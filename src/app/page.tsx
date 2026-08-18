@@ -32,11 +32,17 @@ export default function HomePage() {
   return (
     <>
       {/* ===== CINEMATIC HERO ===== */}
-      <section ref={heroRef} className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-ink">
-        {/* parallax background */}
-        <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
+      <section ref={heroRef} className="relative h-auto min-h-[60vh] sm:h-[100svh] sm:min-h-[640px] w-full overflow-hidden bg-ink">
+        {/* parallax background (desktop/tablet) */}
+        <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0 hidden sm:block">
           <video src={HERO_VIDEO} autoPlay muted loop playsInline poster="/images/hero.jpg" className="h-full w-full object-cover" />
         </motion.div>
+
+        {/* static background for mobile (uses poster image) */}
+        <div className="absolute inset-0 block sm:hidden">
+          <img src="/images/hero.jpg" alt="hero" className="h-full w-full object-cover" />
+        </div>
+
         {/* layered emerald gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
         <div className="absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40" />
@@ -54,11 +60,11 @@ export default function HomePage() {
                   <Sparkles size={13} /> خانه · دکوراسیون · هوش مصنوعی
                 </Badge>
               </motion.div>
-              <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] }} className="font-display text-[2.05rem] font-black leading-[1.14] text-cream text-shadow-soft sm:text-6xl lg:text-7xl text-balance">
+              <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
                 خانه‌ای که <span className="text-gold-gradient">شبیهِ خودت</span> می‌نَفَسَد
               </motion.h1>
               <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.25 }} className="mt-5 max-w-xl text-lg leading-8 text-cream/80">
-                الهام بگیر، محصول پیدا کن، فروشگاه‌ها را مقایسه کن و اتاقت را با هوش مصنوعی طراحی کن — همه در یک مرجع لاکچری.
+                الهام بگیر، محصول پیدا کن، فروشگاه‌ها را مقایسه کن و اتاقت را با هوش مصنوعی طراحی کن — همه در یک محیط ساده و مناسب.
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-cream px-7 py-3.5 font-bold text-ink transition hover:translate-y-[-2px] hover:shadow-gold">
@@ -68,7 +74,7 @@ export default function HomePage() {
                   <Wand2 size={18} /> طراحی فضای من با AI
                 </Link>
               </motion.div>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }} className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-cream/85">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }} className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-cream/70">
                 <span className="flex items-center gap-1.5"><Search size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(allProducts.length)}</b> محصول منتخب</span>
                 <span className="hidden text-cream/30 sm:inline">|</span>
                 <span className="flex items-center gap-1.5"><Users size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(allStores.length)}</b> فروشگاه معتبر</span>
@@ -92,7 +98,7 @@ export default function HomePage() {
       <section className="surface-emerald border-y border-gold/15 py-5 text-cream">
         <Container>
           <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-            {[[Lightbulb, "الهام‌بخش و واقعی"], [Store, "بازارگاه چندفروشگاهی"], [Sparkles, "طراحی با هوش مصنوعی"], [BadgeCheck, "فروشگاه‌های معتبر"]].map(([Icon, t]) => (
+            {[[Lightbulb, "الهام‌بخش و واقعی"], [Store, "بازارگاه چندفروشگاهی"], [Sparkles, "طراحی با هوش مصنوعی"], [BadgeCheck, "فروشگاه معتبر"]].map(([Icon, t]) => (
               <div key={t as string} className="flex items-center justify-center gap-2 text-sm text-cream/80"><Icon size={18} className="text-gold-soft" /> {t as string}</div>
             ))}
           </div>
@@ -119,13 +125,13 @@ export default function HomePage() {
       {/* ===== CATEGORIES ===== */}
       <Container className="py-16 sm:py-24">
         <Reveal>
-          <SectionHeading eyebrow="دسته‌بندی‌ها" title="دنیای خانه را کاوش کن" desc="از مبلمان و نورپردازی تا فرش، دکوراسیون و فضای کار — هر چیزی سر جای خودش." action={<Link href="/products" className="link-underline text-sm font-medium text-terracotta-deep">همه محصولات ←</Link>} />
+          <SectionHeading eyebrow="دسته‌بندی‌ها" title="دنیای خانه را کاوش کن" desc="از مبلمان و نورپردازی تا فرش، دکوراسیون و فضای کاری." />
         </Reveal>
         <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {categories.slice(0, 8).map((c, i) => (
             <RevealItem key={c.id}>
               <Link href={`/category/${c.slug}`} className={`group relative block overflow-hidden rounded-[var(--radius-lg)] sheen ${i === 0 || i === 5 ? "sm:col-span-2 sm:row-span-2" : ""}`}>
-                <SmartImage src={c.image} alt={c.name} className={`w-full transition-transform duration-700 group-hover:scale-110 ${i === 0 || i === 5 ? "aspect-square sm:aspect-[2/1.05]" : "aspect-[4/3]"}`} />
+                <SmartImage src={c.image} alt={c.name} className={`w-full transition-transform duration-700 group-hover:scale-110 ${i === 0 || i === 5 ? "aspect-square sm:aspect-[2/1.05]" : "aspect-[16/10]"}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
                 <div className="absolute bottom-0 p-4 text-cream">
                   <div className="text-[11px] text-gold-soft">{toFa(c.productCount)} محصول</div>
@@ -154,7 +160,7 @@ export default function HomePage() {
       {/* ===== TRENDING PRODUCTS ===== */}
       <Container className="py-10 sm:py-16">
         <Reveal>
-          <SectionHeading eyebrow={<span className="flex items-center gap-1"><TrendingUp size={13} /> پرفروش‌ترین‌ها</span> as unknown as string} title="محصولاتی که همه الان می‌خرن" desc="به‌تیم محبوب‌ترین‌های این هفته رو نشون می‌دیم — این‌ها با سرعت دارن تموم می‌شن" action={<Link href="/products" className="link-underline text-sm font-medium text-terracotta-deep">مشاهده همه ←</Link>} />
+          <SectionHeading eyebrow={<span className="flex items-center gap-1"><TrendingUp size={13} /> پرفروش‌ترین‌ها</span> as unknown as string} title="محصولاتی که همگان می‌پسندند" />
         </Reveal>
         <RevealGroup className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           {trendingProducts.slice(0, 4).map((p) => <RevealItem key={p.id}><ProductCard product={p} /></RevealItem>)}
@@ -164,14 +170,14 @@ export default function HomePage() {
       {/* ===== AI STUDIO — subtle feature (AI is one capability, not the whole product) ===== */}
       <Container className="py-12">
         <Reveal>
-          <Link href="/ai" className="group flex flex-col items-center gap-6 overflow-hidden rounded-[var(--radius-2xl)] border border-clay/40 bg-cream p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] sm:p-10 lg:flex-row lg:gap-10">
+          <Link href="/ai" className="group flex flex-col items-center gap-6 overflow-hidden rounded-[var(--radius-2xl)] border border-clay/40 bg-cream p-8 transition-all duration-500 hover:-translate-y-1">
             <div className="relative w-full max-w-xs shrink-0 overflow-hidden rounded-2xl">
               <SmartImage src={AI_IMG} alt="طراحی هوشمند اتاق" className="aspect-[4/3] w-full transition-transform duration-700 group-hover:scale-105" />
             </div>
             <div className="text-center lg:text-right">
               <Badge tone="gold" className="mb-3"><Sparkles size={12} /> یکی از امکانات Homeino</Badge>
-              <h2 className="font-display text-2xl font-black leading-tight text-ink sm:text-3xl">عکس خانه‌ات را بده، با هوش مصنوعی <span className="text-emerald-gradient">طراحی‌اش کن</span></h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-ink-muted lg:mx-0">فضایت را آپلود کن، سبک دلخواهت را انتخاب کن و محصولات مناسب را خودکار پیدا کن. یک ابزار هوشمند در کنار هزاران محصول واقعی.</p>
+              <h2 className="font-display text-2xl font-black leading-tight text-ink sm:text-3xl">عکس خانه‌ات را بده، با هوش مصنوعی طراحی کن</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-ink-muted lg:mx-0">فضایت را آپلود کن، سبک دلخواهت را انتخاب کن و محصولات مناسب را پیدا کن.</p>
               <span className="link-underline mt-4 inline-block text-sm font-bold text-terracotta-deep">امتحان کن →</span>
             </div>
           </Link>
@@ -181,7 +187,7 @@ export default function HomePage() {
       {/* ===== STORES ===== */}
       <Container className="py-16 sm:py-24">
         <Reveal>
-          <SectionHeading eyebrow="فروشگاه‌ها" title="فروشگاه‌های منتخب و معتبر" desc="برندها و فروشندگانی که به آن‌ها اعتماد داریم." action={<Link href="/stores" className="link-underline text-sm font-medium text-terracotta-deep">همه فروشگاه‌ها ←</Link>} />
+          <SectionHeading eyebrow="فروشگاه‌ها" title="فروشگاه‌های منتخب و معتبر" desc="برندها و فروشندگانی که به آن‌ها اعتماد دارید" />
         </Reveal>
         <RevealGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {stores.slice(0, 4).map((s) => <RevealItem key={s.id}><StoreCard store={s} /></RevealItem>)}
@@ -191,7 +197,7 @@ export default function HomePage() {
       {/* ===== INSPIRATION ===== */}
       <Container className="py-10 sm:py-16">
         <Reveal>
-          <SectionHeading eyebrow="الهام" title="ایده بگیر، نه فقط بخر" desc="هزاران طراحی دکوراسیون. روی هر تصویر کلیک کن تا محصولاتی که داخلش هست را ببینی." action={<Link href="/inspiration" className="link-underline text-sm font-medium text-terracotta-deep">گالری کامل ←</Link>} />
+          <SectionHeading eyebrow="الهام" title="ایده بگیر، نه فقط بخر" desc="هزاران طراحی دکوراسیون. روی هر تصویر کلیک کن تا محصول‌های مرتبط را ببینی." />
         </Reveal>
         <div className="columns-2 gap-4 lg:columns-3 xl:columns-4 [&>*]:mb-4">
           {inspirations.slice(0, 10).map((insp, i) => <Reveal key={insp.id} delay={(i % 4) * 0.05}><InspirationCard insp={insp} index={i} /></Reveal>)}
@@ -205,7 +211,7 @@ export default function HomePage() {
             <div className="surface-emerald relative overflow-hidden rounded-[var(--radius-2xl)] p-10 text-center text-cream sm:p-16">
               <div className="absolute inset-0 grain opacity-30" />
               <Quote size={40} className="relative mx-auto mb-4 text-gold" />
-              <p className="relative mx-auto max-w-2xl font-display text-2xl font-bold leading-relaxed sm:text-3xl text-balance">«هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان.»</p>
+              <p className="relative mx-auto max-w-2xl font-display text-2xl font-bold leading-relaxed sm:text-3xl text-balance">«هر چیزی که برای ساختن خانه‌ای که دوستش داری لازم است، اینجا پیدا می‌شود.»</p>
               <div className="relative mt-5 text-sm text-gold-soft">Homeino — مرجع خانه، دکوراسیون و زندگی</div>
             </div>
           </Reveal>
@@ -221,9 +227,9 @@ export default function HomePage() {
           </Reveal>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { name: "نگار محمدی", city: "تهران", text: "کاناپه‌ای که خریدم دقیقاً مثل عکس بود. کیفیت‌اش فوق‌العاده‌ست و با هوش مصنوعی سایت تونستم ببینم تو پذیراییم چطور می‌شه.", rating: 5, product: "کاناپه هلیم" },
-              { name: "آرش رستمی", city: "اصفهان", text: "بهترین تجربه خرید آنلاین مبلمان. ارسال سریع، بسته‌بندی عالی و قیمت منصفانه. فروشگاه نور مبلمان واقعاً معتبره.", rating: 5, product: "مبل راحتی لوومی" },
-              { name: "سارا کاظمی", city: "شیراز", text: "با طراحی هوش مصنوعی اتاق خوابم رو عوض کردم بعد هموسش همه محصولاتشو از همین سایت خریدم. عالی بود!", rating: 5, product: "طراحی اتاق خواب" },
+              { name: "نگار محمدی", city: "تهران", text: "کاناپه‌ای که خریدم دقیقاً مثل عکس بود. کیفیت‌اش فوق‌العاده‌ست و بسته‌بندی عالی." },
+              { name: "آرش رستمی", city: "اصفهان", text: "بهترین تجربه خرید آنلاین مبلمان. ارسال سریع، بسته‌بندی عالی و قیمت مناسب." },
+              { name: "سارا کاظمی", city: "شیراز", text: "با طراحی هوش مصنوعی اتاق خوابم رو عوض کردم و همه‌چیز جفت و جور شد." },
             ].map((rev, i) => (
               <Reveal key={i} delay={i * 0.1}>
                 <div className="card-surface p-5">
@@ -249,7 +255,7 @@ export default function HomePage() {
       {/* ===== STYLES ===== */}
       <Container className="py-16 sm:py-24">
         <Reveal>
-          <SectionHeading eyebrow="سبک‌ها" title="سبک دکوراسیون خودت را پیدا کن" action={<Link href="/styles" className="link-underline text-sm font-medium text-terracotta-deep">همه سبک‌ها ←</Link>} />
+          <SectionHeading eyebrow="سبک‌ها" title="سبک دکوراسیون خودت را پیدا کن" action={<Link href="/styles" className="link-underline text-sm font-medium text-terracotta-deep">مشاهده همه</Link>} />
         </Reveal>
         <div className="hide-scrollbar -mx-5 flex gap-4 overflow-x-auto px-5 pb-2 sm:mx-0 sm:px-0">
           {styles.map((s) => (
@@ -294,7 +300,7 @@ export default function HomePage() {
             <div className="pointer-events-none absolute left-1/2 top-0 h-[40vh] w-[40vh] -translate-x-1/2 rounded-full bg-gold/15 blur-[120px]" />
             <Sparkles size={32} className="relative mx-auto mb-4 text-gold" />
             <h2 className="relative font-display text-3xl font-black sm:text-5xl text-balance">آماده‌ای خانه‌ات را <span className="text-gold-gradient">متحول کنی؟</span></h2>
-            <p className="relative mx-auto mt-3 max-w-md text-cream/75">همین حالا اولین طراحی هوش مصنوعی‌ات را بساز یا در میان هزاران محصول بگرد.</p>
+            <p className="relative mx-auto mt-3 max-w-md text-cream/75">همین حالا اولین طراحی هوش مصنوعی‌ات را بساز یا در میان هزاران محصول جستجو کن.</p>
             <div className="relative mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/ai" className="btn-gold inline-flex items-center gap-2 px-7 py-3.5 font-bold"><Wand2 size={18} /> شروع طراحی با AI</Link>
               <Link href="/products" className="inline-flex items-center gap-2 rounded-xl border border-cream/25 px-7 py-3.5 font-medium text-cream transition hover:bg-white/10">کاوش محصولات</Link>
