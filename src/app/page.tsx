@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Search, Sparkles, ArrowLeft, Play, Wand2, Star, ChevronDown, Quote, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, TrendingUp, Clock, Truck, RotateCcw } from "lucide-react";
 import { Container, SectionHeading, Badge, Button, Rating, LogoBlock } from "@/components/ui/primitives";
@@ -25,7 +25,6 @@ export default function HomePage() {
   const { setSearch } = useUi();
   const heroRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
@@ -33,36 +32,45 @@ export default function HomePage() {
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   useEffect(() => {
-    // Try to autoplay muted video on mount. If browser blocks it, user can tap the play button.
-    const v = videoRef.current;
-    if (v) {
-      v.muted = true; // ensure muted for autoplay policies
-      v.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {
-          // autoplay blocked on some mobile browsers - leave poster visible and show play control
-        });
-    }
-  }, []);
-
-  function togglePlay() {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) {
-      v.play().then(() => setIsPlaying(true)).catch(() => {});
-    } else {
-      v.pause();
-      setIsPlaying(false);
+
+    // Ensure attributes are set for maximum autoplay compatibility on mobile
+    try {
+      v.muted = true;
+      v.playsInline = true as any; // React attribute
+      v.setAttribute("playsinline", "");
+      v.setAttribute("webkit-playsinline", "");
+      v.setAttribute("muted", "");
+      v.setAttribute("preload", "auto");
+    } catch (e) {
+      // ignore
     }
-  }
+
+    // Try programmatic autoplay.
+    v.play()
+      .then(() => {
+        // playing
+      })
+      .catch(() => {
+        // Some browsers still block autoplay even when muted. As a fallback, start playback on any first user interaction (touch/pointer).
+        const resumePlayback = () => {
+          v.play().catch(() => {});
+          // Remove listeners after first interaction
+          window.removeEventListener("touchstart", resumePlayback);
+          window.removeEventListener("pointerdown", resumePlayback);
+        };
+        window.addEventListener("touchstart", resumePlayback, { once: true });
+        window.addEventListener("pointerdown", resumePlayback, { once: true });
+      });
+  }, []);
 
   return (
     <>
       {/* ===== CINEMATIC HERO ===== */}
       <section ref={heroRef} className="relative h-auto min-h-[60vh] sm:h-[100svh] sm:min-h-[640px] w-full overflow-hidden bg-ink">
-        {/* parallax background (desktop/tablet/mobile) */}
+        {/* parallax background (video) */}
         <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
-          {/* video: keep available on mobile too but use poster and programmatic play toggle for browsers that block autoplay */}
           <video
             ref={videoRef}
             src={HERO_VIDEO}
@@ -70,7 +78,9 @@ export default function HomePage() {
             muted
             loop
             playsInline
+            webkit-playsinline="true"
             poster="/images/hero.jpg"
+            preload="auto"
             className="h-full w-full object-cover"
           />
         </motion.div>
@@ -82,19 +92,6 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate]" />
         <div className="pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px]" />
         <div className="absolute inset-0 grain opacity-40" />
-
-        {/* Mobile play control - visible only on small screens when autoplay is blocked or paused */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center sm:hidden">
-          {!isPlaying && (
-            <button
-              onClick={togglePlay}
-              aria-label="پخش ویدیو"
-              className="rounded-full bg-black/40 p-4 text-cream backdrop-blur transition hover:scale-105"
-            >
-              <Play size={28} />
-            </button>
-          )}
-        </div>
 
         {/* content */}
         <motion.div style={{ opacity }} className="relative z-10 flex h-full flex-col justify-center">
@@ -151,46 +148,6 @@ export default function HomePage() {
       </section>
 
       {/* rest of the page unchanged... */}
-
-      {/* ===== TRUST BADGES — builds instant confidence ===== */}
-      <Container className="py-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { icon: ShieldCheck, title: "خرید کاملاً امن", desc: "پرداخت رمزنگاری‌شده", color: "text-sage" },
-            { icon: Truck, title: "ارسال سریع", desc: "از فروشگاه منتخب شما", color: "text-terracotta-deep" },
-            { icon: RotateCcw, title: `${toFa(PLATFORM.policies.returnDays)} روز بازگشت`, desc: "ضمانت رضایت کامل", color: "text-gold" },
-            { icon: Sparkles, title: "طراحی رایگان", desc: `${toFa(PLATFORM.ai.startingCredits)} اعتبار هدیه اول`, color: "text-gold" },
-          ].map((b) => (
-            <div key={b.title} className="flex items-center gap-2.5 rounded-2xl border border-clay/40 bg-cream/60 p-3">
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ivory-2 ${b.color}`}><b.icon size={20} /></span>
-              <div><div className="text-sm font-bold text-ink">{b.title}</div><div className="text-[11px] text-ink-muted">{b.desc}</div></div>
-            </div>
-          ))}
-        </div>
-      </Container>
-
-      {/* ===== CATEGORIES ===== */}
-      <Container className="py-16 sm:py-24">
-        <Reveal>
-          <SectionHeading eyebrow="دسته‌بندی‌ها" title="دنیای خانه را کاوش کن" desc="از مبلمان و نورپردازی تا فرش، دکوراسیون و فضای کاری." />
-        </Reveal>
-        <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.slice(0, 8).map((c, i) => (
-            <RevealItem key={c.id}>
-              <Link href={`/category/${c.slug}`} className={`group relative block overflow-hidden rounded-[var(--radius-lg)] sheen ${i === 0 || i === 5 ? "sm:col-span-2 sm:row-span-2" : ""}`}>
-                <SmartImage src={c.image} alt={c.name} className={`w-full transition-transform duration-700 group-hover:scale-110 ${i === 0 || i === 5 ? "aspect-square sm:aspect-[2/1.05]" : "aspect-[16/10]"}`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
-                <div className="absolute bottom-0 p-4 text-cream">
-                  <div className="text-[11px] text-gold-soft">{toFa(c.productCount)} محصول</div>
-                  <h3 className="font-display text-lg font-bold">{c.name}</h3>
-                </div>
-              </Link>
-            </RevealItem>
-          ))}
-        </RevealGroup>
-      </Container>
-
-      {/* Remaining sections kept as in the file to avoid unintended changes. */}
 
     </>
   );
