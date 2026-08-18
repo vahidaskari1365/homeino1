@@ -18,7 +18,7 @@ import { PLATFORM } from "@/config/platform";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { toFa } from "@/lib/utils";
 
-const HERO_IMG = "/images/hero.jpg";
+const HERO_VIDEO = "/video/01.mp4";
 const AI_IMG = "/images/ai-feature.jpg";
 
 export default function HomePage() {
@@ -35,8 +35,7 @@ export default function HomePage() {
       <section ref={heroRef} className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-ink">
         {/* parallax background */}
         <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={HERO_IMG} alt="Homeino — فضای لاکچری خانه" className="h-full w-full object-cover" />
+          <video src={HERO_VIDEO} autoPlay muted loop playsInline poster="/images/hero.jpg" className="h-full w-full object-cover" />
         </motion.div>
         {/* layered emerald gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
