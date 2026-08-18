@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Search, Sparkles, ArrowLeft, Play, Wand2, Star, ChevronDown, Quote, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, TrendingUp, Clock, Truck, RotateCcw } from "lucide-react";
 import { Container, SectionHeading, Badge, Button, Rating, LogoBlock } from "@/components/ui/primitives";
@@ -25,6 +25,7 @@ export default function HomePage() {
   const { setSearch } = useUi();
   const heroRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoFinished, setVideoFinished] = useState(false);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
@@ -56,6 +57,8 @@ export default function HomePage() {
         // Some browsers still block autoplay even when muted. As a fallback, start playback on any first user interaction (touch/pointer).
         const resumePlayback = () => {
           v.play().catch(() => {});
+          // If autoplay is blocked, reveal the content on first interaction so the hero is never empty
+          setVideoFinished(true);
           // Remove listeners after first interaction
           window.removeEventListener("touchstart", resumePlayback);
           window.removeEventListener("pointerdown", resumePlayback);
@@ -68,7 +71,7 @@ export default function HomePage() {
   return (
     <>
       {/* ===== CINEMATIC HERO ===== */}
-      <section ref={heroRef} className="relative h-auto min-h-[60vh] sm:h-[100svh] sm:min-h-[640px] w-full overflow-hidden bg-ink">
+      <section ref={heroRef} className={`relative h-auto min-h-[60vh] sm:h-[100svh] sm:min-h-[640px] w-full overflow-hidden transition-colors duration-700 ${videoFinished ? "bg-ink" : "bg-black"}`}>
         {/* parallax background (video) */}
         <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
           <video
@@ -76,24 +79,25 @@ export default function HomePage() {
             src={HERO_VIDEO}
             autoPlay
             muted
-            loop
             playsInline
             webkit-playsinline="true"
-            poster="/images/hero.jpg"
             preload="auto"
+            onEnded={() => setVideoFinished(true)}
+            onError={() => setVideoFinished(true)}
             className="h-full w-full object-cover"
           />
         </motion.div>
 
-        {/* layered emerald gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
-        <div className="absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40" />
+        {/* layered emerald gradient overlay — only visible after the video ends */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30 transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
+        <div className={`absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40 transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
         {/* aurora glow */}
-        <div className="pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate]" />
-        <div className="pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px]" />
-        <div className="absolute inset-0 grain opacity-40" />
+        <div className={`pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate] transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
+        <div className={`pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px] transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
+        <div className={`absolute inset-0 grain transition-opacity duration-700 ${videoFinished ? "opacity-40" : "opacity-0"}`} />
 
-        {/* content */}
+        {/* content — revealed only after the hero video ends */}
+        {videoFinished && (
         <motion.div style={{ opacity }} className="relative z-10 flex h-full flex-col justify-center">
           <Container className="py-10 px-4 sm:px-0">
             <div className="max-w-2xl">
@@ -126,14 +130,17 @@ export default function HomePage() {
             </div>
           </Container>
         </motion.div>
+        )}
 
-        {/* scroll indicator */}
+        {/* scroll indicator — shown after the video ends */}
+        {videoFinished && (
         <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center">
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity }} className="flex flex-col items-center gap-1 text-cream/50">
             <span className="text-[11px] tracking-widest">اسکرول کن</span>
             <ChevronDown size={18} />
           </motion.div>
         </div>
+        )}
       </section>
 
       {/* ===== VALUE STRIP ===== */}
