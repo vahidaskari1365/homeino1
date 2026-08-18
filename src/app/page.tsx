@@ -38,6 +38,7 @@ export default function HomePage() {
 
     // Ensure attributes are set for maximum autoplay compatibility on mobile
     try {
+      v.defaultMuted = true;
       v.muted = true;
       v.playsInline = true as any; // React attribute
       v.setAttribute("playsinline", "");
@@ -48,25 +49,45 @@ export default function HomePage() {
       // ignore
     }
 
-    // Try programmatic autoplay.
-    v.play()
-      .then(() => {
-        // playing
-      })
-      .catch(() => {
-        // Some browsers still block autoplay even when muted. As a fallback, start playback on any first user interaction (touch/pointer).
-        const resumePlayback = () => {
-          v.play().catch(() => {});
-          // If autoplay is blocked, reveal the content on first interaction so the hero is never empty
-          setVideoFinished(true);
-          // Remove listeners after first interaction
-          window.removeEventListener("touchstart", resumePlayback);
-          window.removeEventListener("pointerdown", resumePlayback);
-        };
-        window.addEventListener("touchstart", resumePlayback, { once: true });
-        window.addEventListener("pointerdown", resumePlayback, { once: true });
-      });
-  }, []);
+    let cancelled = false;
+
+    // Programmatic autoplay. On iOS Safari a play() call made before the video
+    // has buffered data rejects, so also retry once the video is ready.
+    const tryPlay = () => {
+      if (cancelled || !v.paused) return;
+      const p = v.play();
+      if (p) {
+        p.catch(() => {
+          // Some browsers still block autoplay even when muted: the
+          // first-interaction fallback below starts playback on tap.
+        });
+      }
+    };
+
+    v.addEventListener("loadeddata", tryPlay);
+    v.addEventListener("canplay", tryPlay);
+
+    // Try programmatic autoplay right away.
+    tryPlay();
+
+    // Fallback: start playback on any first user interaction (touch/pointer).
+    const resumePlayback = () => {
+      tryPlay();
+      // Remove listeners after first interaction
+      window.removeEventListener("touchstart", resumePlayback);
+      window.removeEventListener("pointerdown", resumePlayback);
+    };
+    window.addEventListener("touchstart", resumePlayback, { once: true });
+    window.addEventListener("pointerdown", resumePlayback, { once: true });
+
+    return () => {
+      cancelled = true;
+      v.removeEventListener("loadeddata", tryPlay);
+      v.removeEventListener("canplay", tryPlay);
+      window.removeEventListener("touchstart", resumePlayback);
+      window.removeEventListener("pointerdown", resumePlayback);
+    };
+  }, [setVideoFinished]);
 
   return (
     <>
