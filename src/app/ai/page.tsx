@@ -24,7 +24,7 @@ export default function AIStudioHome() {
       <Reveal>
         <div className="relative mb-8 overflow-hidden rounded-[var(--radius-2xl)] bg-gradient-to-bl from-ink to-ink-soft p-8 text-cream sm:p-12">
           <div className="absolute inset-0 grain opacity-30" />
-          <div className="pointer-events-none absolute left-0 top-0 h-[40vh] w-[30vw] rounded-full bg-terracotta/20 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate]" />
+          <div className="pointer-events-none absolute -left-[10%] -top-[20%] h-[70vh] w-[55vw] animate-[aurora_14s_ease-in-out_infinite_alternate] bg-[radial-gradient(closest-side,rgba(30,93,68,0.28),rgba(30,93,68,0.12)_55%,transparent)]" />
           <div className="relative flex flex-wrap items-center justify-between gap-6">
             <div className="max-w-lg">
               <Badge tone="dark" className="mb-4 border-gold/30 bg-white/10 text-gold-soft"><Sparkles size={13} /> استودیوی هوشمند دکوراسیون</Badge>
