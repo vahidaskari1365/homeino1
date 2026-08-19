@@ -86,6 +86,10 @@ export interface AiProvider {
   recommendProducts(input: GenerateDesignInput): Promise<RecommendedProduct[]>;
   chat(input: ChatReplyInput): Promise<ChatReply>;
   suggestDecor(input: { room: string; style: string; budget?: string }): Promise<DecorSuggestion>;
+  /** Structured intent only — never long prose. */
+  understandIntent?(input: unknown): Promise<unknown>;
+  /** Orali visual / overlay generation. */
+  oraliGenerate?(input: unknown): Promise<unknown>;
 }
 
 export const AI_MODES: {

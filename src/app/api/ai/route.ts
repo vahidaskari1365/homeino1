@@ -13,7 +13,7 @@ import type { GenerateDesignInput, ChatReplyInput } from "@/services/ai/types";
 //   • No keys, providers, or model names reach the client
 // ============================================================
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "orali"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 const MAX_PAYLOAD_BYTES = 15 * 1024 * 1024; // 15 MB (image base64 can be large)
 
@@ -47,6 +47,14 @@ async function dispatch(provider: typeof mockAiProvider, action: string, payload
     case "suggest": return provider.suggestDecor(payload as { room: string; style: string; budget?: string });
     case "analyze": return provider.analyzeRoom(payload as GenerateDesignInput);
     case "recommend": return provider.recommendProducts(payload as GenerateDesignInput);
+    case "understand":
+      return provider.understandIntent
+        ? provider.understandIntent(payload)
+        : Promise.resolve({ intent: "unclear", target: [], changes: [], preservedElements: [], colors: [], confidence: 0, scope: "local" });
+    case "orali":
+      return provider.oraliGenerate
+        ? provider.oraliGenerate(payload)
+        : Promise.resolve({ generatedImage: (payload as { originalImage?: string }).originalImage, preview: true, overlay: { version: 1, regions: [], preservedArchitecture: true, provider: "mock" } });
     default: throw new Error("Unknown action");
   }
 }

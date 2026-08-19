@@ -25,7 +25,7 @@ const drawerGroups = [
   {
     label: "فضای من",
     items: [
-      { label: "AI استودیو", href: "/ai", icon: Sparkles },
+      { label: "هوش مصنوعی", href: "/ai", icon: Sparkles },
       { label: "مقایسه", href: "/compare", icon: GitCompare },
       { label: "علاقه‌مندی‌ها", href: "/wishlist", icon: Heart },
       { label: "سبد خرید", href: "/cart", icon: ShoppingBag },
