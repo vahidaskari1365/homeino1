@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, TrendingUp, Clock, ArrowLeft } from "lucide-react";
+import { Search, X, TrendingUp, Lightbulb, ArrowLeft } from "lucide-react";
 import { useUi } from "@/stores/useApp";
 import { products } from "@/data/products";
 import { stores } from "@/data/stores";
@@ -12,7 +12,7 @@ import { SmartImage } from "../ui/SmartImage";
 import { Rating } from "../ui/primitives";
 import { formatPrice } from "@/lib/utils";
 
-const RECENT = ["مبل کرم پذیرایی", "چراغ رومیزی چوبی", "فرش دستبافت"];
+const SUGGESTIONS = ["مبل کرم پذیرایی", "چراغ رومیزی چوبی", "فرش دستبافت"];
 const TRENDING = ["کاناپه مدرن", "ژاپندی", "آینه طاقی", "ست کوسن خاکی", "لوکس"];
 
 export function SearchOverlay() {
@@ -78,9 +78,9 @@ export function SearchOverlay() {
                   </div>
                 </div>
                 <div>
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-ink-muted"><Clock size={14} /> جستجوهای اخیر</div>
+                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-ink-muted"><Lightbulb size={14} /> پیشنهاد برای شروع</div>
                   <div className="space-y-1">
-                    {RECENT.map((r) => (
+                    {SUGGESTIONS.map((r) => (
                       <button key={r} onClick={() => setQ(r)} className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-sm text-ink transition hover:bg-ivory-2">
                         <span>{r}</span><ArrowLeft size={15} className="text-ink-muted" />
                       </button>

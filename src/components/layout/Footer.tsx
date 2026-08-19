@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, AtSign, Send, Globe, Gift, Check } from "lucide-react";
+import { AtSign, Send, Globe, Gift, Check } from "lucide-react";
 import { Container } from "../ui/primitives";
 import { categories } from "@/data/categories";
 
 const COLS = [
   { title: "کاوش", links: [["همه محصولات", "/products"], ["دسته دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["مجله", "/magazine"]] },
-  { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دسته دوم", "/second-hand"]] },
+  { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["کالکشن‌های من", "/collections"]] },
   { title: "حساب کاربری", links: [["پروفایل", "/account"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["طراحی‌های من", "/account/designs"]] },
   { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/vendor"], ["پیوستن به ما", "/vendor"]] },
 ];
@@ -20,11 +20,11 @@ function NewsletterForm() {
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) return;
     setDone(true);
   };
-  if (done) return <div className="flex items-center gap-1.5 rounded-lg bg-sage/20 px-3 py-2 text-xs font-bold text-sage-soft"><Check size={14} /> ثبت شد! کد تخفیف برات ارسال شد.</div>;
+  if (done) return <div className="flex items-center gap-1.5 rounded-lg bg-sage/20 px-3 py-2 text-xs font-bold text-sage-soft"><Check size={14} /> ایمیل در نسخه نمایشی ثبت شد.</div>;
   return (
     <form onSubmit={submit} className="flex flex-col gap-2 min-[400px]:flex-row">
       <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت..." className="min-w-0 flex-1 rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
-      <button type="submit" className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90">دریافت هدیه</button>
+      <button type="submit" className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90">عضویت</button>
     </form>
   );
 }
@@ -60,8 +60,8 @@ export function Footer() {
             </div>
             {/* Newsletter capture with incentive */}
             <div className="mt-5 rounded-xl border border-gold/25 bg-gold/5 p-4">
-              <div className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-soft"><Gift size={16} /> عضو خبرنامه شو، هدیه بگیر</div>
-              <p className="mb-3 text-xs leading-5 text-cream/60">با عضویت، کد تخفیف ۱۰٪ و ۲۰ اعتبار هوش مصنوعی رایگان بگیر.</p>
+              <div className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-soft"><Gift size={16} /> ایده‌ها و تازه‌های خانه</div>
+              <p className="mb-3 text-xs leading-5 text-cream/60">محصولات تازه، راهنمای انتخاب و کالکشن‌های منتخب را دریافت کن؛ بدون وعده یا تخفیف ساختگی.</p>
               <NewsletterForm />
             </div>
           </div>
@@ -78,7 +78,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-cream/50 md:flex-row">
-          <p>© ۱۴۰۳ Homeino — تمام حقوق محفوظ است.</p>
+          <p>© ۱۴۰۵ Homeino — تمام حقوق محفوظ است.</p>
           <div className="flex flex-wrap gap-4">
             {categories.slice(0, 4).map((c) => (
               <Link key={c.id} href={`/category/${c.slug}`} className="hover:text-cream">{c.name}</Link>

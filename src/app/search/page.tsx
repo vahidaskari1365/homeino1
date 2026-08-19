@@ -48,6 +48,12 @@ function SearchInner() {
         <EmptyState icon={<SearchX size={28} />} title="نتیجه‌ای پیدا نشد" desc="با کلمات دیگری امتحان کن." action={<div className="flex flex-wrap justify-center gap-2">{TRENDING.map((text) => <Link key={text} href={`/search?q=${encodeURIComponent(text)}`} className="min-h-10 rounded-full border border-clay/55 bg-cream px-4 py-2 text-sm text-ink hover:border-terracotta">{text}</Link>)}</div>} />
       ) : (
         <div className="space-y-10">
+          {results.cats.length > 0 && (
+            <div>
+              <h3 className="mb-4 font-display text-lg font-bold text-ink">دسته‌بندی‌ها</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{results.cats.map((category) => <Link key={category.slug} href={`/category/${category.slug}`} className="rounded-2xl border border-clay/40 bg-cream p-4 transition hover:border-terracotta/45"><div className="text-sm font-black text-ink">{category.name}</div><div className="mt-1 text-xs text-ink-muted">{toFa(category.productCount)} محصول</div></Link>)}</div>
+            </div>
+          )}
           {results.styles.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {results.styles.map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="min-h-10 rounded-full border border-ink bg-ink px-4 py-2 text-sm font-bold text-cream">{style.name}</Link>)}

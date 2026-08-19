@@ -37,6 +37,9 @@ export const offers: Offer[] = [
 export const offersForProduct = (productId: string): Offer[] =>
   offers.filter((o) => o.productId === productId);
 
+export const getOfferById = (offerId?: string): Offer | undefined =>
+  offerId ? offers.find((offer) => offer.id === offerId) : undefined;
+
 export const getBestOffer = (productId: string): Offer | null => {
   const list = offersForProduct(productId).filter((o) => o.inStock);
   if (!list.length) return null;
