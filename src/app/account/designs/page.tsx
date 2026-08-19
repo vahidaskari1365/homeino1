@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Wand2, Sparkles, MoreHorizontal, Copy, Share2 } from "lucide-react";
-import { Badge, Button, EmptyState } from "@/components/ui/primitives";
+import { Wand2, Sparkles, Copy, Share2 } from "lucide-react";
+import { Badge, ButtonLink, EmptyState } from "@/components/ui/primitives";
 import { aiDesigns } from "@/data/inspirations";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
@@ -12,7 +12,7 @@ export default function MyDesignsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-black text-ink">طراحی‌های من</h1>
-        <Link href="/ai/design"><Button><Wand2 size={16} /> طراحی جدید</Button></Link>
+        <ButtonLink href="/ai/design"><Wand2 size={16} /> طراحی جدید</ButtonLink>
       </div>
 
       {aiDesigns.length ? (
@@ -43,7 +43,7 @@ export default function MyDesignsPage() {
             </div>
           ))}
         </div>
-      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<Link href="/ai/design"><Button>اولین طراحی‌ات را بساز</Button></Link>} />}
+      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<ButtonLink href="/ai/design">اولین طراحی‌ات را بساز</ButtonLink>} />}
     </div>
   );
 }

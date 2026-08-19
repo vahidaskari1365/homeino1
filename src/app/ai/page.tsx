@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import { Wand2, Sparkles, Search, Edit3, Boxes, LayoutGrid, Clock, Plus, ArrowLeft, ImagePlus, History } from "lucide-react";
+import { Wand2, Sparkles, Edit3, Boxes, LayoutGrid, Plus, ArrowLeft, ImagePlus, History } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
-import { Badge, Button, Spinner } from "@/components/ui/primitives";
+import { Badge, ButtonLink } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { useCredits } from "@/stores/useApp";
@@ -30,9 +30,9 @@ export default function AIStudioHome() {
               <Badge tone="dark" className="mb-4 border-gold/30 bg-white/10 text-gold-soft"><Sparkles size={13} /> استودیوی هوشمند دکوراسیون</Badge>
               <h1 className="font-display text-3xl font-black leading-tight sm:text-4xl">خانه‌ات را با هوش مصنوعی طراحی کن</h1>
               <p className="mt-3 text-cream/70">عکس خانه‌ات را آپلود کن، وسایل انتخاب کن، یا فقط توصیف کن — هوش مصنوعی Homeino فضایت را طراحی می‌کند.</p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href="/ai/design"><Button size="lg" className="bg-gold hover:opacity-90"><Wand2 size={18} /> شروع طراحی جدید</Button></Link>
-                <Link href="/ai/history"><Button size="lg" variant="outline" className="border-cream/30 text-cream hover:bg-white/10"><History size={18} /> تاریخچه طراحی‌ها</Button></Link>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <ButtonLink href="/ai/design" size="lg" variant="gold"><Wand2 size={18} /> شروع طراحی جدید</ButtonLink>
+                <ButtonLink href="/ai/history" size="lg" variant="outline" className="border-cream/30 bg-transparent text-cream hover:bg-white/10"><History size={18} /> تاریخچه طراحی‌ها</ButtonLink>
               </div>
             </div>
             {/* Credit card */}
@@ -69,7 +69,7 @@ export default function AIStudioHome() {
 
       {/* Recent designs */}
       <div className="mt-12">
-        <PageHeader title="طراحی‌های اخیر" action={<Link href="/ai/history"><Button variant="ghost" size="sm">همه طراحی‌ها</Button></Link>} />
+        <PageHeader title="طراحی‌های اخیر" action={<ButtonLink href="/ai/history" variant="ghost" size="sm">همه طراحی‌ها</ButtonLink>} />
         {aiDesigns.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {aiDesigns.slice(0, 4).map((d) => (
@@ -87,7 +87,7 @@ export default function AIStudioHome() {
           <div className="card-surface flex flex-col items-center justify-center px-6 py-16 text-center">
             <Wand2 size={36} className="mb-3 text-ink-muted" />
             <p className="text-sm font-medium text-ink-muted">هنوز طراحی‌ای نساختی</p>
-            <Link href="/ai/design" className="mt-4"><Button><Plus size={16} /> اولین طراحی‌ات را بساز</Button></Link>
+            <ButtonLink href="/ai/design" className="mt-4"><Plus size={16} /> اولین طراحی‌ات را بساز</ButtonLink>
           </div>
         )}
       </div>

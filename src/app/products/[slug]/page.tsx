@@ -95,15 +95,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               <div className="mt-4 rounded-xl border border-clay/40 bg-ivory-2 p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-bold text-ink">{toFa(offerCount)} فروشنده برای این محصول</span>
-                  <span className="flex items-center gap-1 text-[10px] text-success"><Check size={11} /> بهترین قیمت selected</span>
+                  <span className="flex items-center gap-1 text-[10px] text-success"><Check size={11} /> بهترین قیمت انتخاب شده</span>
                 </div>
                 <div className="space-y-1.5">
                   {productOffers.filter((o) => o.inStock).sort((a, b) => (a.price + a.shippingCost) - (b.price + b.shippingCost)).map((offer, idx) => {
                     const sellerStore = getStoreById(offer.storeId);
                     const isBest = idx === 0;
                     return (
-                      <div key={offer.id} className={cn("flex items-center justify-between rounded-lg border p-2 transition", isBest ? "border-success/40 bg-success/5" : "border-clay/30 bg-cream")}>
-                        <div className="flex items-center gap-2">
+                      <div key={offer.id} className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2 transition", isBest ? "border-success/40 bg-success/5" : "border-clay/30 bg-cream")}>
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                           {isBest && <span className="rounded bg-success/15 px-1.5 py-0.5 text-[9px] font-bold text-success">بهترین</span>}
                           <Link href={`/stores/${sellerStore?.slug}`} className="text-xs font-medium text-ink hover:text-terracotta-deep">{sellerStore?.name}</Link>
                           <span className="text-[10px] text-ink-muted">{offer.shippingDays} · {offer.shippingCost === 0 ? "ارسال رایگان" : `${toFa(formatPrice(offer.shippingCost))} ت`}</span>
@@ -127,7 +127,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* stock + qty */}
-            <div className="mt-5 flex items-center gap-4">
+            <div className="mt-5 flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="flex items-center gap-1 rounded-xl border border-clay/60 p-1">
                 <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="کاهش تعداد" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-ivory-2"><Minus size={16} /></button>
                 <span className="w-8 text-center font-medium">{toFa(qty)}</span>
@@ -197,9 +197,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
       {/* tabs */}
       <div className="mt-12">
-        <div className="flex gap-1 border-b border-clay/40">
+        <div role="tablist" aria-label="اطلاعات محصول" className="hide-scrollbar flex max-w-full gap-1 overflow-x-auto border-b border-clay/40">
           {[["desc", "توضیحات"], ["specs", "مشخصات"], ["reviews", `نقد و بررسی (${toFa(product!.reviewsCount)})`]].map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k as typeof tab)} className={cn("relative px-4 py-3 text-sm font-medium transition", tab === k ? "text-ink" : "text-ink-muted hover:text-ink")}>
+            <button key={k} onClick={() => setTab(k as typeof tab)} role="tab" aria-selected={tab === k} className={cn("relative min-h-11 shrink-0 whitespace-nowrap px-4 py-3 text-sm font-medium transition", tab === k ? "text-ink" : "text-ink-muted hover:text-ink")}>
               {l}{tab === k && <span className="absolute inset-x-2 -bottom-px h-0.5 bg-ink" />}
             </button>
           ))}

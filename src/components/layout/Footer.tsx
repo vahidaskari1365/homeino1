@@ -22,8 +22,8 @@ function NewsletterForm() {
   };
   if (done) return <div className="flex items-center gap-1.5 rounded-lg bg-sage/20 px-3 py-2 text-xs font-bold text-sage-soft"><Check size={14} /> ثبت شد! کد تخفیف برات ارسال شد.</div>;
   return (
-    <form onSubmit={submit} className="flex gap-2">
-      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت..." className="flex-1 rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
+    <form onSubmit={submit} className="flex flex-col gap-2 min-[400px]:flex-row">
+      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت..." className="min-w-0 flex-1 rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
       <button type="submit" className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90">دریافت هدیه</button>
     </form>
   );
@@ -32,9 +32,9 @@ function NewsletterForm() {
 export function Footer() {
   return (
     <footer className="mt-24 border-t border-clay/40 bg-ink text-cream/80">
-      <Container className="py-14">
+      <Container className="pb-28 pt-12 lg:py-14">
         {/* CTA strip — marketplace focused, not AI */}
-        <div className="mb-12 flex flex-col items-start justify-between gap-5 rounded-[var(--radius-xl)] bg-gradient-to-l from-terracotta to-terracotta-deep p-8 text-white md:flex-row md:items-center">
+        <div className="mb-12 flex flex-col items-start justify-between gap-5 rounded-[var(--radius-xl)] bg-gradient-to-l from-terracotta to-terracotta-deep p-5 text-white sm:p-8 md:flex-row md:items-center">
           <div>
             <h3 className="font-display text-2xl font-bold text-white">همه‌چیز برای خانه‌ای که دوست داری</h3>
             <p className="mt-1 text-sm text-white/80">از مبلمان و دکوراسیون تا الهام و طراحی — همه در یک مکان.</p>

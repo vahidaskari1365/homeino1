@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Bell, Globe, Moon, Shield, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/primitives";
+import { Button, ConfirmDialog } from "@/components/ui/primitives";
 import { useUi, useAuth } from "@/stores/useApp";
 import { useRouter } from "next/navigation";
 import { DEFAULT_NOTIFICATION_PREFS, NOTIFICATION_LABELS, type NotificationType } from "@/config/notifications";
@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const { toast } = useUi(); const { logout } = useAuth(); const router = useRouter();
   const [prefs, setPrefs] = useState({ notif: true, email: false, sms: true, dark: false });
   const [notifPrefs, setNotifPrefs] = useState(DEFAULT_NOTIFICATION_PREFS);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const toggleNotif = (type: NotificationType) => {
     setNotifPrefs((cur) => cur.map((p) => p.type === type ? { ...p, enabled: !p.enabled } : p));
     toast("ترجیحات ذخیره شد");
@@ -48,7 +49,7 @@ export default function SettingsPage() {
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" onClick={() => toast("تغییر رمز به‌زودی", "info")}>تغییر رمز عبور</Button>
           <Button variant="outline" onClick={() => toast("داده‌ها با موفقیت دریافت شدند", "info")}>دریافت داده‌های من</Button>
-          <Button variant="ghost" className="text-danger" onClick={() => { logout(); toast("از حساب خارج شدی"); router.push("/"); }}><Trash2 size={15} /> خروج از حساب</Button>
+          <Button variant="danger" onClick={() => setLogoutOpen(true)}><Trash2 size={15} /> خروج از حساب</Button>
         </div>
       </div>
 
@@ -79,6 +80,8 @@ export default function SettingsPage() {
           })}
         </div>
       </div>
+
+      <ConfirmDialog open={logoutOpen} onClose={() => setLogoutOpen(false)} onConfirm={() => { logout(); toast("از حساب خارج شدی", "info"); router.push("/"); }} title="از حساب خارج می‌شوی؟" description="برای دسترسی دوباره به سفارش‌ها و طراحی‌ها باید وارد حساب شوی." confirmLabel="خروج از حساب" destructive />
     </div>
   );
 }

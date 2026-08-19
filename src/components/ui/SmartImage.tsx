@@ -25,7 +25,7 @@ export function SmartImage({ src, alt, className, ...props }: ImgHTMLAttributes<
           decoding="async"
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
-          className={cn("h-full w-full transition-all duration-700", loaded ? "opacity-100 scale-100" : "opacity-0 scale-105")}
+          className={cn("h-full w-full object-cover transition-all duration-700", loaded ? "opacity-100 scale-100" : "opacity-0 scale-105")}
           {...props}
         />
       )}

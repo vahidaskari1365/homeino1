@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { Button, Badge, Rating } from "@/components/ui/primitives";
+import { ButtonLink, Badge, Rating } from "@/components/ui/primitives";
 import { products } from "@/data/products";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useState } from "react";
@@ -13,7 +13,7 @@ export default function VendorProductsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-xl font-black text-ink">محصولات ({toFa(list.length)})</h1>
-        <Link href="/vendor/products/new"><Button><Plus size={16} /> افزودن محصول</Button></Link>
+        <ButtonLink href="/vendor/products/new"><Plus size={16} /> افزودن محصول</ButtonLink>
       </div>
       <div className="flex items-center rounded-xl border border-clay/60 bg-cream px-3 focus-within:border-ink">
         <Search size={17} className="text-ink-muted" />

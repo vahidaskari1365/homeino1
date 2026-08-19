@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { CheckCircle2, Package, Home, Sparkles } from "lucide-react";
 import { Container } from "@/components/shared";
-import { Button } from "@/components/ui/primitives";
+import { ButtonLink } from "@/components/ui/primitives";
 import { toFa } from "@/lib/utils";
 
 // Generated once at module load (not during render) → keeps the component pure
@@ -21,10 +21,10 @@ export default function SuccessPage() {
           <div className="flex justify-between py-2 text-sm"><span className="text-ink-muted">وضعیت</span><span className="font-bold text-success">در حال پردازش</span></div>
         </div>
 
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link href="/account/orders"><Button><Package size={16} /> پیگیری سفارش</Button></Link>
-          <Link href="/products"><Button variant="ghost">ادامه خرید</Button></Link>
-          <Link href="/ai"><Button variant="outline"><Sparkles size={16} /> طراحی اتاق با AI</Button></Link>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
+          <ButtonLink href="/account/orders"><Package size={16} /> پیگیری سفارش</ButtonLink>
+          <ButtonLink href="/products" variant="ghost">ادامه خرید</ButtonLink>
+          <ButtonLink href="/ai" variant="outline"><Sparkles size={16} /> طراحی اتاق با AI</ButtonLink>
         </div>
         <Link href="/" className="mt-6 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><Home size={15} /> بازگشت به خانه</Link>
       </div>

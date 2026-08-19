@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Download, Share2, Heart, RotateCcw, Edit3, Sparkles, ShoppingBag, Maximize2, Wand2 } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
+import { Button, ButtonLink, Badge, LogoBlock } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { BeforeAfterSlider } from "@/components/ui/BeforeAfterSlider";
 import { getAiDesign, aiDesigns } from "@/data/inspirations";
@@ -66,7 +66,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
             <div className="flex justify-between py-1 text-sm"><span className="text-ink-muted">وضعیت</span><span className="font-medium text-success">تکمیل شده</span></div>
           </div>
 
-          <Link href="/ai/design"><Button className="mt-5 w-full"><Wand2 size={18} /> طراحی جدید بساز</Button></Link>
+          <ButtonLink href="/ai/design" className="mt-5 w-full"><Wand2 size={18} /> طراحی جدید بساز</ButtonLink>
         </div>
       </div>
 
@@ -77,18 +77,18 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
           {design!.products.map((p, i) => {
             const prod = p.productId ? getProductById(p.productId) : null;
             return prod ? (
-              <Link key={i} href={`/products/${prod.slug}`} className="card-surface overflow-hidden transition hover:-translate-y-1">
-                <SmartImage src={prod.images[0]} alt={prod.name} className="aspect-square w-full" />
+              <article key={i} className="card-surface card-interactive overflow-hidden">
+                <Link href={`/products/${prod.slug}`}><SmartImage src={prod.images[0]} alt={prod.name} className="aspect-square w-full" /></Link>
                 <div className="p-4">
                   <div className="text-xs text-ink-muted">{p.label} · {prod.brand}</div>
-                  <div className="line-clamp-1 font-medium text-ink">{prod.name}</div>
-                  <div className="mt-1 flex items-center justify-between">
+                  <Link href={`/products/${prod.slug}`} className="line-clamp-1 font-medium text-ink hover:text-terracotta-deep">{prod.name}</Link>
+                  <div className="mt-1 flex items-center justify-between gap-2">
                     <span className="text-sm font-black text-terracotta-deep">{toFa(formatPrice(prod.price))} ت</span>
-                    <span className="text-[10px] text-ink-muted">{getStoreById(prod.storeId)?.name}</span>
+                    <span className="truncate text-[10px] text-ink-muted">{getStoreById(prod.storeId)?.name}</span>
                   </div>
-                  <button onClick={(e) => { e.preventDefault(); addToCart(prod.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm"><ShoppingBag size={15} /> افزودن به سبد</button>
+                  <button onClick={() => { addToCart(prod.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-3 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm"><ShoppingBag size={15} /> افزودن به سبد</button>
                 </div>
-              </Link>
+              </article>
             ) : (
               <div key={i} className="card-surface flex items-center gap-3 p-4">
                 <LogoBlock char={p.label[0]} color="#6b6358" size={48} />

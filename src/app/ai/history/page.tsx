@@ -3,7 +3,7 @@ import Link from "next/link";
 import { History, Sparkles, Wand2, ShoppingBag } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
-import { Badge, EmptyState, Button } from "@/components/ui/primitives";
+import { Badge, EmptyState, ButtonLink } from "@/components/ui/primitives";
 import { aiDesigns } from "@/data/inspirations";
 import { useCredits } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
@@ -14,7 +14,7 @@ export default function AIHistoryPage() {
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="AI استودیو" title="تاریخچه طراحی‌ها" desc="همه‌ی طراحی‌هایی که ساخته‌ای را اینجا پیدا کن." action={<Link href="/ai/design"><Button><Sparkles size={16} /> طراحی جدید</Button></Link>} />
+      <PageHeader eyebrow="AI استودیو" title="تاریخچه طراحی‌ها" desc="همه‌ی طراحی‌هایی که ساخته‌ای را اینجا پیدا کن." action={<ButtonLink href="/ai/design"><Sparkles size={16} /> طراحی جدید</ButtonLink>} />
 
       <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
         {/* designs */}
@@ -47,7 +47,7 @@ export default function AIHistoryPage() {
               </div>
             </div>
           )) : (
-            <EmptyState icon={<History size={28} />} title="هنوز طراحی‌ای نساخته‌ای" action={<Link href="/ai/design"><Button>اولین طراحی‌ات را بساز</Button></Link>} />
+            <EmptyState icon={<History size={28} />} title="هنوز طراحی‌ای نساخته‌ای" action={<ButtonLink href="/ai/design">اولین طراحی‌ات را بساز</ButtonLink>} />
           )}
         </div>
 
@@ -66,7 +66,7 @@ export default function AIHistoryPage() {
               </div>
             ))}
           </div>
-          <Link href="/account/credits"><Button variant="ghost" className="mt-3 w-full">خرید اعتبار</Button></Link>
+          <ButtonLink href="/account/credits" variant="ghost" className="mt-3 w-full">خرید اعتبار</ButtonLink>
         </aside>
       </div>
     </Container>

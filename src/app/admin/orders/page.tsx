@@ -14,7 +14,8 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-5">
       <h1 className="font-display text-xl font-black text-ink">مدیریت سفارش‌ها</h1>
-      <div className="overflow-hidden card-surface">
+      <div className="card-surface overflow-hidden">
+        <div className="table-shell">
         <table className="w-full min-w-[600px] text-sm">
           <thead><tr className="border-b border-clay/40 bg-ivory-2 text-right text-xs text-ink-muted"><th className="p-3 font-medium">سفارش</th><th className="p-3 font-medium">مشتری</th><th className="p-3 font-medium">فروشنده</th><th className="p-3 font-medium">مبلغ</th><th className="p-3 font-medium">وضعیت</th></tr></thead>
           <tbody>
@@ -25,6 +26,7 @@ export default function AdminOrdersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -16,10 +16,7 @@ interface CartState {
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
-      items: [
-        { productId: "p1", qty: 1 },
-        { productId: "p15", qty: 2 },
-      ],
+      items: [],
       add: (productId, qty = 1) =>
         set((s) => {
           const existing = s.items.find((i) => i.productId === productId);
@@ -63,10 +60,10 @@ interface WishlistState {
 export const useWishlist = create<WishlistState>()(
   persist(
     (set, get) => ({
-      products: ["p9", "p12"],
-      inspirations: ["i2"],
-      designs: ["d1"],
-      stores: ["st1"],
+      products: [],
+      inspirations: [],
+      designs: [],
+      stores: [],
       toggleProduct: (id) =>
         set((s) => ({
           products: s.products.includes(id)
@@ -114,7 +111,7 @@ interface CompareState {
 export const useCompare = create<CompareState>()(
   persist(
     (set, get) => ({
-      ids: ["p1", "p29"],
+      ids: [],
       toggle: (id) =>
         set((s) => {
           if (s.ids.includes(id)) return { ids: s.ids.filter((x) => x !== id) };
