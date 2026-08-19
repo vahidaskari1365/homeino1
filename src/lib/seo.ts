@@ -1,6 +1,9 @@
 // ============================================================
 // JSON-LD Structured Data generators for SEO.
+// Base URL comes from `@/config/site` so JSON-LD tracks the
+// active deployment (preview, staging, production) automatically.
 // ============================================================
+import { absoluteUrl } from "@/config/site";
 
 export function productJsonLd(p: {
   name: string; slug: string; brand: string; price: number; oldPrice?: number;
@@ -20,7 +23,7 @@ export function productJsonLd(p: {
       priceCurrency: "IRR",
       price: p.price,
       availability: p.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      url: `https://homeino.ir/products/${p.slug}`,
+      url: absoluteUrl(`/products/${p.slug}`),
     },
     aggregateRating: {
       "@type": "AggregateRating",
@@ -42,7 +45,7 @@ export function storeJsonLd(s: {
     image: s.cover,
     address: { "@type": "PostalAddress", addressLocality: s.city },
     aggregateRating: { "@type": "AggregateRating", ratingValue: s.rating, reviewCount: s.reviewsCount },
-    url: `https://homeino.ir/stores/${s.slug}`,
+    url: absoluteUrl(`/stores/${s.slug}`),
   };
 }
 
@@ -57,7 +60,7 @@ export function articleJsonLd(a: {
     author: { "@type": "Person", name: a.author },
     datePublished: a.date,
     image: a.cover,
-    url: `https://homeino.ir/magazine/${a.slug}`,
+    url: absoluteUrl(`/magazine/${a.slug}`),
   };
 }
 
@@ -69,7 +72,33 @@ export function breadcrumbJsonLd(items: { name: string; url: string }[]) {
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
-      item: `https://homeino.ir${item.url}`,
+      item: absoluteUrl(item.url),
     })),
+  };
+}
+
+/** Website + SearchAction — hint search engines about our search page. */
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Homeino",
+    url: absoluteUrl("/"),
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${absoluteUrl("/search")}?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/** Organization — brand knowledge graph. */
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Homeino",
+    url: absoluteUrl("/"),
+    logo: absoluteUrl("/favicon.ico"),
   };
 }

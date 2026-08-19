@@ -102,7 +102,7 @@ export default function StyleDetailPage({ params }: { params: Promise<{ slug: st
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {articles.filter((a) => a.category === "سبک‌ها").slice(0, 2).map((a) => (
             <Link key={a.id} href={`/magazine/${a.slug}`} className="group flex items-center gap-3 rounded-xl border border-clay/40 bg-cream p-3 transition hover:border-gold/40">
-              <img src={a.cover} alt={a.title} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+              <SmartImage src={a.cover} alt={a.title} className="h-16 w-16 shrink-0 rounded-lg" />
               <div className="min-w-0"><p className="line-clamp-2 text-xs font-bold text-ink">{a.title}</p><p className="text-[10px] text-ink-muted">{a.category} · {toFa(a.readTime)} دقیقه</p></div>
             </Link>
           ))}

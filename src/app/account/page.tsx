@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Sparkles, Package, Heart, Wand2, TrendingUp, ArrowLeft } from "lucide-react";
 import { ButtonLink, LogoBlock, Badge } from "@/components/ui/primitives";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useAuth, useCredits } from "@/stores/useApp";
 import { useWishlist, useCart } from "@/stores/useShop";
 import { aiDesigns } from "@/data/inspirations";
@@ -52,7 +53,7 @@ export default function AccountOverview() {
           <div className="space-y-3">
             {aiDesigns.slice(0, 3).map((d) => (
               <Link key={d.id} href={`/ai/result/${d.id}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
-                <img src={d.afterImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                <SmartImage src={d.afterImage} alt="" className="h-12 w-12 shrink-0 rounded-lg" />
                 <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{d.title}</div><div className="text-xs text-ink-muted">{d.createdAt}</div></div>
                 <Badge tone="gold">{toFa(d.creditsUsed)}</Badge>
               </Link>
@@ -68,7 +69,7 @@ export default function AccountOverview() {
           <div className="space-y-3">
             {products.filter((p) => p.aiRecommended).slice(0, 3).map((p) => (
               <Link key={p.id} href={`/products/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
-                <img src={p.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                <SmartImage src={p.images[0]} alt="" className="h-12 w-12 shrink-0 rounded-lg" />
                 <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{p.name}</div><div className="text-xs text-ink-muted">{p.brand}</div></div>
                 <ArrowLeft size={15} className="text-ink-muted" />
               </Link>

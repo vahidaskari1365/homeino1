@@ -4,11 +4,19 @@ import { categories } from "@/data/categories";
 import { stores } from "@/data/stores";
 import { styles } from "@/data/styles";
 import { inspirations } from "@/data/inspirations";
-import { articles } from "@/data/content";
-import { projects } from "@/data/content";
+import { articles, projects } from "@/data/content";
+import { SITE_URL } from "@/config/site";
 
+/**
+ * Sitemap architecture — every public route is emitted here.
+ * Private surfaces (admin, vendor, account, cart, checkout, api)
+ * are disallowed in robots.ts and intentionally NOT included.
+ *
+ * When backend data lands, replace the mock-array iterations with
+ * repository calls; the URL shape stays identical.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://homeino.ir";
+  const base = SITE_URL;
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -20,10 +28,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/magazine`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/second-hand`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
+    { url: `${base}/collections`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${base}/search`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
     { url: `${base}/compare`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
     { url: `${base}/wishlist`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
+    { url: `${base}/ai`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/login`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/register`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/forgot-password`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
@@ -75,5 +87,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.4,
   }));
 
-  return [...staticRoutes, ...productRoutes, ...categoryRoutes, ...storeRoutes, ...styleRoutes, ...inspirationRoutes, ...articleRoutes, ...projectRoutes];
+  return [
+    ...staticRoutes,
+    ...productRoutes,
+    ...categoryRoutes,
+    ...storeRoutes,
+    ...styleRoutes,
+    ...inspirationRoutes,
+    ...articleRoutes,
+    ...projectRoutes,
+  ];
 }

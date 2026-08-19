@@ -109,7 +109,10 @@ export function Hero() {
             autoPlay
             muted
             playsInline
-            preload="auto"
+            /* `metadata` avoids downloading the whole file up-front — the
+               browser fetches enough to start playback and streams the rest.
+               This keeps LCP and mobile data usage sensible. */
+            preload="metadata"
             poster={POSTER}
             disablePictureInPicture
             tabIndex={-1}
@@ -122,7 +125,7 @@ export function Hero() {
             aria-hidden="true"
           />
         ) : (
-          <SmartImage src={POSTER} alt="فضای داخلی گرم و مدرن" className="h-full w-full" />
+          <SmartImage src={POSTER} alt="فضای داخلی گرم و مدرن" className="h-full w-full" priority />
         )}
       </motion.div>
 

@@ -18,6 +18,9 @@ export function OverlayRegionsView({ image, regions, className }: { image: strin
 
   return (
     <div className={cn("relative overflow-hidden rounded-xl border border-clay/40", className)}>
+      {/* Rendered result — usually a base64/data URL returned by the AI provider.
+          next/image can't optimize data URLs, and the overlay boxes rely on this element's box for alignment. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={image} alt="نتیجه طراحی" className="block aspect-video w-full object-cover" draggable={false} />
       {regions.length > 0 ? (
         regions.map((r) => {

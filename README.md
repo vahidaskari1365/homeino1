@@ -62,9 +62,18 @@ src/
 
 | متغیر | توضیح |
 | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | آدرس canonical سایت (برای metadata/sitemap/robots/JSON-LD). fallback: `https://homeino.ir` |
+| `NEXT_PUBLIC_API_BASE_URL` | (اختیاری) prefix برای `apiClient` — اگر خالی باشد از route handlerهای Next استفاده می‌شود |
 | `DATABASE_URL` | آدرس اتصال PostgreSQL (اختیاری برای اجرا؛ فقط برای health check و درخواست‌های دیتابیس لازم است) |
+| `GEMINI_API_KEY` | (اختیاری، فقط server) فعال‌سازی provider Gemini برای AI |
+| `LLM_API_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` | (اختیاری، فقط server) هر endpoint سازگار با OpenAI برای LLM Service |
+| `ORALI_API_BASE_URL` / `ORALI_API_KEY` | (اختیاری، فقط server) موتور واقعی ویرایش تصویر Orali |
 
 اتصال دیتابیس به‌صورت lazy انجام می‌شود، بنابراین بدون `DATABASE_URL` هم برنامه بیلد و اجرا می‌شود.
+
+## آمادگی برای اتصال Backend
+
+Frontend این پروژه کاملاً محصولِ آماده لانچ است — با یک لایه Repository (در `src/repositories/`) که تنها اتصال UI به داده‌ی زیرین است. برای مهاجرت به Supabase یا هر backend دیگر فقط پیاده‌سازی repositoryها را عوض کنید. جزئیات کامل در `docs/PRODUCTION_READY.md`.
 
 ## استقرار روی Vercel
 

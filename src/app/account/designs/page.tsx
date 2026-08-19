@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Wand2, Sparkles, Copy, Share2 } from "lucide-react";
 import { Badge, ButtonLink, EmptyState } from "@/components/ui/primitives";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { aiDesigns } from "@/data/inspirations";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
@@ -20,8 +21,14 @@ export default function MyDesignsPage() {
           {aiDesigns.map((d) => (
             <div key={d.id} className="card-surface overflow-hidden">
               <Link href={`/ai/result/${d.id}`} className="group relative block">
-                <img src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full object-cover transition group-hover:scale-105" />
-                {d.beforeImage && <img src={d.beforeImage} alt="" className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream object-cover" />}
+                <SmartImage src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full transition group-hover:scale-105" />
+                {d.beforeImage && (
+                  <SmartImage
+                    src={d.beforeImage}
+                    alt=""
+                    className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream"
+                  />
+                )}
                 <div className="absolute right-2 top-2 flex gap-1"><Badge tone="dark">{d.room}</Badge></div>
               </Link>
               <div className="p-4">
