@@ -60,6 +60,14 @@ export interface Store {
   trending: boolean;
   isNew: boolean;
   categorySlugs: string[];
+  // ---- Marketplace trust & policy (frontend-ready — backend TBD) ----
+  salesCount: number;     // تعداد فروش موفق
+  followersCount: number; // دنبال‌کننده‌ها
+  sinceYear: number;      // سال آغاز فعالیت
+  responseTime: string;   // زمان پاسخگویی
+  badges: string[];       // e.g. ["پرفروش", "ارسال سریع"]
+  shippingPolicy: string; // سیاست ارسال
+  returnPolicy: string;   // سیاست بازگشت
 }
 
 export interface ProductSpec {
@@ -141,6 +149,7 @@ export interface Product {
   isNew?: boolean;
   discount?: number;
   tags: string[];
+  salesCount?: number; // تعداد خرید این محصول (mock — جایگزین با API واقعی)
 }
 
 export interface InspirationImage {

@@ -2,18 +2,19 @@
 import { useState, use, useEffect } from "react";
 import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, MessageCircle, Ruler } from "lucide-react";
+import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, Ruler, Lock, PackageCheck, Star } from "lucide-react";
 import { Container, Breadcrumb, ProductGrid } from "@/components/shared";
-import { Button, Badge, Rating, Price, EmptyState, LogoBlock } from "@/components/ui/primitives";
+import { Button, Badge, Rating, Price, EmptyState, LogoBlock, VerifiedBadge, TrustPoint } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
-import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
-import { getStoreById, stores as allStores } from "@/data/stores";
+import { getProduct, getProductById, products, productsByCategory, similarProducts, getProductSalesCount } from "@/data/products";
+import { getStoreById } from "@/data/stores";
 import { offersForProduct, getBestOffer } from "@/data/offers";
 import { sampleReviews } from "@/data/inspirations";
+import { PLATFORM } from "@/config/platform";
 import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/useShop";
 import { useUi, useChat } from "@/stores/useApp";
-import { uid, toFa, formatPrice, cn } from "@/lib/utils";
+import { toFa, formatPrice, cn } from "@/lib/utils";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -83,11 +84,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         {/* info */}
         <Reveal delay={0.08}>
           <div>
-            <div className="flex items-center gap-2 text-sm text-ink-muted">
-              <Link href={`/stores/${store?.slug}`} className="font-medium text-ink hover:text-terracotta-deep">{product!.brand}</Link>
-              <span>•</span><Rating value={product!.rating} count={product!.reviewsCount} />
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-ink-muted">فروشنده:</span>
+              <Link href={`/stores/${store?.slug}`} className="font-bold text-ink hover:text-terracotta-deep">{store?.name ?? product!.brand}</Link>
+              {store?.verified && <VerifiedBadge />}
             </div>
             <h1 className="mt-2 font-display text-3xl font-black text-ink">{product!.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+              <Rating value={product!.rating} count={product!.reviewsCount} />
+              {store && <span className="flex items-center gap-1"><Star size={13} className="fill-gold text-gold" /> فروشگاه: {toFa(store.rating.toFixed(1))}</span>}
+              {store && <span className="flex items-center gap-1"><ShoppingBag size={13} /> {toFa(store.salesCount)} فروش موفق</span>}
+            </div>
             <div className="mt-4"><Price price={displayPrice} oldPrice={bestOffer?.oldPrice ?? product!.oldPrice} /></div>
 
             {/* MULTI-VENDOR OFFERS — sellers comparison */}
@@ -134,10 +141,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 <button onClick={() => setQty((q) => q + 1)} aria-label="افزایش تعداد" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-ivory-2"><Plus size={16} /></button>
               </div>
               {product!.inStock ? (
-                <span className="flex items-center gap-1.5 text-sm text-success"><Check size={16} /> موجود
-                  {product!.stockCount <= 10 && <b className="text-danger"> · فقط {toFa(product!.stockCount)} عدد باقی مانده!</b>}
-                  {product!.stockCount > 10 && <span className="text-ink-muted">({toFa(product!.stockCount)} عدد)</span>}
-                </span>
+                <span className="flex items-center gap-1.5 text-sm text-success"><Check size={16} /> موجود در انبار <span className="text-ink-muted">· {toFa(product!.stockCount)} عدد</span></span>
               ) : (
                 <span className="text-sm text-danger">ناموجود — به‌زودی موجود می‌شود</span>
               )}
@@ -165,19 +169,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 ))}
                 {product!.dimensions && <span className="flex items-center gap-1 rounded-full bg-ivory-2 px-2.5 py-1 text-ink-muted"><Ruler size={11} /> {product!.dimensions}</span>}
               </div>
-              {product!.price > 30000000 && (
-                <div className="mt-3 flex items-start gap-1.5 border-t border-clay/30 pt-2 text-[11px] leading-5 text-ink-muted">
-                  <ShieldCheck size={13} className="mt-0.5 shrink-0 text-sage" />
-                  <span>خرید مطمئن: این محصول دارای <b className="text-ink">ضمانت اصالت</b> و <b className="text-ink">۷ روز بازگشت بدون قید و شرط</b> است. قبل از خرید می‌توانید با هوش مصنوعی آن را در فضای خودتان تصور کنید.</span>
-                </div>
-              )}
             </div>
 
-            {/* benefits */}
-            <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-ivory-2 p-4 text-center text-xs text-ink-muted">
-              <div className="flex flex-col items-center gap-1"><Truck size={18} className="text-terracotta-deep" /> ارسال سریع</div>
-              <div className="flex flex-col items-center gap-1"><ShieldCheck size={18} className="text-terracotta-deep" /> ضمانت اصالت</div>
-              <div className="flex flex-col items-center gap-1"><RotateCcw size={18} className="text-terracotta-deep" /> ۷ روز بازگشت</div>
+            {/* TRUST & DELIVERY — always visible, no price-gating */}
+            <div className="mt-4 rounded-xl border border-sage/30 bg-sage/6 p-4">
+              <div className="mb-3 flex items-center gap-2 text-xs font-black text-ink"><ShieldCheck size={16} className="text-success" /> خرید مطمئن با Homeino</div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <TrustPoint icon={Truck} title="ارسال" desc={bestOffer ? `${bestOffer.shippingDays} · ${bestOffer.shippingCost === 0 ? "ارسال رایگان" : `هزینه ارسال ${toFa(formatPrice(bestOffer.shippingCost))} تومان`}` : "جزئیات ارسال در سبد خرید محاسبه می‌شود"} />
+                <TrustPoint icon={RotateCcw} title="ضمانت بازگشت" desc={`${toFa(PLATFORM.policies.returnDays)} روز بازگشت بدون قید و شرط`} />
+                <TrustPoint icon={Lock} title="پرداخت امن" desc="پرداخت از طریق درگاه امن؛ وجه تا تحویل نزد Homeino امانت می‌ماند" />
+                <TrustPoint icon={PackageCheck} title="اصالت و خرید" desc={`ضمانت اصالت کالا · ${toFa(getProductSalesCount(product!))} نفر این محصول را خریده‌اند`} />
+              </div>
             </div>
 
             {/* AI section */}
@@ -267,9 +269,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         </div>
       )}
 
-      {/* related */}
+      {/* SIMILAR — style/category overlap, ranked by relevance */}
+      {(() => {
+        const similar = similarProducts(product!.id, 4);
+        if (similar.length < 2) return null;
+        return (
+          <div className="mt-12">
+            <h2 className="mb-1 font-display text-2xl font-bold text-ink">محصولات مشابه</h2>
+            <p className="mb-5 text-sm text-ink-muted">انتخاب‌هایی با سبک و دسته‌بندی هم‌خانواده، برای مقایسه و انتخاب بهتر.</p>
+            <ProductGrid products={similar} />
+          </div>
+        );
+      })()}
+
+      {/* related (same category) */}
       <div className="mt-12">
-        <h2 className="mb-5 font-display text-2xl font-bold text-ink">محصولات مرتبط</h2>
+        <h2 className="mb-1 font-display text-2xl font-bold text-ink">بیشتر از این دسته‌بندی</h2>
+        <p className="mb-5 text-sm text-ink-muted">سایر محصولات همین دسته را ببین.</p>
         {related.length > 0 ? <ProductGrid products={related} /> : <EmptyState title="محصول مرتبطی نیست" />}
       </div>
 

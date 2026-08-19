@@ -447,3 +447,31 @@ export const productsByStore = (storeId: string) =>
   products.filter((p) => p.storeId === storeId);
 export const productsByStyle = (slug: string) =>
   products.filter((p) => p.styleSlugs.includes(slug as never));
+
+// ============================================================
+// DISCOVERY — Similar products (style + category overlap).
+// ============================================================
+export const similarProducts = (productId: string, limit = 4): Product[] => {
+  const target = products.find((p) => p.id === productId);
+  if (!target) return [];
+  return products
+    .filter((p) => p.id !== productId)
+    .map((p) => {
+      const sharedStyles = p.styleSlugs.filter((s) => target.styleSlugs.includes(s)).length;
+      const sameCategory = p.categorySlug === target.categorySlug ? 1 : 0;
+      const sameStore = p.storeId === target.storeId ? 1 : 0;
+      return { p, score: sharedStyles * 2 + sameCategory + sameStore };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((x) => x.p);
+};
+
+// ============================================================
+// TRUST — per-product purchase count for the trust panel.
+// Deterministic & stable (seeded by reviews + rating) so it never
+// flickers between renders. Replace with real sales from backend.
+// ============================================================
+export const getProductSalesCount = (p: Product): number =>
+  Math.max(1, Math.round(p.reviewsCount * 6 + p.rating * 12));
