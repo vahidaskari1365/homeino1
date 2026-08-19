@@ -52,7 +52,13 @@ export default function RegisterPage() {
     <AuthShell title="ساخت حساب جدید" subtitle="به خانواده‌ی Homeino بپیوند. رایگان و سریع." footer={<>حساب داری؟ <Link href="/login" className="font-medium text-terracotta-deep">وارد شو</Link></>}>
       {/* Google (placeholder) */}
       <button type="button" onClick={() => toast("ورود با گوگل به‌زودی فعال می‌شود", "info")} className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-clay/60 bg-cream py-3 text-sm font-medium text-ink transition hover:bg-ivory-2">
-        <img src="https://www.google.com/favicon.ico" alt="" className="h-5 w-5" /> ورود با حساب گوگل
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h6.44c-.28 1.5-1.12 2.77-2.39 3.62v3h3.86c2.26-2.08 3.58-5.14 3.58-8.65z" />
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.92l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.72-4.96H1.29v3.09C3.27 21.33 7.31 24 12 24z" />
+          <path fill="#FBBC05" d="M5.28 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.29a12 12 0 0 0 0 10.74l3.99-3.09z" />
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.27 2.67 1.29 6.63l3.99 3.09C6.22 6.87 8.87 4.75 12 4.75z" />
+        </svg>
+        ورود با حساب گوگل
       </button>
       <div className="relative mb-5 text-center text-xs text-ink-muted"><span className="relative z-10 bg-cream px-2">یا با ایمیل</span><span className="absolute inset-x-0 top-1/2 h-px bg-clay/50" /></div>
 

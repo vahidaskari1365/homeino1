@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, Package, ImageIcon, Sparkles, Store as StoreIcon, Lightbulb, FolderHeart } from "lucide-react";
 import { Container, PageHeader, ProductGrid } from "@/components/shared";
 import { ButtonLink, EmptyState, Tabs } from "@/components/ui/primitives";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { StoreCard, InspirationCard } from "@/components/cards";
 import { useWishlist } from "@/stores/useShop";
 import { getProductById } from "@/data/products";
@@ -65,7 +66,7 @@ export default function WishlistPage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {designs.map((d) => d && (
             <Link key={d.id} href={`/ai/result/${d.id}`} className="card-surface overflow-hidden">
-              <img src={d.afterImage} alt={d.title} className="aspect-video w-full object-cover" />
+              <SmartImage src={d.afterImage} alt={d.title} className="aspect-video w-full" />
               <div className="p-4"><div className="text-xs text-ink-muted">{d.room}</div><div className="font-display font-bold text-ink">{d.title}</div></div>
             </Link>
           ))}

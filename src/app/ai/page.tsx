@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { Badge, ButtonLink } from "@/components/ui/primitives";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { BeforeAfterSlider } from "@/components/ui/BeforeAfterSlider";
 import { AiPhaseLoader } from "@/components/ai/AiPhaseLoader";
 import { IntentCard, TargetPicker } from "@/components/ai/IntentCard";
@@ -363,7 +364,7 @@ function DesignerInner() {
                 </div>
               ) : (
                 <div className="relative overflow-hidden rounded-xl border border-clay/40">
-                  <img src={baseImage} alt="پیش‌نمایش اتاق" className="aspect-video w-full object-cover" />
+                  <SmartImage src={baseImage} alt="پیش‌نمایش اتاق" className="aspect-video w-full" />
                   <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-ink/70 to-transparent px-3 pb-2 pt-8">
                     <span className="text-[10px] font-bold text-cream">
                       {iteration > 0 ? `پایه‌ی ویرایش — مرحله ${toFa(iteration + 1)}` : "پیش‌نمایش تصویر آپلودشده"}
@@ -398,7 +399,7 @@ function DesignerInner() {
                   <button key={s.id} onClick={() => setStyleId(s.id)} disabled={busy}
                     className={cn("overflow-hidden rounded-lg border transition disabled:opacity-40", styleId === s.id ? "border-terracotta ring-1 ring-terracotta/40" : "border-clay/40 hover:border-terracotta/50")}>
                     <span className="relative block aspect-square">
-                      <img src={s.image} alt={s.label} className="h-full w-full object-cover" />
+                      <SmartImage src={s.image} alt={s.label} className="absolute inset-0 h-full w-full" sizes="(min-width: 1024px) 12vw, 25vw" />
                       {styleId === s.id && <span className="absolute inset-0 grid place-items-center bg-terracotta/25"><Check size={14} className="text-white drop-shadow" /></span>}
                     </span>
                     <span className="block bg-ivory-2 py-0.5 text-[9px] font-bold text-ink">{s.label}</span>
@@ -546,7 +547,7 @@ function DesignerInner() {
                   ) : resultView === "regions" ? (
                     <OverlayRegionsView image={result.result.afterImage} regions={result.result.regions ?? []} />
                   ) : (
-                    <div className="overflow-hidden rounded-xl border border-clay/40"><img src={result.result.afterImage} alt="نتیجه طراحی" className="aspect-video w-full object-cover" /></div>
+                    <div className="overflow-hidden rounded-xl border border-clay/40"><SmartImage src={result.result.afterImage} alt="نتیجه طراحی" className="aspect-video w-full" /></div>
                   )}
 
                   {/* scope summary — what changed / what was preserved */}

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/config/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -6,10 +7,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/admin/", "/vendor/", "/account/", "/cart", "/checkout"],
+        disallow: [
+          "/api/",
+          "/admin/",
+          "/vendor/",
+          "/account/",
+          "/cart",
+          "/checkout",
+        ],
       },
     ],
-    sitemap: "https://homeino.ir/sitemap.xml",
-    host: "https://homeino.ir",
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

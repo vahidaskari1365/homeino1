@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { ButtonLink, Badge, Rating } from "@/components/ui/primitives";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { products } from "@/data/products";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useState } from "react";
@@ -28,7 +29,7 @@ export default function VendorProductsPage() {
             <tbody>
               {list.map((p) => (
                 <tr key={p.id} className="border-b border-clay/30 hover:bg-ivory-2/50">
-                  <td className="p-3"><div className="flex items-center gap-2"><img src={p.images[0]} alt="" className="h-10 w-10 rounded-lg object-cover" /><span className="line-clamp-1 font-medium text-ink">{p.name}</span></div></td>
+                  <td className="p-3"><div className="flex items-center gap-2"><SmartImage src={p.images[0]} alt="" className="h-10 w-10 shrink-0 rounded-lg" /><span className="line-clamp-1 font-medium text-ink">{p.name}</span></div></td>
                   <td className="p-3 whitespace-nowrap text-ink">{toFa(formatPrice(p.price))} ت</td>
                   <td className="p-3 text-ink">{toFa(p.stockCount)}</td>
                   <td className="p-3"><Rating value={p.rating} /></td>

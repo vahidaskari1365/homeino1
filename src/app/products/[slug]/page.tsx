@@ -254,7 +254,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               return (
                 <div key={p.id} className="flex flex-col rounded-xl border border-clay/40 bg-cream p-3">
                   <div className="mb-2 flex items-center gap-2.5">
-                    <img src={p.images[0]} alt={p.name} className="h-14 w-14 rounded-lg object-cover" />
+                    <SmartImage src={p.images[0]} alt={p.name} className="h-14 w-14 shrink-0 rounded-lg" />
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-1 text-xs font-bold text-ink">{p.name}</p>
                       <p className="text-[11px] text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
@@ -317,7 +317,7 @@ function RecentlyViewedSection({ currentId }: { currentId: string }) {
       <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
         {recent.map((p) => (
           <Link key={p.id} href={`/products/${p.slug}`} className="group w-32 shrink-0">
-            <div className="overflow-hidden rounded-xl border border-clay/40"><img src={p.images[0]} alt={p.name} className="aspect-square w-full object-cover transition group-hover:scale-105" /></div>
+            <div className="overflow-hidden rounded-xl border border-clay/40"><SmartImage src={p.images[0]} alt={p.name} className="aspect-square w-full transition group-hover:scale-105" /></div>
             <p className="mt-1.5 line-clamp-1 text-[11px] font-bold text-ink">{p.name}</p>
             <p className="text-[10px] text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
           </Link>

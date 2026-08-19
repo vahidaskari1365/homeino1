@@ -59,10 +59,14 @@ export function BeforeAfterSlider({ before, after, className }: { before: string
       onPointerUp={onPointerUp}
       onKeyDown={onKeyDown}
     >
+      {/* Compare slider — sources are typically base64/data URLs returned by the AI provider;
+          next/image can't optimize them, and the clipped overlay needs pixel-locked alignment with the base. */}
       {/* after (base) */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={after} alt="بعد" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
       {/* before (clipped) */}
       <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={before} alt="قبل" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
       </div>
 
