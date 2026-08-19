@@ -25,7 +25,7 @@ const drawerGroups = [
   {
     label: "فضای من",
     items: [
-      { label: "هوش مصنوعی", href: "/ai", icon: Sparkles },
+      { label: "طراحی هوشمند", href: "/ai", icon: Sparkles },
       { label: "مقایسه", href: "/compare", icon: GitCompare },
       { label: "علاقه‌مندی‌ها", href: "/wishlist", icon: Heart },
       { label: "سبد خرید", href: "/cart", icon: ShoppingBag },
@@ -91,7 +91,7 @@ export function MobileNav() {
         <div className="mx-auto flex max-w-md items-end justify-around px-1 pb-[max(.35rem,env(safe-area-inset-bottom))] pt-1.5">
           <Link href="/" aria-current={pathname === "/" ? "page" : undefined} className={cn("flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-1 text-[10px]", pathname === "/" ? "font-bold text-ink" : "text-ink-muted")}><Home size={20} /><span>خانه</span></Link>
           <button type="button" onClick={() => setSearch(true)} className="flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-1 text-[10px] text-ink-muted"><Search size={20} /><span>جستجو</span></button>
-          <Link href="/products" aria-current={pathname.startsWith("/products") || pathname.startsWith("/category") ? "page" : undefined} className="relative -mt-5 flex min-w-0 flex-1 flex-col items-center gap-0.5 text-[10px] font-bold text-terracotta-deep"><span className="grid h-12 w-12 place-items-center rounded-2xl border-4 border-ivory bg-ink text-cream shadow-[var(--shadow-card)]"><Grid2X2 size={20} /></span><span>محصولات</span></Link>
+<Link href="/products" aria-current={pathname.startsWith("/products") || pathname.startsWith("/category") ? "page" : undefined} className="relative -mt-5 flex min-w-0 flex-1 flex-col items-center gap-0.5 text-[10px] font-bold text-terracotta-deep"><span className="grid h-12 w-12 place-items-center rounded-2xl border-4 border-ivory bg-ink text-cream shadow-[var(--shadow-card)]"><Grid2X2 size={20} /></span><span>محصولات</span></Link>
           <Link href="/wishlist" aria-current={pathname.startsWith("/wishlist") ? "page" : undefined} className={cn("flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-1 text-[10px]", pathname.startsWith("/wishlist") ? "font-bold text-ink" : "text-ink-muted")}><span className="relative"><Heart size={20} /><Count value={wishCount} /></span><span>علاقه‌مندی</span></Link>
           <Link href="/account" aria-current={pathname.startsWith("/account") ? "page" : undefined} className={cn("flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-1 text-[10px]", pathname.startsWith("/account") ? "font-bold text-ink" : "text-ink-muted")}><User size={20} /><span>حساب</span></Link>
         </div>
