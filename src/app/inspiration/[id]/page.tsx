@@ -45,7 +45,7 @@ export default function InspirationDetailPage({ params }: { params: Promise<{ id
             <Button variant={wished ? "primary" : "outline"} onClick={() => { wl.toggleInspiration(insp!.id); toast(wished ? "حذف شد" : "ذخیره شد"); }}>
               <Heart size={16} className={cn(wished && "fill-current")} /> {wished ? "ذخیره شد" : "ذخیره ایده"}
             </Button>
-            <ButtonLink href="/ai/design" variant="accent"><Wand2 size={16} /> بساز مشابهش با AI</ButtonLink>
+            <ButtonLink href="/ai" variant="accent"><Wand2 size={16} /> بساز مشابهش با AI</ButtonLink>
             {style && <ButtonLink href={`/styles/${style.slug}`} variant="ghost">سبک {style.name} ←</ButtonLink>}
           </div>
 

@@ -101,7 +101,7 @@ export function AIPanel() {
         {/* input */}
         <div className="border-t border-clay/40 p-4">
           <div className="flex items-end gap-2 rounded-2xl border border-clay/60 bg-cream p-2 focus-within:border-ink">
-            <button onClick={() => router.push("/ai/design")} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-ink-muted transition hover:bg-ivory-2" aria-label="آپلود تصویر">
+            <button onClick={() => router.push("/ai")} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-ink-muted transition hover:bg-ivory-2" aria-label="آپلود تصویر">
               <ImagePlus size={18} />
             </button>
             <textarea
@@ -117,7 +117,7 @@ export function AIPanel() {
             </button>
           </div>
           <button onClick={() => { setAiPanel(false); router.push("/ai"); }} className="mt-2 w-full text-center text-xs text-terracotta-deep hover:underline">
-            ورود به AI استودیو ←
+            رفتن به طراحی هوشمند اتاق ←
           </button>
         </div>
       </aside>
