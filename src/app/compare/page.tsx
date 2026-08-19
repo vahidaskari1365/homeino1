@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { GitCompare, X, Check, Minus } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, EmptyState, Rating, Price, LogoBlock } from "@/components/ui/primitives";
+import { Button, ButtonLink, EmptyState, Rating, Price } from "@/components/ui/primitives";
 import { useCompare, useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { getProductById } from "@/data/products";
@@ -29,7 +29,7 @@ export default function ComparePage() {
     return (
       <Container className="py-16">
         <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "مقایسه" }]} />
-        <div className="mt-8"><EmptyState icon={<GitCompare size={32} />} title="هیچ محصولی برای مقایسه نیست" desc="از روی کارت محصولات، آن‌ها را برای مقایسه اضافه کن." action={<Link href="/products"><Button>کاوش محصولات</Button></Link>} /></div>
+        <div className="mt-8"><EmptyState icon={<GitCompare size={32} />} title="هیچ محصولی برای مقایسه نیست" desc="از روی کارت محصولات، آن‌ها را برای مقایسه اضافه کن." action={<ButtonLink href="/products">کاوش محصولات</ButtonLink>} /></div>
       </Container>
     );
   }
@@ -37,7 +37,7 @@ export default function ComparePage() {
   return (
     <Container className="py-10">
       <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "مقایسه" }]} />
-      <div className="mt-5 flex items-center justify-between">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-black text-ink">مقایسه محصولات ({toFa(items.length)})</h1>
         <Button variant="ghost" onClick={clear}>پاک کردن همه</Button>
       </div>

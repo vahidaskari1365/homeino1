@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MapPin, Truck, CreditCard, Check, ShieldCheck } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, LogoBlock } from "@/components/ui/primitives";
+import { Button, ButtonLink, EmptyState } from "@/components/ui/primitives";
 import { useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { getProductById } from "@/data/products";
@@ -36,7 +35,7 @@ export default function CheckoutPage() {
   };
 
   if (rows.length === 0) {
-    return <Container className="py-20 text-center"><p className="text-ink-muted">سبد خریدت خالیه.</p><Link href="/products" className="mt-3 inline-block text-terracotta-deep underline">بازگشت به خرید</Link></Container>;
+    return <Container className="py-12 sm:py-20"><EmptyState title="سبد خریدت خالی است" desc="برای ادامه پرداخت، ابتدا یک محصول به سبد اضافه کن." action={<ButtonLink href="/products">بازگشت به خرید</ButtonLink>} /></Container>;
   }
 
   return (
@@ -44,19 +43,18 @@ export default function CheckoutPage() {
       <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "سبد خرید", href: "/cart" }, { label: "پرداخت" }]} />
 
       {/* steps */}
-      <div className="mt-6 flex items-center justify-center gap-2">
-        {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <span className={cn("grid h-8 w-8 place-items-center rounded-full text-sm font-bold transition", i <= step ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted")}>{i < step ? <Check size={15} /> : toFa(i + 1)}</span>
-            <span className={cn("text-sm", i <= step ? "font-bold text-ink" : "text-ink-muted")}>{s}</span>
-            {i < STEPS.length - 1 && <span className="mx-2 h-px w-8 bg-clay/60 sm:w-16" />}
-          </div>
+      <ol aria-label="مراحل پرداخت" className="relative mx-auto mt-6 grid max-w-xl grid-cols-3 gap-2 before:absolute before:left-[16%] before:right-[16%] before:top-4 before:h-px before:bg-clay/60">
+        {STEPS.map((label, index) => (
+          <li key={label} className="relative z-10 flex min-w-0 flex-col items-center gap-1.5 text-center">
+            <span className={cn("grid h-8 w-8 place-items-center rounded-full border-2 border-ivory text-xs font-bold transition", index <= step ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted")}>{index < step ? <Check size={15} /> : toFa(index + 1)}</span>
+            <span className={cn("text-xs sm:text-sm", index <= step ? "font-bold text-ink" : "text-ink-muted")}>{label}</span>
+          </li>
         ))}
-      </div>
+      </ol>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
         {/* form */}
-        <div className="card-surface p-6">
+        <div className="card-surface p-4 sm:p-6">
           {step === 0 && (
             <div className="space-y-4">
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><MapPin size={18} /> نشانی تحویل</h2>
@@ -72,7 +70,7 @@ export default function CheckoutPage() {
             <div className="space-y-4">
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><Truck size={18} /> روش ارسال</h2>
               {[["post", "پست عادی", "۳ تا ۵ روز کاری", 120000], ["express", "پیک سریع", "۲۴ ساعت", 250000]].map(([id, t, d, c]) => (
-                <button key={id} onClick={() => setShipping(id as string)} className={cn("flex w-full items-center justify-between rounded-xl border p-4 text-right transition", shipping === id ? "border-ink bg-ivory-2" : "border-clay/60")}>
+                <button key={id} onClick={() => setShipping(id as string)} className={cn("flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border p-3 text-right transition sm:p-4", shipping === id ? "border-ink bg-ivory-2" : "border-clay/60")}>
                   <div><div className="font-medium text-ink">{t}</div><div className="text-xs text-ink-muted">{d}</div></div>
                   <div className="flex items-center gap-2"><span className="text-sm font-bold text-ink">{toFa(formatPrice(c as number))} ت</span><span className={cn("grid h-5 w-5 place-items-center rounded-full border", shipping === id ? "border-ink bg-ink text-cream" : "border-clay")}>{shipping === id && <Check size={12} />}</span></div>
                 </button>

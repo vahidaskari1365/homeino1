@@ -30,11 +30,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
-      <head>
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
-      </head>
       <body className="bg-ivory text-ink antialiased">
+        <a href="#main-content" className="skip-link">رفتن به محتوای اصلی</a>
         <AppShell>{children}</AppShell>
       </body>
     </html>

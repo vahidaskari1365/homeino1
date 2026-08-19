@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useMemo, useEffect, Suspense } from "react";
+import { useState, useRef, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Upload, Wand2, Search, Sparkles, RefreshCw, X, ShoppingBag, Lightbulb,
@@ -117,9 +117,10 @@ const DEFAULT_ROOM_IDS = ["p1", "p3", "p9", "p12", "p15", "p6"];
 function DesignInner() {
   const sp = useSearchParams();
   const presetSlug = sp.get("product");
-  const [tab, setTab] = useState<"design" | "inspiration" | "suggest">(sp.get("tab") === "inspiration" ? "inspiration" : "design");
+  const initialPresetProduct = presetSlug ? products.find((product) => product.slug === presetSlug) ?? null : null;
+  const [tab, setTab] = useState<"design" | "inspiration" | "suggest">(sp.get("tab") === "inspiration" || initialPresetProduct ? "inspiration" : "design");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [presetProduct, setPresetProduct] = useState<Product | null>(null);
+  const [presetProduct, setPresetProduct] = useState<Product | null>(initialPresetProduct);
   const [style, setStyle] = useState("modern");
   const [prompt, setPrompt] = useState("");
   const [budget, setBudget] = useState("");
@@ -129,7 +130,7 @@ function DesignInner() {
   const [error, setError] = useState<string | null>(null);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set(["furniture"]));
   const [selectedSubTypes, setSelectedSubTypes] = useState<Record<string, string[]>>({});
-  const [selected, setSelected] = useState<Record<string, Product>>({});
+  const [selected, setSelected] = useState<Record<string, Product>>(() => initialPresetProduct ? { [initialPresetProduct.id]: initialPresetProduct } : {});
   const [inspirationMatches, setInspirationMatches] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -181,10 +182,6 @@ function DesignInner() {
     toast("توضیحات پیشنهاد در فیلد دستور قرار گرفت — می‌تونی ویرایش کنی");
   };
 
-  useEffect(() => {
-    if (presetSlug) { const p = products.find((x) => x.slug === presetSlug); if (p) { setPresetProduct(p); setSelected((s) => ({ ...s, [p.id]: p })); setTab("inspiration"); } }
-  }, [presetSlug]);
-
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -234,6 +231,7 @@ function DesignInner() {
     try {
       const pd = chosen.map((p, idx) => { const cols = Math.min(chosen.length, 3); const col = idx % cols; const row = Math.floor(idx / cols); const rows = Math.ceil(chosen.length / cols); const x = cols === 1 ? 0.5 : 0.22 + (0.56 * col) / (cols - 1); const y = rows === 1 ? 0.62 : 0.42 + (0.4 * row) / Math.max(1, rows - 1); return { productId: p.id, category: p.categorySlug, reason: scope.targets.join("، "), placement: { x, y, scale: 1, rotation: 0 } }; });
       setPlacements(makePlacements(chosen));
+      window.requestAnimationFrame(() => document.getElementById("ai-design-output")?.scrollIntoView({ behavior: "smooth", block: "start" }));
       rs.commitChange({ label: isFullSet ? "چیدمان کامل" : scope.targets.join("، "), placements: pd, change: scope.summary, scope: scope.targets.join("، ") });
       setStage("RENDERING");
       trackEvent("ai_finished", { metadata: { count: chosen.length, preview: result.result.preview ?? false } });
@@ -357,7 +355,7 @@ function DesignInner() {
                   <div key={label} className="flex flex-1 items-center gap-1">
                     <div className={cn("flex items-center gap-1 rounded-full px-2 py-1 transition", active ? "bg-terracotta/15 text-terracotta-deep" : "text-ink-muted/50", current && "ring-1 ring-terracotta/40")}>
                       <span className={cn("grid h-4 w-4 place-items-center rounded-full text-[8px] font-bold", active ? "bg-terracotta text-white" : "bg-clay/40 text-ink-muted")}>{toFa(num)}</span>
-                      {label}
+                      <span className="hidden sm:inline">{label}</span>
                     </div>
                     {i < labels.length - 1 && <div className={cn("h-px flex-1", active ? "bg-terracotta/30" : "bg-clay/30")} />}
                   </div>
@@ -475,7 +473,7 @@ function DesignInner() {
               </div>
 
               {/* Budget + Prompt */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="rounded-xl border border-clay/50 bg-cream p-3"><span className="mb-1 block text-[10px] font-bold text-ink-muted">بودجه</span><input type="text" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^\d]/g, ""))} placeholder="تومان" dir="ltr" className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-terracotta" /></div>
                 <div className="rounded-xl border border-clay/50 bg-cream p-3"><span className="mb-1 block text-[10px] font-bold text-ink-muted">دستور به AI</span><input value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="مثلاً نور گرم‌تر..." className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-terracotta" /></div>
               </div>
@@ -495,8 +493,8 @@ function DesignInner() {
             </div>
 
             {/* RIGHT: Output */}
-            <div className="space-y-3 lg:col-span-7">
-              <div className="rounded-2xl border border-clay/50 bg-cream p-4 shadow-[var(--shadow-soft)]">
+            <div id="ai-design-output" className="min-w-0 space-y-3 lg:col-span-7">
+              <div className="rounded-2xl border border-clay/50 bg-cream p-3 shadow-[var(--shadow-soft)] sm:p-4">
                 <div className="mb-3 flex items-center justify-between border-b border-clay/30 pb-2">
                   <h3 className="flex items-center gap-1.5 text-xs font-bold text-ink"><Wand2 size={14} className="text-terracotta-deep" /> خروجی چیدمان</h3>
                   {placements.length > 0 && <div className="flex gap-1"><button onClick={() => toast("ذخیره شد")} className="grid h-7 w-7 place-items-center rounded-md bg-ivory-2 text-ink-muted hover:text-ink" aria-label="دانلود"><Download size={12} /></button><button onClick={async () => { const res = await shareContent({ title: "طراحی هوشمند خانه من", text: "با Homeino طراحی کردم", url: buildShareUrl("/ai") }); toast(res.method === "clipboard" ? "لینک کپی شد" : res.method === "native" ? "اشتراک‌گذاری شد" : "خطا", res.method === "failed" ? "error" : "success"); }} className="grid h-9 w-9 place-items-center rounded-md bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="اشتراک‌گذاری"><Share2 size={13} /></button></div>}
@@ -517,13 +515,13 @@ function DesignInner() {
               )}
 
               {rs.history.length > 1 && !loading && (
-                <div className="flex items-center justify-between rounded-xl border border-clay/50 bg-cream px-3 py-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-clay/50 bg-cream px-3 py-2">
                   <div className="flex items-center gap-1">
                     <button onClick={() => { rs.undo(); setPlacements(rs.placements.map((p) => ({ product: getProductById(p.productId)!, xNorm: p.placement.x, yNorm: p.placement.y, scale: p.placement.scale, rotation: p.placement.rotation })).filter(Boolean)); }} disabled={!rs.canUndo()} className="grid h-7 w-7 place-items-center rounded-md bg-ivory-2 text-ink-muted transition hover:bg-clay/20 disabled:opacity-30" aria-label="بازگشت"><Undo2 size={13} /></button>
                     <button onClick={() => { rs.redo(); setPlacements(rs.placements.map((p) => ({ product: getProductById(p.productId)!, xNorm: p.placement.x, yNorm: p.placement.y, scale: p.placement.scale, rotation: p.placement.rotation })).filter(Boolean)); }} disabled={!rs.canRedo()} className="grid h-7 w-7 place-items-center rounded-md bg-ivory-2 text-ink-muted transition hover:bg-clay/20 disabled:opacity-30" aria-label="جلو"><Redo2 size={13} /></button>
                     <span className="mr-1 text-[10px] text-ink-muted">{toFa(rs.historyIndex + 1)}/{toFa(rs.history.length)}</span>
                   </div>
-                  <div className="flex gap-1">{rs.history.map((snap, idx) => <button key={snap.version} onClick={() => { const steps = idx - rs.historyIndex; if (steps < 0) for (let s = 0; s < -steps; s++) rs.undo(); else for (let s = 0; s < steps; s++) rs.redo(); setPlacements(rs.placements.map((p) => ({ product: getProductById(p.productId)!, xNorm: p.placement.x, yNorm: p.placement.y, scale: p.placement.scale, rotation: p.placement.rotation })).filter(Boolean)); }} className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold transition", idx === rs.historyIndex ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted hover:text-ink")}>{snap.label}</button>)}</div>
+                  <div className="hide-scrollbar flex max-w-full gap-1 overflow-x-auto">{rs.history.map((snap, idx) => <button key={snap.version} onClick={() => { const steps = idx - rs.historyIndex; if (steps < 0) for (let s = 0; s < -steps; s++) rs.undo(); else for (let s = 0; s < steps; s++) rs.redo(); setPlacements(rs.placements.map((p) => ({ product: getProductById(p.productId)!, xNorm: p.placement.x, yNorm: p.placement.y, scale: p.placement.scale, rotation: p.placement.rotation })).filter(Boolean)); }} className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold transition", idx === rs.historyIndex ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted hover:text-ink")}>{snap.label}</button>)}</div>
                 </div>
               )}
 
@@ -577,7 +575,7 @@ function SuggestAssistant({ onApply, onBack }: { onApply: (p: { style: string; b
       <div className="flex items-center justify-center gap-2">{[0, 1, 2].map((s) => <div key={s} className={cn("h-2 w-2 rounded-full transition-all", s === step ? "scale-125 bg-terracotta" : s < step ? "bg-terracotta" : "bg-clay")} />)}</div>
       {step === 0 && (<div className="space-y-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><div><h3 className="text-sm font-bold text-ink">نوع فضا</h3></div></div><div className="grid grid-cols-3 gap-2">{ROOM_TYPES.map(([v, l]) => <button key={v} onClick={() => setRoomType(v)} className={cn("rounded-lg border p-2.5 text-xs font-medium transition", roomType === v ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/50 text-ink-muted hover:border-terracotta/40")}>{l}</button>)}</div><div className="flex gap-2 pt-1"><button onClick={onBack} className="px-3 py-1.5 text-[11px] text-ink-muted">بازگشت</button><button onClick={() => setStep(1)} disabled={!roomType} className="flex-1 rounded-lg bg-ink py-2 text-xs font-bold text-cream disabled:opacity-40">بعدی</button></div></div>)}
       {step === 1 && (<div className="space-y-4"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><h3 className="text-sm font-bold text-ink">سبک و بودجه</h3></div><div><p className="mb-1.5 text-[11px] font-medium text-ink-muted">سبک</p><div className="flex flex-wrap gap-1.5">{STYLES.map((s) => <button key={s.id} onClick={() => setStyle(s.id)} className={cn("rounded-lg border px-3 py-1.5 text-[11px] font-medium transition", style === s.id ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/50 text-ink-muted hover:border-terracotta/40")}>{s.label}</button>)}</div></div><div><p className="mb-1.5 text-[11px] font-medium text-ink-muted">بودجه</p><div className="space-y-1.5">{BUDGETS.map(([v, l]) => <button key={v} onClick={() => setBudget(v)} className={cn("w-full rounded-lg border p-2.5 text-left text-xs transition", budget === v ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/50 text-ink-muted hover:border-terracotta/40")}>{l}</button>)}</div></div><div className="flex gap-2 pt-1"><button onClick={() => setStep(0)} className="px-3 py-1.5 text-[11px] text-ink-muted">قبلی</button><button onClick={() => setStep(2)} disabled={!style || !budget} className="flex-1 rounded-lg bg-ink py-2 text-xs font-bold text-cream disabled:opacity-40">بعدی</button></div></div>)}
-      {step === 2 && (<div className="space-y-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><h3 className="text-sm font-bold text-ink">رنگ‌ها (اختیاری)</h3></div><div className="flex gap-2"><input value={colorInput} onChange={(e) => setColorInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }} placeholder="مثلاً طلایی..." className="flex-1 rounded-lg border border-clay/50 bg-ivory-2 px-3 py-2 text-xs text-ink outline-none focus:border-terracotta" /><button onClick={addColor} className="rounded-lg bg-terracotta/10 px-3 py-2 text-xs font-medium text-terracotta-deep">+</button></div>{colors.length > 0 && <div className="flex flex-wrap gap-1">{colors.map((c) => <span key={c} className="flex items-center gap-0.5 rounded-full bg-ivory-2 px-2 py-0.5 text-[10px] text-ink">{c}<button onClick={() => setColors(colors.filter((x) => x !== c))} className="hover:text-danger"><X size={9} /></button></span>)}</div>}<div className="rounded-lg bg-ivory-2 p-3"><p className="text-[10px] font-bold text-terracotta-deep">خلاصه</p><div className="mt-0.5 space-y-0.5 text-[10px] text-ink-muted"><p>فضا: {ROOM_TYPES.find((r) => r[0] === roomType)?.[1]}</p><p>سبک: {STYLES.find((s) => s.id === style)?.label}</p><p>بودجه: {BUDGETS.find((b) => b[0] === budget)?.[1]}</p>{colors.length > 0 && <p>رنگ‌ها: {colors.join("، ")}</p>}</div></div><div className="flex gap-2 pt-1"><button onClick={() => setStep(1)} className="px-3 py-1.5 text-[11px] text-ink-muted">قبلی</button><button onClick={() => onApply({ style, budget, roomType, colors })} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-ink py-2 text-xs font-bold text-cream transition hover:opacity-90"><Sparkles size={14} /> دریافت پیشنهاد</button></div></div>)}
+      {step === 2 && (<div className="space-y-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><h3 className="text-sm font-bold text-ink">رنگ‌ها (اختیاری)</h3></div><div className="flex gap-2"><input value={colorInput} onChange={(e) => setColorInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }} placeholder="مثلاً طلایی..." className="min-w-0 flex-1 rounded-lg border border-clay/50 bg-ivory-2 px-3 py-2 text-xs text-ink outline-none focus:border-terracotta" /><button onClick={addColor} className="rounded-lg bg-terracotta/10 px-3 py-2 text-xs font-medium text-terracotta-deep">+</button></div>{colors.length > 0 && <div className="flex flex-wrap gap-1">{colors.map((c) => <span key={c} className="flex items-center gap-0.5 rounded-full bg-ivory-2 px-2 py-0.5 text-[10px] text-ink">{c}<button onClick={() => setColors(colors.filter((x) => x !== c))} className="hover:text-danger"><X size={9} /></button></span>)}</div>}<div className="rounded-lg bg-ivory-2 p-3"><p className="text-[10px] font-bold text-terracotta-deep">خلاصه</p><div className="mt-0.5 space-y-0.5 text-[10px] text-ink-muted"><p>فضا: {ROOM_TYPES.find((r) => r[0] === roomType)?.[1]}</p><p>سبک: {STYLES.find((s) => s.id === style)?.label}</p><p>بودجه: {BUDGETS.find((b) => b[0] === budget)?.[1]}</p>{colors.length > 0 && <p>رنگ‌ها: {colors.join("، ")}</p>}</div></div><div className="flex gap-2 pt-1"><button onClick={() => setStep(1)} className="px-3 py-1.5 text-[11px] text-ink-muted">قبلی</button><button onClick={() => onApply({ style, budget, roomType, colors })} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-ink py-2 text-xs font-bold text-cream transition hover:opacity-90"><Sparkles size={14} /> دریافت پیشنهاد</button></div></div>)}
     </div>
   );
 }

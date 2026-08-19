@@ -1,183 +1,110 @@
 "use client";
+
 import Link from "next/link";
-import { Heart, GitCompare, ShoppingBag, MapPin, BadgeCheck, Star } from "lucide-react";
+import { Heart, GitCompare, ShoppingBag, MapPin, BadgeCheck } from "lucide-react";
 import type { Product, Store, InspirationImage } from "@/types";
 import { useWishlist, useCompare, useCart } from "@/stores/useShop";
-import { useUi as useUiStore } from "@/stores/useApp";
-import { cn, toFa, formatPrice } from "@/lib/utils";
+import { useUi } from "@/stores/useApp";
+import { cn } from "@/lib/utils";
 import { SmartImage } from "./ui/SmartImage";
 import { Badge, Price, Rating, LogoBlock } from "./ui/primitives";
 
 export function ProductCard({ product }: { product: Product }) {
-  const wl = useWishlist();
-  const cmp = useCompare();
-  const addToCart = useCart((s) => s.add);
-  const toast = useUiStore((s) => s.toast);
-  const wished = wl.products.includes(product.id);
-  const compared = cmp.has(product.id);
+  const wishlist = useWishlist();
+  const compare = useCompare();
+  const addToCart = useCart((state) => state.add);
+  const toast = useUi((state) => state.toast);
+  const wished = wishlist.products.includes(product.id);
+  const compared = compare.has(product.id);
 
   return (
-    <div className="group relative overflow-hidden rounded-[var(--radius-lg)] bg-ink shadow-[var(--shadow-soft)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] sm:aspect-[3/4]">
-      {/* Image fills the entire card */}
-      <Link href={`/products/${product.slug}`} className="relative block aspect-square overflow-hidden sm:aspect-auto sm:h-full" aria-label={product.name}>
-        <SmartImage src={product.images[0]} alt={product.name} className="absolute inset-0 h-full w-full" />
-        {/* top badges */}
-        <div className="absolute right-2 top-2 z-20 flex flex-col gap-1">
-          {product.discount ? <Badge tone="accent">٪{product.discount} تخفیف</Badge> : null}
+    <article className="group card-surface card-interactive flex min-w-0 flex-col overflow-hidden">
+      <div className="relative overflow-hidden bg-ivory-2">
+        <Link href={`/products/${product.slug}`} aria-label={`مشاهده ${product.name}`} className="block aspect-[4/5] overflow-hidden">
+          <SmartImage src={product.images[0]} alt={product.name} className="h-full w-full transition-transform duration-700 group-hover:scale-[1.025]" />
+        </Link>
+        <div className="absolute right-2 top-2 z-10 flex max-w-[70%] flex-col items-start gap-1">
+          {product.discount ? <Badge tone="accent">{product.discount}٪ تخفیف</Badge> : null}
           {product.isNew && <Badge tone="dark">جدید</Badge>}
           {product.aiRecommended && <Badge tone="gold">پیشنهاد AI</Badge>}
         </div>
-      </Link>
-
-      {/* ===== MOBILE: always-visible floating actions (no hover needed) ===== */}
-      <div className="absolute left-2 top-2 z-20 flex flex-col gap-1.5 lg:hidden">
-        <button
-          aria-label="افزودن به علاقه‌مندی"
-          onClick={() => { wl.toggleProduct(product.id); toast(wished ? "از علاقه‌مندی حذف شد" : "به علاقه‌مندی اضافه شد"); }}
-          className={cn("grid h-9 w-9 place-items-center rounded-full bg-ink/70 text-cream backdrop-blur transition active:scale-90", wished && "text-rose-400")}
-        >
-          <Heart size={16} className={cn(wished && "fill-current")} />
-        </button>
-        <button
-          aria-label="افزودن به مقایسه"
-          onClick={() => { cmp.toggle(product.id); toast(compared ? "از مقایسه حذف شد" : "به مقایسه اضافه شد"); }}
-          className={cn("grid h-9 w-9 place-items-center rounded-full bg-ink/70 text-cream backdrop-blur transition active:scale-90", compared && "text-gold-soft")}
-        >
-          <GitCompare size={16} />
-        </button>
+        <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5">
+          <button type="button" aria-label={wished ? "حذف از علاقه‌مندی" : "افزودن به علاقه‌مندی"} aria-pressed={wished} onClick={() => { wishlist.toggleProduct(product.id); toast(wished ? "از علاقه‌مندی حذف شد" : "به علاقه‌مندی اضافه شد"); }} className={cn("grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-ink/62 text-cream shadow-sm backdrop-blur transition hover:bg-ink active:scale-90", wished && "bg-cream text-terracotta-deep")}>
+            <Heart size={16} className={cn(wished && "fill-current")} />
+          </button>
+          <button type="button" aria-label={compared ? "حذف از مقایسه" : "افزودن به مقایسه"} aria-pressed={compared} onClick={() => { compare.toggle(product.id); toast(compared ? "از مقایسه حذف شد" : "به مقایسه اضافه شد"); }} className={cn("grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-ink/62 text-cream shadow-sm backdrop-blur transition hover:bg-ink active:scale-90", compared && "bg-gold text-ink")}>
+            <GitCompare size={15} />
+          </button>
+        </div>
+        {!product.inStock && <div className="absolute inset-x-2 bottom-2 rounded-lg bg-ink/78 px-2 py-1.5 text-center text-[10px] font-bold text-cream backdrop-blur">فعلاً ناموجود</div>}
       </div>
 
-      {/* always-visible bottom gradient with name + price */}
-      <Link href={`/products/${product.slug}`} className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-ink via-ink/85 to-transparent pb-3 pt-14">
-        <div className="px-3">
-          <p className="line-clamp-1 text-sm font-bold text-cream">{product.name}</p>
-          <div className="mt-0.5 flex items-center gap-2">
-            <span className="text-sm font-black text-gold-soft">{toFa(formatPrice(product.price))}</span>
-            {product.oldPrice && <span className="text-[11px] text-cream/50 line-through">{toFa(formatPrice(product.oldPrice))}</span>}
-          </div>
+      <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-3.5">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <span className="truncate text-[10px] font-bold text-terracotta-deep sm:text-xs">{product.brand}</span>
+          <Rating value={product.rating} size={12} />
         </div>
-      </Link>
-
-      {/* ===== DESKTOP HOVER OVERLAY: full info + actions (lg and up only) ===== */}
-      <div className="absolute inset-0 z-30 hidden flex-col bg-ink/94 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:flex">
-        {/* info at top */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gold-soft">{product.brand}</span>
-            <span className="flex items-center gap-1 text-xs text-cream">
-              <Star size={12} className="fill-gold text-gold" />
-              <span className="font-bold">{toFa(product.rating.toFixed(1))}</span>
-              <span className="text-cream/70">({toFa(product.reviewsCount)})</span>
-            </span>
-          </div>
-          <Link href={`/products/${product.slug}`} className="block line-clamp-2 text-sm font-bold leading-snug text-cream hover:text-gold-soft">{product.name}</Link>
-          <div className="flex items-center gap-1.5 pt-0.5">
-            {product.colors.slice(0, 4).map((c) => (
-              <span key={c.name} className="h-4 w-4 rounded-full border border-cream/40" style={{ background: c.hex }} title={c.name} />
-            ))}
-            <span className="text-[10px] text-cream/80">{product.colors[0]?.name}</span>
-          </div>
-          <div className="pt-1.5">
-            <span className="text-lg font-black text-gold-soft">{toFa(formatPrice(product.price))} </span>
-            <span className="text-xs text-cream/80">تومان</span>
-            {product.oldPrice && <span className="mr-2 text-xs text-cream/50 line-through">{toFa(formatPrice(product.oldPrice))}</span>}
-          </div>
-        </div>
-
-        {/* action buttons at bottom — min touch target 44px */}
-        <div className="mt-auto flex items-center gap-1.5 pt-3">
-          <button
-            aria-label="افزودن به علاقه‌مندی"
-            onClick={() => { wl.toggleProduct(product.id); toast(wished ? "از علاقه‌مندی حذف شد" : "به علاقه‌مندی اضافه شد"); }}
-            className={cn("flex flex-1 items-center justify-center gap-1 rounded-lg border py-2.5 text-xs font-bold transition", wished ? "border-terracotta-soft bg-terracotta-soft/20 text-terracotta-soft" : "border-cream/30 bg-cream/5 text-cream hover:bg-cream/15")}
-          >
-            <Heart size={14} className={cn(wished && "fill-current")} /> علاقه‌مندی
-          </button>
-          <button
-            aria-label="افزودن به مقایسه"
-            onClick={() => { cmp.toggle(product.id); toast(compared ? "از مقایسه حذف شد" : "به مقایسه اضافه شد"); }}
-            className={cn("flex flex-1 items-center justify-center gap-1 rounded-lg border py-2.5 text-xs font-bold transition", compared ? "border-gold-soft bg-gold/20 text-gold-soft" : "border-cream/30 bg-cream/5 text-cream hover:bg-cream/15")}
-          >
-            <GitCompare size={14} /> مقایسه
-          </button>
-          <button
-            aria-label="افزودن به سبد خرید"
-            onClick={() => { addToCart(product.id); toast("به سبد خرید اضافه شد"); }}
-            disabled={!product.inStock}
-            className="btn-accent grid h-11 w-11 shrink-0 place-items-center rounded-lg disabled:opacity-40"
-          >
-            <ShoppingBag size={16} />
-          </button>
-        </div>
+        <Link href={`/products/${product.slug}`} className="mt-1.5 line-clamp-2 min-h-10 text-xs font-black leading-5 text-ink transition hover:text-terracotta-deep sm:text-sm sm:leading-6">{product.name}</Link>
+        <Price price={product.price} oldPrice={product.oldPrice} className="mt-2 [&_span:first-child]:text-sm sm:[&_span:first-child]:text-base" />
+        <button type="button" disabled={!product.inStock} onClick={() => { addToCart(product.id); toast("به سبد خرید اضافه شد"); }} className="btn-primary mt-3 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-[10px] font-bold disabled:opacity-40 sm:text-xs">
+          <ShoppingBag size={14} /><span className="hidden min-[360px]:inline">افزودن به سبد</span><span className="min-[360px]:hidden">افزودن</span>
+        </button>
       </div>
-    </div>
+    </article>
   );
 }
 
 export function StoreCard({ store }: { store: Store }) {
-  const wl = useWishlist();
-  const wished = wl.stores.includes(store.id);
+  const wishlist = useWishlist();
+  const wished = wishlist.stores.includes(store.id);
+  const toast = useUi((state) => state.toast);
+
   return (
-    <Link href={`/stores/${store.slug}`} className="group card-surface relative overflow-hidden">
-      <div className="relative h-28 overflow-hidden">
-        <SmartImage src={store.cover} alt={store.name} className="absolute inset-0 h-full w-full" />
-        <div className="absolute inset-0 bg-ink/35" />
-        {store.verified && (
-          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-cream/90 px-2 py-0.5 text-[11px] font-medium text-ink">
-            <BadgeCheck size={13} className="text-sage" /> تأیید شده
-          </span>
-        )}
-        {store.isNew && <span className="absolute left-3 top-3"><Badge tone="accent">جدید</Badge></span>}
-      </div>
+    <article className="group card-surface card-interactive relative overflow-hidden">
+      <Link href={`/stores/${store.slug}`} className="block" aria-label={`مشاهده فروشگاه ${store.name}`}>
+        <div className="relative h-32 overflow-hidden">
+          <SmartImage src={store.cover} alt={`ویترین ${store.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
+          {store.verified && <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-cream/92 px-2 py-1 text-[10px] font-bold text-ink backdrop-blur"><BadgeCheck size={13} className="text-success" /> تأیید شده</span>}
+          {store.isNew && <span className="absolute left-3 top-3"><Badge tone="accent">جدید</Badge></span>}
+        </div>
+      </Link>
       <div className="px-4 pb-4">
         <div className="-mt-7 mb-2 flex items-end justify-between">
-          <LogoBlock char={store.logo} color={store.logoColor} size={56} />
-          <button
-            onClick={(e) => { e.preventDefault(); wl.toggleStore(store.id); }}
-            className={cn("mb-1 grid h-9 w-9 place-items-center rounded-full glass border border-clay/40", wished && "text-terracotta-deep")}
-          >
-            <Heart size={16} className={cn(wished && "fill-terracotta")} />
+          <Link href={`/stores/${store.slug}`} className="relative rounded-2xl border-4 border-cream"><LogoBlock char={store.logo} color={store.logoColor} size={56} /></Link>
+          <button type="button" onClick={() => { wishlist.toggleStore(store.id); toast(wished ? "دنبال‌کردن فروشگاه لغو شد" : "فروشگاه را دنبال می‌کنی"); }} aria-label={wished ? "لغو دنبال‌کردن فروشگاه" : "دنبال‌کردن فروشگاه"} aria-pressed={wished} className={cn("mb-1 grid h-10 w-10 place-items-center rounded-full border border-clay/40 bg-cream text-ink-muted shadow-sm transition hover:border-terracotta hover:text-terracotta-deep", wished && "border-terracotta/30 bg-terracotta/10 text-terracotta-deep")}>
+            <Heart size={16} className={cn(wished && "fill-current")} />
           </button>
         </div>
-        <h3 className="font-display font-bold text-ink transition group-hover:text-terracotta-deep">{store.name}</h3>
-        <p className="mt-1 line-clamp-2 text-xs text-ink-muted">{store.description}</p>
-        <div className="mt-3 flex items-center justify-between border-t border-clay/40 pt-3 text-xs text-ink-muted">
-          <span className="flex items-center gap-1"><MapPin size={13} /> {store.city}</span>
+        <Link href={`/stores/${store.slug}`}><h3 className="text-base font-black text-ink transition group-hover:text-terracotta-deep">{store.name}</h3></Link>
+        <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-ink-muted">{store.description}</p>
+        <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-clay/35 pt-3 text-xs text-ink-muted">
+          <span className="flex min-w-0 items-center gap-1"><MapPin size={13} className="shrink-0" /><span className="truncate">{store.city}</span></span>
           <Rating value={store.rating} count={store.reviewsCount} />
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
 export function InspirationCard({ insp, index = 0 }: { insp: InspirationImage; index?: number }) {
-  const wl = useWishlist();
-  const wished = wl.inspirations.includes(insp.id);
+  const wishlist = useWishlist();
+  const wished = wishlist.inspirations.includes(insp.id);
+  const toast = useUi((state) => state.toast);
   return (
-    <Link href={`/inspiration/${insp.id}`} className="group relative block overflow-hidden rounded-[var(--radius-lg)]">
-      <SmartImage
-        src={insp.image}
-        alt={insp.title}
-        className={cn("w-full transition-transform duration-700 group-hover:scale-105", index % 5 === 0 ? "aspect-[3/4]" : index % 5 === 2 ? "aspect-square" : "aspect-[4/5]")}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
-      <button
-        onClick={(e) => { e.preventDefault(); wl.toggleInspiration(insp.id); }}
-        className={cn("absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full glass border border-clay/40 transition", wished ? "text-terracotta-deep" : "text-cream")}
-      >
-        <Heart size={16} className={cn(wished && "fill-terracotta")} />
-      </button>
-      <div className="absolute bottom-0 right-0 p-4 text-cream">
-        <span className="text-[11px] opacity-80">{insp.room}</span>
-        <h3 className="font-display text-base font-bold leading-tight">{insp.title}</h3>
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {insp.tags.slice(0, 2).map((t) => (
-            <span key={t} className="rounded-full bg-cream/15 px-2 py-0.5 text-[10px] backdrop-blur">#{t}</span>
-          ))}
+    <article className="group relative block h-full min-h-48 overflow-hidden rounded-[var(--radius-lg)] bg-ink shadow-[var(--shadow-soft)]">
+      <Link href={`/inspiration/${insp.id}`} className="block h-full" aria-label={`مشاهده ایده ${insp.title}`}>
+        <SmartImage src={insp.image} alt={insp.title} className={cn("h-full min-h-48 w-full transition-transform duration-700 group-hover:scale-105", index % 5 === 0 ? "aspect-[3/4]" : index % 5 === 2 ? "aspect-square" : "aspect-[4/5]")} />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/88 via-ink/5 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-3.5 text-cream sm:p-4">
+          <span className="text-[10px] text-gold-soft sm:text-[11px]">{insp.room}</span>
+          <h3 className="mt-0.5 text-sm font-black leading-6 text-cream sm:text-base">{insp.title}</h3>
+          <div className="mt-1.5 hidden flex-wrap gap-1 sm:flex">{insp.tags.slice(0, 2).map((tag) => <span key={tag} className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] backdrop-blur">#{tag}</span>)}</div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      <button type="button" onClick={() => { wishlist.toggleInspiration(insp.id); toast(wished ? "از الهام‌ها حذف شد" : "ایده ذخیره شد"); }} aria-label={wished ? "حذف ایده از علاقه‌مندی" : "ذخیره ایده"} aria-pressed={wished} className={cn("absolute left-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-ink/48 text-cream backdrop-blur transition hover:bg-ink", wished && "bg-cream text-terracotta-deep")}>
+        <Heart size={16} className={cn(wished && "fill-current")} />
+      </button>
+    </article>
   );
 }
-
-

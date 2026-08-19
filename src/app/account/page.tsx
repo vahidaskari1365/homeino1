@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Sparkles, Package, Heart, Wand2, TrendingUp, ArrowLeft } from "lucide-react";
-import { Button, LogoBlock, Badge } from "@/components/ui/primitives";
+import { ButtonLink, LogoBlock, Badge } from "@/components/ui/primitives";
 import { useAuth, useCredits } from "@/stores/useApp";
 import { useWishlist, useCart } from "@/stores/useShop";
 import { aiDesigns } from "@/data/inspirations";
@@ -29,7 +29,7 @@ export default function AccountOverview() {
           <h1 className="font-display text-xl font-black text-ink">سلام، {user?.name} 👋</h1>
           <p className="text-sm text-ink-muted">{user?.email}</p>
         </div>
-        <Link href="/ai"><Button><Wand2 size={16} /> طراحی جدید</Button></Link>
+        <ButtonLink href="/ai"><Wand2 size={16} /> طراحی جدید</ButtonLink>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
