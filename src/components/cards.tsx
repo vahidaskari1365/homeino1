@@ -5,7 +5,7 @@ import { Heart, GitCompare, ShoppingBag, MapPin, BadgeCheck } from "lucide-react
 import type { Product, Store, InspirationImage } from "@/types";
 import { useWishlist, useCompare, useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
-import { cn } from "@/lib/utils";
+import { cn, toFa } from "@/lib/utils";
 import { SmartImage } from "./ui/SmartImage";
 import { Badge, Price, Rating, LogoBlock } from "./ui/primitives";
 
@@ -78,9 +78,14 @@ export function StoreCard({ store }: { store: Store }) {
         </div>
         <Link href={`/stores/${store.slug}`}><h3 className="text-base font-black text-ink transition group-hover:text-terracotta-deep">{store.name}</h3></Link>
         <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-ink-muted">{store.description}</p>
+        {store.badges.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {store.badges.slice(0, 2).map((badge) => <span key={badge} className="rounded-full bg-sand/50 px-2 py-0.5 text-[10px] font-bold text-ink-muted">{badge}</span>)}
+          </div>
+        )}
         <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-clay/35 pt-3 text-xs text-ink-muted">
           <span className="flex min-w-0 items-center gap-1"><MapPin size={13} className="shrink-0" /><span className="truncate">{store.city}</span></span>
-          <Rating value={store.rating} count={store.reviewsCount} />
+          <span className="flex shrink-0 items-center gap-2"><Rating value={store.rating} count={store.reviewsCount} /><span className="text-[10px] text-ink-muted/80">{toFa(store.salesCount)} فروش</span></span>
         </div>
       </div>
     </article>

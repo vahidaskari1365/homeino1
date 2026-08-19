@@ -10,7 +10,7 @@ import {
   type ReactNode,
   type SelectHTMLAttributes,
 } from "react";
-import { AlertTriangle, CheckCircle2, ChevronDown, Star, X } from "lucide-react";
+import { AlertTriangle, BadgeCheck, CheckCircle2, ChevronDown, Star, X } from "lucide-react";
 import { cn, formatPrice, toFa, faGroup, fromFa } from "@/lib/utils";
 
 /* ---------- Layout ---------- */
@@ -293,4 +293,27 @@ export function FaNumberInput({ value, onChange, placeholder, className, dir = "
 /* ---------- Avatar / logo ---------- */
 export function LogoBlock({ char, color, size = 44 }: { char: string; color: string; size?: number }) {
   return <span className="grid shrink-0 place-items-center rounded-xl font-display font-black text-cream shadow-sm" style={{ width: size, height: size, backgroundColor: color }}>{char}</span>;
+}
+
+/* ---------- Trust ---------- */
+/** Small verified-seller badge — the marketplace's core trust signal. */
+export function VerifiedBadge({ label = "فروشگاه تأیید شده", className }: { label?: string; className?: string }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border border-sage/35 bg-sage/12 px-2 py-0.5 text-[10px] font-bold leading-none text-success", className)}>
+      <BadgeCheck size={12} /> {label}
+    </span>
+  );
+}
+
+/** A single trust point (icon + title + optional description) — no pressure, just clarity. */
+export function TrustPoint({ icon: Icon, title, desc }: { icon: React.ComponentType<{ size?: number; className?: string }>; title: string; desc?: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-sage/12 text-success"><Icon size={17} /></span>
+      <div className="min-w-0">
+        <div className="text-xs font-bold text-ink">{title}</div>
+        {desc && <p className="mt-0.5 text-[11px] leading-5 text-ink-muted">{desc}</p>}
+      </div>
+    </div>
+  );
 }

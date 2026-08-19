@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform, type Variants } from "framer-motion";
-import { ArrowLeft, ChevronDown, Search, ShieldCheck, Sparkles, Users, Wand2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, Lock, Search, ShieldCheck, Sparkles, Users, Wand2 } from "lucide-react";
 import { Badge, ButtonLink, Container } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { useUi } from "@/stores/useApp";
@@ -197,6 +197,9 @@ export function Hero() {
               </span>
               <span className="flex items-center gap-1.5">
                 <ShieldCheck size={14} className="text-sage-soft" /> ضمانت خرید و بازگشت
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Lock size={14} className="text-sage-soft" /> پرداخت امن
               </span>
             </motion.div>
           </motion.div>

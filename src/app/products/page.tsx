@@ -45,7 +45,10 @@ export default function ProductsPage() {
       if (sort === "price-asc") return a.price - b.price;
       if (sort === "price-desc") return b.price - a.price;
       if (sort === "rating") return b.rating - a.rating;
-      if (sort === "discount") return (b.oldPrice ? 1 : 0) - (a.oldPrice ? 1 : 0);
+      if (sort === "discount") {
+        const disc = (p: typeof a) => (p.oldPrice && p.oldPrice > p.price ? (p.oldPrice - p.price) / p.oldPrice : 0);
+        return disc(b) - disc(a);
+      }
       return 0;
     });
     return list;
