@@ -62,6 +62,34 @@ export interface Store {
   categorySlugs: string[];
 }
 
+/**
+ * Storefront-only information. Kept separate from Store so the current mock
+ * layer can later be replaced by a vendor profile API without changing UI.
+ */
+export interface StorefrontProfile {
+  storeId: string;
+  joinedAt: string;
+  fulfilledOrders: number;
+  responseRate: number;
+  responseTime: string;
+  dispatchTime: string;
+  shippingCoverage: string;
+  shippingNote: string;
+  returnDays: number;
+  returnNote: string;
+  authenticityNote: string;
+}
+
+export interface StoreReview {
+  id: string;
+  storeId: string;
+  author: string;
+  rating: number;
+  date: string;
+  comment: string;
+  verifiedPurchase: boolean;
+}
+
 export interface ProductSpec {
   label: string;
   value: string;
@@ -128,6 +156,7 @@ export interface Product {
   currency: "تومان";
   rating: number;
   reviewsCount: number;
+  purchaseCount: number;
   images: string[];
   colors: { name: string; hex: string }[];
   materials: string[];
@@ -207,7 +236,17 @@ export interface Review {
 // ---- Cart ----
 export interface CartItem {
   productId: string;
+  /** Selected marketplace offer. Optional for products with one default store. */
+  offerId?: string;
   qty: number;
+}
+
+export interface UserCollection {
+  id: string;
+  title: string;
+  description?: string;
+  productIds: string[];
+  createdAt: string;
 }
 
 // ---- Second-hand listing ----

@@ -107,11 +107,13 @@ export async function POST(req: NextRequest) {
     const { provider, name } = await resolveProvider();
     try {
       const result = await dispatch(provider, action, p as never);
-      return NextResponse.json({ ...result, _provider: name });
+      const response = result && typeof result === "object" ? result : { result };
+      return NextResponse.json({ ...response, _provider: name });
     } catch (err) {
       if (IMAGE_ACTIONS.has(action)) {
         const fallback = await dispatch(mockAiProvider, action, p as never);
-        return NextResponse.json({ ...fallback, _provider: "mock", _degraded: true });
+        const response = fallback && typeof fallback === "object" ? fallback : { result: fallback };
+        return NextResponse.json({ ...response, _provider: "mock", _degraded: true });
       }
       throw err;
     }

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, Package, ImageIcon, Sparkles, Store as StoreIcon, Lightbulb } from "lucide-react";
+import { Heart, Package, ImageIcon, Sparkles, Store as StoreIcon, Lightbulb, FolderHeart } from "lucide-react";
 import { Container, PageHeader, ProductGrid } from "@/components/shared";
 import { ButtonLink, EmptyState, Tabs } from "@/components/ui/primitives";
 import { StoreCard, InspirationCard } from "@/components/cards";
@@ -31,7 +31,7 @@ export default function WishlistPage() {
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="حساب کاربری" title="علاقه‌مندی‌های من" desc={`در مجموع ${toFa(wl.total())} مورد ذخیره شده.`} />
+      <PageHeader eyebrow="فضای شخصی من" title="ذخیره‌های من" desc={`در مجموع ${toFa(wl.total())} مورد ذخیره شده.`} action={<ButtonLink href="/collections" variant="outline"><FolderHeart size={17} /> مدیریت کالکشن‌ها</ButtonLink>} />
 
       <Tabs items={TABS.map((item) => ({ ...item, count: count[item.id] }))} value={tab} onChange={setTab} ariaLabel="نوع علاقه‌مندی" className="mb-8" />
 

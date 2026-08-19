@@ -2,16 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sparkles, CheckCircle2, XCircle, Info, X, GitCompare, ArrowUp } from "lucide-react";
-import { useUi, useCredits } from "@/stores/useApp";
+import { CheckCircle2, XCircle, Info, X, GitCompare, ArrowUp } from "lucide-react";
+import { useUi } from "@/stores/useApp";
 import { useCompare } from "@/stores/useShop";
 import { toFa } from "@/lib/utils";
 
 const ICONS = { success: CheckCircle2, error: XCircle, info: Info };
 
 export function GlobalChrome() {
-  const { setAiPanel, toasts, dismissToast } = useUi();
-  const balance = useCredits((state) => state.balance);
+  const { toasts, dismissToast } = useUi();
   const compareCount = useCompare((state) => state.ids.length);
   const [showTop, setShowTop] = useState(false);
 
@@ -28,10 +27,6 @@ export function GlobalChrome() {
           <ArrowUp size={19} />
         </button>
       )}
-
-      <button onClick={() => setAiPanel(true)} className="fixed bottom-6 left-6 z-40 hidden items-center gap-2 rounded-full bg-ink py-2.5 pl-4 pr-2.5 text-cream shadow-[var(--shadow-lift)] transition hover:-translate-y-0.5 hover:bg-terracotta-deep active:scale-95 lg:flex" aria-label="باز کردن دستیار هوشمند">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-terracotta"><Sparkles size={16} /></span><span className="text-sm font-bold">دستیار AI</span>
-      </button>
 
       <div aria-live="polite" aria-relevant="additions" className="pointer-events-none fixed inset-x-3 bottom-24 z-[150] flex flex-col items-center gap-2 lg:inset-x-auto lg:bottom-6 lg:right-6 lg:items-end">
         {toasts.map((toast) => {
@@ -53,9 +48,6 @@ export function GlobalChrome() {
         </div>
       )}
 
-      <Link href="/account/credits" className="fixed right-4 top-[7.8rem] z-30 hidden items-center gap-1.5 rounded-full border border-clay/45 bg-cream/92 px-3 py-2 text-xs font-bold text-ink shadow-sm backdrop-blur transition hover:border-gold lg:flex">
-        <Sparkles size={13} className="text-gold" /> {toFa(balance)} اعتبار
-      </Link>
     </>
   );
 }

@@ -4,10 +4,12 @@ import { useRouter } from "next/navigation";
 import { MapPin, Truck, CreditCard, Check, ShieldCheck } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { Button, ButtonLink, EmptyState } from "@/components/ui/primitives";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { getProductById } from "@/data/products";
 import { getStoreById } from "@/data/stores";
+import { getBestOffer, getOfferById } from "@/data/offers";
 import { toFa, formatPrice, cn } from "@/lib/utils";
 
 const STEPS = ["نشانی", "ارسال", "پرداخت"] as const;
@@ -20,8 +22,12 @@ export default function CheckoutPage() {
   const [shipping, setShipping] = useState("post");
   const [pay, setPay] = useState("online");
 
-  const rows = items.map((i) => ({ item: i, product: getProductById(i.productId)! })).filter((r) => r.product);
-  const subtotal = rows.reduce((s, r) => s + r.product.price * r.item.qty, 0);
+  const rows = items.map((item) => {
+    const product = getProductById(item.productId)!;
+    const offer = getOfferById(item.offerId) ?? getBestOffer(item.productId) ?? undefined;
+    return { item, product, offer, storeId: offer?.storeId ?? product?.storeId, price: offer?.price ?? product?.price ?? 0 };
+  }).filter((row) => row.product);
+  const subtotal = rows.reduce((sum, row) => sum + row.price * row.item.qty, 0);
   const shippingCost = shipping === "express" ? 250000 : 120000;
   const total = subtotal + shippingCost;
 
@@ -100,10 +106,10 @@ export default function CheckoutPage() {
         <aside className="card-surface h-fit p-6 lg:sticky lg:top-24">
           <h3 className="mb-4 font-display font-bold text-ink">سفارش شما</h3>
           <div className="max-h-60 space-y-3 overflow-y-auto pl-1">
-            {rows.map(({ item, product }) => (
-              <div key={product.id} className="flex items-center gap-2">
-                <img src={product.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
-                <div className="min-w-0 flex-1"><div className="truncate text-xs font-medium text-ink">{product.name}</div><div className="text-[11px] text-ink-muted">{toFa(item.qty)} عدد · {getStoreById(product.storeId)?.name}</div></div>
+            {rows.map(({ item, product, storeId }) => (
+              <div key={`${product.id}:${item.offerId ?? "default"}`} className="flex items-center gap-2">
+                <SmartImage src={product.images[0]} alt={product.name} className="h-12 w-12 rounded-lg" />
+                <div className="min-w-0 flex-1"><div className="truncate text-xs font-medium text-ink">{product.name}</div><div className="text-[11px] text-ink-muted">{toFa(item.qty)} عدد · {getStoreById(storeId)?.name}</div></div>
               </div>
             ))}
           </div>

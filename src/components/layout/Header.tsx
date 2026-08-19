@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Search, Heart, GitCompare, ShoppingBag, User, Menu, Sparkles, ChevronDown, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Search, Heart, GitCompare, ShoppingBag, User, Menu, ChevronDown, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { useCart, useWishlist, useCompare } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
-import { PLATFORM, formatThreshold } from "@/config/platform";
+import { PLATFORM } from "@/config/platform";
 import { cn, toFa } from "@/lib/utils";
 import { Container } from "../ui/primitives";
 
@@ -19,7 +19,7 @@ const NAV = [
   { label: "الهام", href: "/inspiration" },
   { label: "سبک‌ها", href: "/styles", mega: "styles" },
   { label: "دسته دوم", href: "/second-hand" },
-  { label: "هوش مصنوعی", href: "/ai", accent: true },
+  { label: "طراحی با AI", href: "/ai" },
 ];
 
 function IconBadge({ count, children }: { count: number; children: React.ReactNode }) {
@@ -44,10 +44,10 @@ export function Header() {
       <div className="bg-ink text-cream/88">
         <Container>
           <div className="flex h-8 min-w-0 items-center justify-center gap-4 text-[10px] font-medium sm:justify-between sm:text-[11px]">
-            <span className="hidden items-center gap-1.5 sm:flex"><ShieldCheck size={12} className="text-sage-soft" /> تضمین اصالت کالا</span>
-            <span className="flex min-w-0 items-center gap-1.5"><Truck size={12} className="shrink-0 text-sage-soft" /><span className="truncate">ارسال رایگان بالای {toFa(formatThreshold(PLATFORM.policies.freeShippingThreshold / 1_000_000))} میلیون تومان</span></span>
-            <span className="hidden items-center gap-1.5 md:flex"><RotateCcw size={12} className="text-sage-soft" /> {toFa(PLATFORM.policies.returnDays)} روز ضمانت بازگشت</span>
-            <span className="hidden items-center gap-1.5 xl:flex"><Sparkles size={12} className="text-gold-soft" /> {toFa(PLATFORM.ai.startingCredits)} اعتبار هدیه شروع</span>
+            <span className="hidden items-center gap-1.5 sm:flex"><ShieldCheck size={12} className="text-sage-soft" /> هویت فروشگاه‌های منتخب بررسی شده</span>
+            <span className="flex min-w-0 items-center gap-1.5"><Truck size={12} className="shrink-0 text-sage-soft" /><span className="truncate">زمان و هزینه ارسال پیش از پرداخت</span></span>
+            <span className="hidden items-center gap-1.5 md:flex"><RotateCcw size={12} className="text-sage-soft" /> تا {toFa(PLATFORM.policies.returnDays)} روز امکان بازگشت</span>
+            <span className="hidden items-center gap-1.5 xl:flex"><GitCompare size={12} className="text-gold-soft" /> مقایسه قیمت و فروشنده</span>
           </div>
         </Container>
       </div>
@@ -75,10 +75,10 @@ export function Header() {
                   aria-expanded={item.mega ? mega === item.mega : undefined}
                   className={cn(
                     "flex min-h-10 items-center gap-1 rounded-lg px-2.5 py-2 text-[13px] font-bold transition",
-                    active ? "bg-ivory-2 text-ink" : item.accent ? "text-terracotta-deep hover:bg-terracotta/8" : "text-ink-muted hover:bg-ivory-2 hover:text-ink",
+                    active ? "bg-ivory-2 text-ink" : "text-ink-muted hover:bg-ivory-2 hover:text-ink",
                   )}
                 >
-                  {item.label}{item.accent && <Sparkles size={13} />}{item.mega && <ChevronDown size={13} className="opacity-50" />}
+                  {item.label}{item.mega && <ChevronDown size={13} className="opacity-50" />}
                 </Link>
               );
             })}

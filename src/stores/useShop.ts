@@ -1,14 +1,14 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartItem } from "@/types";
+import type { CartItem, UserCollection } from "@/types";
 
 /* ---------------- CART (multi-vendor aware) ---------------- */
 interface CartState {
   items: CartItem[];
-  add: (productId: string, qty?: number) => void;
-  remove: (productId: string) => void;
-  setQty: (productId: string, qty: number) => void;
+  add: (productId: string, qty?: number, offerId?: string) => void;
+  remove: (productId: string, offerId?: string) => void;
+  setQty: (productId: string, qty: number, offerId?: string) => void;
   clear: () => void;
   count: () => number;
 }
@@ -17,24 +17,24 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      add: (productId, qty = 1) =>
+      add: (productId, qty = 1, offerId) =>
         set((s) => {
-          const existing = s.items.find((i) => i.productId === productId);
+          const existing = s.items.find((item) => item.productId === productId && item.offerId === offerId);
           if (existing)
             return {
-              items: s.items.map((i) =>
-                i.productId === productId ? { ...i, qty: i.qty + qty } : i
+              items: s.items.map((item) =>
+                item.productId === productId && item.offerId === offerId ? { ...item, qty: item.qty + qty } : item
               ),
             };
-          return { items: [...s.items, { productId, qty }] };
+          return { items: [...s.items, { productId, offerId, qty }] };
         }),
-      remove: (productId) =>
-        set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
-      setQty: (productId, qty) =>
+      remove: (productId, offerId) =>
+        set((s) => ({ items: s.items.filter((item) => !(item.productId === productId && (offerId === undefined || item.offerId === offerId))) })),
+      setQty: (productId, qty, offerId) =>
         set((s) => ({
           items: s.items
-            .map((i) => (i.productId === productId ? { ...i, qty } : i))
-            .filter((i) => i.qty > 0),
+            .map((item) => item.productId === productId && (offerId === undefined || item.offerId === offerId) ? { ...item, qty } : item)
+            .filter((item) => item.qty > 0),
         })),
       clear: () => set({ items: [] }),
       count: () => get().items.reduce((n, i) => n + i.qty, 0),
@@ -145,4 +145,47 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
     }),
     { name: "homeino-recent" }
   )
+);
+
+/* ---------------- USER COLLECTIONS ---------------- */
+interface CollectionsState {
+  collections: UserCollection[];
+  createCollection: (title: string, description?: string) => string;
+  removeCollection: (id: string) => void;
+  addProduct: (collectionId: string, productId: string) => void;
+  removeProduct: (collectionId: string, productId: string) => void;
+  hasProduct: (collectionId: string, productId: string) => boolean;
+}
+
+export const useCollections = create<CollectionsState>()(
+  persist(
+    (set, get) => ({
+      collections: [],
+      createCollection: (title, description) => {
+        const id = `collection-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const collection: UserCollection = {
+          id,
+          title: title.trim(),
+          description: description?.trim() || undefined,
+          productIds: [],
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({ collections: [collection, ...state.collections] }));
+        return id;
+      },
+      removeCollection: (id) => set((state) => ({ collections: state.collections.filter((collection) => collection.id !== id) })),
+      addProduct: (collectionId, productId) => set((state) => ({
+        collections: state.collections.map((collection) => collection.id === collectionId && !collection.productIds.includes(productId)
+          ? { ...collection, productIds: [...collection.productIds, productId] }
+          : collection),
+      })),
+      removeProduct: (collectionId, productId) => set((state) => ({
+        collections: state.collections.map((collection) => collection.id === collectionId
+          ? { ...collection, productIds: collection.productIds.filter((id) => id !== productId) }
+          : collection),
+      })),
+      hasProduct: (collectionId, productId) => Boolean(get().collections.find((collection) => collection.id === collectionId)?.productIds.includes(productId)),
+    }),
+    { name: "homeino-collections" },
+  ),
 );

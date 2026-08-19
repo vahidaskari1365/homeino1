@@ -17,7 +17,7 @@ export const products: Product[] = [
   {
     id: "p1", slug: "sofa-helia", name: "کاناپه هلیم ۳ نفره", brand: "نور مبلمان", storeId: "st1",
     categorySlug: "furniture", subCategorySlug: "sofa", styleSlugs: ["modern", "scandinavian"],
-    price: 48500000, oldPrice: 62000000, currency: "تومان", rating: 4.8, reviewsCount: 142,
+    price: 48500000, oldPrice: 62000000, currency: "تومان", rating: 4.8, reviewsCount: 142, purchaseCount: 443,
     images: [IMG.living2, IMG.living6, IMG.living7],
     colors: [COLORS.cream, COLORS.charcoal, COLORS.sage], materials: ["پارچه کتان", "چوب راش", "فوم سرد"],
     dimensions: "۲۲۰ × ۹۰ × ۸۵ سانتی‌متر",
@@ -28,7 +28,7 @@ export const products: Product[] = [
   {
     id: "p2", slug: "sofa-lumi", name: "مبل راحتی لوومی", brand: "نور مبلمان", storeId: "st1",
     categorySlug: "furniture", subCategorySlug: "armchair", styleSlugs: ["modern", "luxury"],
-    price: 18900000, currency: "تومان", rating: 4.7, reviewsCount: 88,
+    price: 18900000, currency: "تومان", rating: 4.7, reviewsCount: 88, purchaseCount: 281,
     images: [IMG.living3, IMG.living9],
     colors: [COLORS.terracotta, COLORS.charcoal], materials: ["حریر مصنوعی", "فلز"],
     dimensions: "۸۵ × ۸۰ × ۹۰ سانتی‌متر",
@@ -39,7 +39,7 @@ export const products: Product[] = [
   {
     id: "p3", slug: "coffee-table-oak", name: "میز جلو مبلی بلوط", brand: "آرا اتاق خواب", storeId: "st7",
     categorySlug: "furniture", subCategorySlug: "coffee-table", styleSlugs: ["scandinavian", "japandi"],
-    price: 7800000, oldPrice: 9500000, currency: "تومان", rating: 4.6, reviewsCount: 54,
+    price: 7800000, oldPrice: 9500000, currency: "تومان", rating: 4.6, reviewsCount: 54, purchaseCount: 179,
     images: [IMG.living9, IMG.decor7],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب بلوط", "MDF"],
     dimensions: "۱۱۰ × ۶۰ × ۳۸ سانتی‌متر",
@@ -50,7 +50,7 @@ export const products: Product[] = [
   {
     id: "p4", slug: "dining-set-sara", name: "میز و صندلی ناهارخوری سارا", brand: "نور مبلمان", storeId: "st1",
     categorySlug: "furniture", subCategorySlug: "dining-table", styleSlugs: ["modern", "contemporary"],
-    price: 63000000, currency: "تومان", rating: 4.9, reviewsCount: 73,
+    price: 63000000, currency: "تومان", rating: 4.9, reviewsCount: 73, purchaseCount: 236,
     images: [IMG.living9, IMG.living2],
     colors: [COLORS.charcoal, COLORS.sand], materials: ["چوب راش", "پارچه"],
     dimensions: "میز ۱۸۰ × ۹۰ + ۶ صندلی",
@@ -61,7 +61,7 @@ export const products: Product[] = [
   {
     id: "p5", slug: "chair-mio", name: "صندلی مِئو", brand: "آتلیه نور", storeId: "st10",
     categorySlug: "furniture", subCategorySlug: "chair", styleSlugs: ["classic", "luxury"],
-    price: 6200000, currency: "تومان", rating: 4.5, reviewsCount: 41,
+    price: 6200000, currency: "تومان", rating: 4.5, reviewsCount: 41, purchaseCount: 140,
     images: [IMG.decor8],
     colors: [COLORS.plum, COLORS.gold], materials: ["مخمل", "چوب گردو"],
     description: "صندلی تکی با روکش مخمل و پایه‌ی چوب گردو، یک لمس کلاسیک و لوکس برای هر فضا.",
@@ -71,7 +71,7 @@ export const products: Product[] = [
   {
     id: "p6", slug: "vase-ceramic-blue", name: "گلدان سرامیکی لاجوردی", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
     categorySlug: "decor", subCategorySlug: "vase", styleSlugs: ["boho", "classic"],
-    price: 1450000, oldPrice: 2100000, currency: "تومان", rating: 4.8, reviewsCount: 120,
+    price: 1450000, oldPrice: 2100000, currency: "تومان", rating: 4.8, reviewsCount: 120, purchaseCount: 377,
     images: [IMG.decor9, IMG.decor6],
     colors: [COLORS.navy, COLORS.white], materials: ["سرامیک دست‌ساز"],
     dimensions: "ارتفاع ۳۲ سانتی‌متر",
@@ -82,7 +82,7 @@ export const products: Product[] = [
   {
     id: "p7", slug: "mirror-arch", name: "آینه طاقی برنزی", brand: "آتلیه نور", storeId: "st10",
     categorySlug: "decor", subCategorySlug: "mirror", styleSlugs: ["modern", "luxury"],
-    price: 4900000, currency: "تومان", rating: 4.7, reviewsCount: 36,
+    price: 4900000, currency: "تومان", rating: 4.7, reviewsCount: 36, purchaseCount: 125,
     images: [IMG.decor8],
     colors: [COLORS.gold, COLORS.charcoal], materials: ["فلز برنزی", "آینه"],
     dimensions: "۱۶۰ × ۸۰ سانتی‌متر",
@@ -93,7 +93,7 @@ export const products: Product[] = [
   {
     id: "p8", slug: "wall-art-line", name: "تابلو خطی مدرن", brand: "چاپان دکور", storeId: "st2",
     categorySlug: "decor", subCategorySlug: "wall-art", styleSlugs: ["minimal", "modern"],
-    price: 2800000, currency: "تومان", rating: 4.4, reviewsCount: 22,
+    price: 2800000, currency: "تومان", rating: 4.4, reviewsCount: 22, purchaseCount: 83,
     images: [IMG.decor6],
     colors: [COLORS.charcoal, COLORS.cream], materials: ["بوم", "چوب"],
     dimensions: "۹۰ × ۱۲۰ سانتی‌متر",
@@ -104,7 +104,7 @@ export const products: Product[] = [
   {
     id: "p9", slug: "lamp-wood-minimal", name: "چراغ رومیزی چوبی مینیمال", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "table-lamp", styleSlugs: ["japandi", "minimal"],
-    price: 3900000, oldPrice: 5200000, currency: "تومان", rating: 4.9, reviewsCount: 167,
+    price: 3900000, oldPrice: 5200000, currency: "تومان", rating: 4.9, reviewsCount: 167, purchaseCount: 518,
     images: [IMG.decor3, IMG.decor4, IMG.decor5],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب راش", "کتان"],
     dimensions: "ارتفاع ۴۵ سانتی‌متر",
@@ -115,7 +115,7 @@ export const products: Product[] = [
   {
     id: "p10", slug: "floor-lamp-arc", name: "آباژور قوسی لوکس", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "floor-lamp", styleSlugs: ["luxury", "contemporary"],
-    price: 8900000, currency: "تومان", rating: 4.6, reviewsCount: 48,
+    price: 8900000, currency: "تومان", rating: 4.6, reviewsCount: 48, purchaseCount: 161,
     images: [IMG.decor3],
     colors: [COLORS.gold, COLORS.charcoal], materials: ["فلز", "مرمر"],
     dimensions: "ارتفاع ۱۸۰ سانتی‌متر",
@@ -126,7 +126,7 @@ export const products: Product[] = [
   {
     id: "p11", slug: "ceiling-light-sphere", name: "چراغ سقفی کروی", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "ceiling", styleSlugs: ["modern", "minimal"],
-    price: 5400000, currency: "تومان", rating: 4.5, reviewsCount: 33,
+    price: 5400000, currency: "تومان", rating: 4.5, reviewsCount: 33, purchaseCount: 116,
     images: [IMG.living5],
     colors: [COLORS.white, COLORS.gold], materials: ["فلز", "شیر"],
     description: "چراغ سقفی کروی با پخش نور ملایم، مناسب پذیرایی و راهرو با سقف کوتاه.",
@@ -136,7 +136,7 @@ export const products: Product[] = [
   {
     id: "p12", slug: "rug-berber", name: "قالیچه بربری دست‌بافت", brand: "فرش سرا", storeId: "st4",
     categorySlug: "rugs", subCategorySlug: "rug", styleSlugs: ["boho", "rustic"],
-    price: 9800000, oldPrice: 13000000, currency: "تومان", rating: 4.8, reviewsCount: 95,
+    price: 9800000, oldPrice: 13000000, currency: "تومان", rating: 4.8, reviewsCount: 95, purchaseCount: 302,
     images: [IMG.decor10, IMG.living3],
     colors: [COLORS.cream, COLORS.terracotta], materials: ["پشم", "نخ طبیعی"],
     dimensions: "۲۰۰ × ۱۵۰ سانتی‌متر",
@@ -147,7 +147,7 @@ export const products: Product[] = [
   {
     id: "p13", slug: "carpet-modern-geo", name: "فرش مدرن هندسی", brand: "فرش سرا", storeId: "st4",
     categorySlug: "rugs", subCategorySlug: "carpet", styleSlugs: ["modern", "contemporary"],
-    price: 14500000, currency: "تومان", rating: 4.6, reviewsCount: 51,
+    price: 14500000, currency: "تومان", rating: 4.6, reviewsCount: 51, purchaseCount: 170,
     images: [IMG.living8],
     colors: [COLORS.charcoal, COLORS.cream], materials: ["پلی‌پروپیلن", "نخ حریر"],
     dimensions: "۳۰۰ × ۲۰۰ سانتی‌متر",
@@ -158,7 +158,7 @@ export const products: Product[] = [
   {
     id: "p14", slug: "curtain-linen", name: "پرده کتان بلند", brand: "نون تکستایل", storeId: "st5",
     categorySlug: "textiles", subCategorySlug: "curtain", styleSlugs: ["scandinavian", "minimal"],
-    price: 3200000, currency: "تومان", rating: 4.5, reviewsCount: 44,
+    price: 3200000, currency: "تومان", rating: 4.5, reviewsCount: 44, purchaseCount: 149,
     images: [IMG.living6],
     colors: [COLORS.cream, COLORS.sand, COLORS.sage], materials: ["کتان", "پنبه"],
     dimensions: "طول ۲۶۰ سانتی‌متر (جفتی)",
@@ -169,7 +169,7 @@ export const products: Product[] = [
   {
     id: "p15", slug: "cushion-set-earth", name: "ست کوسن پالت خاکی", brand: "نون تکستایل", storeId: "st5",
     categorySlug: "textiles", subCategorySlug: "cushion", styleSlugs: ["boho", "rustic"],
-    price: 1850000, oldPrice: 2400000, currency: "تومان", rating: 4.7, reviewsCount: 130,
+    price: 1850000, oldPrice: 2400000, currency: "تومان", rating: 4.7, reviewsCount: 130, purchaseCount: 407,
     images: [IMG.living3, IMG.living6],
     colors: [COLORS.terracotta, COLORS.sand, COLORS.cream], materials: ["کتان", "ولور"],
     dimensions: "ست ۴ تایی ۴۵×۴۵",
@@ -180,7 +180,7 @@ export const products: Product[] = [
   {
     id: "p16", slug: "throw-knit", name: "پوشالی بافت‌دار", brand: "نون تکستایل", storeId: "st5",
     categorySlug: "textiles", subCategorySlug: "throw", styleSlugs: ["scandinavian", "rustic"],
-    price: 1200000, currency: "تومان", rating: 4.6, reviewsCount: 67,
+    price: 1200000, currency: "تومان", rating: 4.6, reviewsCount: 67, purchaseCount: 218,
     images: [IMG.living6],
     colors: [COLORS.cream, COLORS.charcoal], materials: ["اکریلیک", "پشم"],
     description: "پوشالی نرم بافت‌دار برای روی مبل یا تخت، گرما و بافت را به فضا اضافه می‌کند.",
@@ -190,7 +190,7 @@ export const products: Product[] = [
   {
     id: "p17", slug: "dinnerware-stone", name: "ست ظروف استون‌ور", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
     categorySlug: "kitchen", subCategorySlug: "dinnerware", styleSlugs: ["minimal", "japandi"],
-    price: 4200000, currency: "تومان", rating: 4.8, reviewsCount: 156,
+    price: 4200000, currency: "تومان", rating: 4.8, reviewsCount: 156, purchaseCount: 485,
     images: [IMG.bed3],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["سرامیک استون‌ور"],
     dimensions: "ست ۱۲ تایی (۴ نفره)",
@@ -201,7 +201,7 @@ export const products: Product[] = [
   {
     id: "p18", slug: "kitchen-organizer-wood", name: "نظم‌دهنده چوبی آشپزخانه", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
     categorySlug: "kitchen", subCategorySlug: "organizer", styleSlugs: ["scandinavian", "minimal"],
-    price: 980000, currency: "تومان", rating: 4.4, reviewsCount: 39,
+    price: 980000, currency: "تومان", rating: 4.4, reviewsCount: 39, purchaseCount: 134,
     images: [IMG.decor7],
     colors: [COLORS.sand], materials: ["چوب بامبو"],
     description: "نظم‌دهنده‌ی بامبویی برای کشو و کابینت، سادگی و نظم را به آشپزخانه می‌آورد.",
@@ -211,7 +211,7 @@ export const products: Product[] = [
   {
     id: "p19", slug: "bed-nordic", name: "تخت نوردیک چوبی", brand: "آرا اتاق خواب", storeId: "st7",
     categorySlug: "bedroom", subCategorySlug: "bed", styleSlugs: ["scandinavian", "minimal"],
-    price: 22500000, oldPrice: 28000000, currency: "تومان", rating: 4.7, reviewsCount: 62,
+    price: 22500000, oldPrice: 28000000, currency: "تومان", rating: 4.7, reviewsCount: 62, purchaseCount: 203,
     images: [IMG.bed2, IMG.bed9],
     colors: [COLORS.sand, COLORS.white], materials: ["چوب راش", "MDF"],
     dimensions: "۱۶۰ × ۲۰۰ سانتی‌متر",
@@ -222,7 +222,7 @@ export const products: Product[] = [
   {
     id: "p20", slug: "nightstand-oak", name: "میز کنار تخت بلوط", brand: "آرا اتاق خواب", storeId: "st7",
     categorySlug: "bedroom", subCategorySlug: "nightstand", styleSlugs: ["scandinavian", "japandi"],
-    price: 3400000, currency: "تومان", rating: 4.6, reviewsCount: 28,
+    price: 3400000, currency: "تومان", rating: 4.6, reviewsCount: 28, purchaseCount: 101,
     images: [IMG.bed3],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب بلوط"],
     dimensions: "۴۵ × ۴۰ × ۵۵ سانتی‌متر",
@@ -233,7 +233,7 @@ export const products: Product[] = [
   {
     id: "p21", slug: "bedding-linen-set", name: "روتختی کتان ساده", brand: "نون تکستایل", storeId: "st5",
     categorySlug: "bedroom", subCategorySlug: "bedding", styleSlugs: ["minimal", "scandinavian"],
-    price: 2600000, currency: "تومان", rating: 4.5, reviewsCount: 71,
+    price: 2600000, currency: "تومان", rating: 4.5, reviewsCount: 71, purchaseCount: 230,
     images: [IMG.bed9],
     colors: [COLORS.cream, COLORS.sage, COLORS.charcoal], materials: ["کتان شسته"],
     description: "ست روتختی کتان شسته‌شده با حس نرم و طبیعی، برای خوابی راحت و ظاهری شیک.",
@@ -243,7 +243,7 @@ export const products: Product[] = [
   {
     id: "p22", slug: "wardrobe-slim", name: "کمد باریک ایستاده", brand: "آرا اتاق خواب", storeId: "st7",
     categorySlug: "bedroom", subCategorySlug: "wardrobe", styleSlugs: ["modern", "minimal"],
-    price: 18900000, currency: "تومان", rating: 4.4, reviewsCount: 19,
+    price: 18900000, currency: "تومان", rating: 4.4, reviewsCount: 19, purchaseCount: 74,
     images: [IMG.bed8],
     colors: [COLORS.charcoal, COLORS.sand], materials: ["MDF", "فلز"],
     dimensions: "۱۲۰ × ۶۰ × ۲۰۰ سانتی‌متر",
@@ -254,7 +254,7 @@ export const products: Product[] = [
   {
     id: "p23", slug: "desk-natural", name: "میز کار طبیعی", brand: "ورک‌نست", storeId: "st8",
     categorySlug: "workspace", subCategorySlug: "desk", styleSlugs: ["scandinavian", "japandi"],
-    price: 6700000, currency: "تومان", rating: 4.7, reviewsCount: 58,
+    price: 6700000, currency: "تومان", rating: 4.7, reviewsCount: 58, purchaseCount: 191,
     images: [IMG.decor7, IMG.decor3],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب راش", "فلز"],
     dimensions: "۱۴۰ × ۷۰ سانتی‌متر",
@@ -265,7 +265,7 @@ export const products: Product[] = [
   {
     id: "p24", slug: "office-chair-ergo", name: "صندلی اداری ارگونومیک", brand: "ورک‌نست", storeId: "st8",
     categorySlug: "workspace", subCategorySlug: "office-chair", styleSlugs: ["modern", "contemporary"],
-    price: 8900000, oldPrice: 11000000, currency: "تومان", rating: 4.6, reviewsCount: 84,
+    price: 8900000, oldPrice: 11000000, currency: "تومان", rating: 4.6, reviewsCount: 84, purchaseCount: 269,
     images: [IMG.decor7],
     colors: [COLORS.charcoal, COLORS.sage], materials: ["توری", "فلز", "پلاستیک"],
     description: "صندلی اداری با تکیه‌گاه کمری و تنظیم ارتفاع، برای ساعت‌های طولانی پشت میز بدون خستگی.",
@@ -275,7 +275,7 @@ export const products: Product[] = [
   {
     id: "p25", slug: "sculpture-stone", name: "مجسمه سنگی انتزاعی", brand: "آتلیه نور", storeId: "st10",
     categorySlug: "decor", subCategorySlug: "sculpture", styleSlugs: ["minimal", "japandi"],
-    price: 5400000, currency: "تومان", rating: 4.5, reviewsCount: 17,
+    price: 5400000, currency: "تومان", rating: 4.5, reviewsCount: 17, purchaseCount: 68,
     images: [IMG.decor8],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["رزین سنگی"],
     dimensions: "ارتفاع ۳۸ سانتی‌متر",
@@ -286,7 +286,7 @@ export const products: Product[] = [
   {
     id: "p26", slug: "candle-trio", name: "ست شمع معطر سه‌تایی", brand: "چاپان دکور", storeId: "st2",
     categorySlug: "decor", subCategorySlug: "candle", styleSlugs: ["boho", "minimal"],
-    price: 890000, currency: "تومان", rating: 4.6, reviewsCount: 49,
+    price: 890000, currency: "تومان", rating: 4.6, reviewsCount: 49, purchaseCount: 164,
     images: [IMG.decor6],
     colors: [COLORS.cream, COLORS.sage, COLORS.terracotta], materials: ["موم سویا", "شیشه"],
     description: "ست سه شمع معطر با عطرهای آرامش‌بخش و ظروف شیشه‌ای، برای شب‌های دنج.",
@@ -296,7 +296,7 @@ export const products: Product[] = [
   {
     id: "p27", slug: "outdoor-lounge-set", name: "ست مبلمان بالکن", brand: "بالکن‌کو", storeId: "st9",
     categorySlug: "outdoor", subCategorySlug: "outdoor-furniture", styleSlugs: ["modern", "boho"],
-    price: 32000000, currency: "تومان", rating: 4.4, reviewsCount: 23,
+    price: 32000000, currency: "تومان", rating: 4.4, reviewsCount: 23, purchaseCount: 86,
     images: [IMG.living5],
     colors: [COLORS.charcoal, COLORS.sage], materials: ["حصیر", "آلومینیوم", "کوسن ضدآب"],
     dimensions: "ست ۴ نفره",
@@ -307,7 +307,7 @@ export const products: Product[] = [
   {
     id: "p28", slug: "planter-terracotta", name: "گلدان تراکوتای بزرگ", brand: "بالکن‌کو", storeId: "st9",
     categorySlug: "outdoor", subCategorySlug: "planter", styleSlugs: ["rustic", "boho"],
-    price: 1500000, currency: "تومان", rating: 4.3, reviewsCount: 31,
+    price: 1500000, currency: "تومان", rating: 4.3, reviewsCount: 31, purchaseCount: 110,
     images: [IMG.decor10],
     colors: [COLORS.terracotta], materials: ["تراکوتا"],
     dimensions: "ارتفاع ۵۰ سانتی‌متر",
@@ -318,7 +318,7 @@ export const products: Product[] = [
   {
     id: "p29", slug: "sofa-bed-modular", name: "کاناپه‌ی ماژولار خواب‌دار", brand: "نور مبلمان", storeId: "st1",
     categorySlug: "furniture", subCategorySlug: "sofa", styleSlugs: ["modern", "minimal"],
-    price: 56000000, oldPrice: 68000000, currency: "تومان", rating: 4.9, reviewsCount: 211,
+    price: 56000000, oldPrice: 68000000, currency: "تومان", rating: 4.9, reviewsCount: 211, purchaseCount: 650,
     images: [IMG.living4, IMG.living8],
     colors: [COLORS.cream, COLORS.sage, COLORS.charcoal], materials: ["پارچه", "فوم"],
     dimensions: "ماژولار (قابل توسعه)",
@@ -329,7 +329,7 @@ export const products: Product[] = [
   {
     id: "p30", slug: "bookshelf-ladder", name: "میز کتابخانه‌ای نردبانی", brand: "چاپان دکور", storeId: "st2",
     categorySlug: "furniture", subCategorySlug: "coffee-table", styleSlugs: ["scandinavian", "industrial"],
-    price: 4600000, currency: "تومان", rating: 4.5, reviewsCount: 37,
+    price: 4600000, currency: "تومان", rating: 4.5, reviewsCount: 37, purchaseCount: 128,
     images: [IMG.decor7],
     colors: [COLORS.charcoal, COLORS.sand], materials: ["چوب", "فلز"],
     dimensions: "۱۸۰ × ۸۰ سانتی‌متر",
@@ -340,7 +340,7 @@ export const products: Product[] = [
   {
     id: "p31", slug: "wall-sconce-brass", name: "چراغ دیواری برنجی", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["classic", "luxury"],
-    price: 2400000, currency: "تومان", rating: 4.4, reviewsCount: 26,
+    price: 2400000, currency: "تومان", rating: 4.4, reviewsCount: 26, purchaseCount: 95,
     images: [IMG.decor3],
     colors: [COLORS.gold], materials: ["برنج", "شیشه"],
     description: "چراغ دیواری برنجی با نور ملایم، برای راهرو، پله یا کنار آینه.",
@@ -350,7 +350,7 @@ export const products: Product[] = [
   {
     id: "p32", slug: "table-runner-jute", name: "رومیزی چمنی دست‌بافت", brand: "نون تکستایل", storeId: "st5",
     categorySlug: "textiles", subCategorySlug: "table-runner", styleSlugs: ["boho", "rustic"],
-    price: 760000, currency: "تومان", rating: 4.5, reviewsCount: 42,
+    price: 760000, currency: "تومان", rating: 4.5, reviewsCount: 42, purchaseCount: 143,
     images: [IMG.decor10],
     colors: [COLORS.cream, COLORS.sand], materials: ["جوت", "پنبه"],
     dimensions: "۵۰ × ۲۰۰ سانتی‌متر",
@@ -361,7 +361,7 @@ export const products: Product[] = [
   {
     id: "p33", slug: "l-sofa-avan", name: "مبل ال «آوان»", brand: "نور مبلمان", storeId: "st1",
     categorySlug: "furniture", subCategorySlug: "sofa", styleSlugs: ["modern", "minimal"],
-    price: 62000000, oldPrice: 75000000, currency: "تومان", rating: 4.8, reviewsCount: 96,
+    price: 62000000, oldPrice: 75000000, currency: "تومان", rating: 4.8, reviewsCount: 96, purchaseCount: 305,
     images: [IMG.living4, IMG.living8],
     colors: [COLORS.cream, COLORS.charcoal, COLORS.sage, COLORS.sand], materials: ["پارچه", "فوم سرد"],
     dimensions: "مبل ال ۲۶۰ × ۱۸۰ سانتی‌متر",
@@ -372,7 +372,7 @@ export const products: Product[] = [
   {
     id: "p34", slug: "chandelier-nor", name: "لوستر کریستالی «نُر»", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "ceiling", styleSlugs: ["luxury", "classic"],
-    price: 24000000, currency: "تومان", rating: 4.7, reviewsCount: 54,
+    price: 24000000, currency: "تومان", rating: 4.7, reviewsCount: 54, purchaseCount: 179,
     images: [IMG.living5, IMG.decor3],
     colors: [COLORS.gold, COLORS.white], materials: ["کریستال", "فلز برنجی"],
     dimensions: "قطر ۸۰ سانتی‌متر",
@@ -383,7 +383,7 @@ export const products: Product[] = [
   {
     id: "p35", slug: "dining-table-sepa", name: "میز ناهارخوری چوب بلوط «سِپا»", brand: "نور مبلمان", storeId: "st1",
     categorySlug: "furniture", subCategorySlug: "dining-table", styleSlugs: ["scandinavian", "modern"],
-    price: 18500000, currency: "تومان", rating: 4.6, reviewsCount: 41,
+    price: 18500000, currency: "تومان", rating: 4.6, reviewsCount: 41, purchaseCount: 140,
     images: [IMG.living9],
     colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب بلوط", "فلز"],
     dimensions: "۱۸۰ × ۹۰ سانتی‌متر",
@@ -394,7 +394,7 @@ export const products: Product[] = [
   {
     id: "p36", slug: "floor-lamp-hila", name: "آباژور ایستاده مدرن «هیلا»", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "floor-lamp", styleSlugs: ["modern", "minimal"],
-    price: 6700000, oldPrice: 8200000, currency: "تومان", rating: 4.5, reviewsCount: 33,
+    price: 6700000, oldPrice: 8200000, currency: "تومان", rating: 4.5, reviewsCount: 33, purchaseCount: 116,
     images: [IMG.decor3, IMG.decor4],
     colors: [COLORS.charcoal, COLORS.gold, COLORS.sand], materials: ["فلز", "کتان"],
     dimensions: "ارتفاع ۱۶۰ سانتی‌متر",
@@ -405,7 +405,7 @@ export const products: Product[] = [
   {
     id: "p37", slug: "wall-sconce-zar", name: "دیوارکوب برنجی «زَر»", brand: "لوامینا", storeId: "st3",
     categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["classic", "luxury"],
-    price: 2900000, currency: "تومان", rating: 4.4, reviewsCount: 22,
+    price: 2900000, currency: "تومان", rating: 4.4, reviewsCount: 22, purchaseCount: 83,
     images: [IMG.decor3],
     colors: [COLORS.gold], materials: ["برنج", "شیشه"],
     description: "دیوارکوب برنجی با نور ملایم، برای راهرو، پله یا کنار آینه.",
@@ -415,7 +415,7 @@ export const products: Product[] = [
   {
     id: "p38", slug: "pouf-narm", name: "پوف مخملی «نَرم»", brand: "نون تکستایل", storeId: "st5",
     categorySlug: "furniture", subCategorySlug: "armchair", styleSlugs: ["boho", "modern"],
-    price: 2400000, currency: "تومان", rating: 4.3, reviewsCount: 18,
+    price: 2400000, currency: "تومان", rating: 4.3, reviewsCount: 18, purchaseCount: 71,
     images: [IMG.living3],
     colors: [COLORS.terracotta, COLORS.sage, COLORS.cream, COLORS.plum], materials: ["مخمل", "فوم"],
     dimensions: "قطر ۴۵ سانتی‌متر",
@@ -426,7 +426,7 @@ export const products: Product[] = [
   {
     id: "p39", slug: "console-line", name: "کنسول چوبی «لاین»", brand: "آرا اتاق خواب", storeId: "st7",
     categorySlug: "furniture", subCategorySlug: "coffee-table", styleSlugs: ["minimal", "scandinavian"],
-    price: 8900000, currency: "تومان", rating: 4.5, reviewsCount: 27,
+    price: 8900000, currency: "تومان", rating: 4.5, reviewsCount: 27, purchaseCount: 98,
     images: [IMG.living9, IMG.decor7],
     colors: [COLORS.charcoal, COLORS.sand], materials: ["چوب", "فلز"],
     dimensions: "۱۲۰ × ۳۵ سانتی‌متر",
