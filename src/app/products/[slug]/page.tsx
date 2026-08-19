@@ -49,7 +49,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const router = useRouter();
   const onAi = (label: string) => {
     if (label.includes("در اتاق من قرار بده")) {
-      router.push(`/ai/design?tab=inspiration&product=${product!.slug}`);
+      router.push(`/ai?product=${product!.slug}`);
       return;
     }
     push({ role: "user", content: `${label} — ${product!.name}` });

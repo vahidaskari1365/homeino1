@@ -12,7 +12,7 @@ export default function MyDesignsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-black text-ink">طراحی‌های من</h1>
-        <ButtonLink href="/ai/design"><Wand2 size={16} /> طراحی جدید</ButtonLink>
+        <ButtonLink href="/ai"><Wand2 size={16} /> طراحی جدید</ButtonLink>
       </div>
 
       {aiDesigns.length ? (
@@ -43,7 +43,7 @@ export default function MyDesignsPage() {
             </div>
           ))}
         </div>
-      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<ButtonLink href="/ai/design">اولین طراحی‌ات را بساز</ButtonLink>} />}
+      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<ButtonLink href="/ai">اولین طراحی‌ات را بساز</ButtonLink>} />}
     </div>
   );
 }

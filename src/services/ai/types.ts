@@ -1,3 +1,4 @@
+import type { OverlayRegion } from "./orali/types";
 import type { AiMode } from "@/types";
 
 export interface GenerateDesignInput {
@@ -24,6 +25,9 @@ export interface GeneratedDesign {
    *  development preview (original preserved or placeholder). The UI must
    *  show an honest "preview" badge, never fake a successful real edit. */
   preview?: boolean;
+  /** Overlay metadata: the regions the visual engine actually changed.
+   *  Empty when no real overlay engine ran — the UI must not fake boxes. */
+  regions?: OverlayRegion[];
 }
 
 export interface ChatReplyInput {
@@ -86,10 +90,6 @@ export interface AiProvider {
   recommendProducts(input: GenerateDesignInput): Promise<RecommendedProduct[]>;
   chat(input: ChatReplyInput): Promise<ChatReply>;
   suggestDecor(input: { room: string; style: string; budget?: string }): Promise<DecorSuggestion>;
-  /** Structured intent only — never long prose. */
-  understandIntent?(input: unknown): Promise<unknown>;
-  /** Orali visual / overlay generation. */
-  oraliGenerate?(input: unknown): Promise<unknown>;
 }
 
 export const AI_MODES: {
