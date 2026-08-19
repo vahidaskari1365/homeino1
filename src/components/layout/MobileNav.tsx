@@ -63,7 +63,7 @@ export function MobileNav() {
           <p className="mt-1 text-xs leading-6 text-cream/65">کشف محصول، مقایسه فروشگاه‌ها و خرید مطمئن — با طراحی هوشمند در کنارش.</p>
           <div className="mt-3 flex gap-2">
             <Link href="/products" onClick={() => setMobileNav(false)} className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-cream px-3 text-xs font-bold text-ink"><Store size={14} /> کاوش محصولات</Link>
-            <Link href="/ai/design" onClick={() => setMobileNav(false)} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/20 bg-ink/30 px-3 text-xs font-bold text-cream"><Sparkles size={14} /> طراحی AI</Link>
+            <Link href="/ai" onClick={() => setMobileNav(false)} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/20 bg-ink/30 px-3 text-xs font-bold text-cream"><Sparkles size={14} /> طراحی AI</Link>
           </div>
         </div>
 
