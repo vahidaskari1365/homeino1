@@ -44,7 +44,7 @@ export default function StyleDetailPage({ params }: { params: Promise<{ slug: st
         <div>
           <p className="leading-9 text-ink-muted">{style!.description}</p>
           {/* AI design CTA — connects discovery to AI loop */}
-          <Link href={`/ai/design`} className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-gold/25 bg-gold/5 p-4 transition hover:border-gold/40">
+          <Link href={`/ai`} className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-gold/25 bg-gold/5 p-4 transition hover:border-gold/40">
             <div className="flex items-center gap-2.5">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold/15 text-gold"><Wand2 size={18} /></span>
               <div><p className="text-sm font-bold text-ink">این سبک رو تو خونه‌ات ببین</p><p className="text-[11px] text-ink-muted">عکس اتاقت رو بده، با هوش مصنوعی با سبک {style!.name} بچینش</p></div>

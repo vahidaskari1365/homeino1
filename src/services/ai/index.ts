@@ -9,11 +9,22 @@ import type {
   AiProvider, GenerateDesignInput, GeneratedDesign,
   ChatReplyInput, ChatReply, DecorSuggestion, RoomAnalysis, RecommendedProduct,
 } from "./types";
+import type { IntentRequest, IntentAnalysis } from "./llm/types";
+import type { PipelineInput, PipelineResult } from "./pipeline";
 import { AI_MODES } from "./types";
 import { CREDIT_CONFIG, costForMode } from "./credits";
 
 export type { AiProvider, GenerateDesignInput, GeneratedDesign, ChatReplyInput, ChatReply, DecorSuggestion, RoomAnalysis, RecommendedProduct } from "./types";
 export { AI_MODES, CREDIT_CONFIG, costForMode };
+
+// ---- Pipeline / LLM / Orali contracts the UI consumes ----
+// Architecture: AI Designer (UI) → /api/ai → Pipeline → { LLM Service, Orali, Base Provider }
+export type { IntentRequest, IntentAnalysis, DesignIntentType, LlmProvider } from "./llm/types";
+export { INTENT_LABELS } from "./llm/types";
+export type { OverlayRegion, OverlayBox, OraliEditRequest, OraliEditResult, OraliClient } from "./orali/types";
+export type { PipelineInput, DesignInstruction, PipelineResult, PipelineOutcome, ChangeScope } from "./pipeline";
+export { AI_PHASE_LABEL, AI_WAIT_TIPS, PIPELINE_STEPS, isBusyPhase, stepIndexForPhase } from "./states";
+export type { AiPhase, PipelineStepKey } from "./states";
 
 /** Low-level server call. Automatically attaches userId from localStorage
  *  (optimistic — backend will use the authenticated session instead). */
@@ -51,8 +62,10 @@ export const aiService = {
   recommend: (input: GenerateDesignInput) => callAiServer<RecommendedProduct[]>("recommend", input),
   chat: (input: ChatReplyInput) => callAiServer<ChatReply>("chat", input),
   suggest: (input: { room: string; style: string; budget?: string }) => callAiServer<DecorSuggestion>("suggest", input),
-  understand: (input: unknown) => callAiServer("understand", input),
-  orali: (input: unknown) => callAiServer("orali", input),
+  /** LLM intent understanding — structured JSON, free (0 credits). */
+  understand: (input: IntentRequest) => callAiServer<IntentAnalysis>("understand", input),
+  /** Full design pipeline: understand → instruct → generate → validate. */
+  pipeline: (input: PipelineInput) => callAiServer<PipelineResult>("pipeline", input),
 };
 
 // type re-export for convenience (unused import suppression)

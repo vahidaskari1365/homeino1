@@ -97,7 +97,7 @@ export default function CartPage() {
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-clay/35 pt-4"><span className="font-bold text-ink">قابل پرداخت</span><span className="text-lg font-black text-ink">{toFa(formatPrice(subtotal + shipping))} <small className="text-[10px] font-normal text-ink-muted">تومان</small></span></div>
           <ButtonLink href="/checkout" size="lg" className="mt-5 w-full">ادامه و پرداخت امن <ArrowLeft size={16} /></ButtonLink>
           <div className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-muted"><ShieldCheck size={13} className="shrink-0 text-success" /> پرداخت امن · ضمانت بازگشت {toFa(PLATFORM.policies.returnDays)} روزه</div>
-          <div className="mt-4 grid grid-cols-2 gap-2"><Link href="/ai/design" className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-gold/25 bg-gold/5 px-2 text-[10px] font-bold text-[#80601f]"><Sparkles size={13} /> طراحی با AI</Link><Link href="/inspiration" className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-clay/45 bg-ivory-2 px-2 text-[10px] font-bold text-ink-muted"><Lightbulb size={13} /> الهام بگیر</Link></div>
+          <div className="mt-4 grid grid-cols-2 gap-2"><Link href="/ai" className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-gold/25 bg-gold/5 px-2 text-[10px] font-bold text-[#80601f]"><Sparkles size={13} /> طراحی با AI</Link><Link href="/inspiration" className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-clay/45 bg-ivory-2 px-2 text-[10px] font-bold text-ink-muted"><Lightbulb size={13} /> الهام بگیر</Link></div>
         </aside>
       </div>
 

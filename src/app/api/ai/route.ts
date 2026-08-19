@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveProvider } from "@/services/ai/provider";
 import { mockAiProvider } from "@/services/ai/mockAiService";
-import { sanitizeUserPrompt } from "@/services/ai/roomState";
+import { sanitizeUserPrompt, ALL_ELEMENTS } from "@/services/ai/roomState";
+import { understandIntent } from "@/services/ai/llm";
+import { runDesignPipeline } from "@/services/ai/pipeline";
 import type { GenerateDesignInput, ChatReplyInput } from "@/services/ai/types";
+import type { IntentRequest } from "@/services/ai/llm/types";
+import type { PipelineInput } from "@/services/ai/pipeline";
 
 // ============================================================
 // /api/ai — server AI gateway with security hardening.
@@ -13,7 +17,7 @@ import type { GenerateDesignInput, ChatReplyInput } from "@/services/ai/types";
 //   • No keys, providers, or model names reach the client
 // ============================================================
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "orali"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 const MAX_PAYLOAD_BYTES = 15 * 1024 * 1024; // 15 MB (image base64 can be large)
 
@@ -47,14 +51,6 @@ async function dispatch(provider: typeof mockAiProvider, action: string, payload
     case "suggest": return provider.suggestDecor(payload as { room: string; style: string; budget?: string });
     case "analyze": return provider.analyzeRoom(payload as GenerateDesignInput);
     case "recommend": return provider.recommendProducts(payload as GenerateDesignInput);
-    case "understand":
-      return provider.understandIntent
-        ? provider.understandIntent(payload)
-        : Promise.resolve({ intent: "unclear", target: [], changes: [], preservedElements: [], colors: [], confidence: 0, scope: "local" });
-    case "orali":
-      return provider.oraliGenerate
-        ? provider.oraliGenerate(payload)
-        : Promise.resolve({ generatedImage: (payload as { originalImage?: string }).originalImage, preview: true, overlay: { version: 1, regions: [], preservedArchitecture: true, provider: "mock" } });
     default: throw new Error("Unknown action");
   }
 }
@@ -100,6 +96,31 @@ export async function POST(req: NextRequest) {
     for (const key of ["style", "room", "color", "mood"]) {
       if (key in p && typeof p[key] === "string") {
         p[key] = (p[key] as string).replace(/<[^>]+>/g, "").slice(0, 200);
+      }
+    }
+    // ---- Pipeline payloads: clamp enum arrays to the element vocabulary ----
+    const VALID_ELEMENTS = new Set(ALL_ELEMENTS as string[]);
+    for (const key of ["targets", "preservedExtra", "selectedTargets"]) {
+      if (key in p && Array.isArray(p[key])) {
+        p[key] = (p[key] as unknown[]).filter((x): x is string => typeof x === "string" && VALID_ELEMENTS.has(x)).slice(0, 16);
+      }
+    }
+    if ("colors" in p && Array.isArray(p.colors)) {
+      p.colors = (p.colors as unknown[]).filter((x): x is string => typeof x === "string").map((c) => c.replace(/<[^>]+>/g, "").slice(0, 40)).slice(0, 6);
+    }
+
+    // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----
+    if (action === "understand") {
+      const { analysis, source, degraded } = await understandIntent(p as unknown as IntentRequest);
+      return NextResponse.json({ ...analysis, _llm: source, _degraded: degraded });
+    }
+    if (action === "pipeline") {
+      try {
+        const result = await runDesignPipeline(p as unknown as PipelineInput);
+        return NextResponse.json({ ...result, _pipeline: true });
+      } catch {
+        // Honest failure — no fake success, no silent mock substitution.
+        return NextResponse.json({ error: "PIPELINE_FAILED" }, { status: 502 });
       }
     }
 

@@ -12,6 +12,7 @@ import { useAuth } from "@/stores/useApp";
 export type AnalyticsEventType =
   | "page_view" | "user_registered" | "user_login" | "user_logout"
   | "room_uploaded" | "ai_started" | "ai_finished" | "ai_failed"
+  | "ai_design_started" | "ai_design_finished" | "ai_design_failed" | "ai_design_no_result"
   | "design_saved" | "product_viewed" | "product_clicked" | "product_favorited"
   | "add_to_cart" | "remove_from_cart" | "checkout_started" | "order_placed"
   | "store_viewed" | "store_followed" | "object_detected" | "object_selected"

@@ -41,7 +41,7 @@ export default function WishlistPage() {
           <div className="mb-4 space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
             <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2"><Sparkles size={16} className="shrink-0 text-gold" /><p className="text-xs text-ink-muted">می‌خوای این محصولات رو با هم توی خونه‌ات ببینی؟</p></div>
-              <ButtonLink href="/ai/design" size="sm" variant="accent" className="w-full sm:w-auto">طراحی با این وسایل</ButtonLink>
+              <ButtonLink href="/ai" size="sm" variant="accent" className="w-full sm:w-auto">طراحی با این وسایل</ButtonLink>
             </div>
             {/* Style analysis */}
             {(() => {

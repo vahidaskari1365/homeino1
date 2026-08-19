@@ -57,7 +57,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             ) : null;
           })}
         </div>
-        <Link href="/ai/design" className="mt-8 inline-flex items-center gap-1 text-sm font-medium text-terracotta-deep"><ArrowLeft size={15} /> این پروژه را با AI برای خودت بازسازی کن</Link>
+        <Link href="/ai" className="mt-8 inline-flex items-center gap-1 text-sm font-medium text-terracotta-deep"><ArrowLeft size={15} /> این پروژه را با AI برای خودت بازسازی کن</Link>
       </div>
     </Container>
   );
