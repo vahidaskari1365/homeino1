@@ -1,95 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
 import {
-  ArrowLeft, BadgeCheck, ChevronDown, HeartHandshake, Lightbulb, Play,
-  Search, ShieldCheck, Sparkles, Store, Truck, Users, Wand2,
+  ArrowLeft, BadgeCheck, HeartHandshake, Lightbulb, Play, Search, ShieldCheck, Sparkles, Store, Truck, Wand2,
 } from "lucide-react";
 import { Container, Badge, ButtonLink, Rating, SectionHeading } from "@/components/ui/primitives";
 import { ProductCard, StoreCard, InspirationCard } from "@/components/cards";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
-import { useUi } from "@/stores/useApp";
+import { Hero } from "@/components/home/Hero";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
 import { stores, collections } from "@/data/stores";
-import { trendingProducts, products } from "@/data/products";
+import { trendingProducts } from "@/data/products";
 import { inspirations } from "@/data/inspirations";
 import { IMG } from "@/data/media";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { toFa } from "@/lib/utils";
 
-const HERO_VIDEO = "/video/01.mp4";
-
 export default function HomePage() {
-  const { setSearch } = useUi();
-  const heroRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoUnavailable, setVideoUnavailable] = useState(false);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const yBackground = useTransform(scrollYProgress, [0, 1], ["0%", "14%"]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.78], [1, 0]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = true;
-    const play = () => video.play().catch(() => undefined);
-    play();
-    video.addEventListener("canplay", play, { once: true });
-    return () => video.removeEventListener("canplay", play);
-  }, []);
-
   return (
     <>
-      <section ref={heroRef} className="relative min-h-[76svh] w-full overflow-hidden bg-ink sm:min-h-[720px] lg:min-h-[calc(100svh-6rem)]">
-        <motion.div style={{ y: yBackground }} className="absolute -inset-y-[8%] inset-x-0">
-          {videoUnavailable ? (
-            <SmartImage src={IMG.living5} alt="فضای داخلی گرم و مدرن" className="h-full w-full" />
-          ) : (
-            <video ref={videoRef} src={HERO_VIDEO} autoPlay muted loop playsInline preload="metadata" poster={IMG.living5} onError={() => setVideoUnavailable(true)} className="h-full w-full object-cover" aria-hidden="true" />
-          )}
-        </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-l from-ink/92 via-ink/64 to-ink/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-ink/28" />
-        <div className="grain absolute inset-0 opacity-45" />
-        <div className="pointer-events-none absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-terracotta/28 blur-[100px] sm:h-[50vh] sm:w-[50vh]" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-gold/15 blur-[100px]" />
-
-        <motion.div style={{ opacity: contentOpacity }} className="relative z-10 flex min-h-[76svh] items-center py-14 sm:min-h-[720px] lg:min-h-[calc(100svh-6rem)]">
-          <Container>
-            <div className="max-w-3xl">
-              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65 }}>
-                <Badge tone="dark" className="mb-5 border-gold/35 bg-white/10 px-3.5 py-2 text-gold-soft backdrop-blur"><Sparkles size={13} /> بازارگاه خانه و طراحی هوشمند</Badge>
-              </motion.div>
-              <motion.h1 initial={{ opacity: 0, y: 24, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.9, delay: 0.06 }} className="text-balance text-shadow-soft font-display text-[clamp(2.25rem,8vw,5rem)] font-black leading-[1.2] text-cream">
-                خانه‌ای بساز که<br /><span className="text-gold-gradient">شبیه خودت</span> باشد.
-              </motion.h1>
-              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.18 }} className="mt-5 max-w-2xl text-pretty text-base leading-8 text-cream/78 sm:text-lg sm:leading-9">
-                از کشف محصول و مقایسه فروشگاه‌ها تا الهام گرفتن و دیدن نتیجه در فضای واقعی با هوش مصنوعی؛ همه در یک تجربه ساده و مطمئن.
-              </motion.p>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.28 }} className="mt-7 flex max-w-2xl flex-col gap-3 sm:flex-row">
-                <button onClick={() => setSearch(true)} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/15 bg-cream/95 px-4 text-right text-ink shadow-[var(--shadow-lift)] backdrop-blur transition hover:bg-cream sm:px-5">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink text-cream"><Search size={17} /></span>
-                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold">دنبال چه چیزی هستی؟</span><span className="block truncate text-xs text-ink-muted">مبل، فرش، سبک یا فروشگاه…</span></span>
-                  <ArrowLeft size={18} className="shrink-0 text-terracotta" />
-                </button>
-                <ButtonLink href="/ai/design" variant="gold" size="lg" className="min-h-14 rounded-2xl px-5"><Wand2 size={18} /> شروع طراحی AI</ButtonLink>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.42 }} className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-cream/72 sm:text-sm">
-                <span className="flex items-center gap-1.5"><Search size={14} className="text-gold-soft" /><b className="text-cream">{toFa(products.length)}</b> محصول منتخب</span>
-                <span className="flex items-center gap-1.5"><Users size={14} className="text-gold-soft" /><b className="text-cream">{toFa(stores.length)}</b> فروشگاه معتبر</span>
-                <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-sage-soft" /> ضمانت خرید و بازگشت</span>
-              </motion.div>
-            </div>
-          </Container>
-        </motion.div>
-
-        <div className="absolute inset-x-0 bottom-5 z-10 hidden justify-center sm:flex"><motion.div animate={{ y: [0, 7, 0] }} transition={{ duration: 1.8, repeat: Infinity }} className="flex flex-col items-center gap-1 text-cream/50"><span className="text-[10px] tracking-[.2em]">کشف کن</span><ChevronDown size={18} /></motion.div></div>
-      </section>
+      <Hero />
 
       <section className="surface-emerald border-y border-gold/15 py-4 text-cream">
         <Container>

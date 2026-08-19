@@ -102,6 +102,7 @@ body {
 main { min-width: 0; }
 img, video, canvas, svg { max-width: 100%; }
 img, video { display: block; }
+video { background-color: var(--color-ink); } /* never flash white while the hero video loads */
 button, input, textarea, select { max-width: 100%; font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
