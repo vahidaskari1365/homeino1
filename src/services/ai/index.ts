@@ -51,6 +51,8 @@ export const aiService = {
   recommend: (input: GenerateDesignInput) => callAiServer<RecommendedProduct[]>("recommend", input),
   chat: (input: ChatReplyInput) => callAiServer<ChatReply>("chat", input),
   suggest: (input: { room: string; style: string; budget?: string }) => callAiServer<DecorSuggestion>("suggest", input),
+  understand: (input: unknown) => callAiServer("understand", input),
+  orali: (input: unknown) => callAiServer("orali", input),
 };
 
 // type re-export for convenience (unused import suppression)

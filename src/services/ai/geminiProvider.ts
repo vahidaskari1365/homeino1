@@ -109,6 +109,25 @@ export const geminiProvider: AiProvider = {
     try { return JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] ?? "{}"); }
     catch { return { roomType: input.room || "پذیرایی", style: input.style || "مدرن", palette: ["#F0E8D8", "#1E5D44", "#BE9A4F"], mood: "گرم و دنج", suggestions: [] }; }
   },
+  async understandIntent(input: unknown) {
+    const { localUnderstand } = await import("./llm");
+    const p = (input ?? {}) as { prompt?: string; style?: string; roomType?: string; colors?: string[]; keep?: string; change?: string };
+    const raw = await geminiText(
+      "Reply ONLY compact JSON: {intent,target[],changes[],preservedElements[],style,colors[],confidence,scope}. No prose. Local edits unless user asks to restyle the whole room.",
+      JSON.stringify(p),
+    );
+    try { return JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] ?? "{}"); }
+    catch { return localUnderstand({ prompt: p.prompt || "", style: p.style, roomType: p.roomType, colors: p.colors, keep: p.keep, change: p.change }); }
+  },
+  async oraliGenerate(input: unknown) {
+    const p = (input ?? {}) as { originalImage?: string };
+    try {
+      const img = await geminiImage({ mode: "image-edit", prompt: "Apply scoped interior edit. Preserve architecture.", referenceImage: p.originalImage });
+      return { generatedImage: img.afterImage, preview: false, overlay: { version: 1, regions: [], preservedArchitecture: true, provider: "orali" } };
+    } catch {
+      return { generatedImage: p.originalImage, preview: true, overlay: { version: 1, regions: [], preservedArchitecture: true, provider: "mock" } };
+    }
+  },
   async recommendProducts() {
     const raw = await geminiText(
       "Reply ONLY a compact JSON array [{productId, reason, score}] using real ids p1..p39.",

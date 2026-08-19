@@ -19,7 +19,7 @@ const NAV = [
   { label: "الهام", href: "/inspiration" },
   { label: "سبک‌ها", href: "/styles", mega: "styles" },
   { label: "دسته دوم", href: "/second-hand" },
-  { label: "AI استودیو", href: "/ai", accent: true },
+  { label: "هوش مصنوعی", href: "/ai", accent: true },
 ];
 
 function IconBadge({ count, children }: { count: number; children: React.ReactNode }) {

@@ -177,6 +177,44 @@ export const mockAiProvider: AiProvider = {
     };
   },
 
+  async understandIntent(input: unknown) {
+    const { localUnderstand } = await import("./llm");
+    const p = (input ?? {}) as { prompt?: string; style?: string; roomType?: string; colors?: string[]; keep?: string; change?: string };
+    return localUnderstand({
+      prompt: p.prompt || "",
+      style: p.style,
+      roomType: p.roomType,
+      colors: p.colors,
+      keep: p.keep,
+      change: p.change,
+    });
+  },
+
+  async oraliGenerate(input: unknown) {
+    await new Promise((r) => setTimeout(r, 900));
+    const p = (input ?? {}) as { originalImage?: string; instruction?: string; intentJson?: { target?: string[] } };
+    const img = p.originalImage || roomShots[0];
+    const targets = p.intentJson?.target ?? [];
+    return {
+      generatedImage: img,
+      preview: true,
+      overlay: {
+        version: 1,
+        preservedArchitecture: true,
+        provider: "mock",
+        regions: targets.slice(0, 4).map((label, i) => ({
+          id: `r${i}`,
+          label: String(label),
+          x: 0.12 + i * 0.08,
+          y: 0.35,
+          w: 0.28,
+          h: 0.32,
+          editable: true,
+        })),
+      },
+    };
+  },
+
   async recommendProducts(input) {
     await new Promise((r) => setTimeout(r, 900));
     // Match from REAL catalog — never invent product IDs
