@@ -1,9 +1,9 @@
-import type { DecorStyle } from "@/types";
+import type { Style } from "@/types";
 import { styles, getStyle } from "@/data/styles";
 
 export interface StylesRepository {
-  list(): Promise<DecorStyle[]>;
-  bySlug(slug: string): Promise<DecorStyle | undefined>;
+  list(): Promise<Style[]>;
+  bySlug(slug: string): Promise<Style | undefined>;
 }
 
 export const stylesRepository: StylesRepository = {

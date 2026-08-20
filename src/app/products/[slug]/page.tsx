@@ -3,11 +3,13 @@ import { useState, use, useEffect } from "react";
 import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, MessageCircle, Ruler } from "lucide-react";
-import { Container, Breadcrumb, ProductGrid } from "@/components/shared";
+import { Container, Breadcrumb } from "@/components/shared";
+import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
 import { Button, Badge, Rating, Price, EmptyState, LogoBlock } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
+import { getStyle } from "@/data/styles";
 import { getStoreById, stores as allStores } from "@/data/stores";
 import { offersForProduct, getBestOffer } from "@/data/offers";
 import { sampleReviews } from "@/data/inspirations";
@@ -160,8 +162,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <div className="mt-5 rounded-xl border border-clay/40 bg-cream p-4">
               <h4 className="mb-2 text-xs font-bold text-ink">مناسب برای خانه شما؟</h4>
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                {product!.styleSlugs.map((s) => (
-                  <Link key={s} href={`/styles/${s}`} className="rounded-full border border-terracotta/30 bg-terracotta/8 px-2.5 py-1 font-medium text-terracotta-deep transition hover:bg-terracotta/15">سبک {s}</Link>
+                {product!.styleSlugs.map((styleSlug) => (
+                  <Link key={styleSlug} href={`/styles/${styleSlug}`} className="rounded-full border border-terracotta/30 bg-terracotta/8 px-2.5 py-1 font-medium text-terracotta-deep transition hover:bg-terracotta/15">سبک {getStyle(styleSlug)?.name ?? styleSlug}</Link>
                 ))}
                 {product!.dimensions && <span className="flex items-center gap-1 rounded-full bg-ivory-2 px-2.5 py-1 text-ink-muted"><Ruler size={11} /> {product!.dimensions}</span>}
               </div>
@@ -270,7 +272,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       {/* related */}
       <div className="mt-12">
         <h2 className="mb-5 font-display text-2xl font-bold text-ink">محصولات مرتبط</h2>
-        {related.length > 0 ? <ProductGrid products={related} /> : <EmptyState title="محصول مرتبطی نیست" />}
+        {related.length > 0 ? (
+          <FilterableProductGrid
+            products={related}
+            layout="compact"
+            emptyDescription="فیلتر سبک محصولات مشابه را تغییر بده."
+          />
+        ) : <EmptyState title="محصول مرتبطی نیست" />}
       </div>
 
       {/* STICKY MOBILE CTA — always visible on scroll (mobile only) */}

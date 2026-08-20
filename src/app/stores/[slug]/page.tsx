@@ -2,7 +2,8 @@
 import { use, useState } from "react";
 import { notFound } from "next/navigation";
 import { BadgeCheck, MapPin, Package, Star } from "lucide-react";
-import { Container, Breadcrumb, ProductGrid } from "@/components/shared";
+import { Container, Breadcrumb } from "@/components/shared";
+import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
 import { Button, LogoBlock, Rating, Chip } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
@@ -60,7 +61,12 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
         ))}
       </div>
 
-      <div className="mt-6"><ProductGrid products={list} /></div>
+      <FilterableProductGrid
+        products={list}
+        layout="compact"
+        className="mt-6"
+        emptyDescription="فیلتر سبک یا سایر فیلترهای محصولات این فروشگاه را تغییر بده."
+      />
     </Container>
   );
 }

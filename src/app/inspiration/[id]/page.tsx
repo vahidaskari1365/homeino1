@@ -50,7 +50,7 @@ export default function InspirationDetailPage({ params }: { params: Promise<{ id
           </div>
 
           <div className="mt-5 flex items-center gap-1">
-            {style?.palette.map((c) => <span key={c} className="h-8 w-8 rounded-full border border-clay/40" style={{ background: c }} title={c} />)}
+            {style?.colorPalette.map((color) => <span key={color.hex} className="h-8 w-8 rounded-full border border-clay/40" style={{ background: color.hex }} title={color.name} />)}
           </div>
         </div>
       </div>
