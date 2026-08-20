@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { FolderHeart, Plus, Trash2, X } from "lucide-react";
-import { Container, PageHeader, ProductGrid } from "@/components/shared";
+import { Container, PageHeader } from "@/components/shared";
+import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
 import { Button, ButtonLink, ConfirmDialog, EmptyState, Modal } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { products as allProducts, getProductById } from "@/data/products";
@@ -80,7 +81,12 @@ export default function CollectionsPage() {
               {activeProducts.length ? (
                 <>
                   <div className="relative">
-                    <ProductGrid products={activeProducts as typeof allProducts} cols={3} />
+                    <FilterableProductGrid
+                      products={activeProducts as typeof allProducts}
+                      cols={3}
+                      layout="compact"
+                      emptyDescription="فیلتر سبک یا سایر فیلترهای این کالکشن را تغییر بده."
+                    />
                     <div className="mt-3 flex flex-wrap gap-2">
                       {activeProducts.map((product) => product && <button key={product.id} onClick={() => removeProduct(active.id, product.id)} className="inline-flex min-h-9 items-center gap-1 rounded-full border border-clay/45 bg-cream px-3 text-xs text-ink-muted hover:border-danger/35 hover:text-danger"><X size={13} /> حذف {product.name}</button>)}
                     </div>

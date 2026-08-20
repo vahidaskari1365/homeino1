@@ -29,6 +29,20 @@ export const IMG = {
   bed9: p(6970025),
   bed10: p(9565779),
 
+  // Interior style guide — curated Pexels photography matched to each style.
+  styleModern: p(1571460),
+  styleMinimal: p(12277220),
+  styleScandinavian: p(20390760),
+  styleClassic: p(11433090),
+  styleNeoclassical: p(12277282),
+  styleIndustrial: p(7587827),
+  styleBoho: p(20541968),
+  styleRustic: p(7746106),
+  styleJapandi: p(12285892),
+  styleMediterranean: p(4846221),
+  styleContemporary: p(6969866),
+  styleArtDeco: p(31080809),
+
   // Decor / objects (square)
   decor1: p(32631105, "jpeg", 900, 900),
   decor2: p(33948970, "png", 900, 900),

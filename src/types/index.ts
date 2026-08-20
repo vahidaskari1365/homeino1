@@ -25,24 +25,50 @@ export type StyleSlug =
   | "modern"
   | "minimal"
   | "scandinavian"
-  | "japandi"
   | "classic"
-  | "contemporary"
+  | "neoclassical"
   | "industrial"
   | "boho"
-  | "luxury"
-  | "rustic";
+  | "rustic"
+  | "japandi"
+  | "mediterranean"
+  | "contemporary"
+  | "art-deco";
 
-export interface DecorStyle {
-  slug: string;
+export interface StyleColor {
+  name: string;
+  hex: string;
+}
+
+/**
+ * Editorial style model. It is deliberately backend-friendly: every field is
+ * serializable and can map directly to a Supabase row plus related arrays.
+ */
+export interface Style {
+  id: string;
+  slug: StyleSlug;
   name: string;
   nameEn: string;
   tagline: string;
+  shortDescription: string;
   description: string;
   image: string;
-  palette: string[];
-  traits: string[];
+  imageAlt: string;
+  colorPalette: StyleColor[];
+  materials: string[];
+  keyFeatures: string[];
+  furnitureCharacteristics: string;
+  lightingCharacteristics: string;
+  formCharacteristics: string;
+  decorCharacteristics: string;
+  visualDensity: string;
+  suitableFor: string;
+  suitableRooms: string[];
+  comparisonNote?: string;
 }
+
+/** Backwards-compatible domain name used by existing storefront modules. */
+export type DecorStyle = Style;
 
 export interface Store {
   id: string;

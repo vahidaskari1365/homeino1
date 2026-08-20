@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { SearchX } from "lucide-react";
 import { Suspense, useMemo } from "react";
 import { Container, ProductGrid, PageHeader } from "@/components/shared";
+import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
 import { EmptyState, Button, Chip } from "@/components/ui/primitives";
 import { products } from "@/data/products";
 import { stores } from "@/data/stores";
@@ -58,7 +59,11 @@ function SearchInner() {
           {results.products.length > 0 && (
             <div>
               <h3 className="mb-4 font-display text-lg font-bold text-ink">محصولات ({toFa(results.products.length)})</h3>
-              <ProductGrid products={results.products} />
+              <FilterableProductGrid
+                products={results.products}
+                layout="compact"
+                emptyDescription="فیلتر سبک یا سایر فیلترهای نتایج جستجو را تغییر بده."
+              />
             </div>
           )}
         </div>

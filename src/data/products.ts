@@ -27,7 +27,7 @@ export const products: Product[] = [
   },
   {
     id: "p2", slug: "sofa-lumi", name: "مبل راحتی لوومی", brand: "نور مبلمان", storeId: "st1",
-    categorySlug: "furniture", subCategorySlug: "armchair", styleSlugs: ["modern", "luxury"],
+    categorySlug: "furniture", subCategorySlug: "armchair", styleSlugs: ["modern", "art-deco"],
     price: 18900000, currency: "تومان", rating: 4.7, reviewsCount: 88, purchaseCount: 281,
     images: [IMG.living3, IMG.living9],
     colors: [COLORS.terracotta, COLORS.charcoal], materials: ["حریر مصنوعی", "فلز"],
@@ -60,7 +60,7 @@ export const products: Product[] = [
   },
   {
     id: "p5", slug: "chair-mio", name: "صندلی مِئو", brand: "آتلیه نور", storeId: "st10",
-    categorySlug: "furniture", subCategorySlug: "chair", styleSlugs: ["classic", "luxury"],
+    categorySlug: "furniture", subCategorySlug: "chair", styleSlugs: ["classic", "neoclassical"],
     price: 6200000, currency: "تومان", rating: 4.5, reviewsCount: 41, purchaseCount: 140,
     images: [IMG.decor8],
     colors: [COLORS.plum, COLORS.gold], materials: ["مخمل", "چوب گردو"],
@@ -70,7 +70,7 @@ export const products: Product[] = [
   },
   {
     id: "p6", slug: "vase-ceramic-blue", name: "گلدان سرامیکی لاجوردی", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
-    categorySlug: "decor", subCategorySlug: "vase", styleSlugs: ["boho", "classic"],
+    categorySlug: "decor", subCategorySlug: "vase", styleSlugs: ["boho", "mediterranean"],
     price: 1450000, oldPrice: 2100000, currency: "تومان", rating: 4.8, reviewsCount: 120, purchaseCount: 377,
     images: [IMG.decor9, IMG.decor6],
     colors: [COLORS.navy, COLORS.white], materials: ["سرامیک دست‌ساز"],
@@ -81,7 +81,7 @@ export const products: Product[] = [
   },
   {
     id: "p7", slug: "mirror-arch", name: "آینه طاقی برنزی", brand: "آتلیه نور", storeId: "st10",
-    categorySlug: "decor", subCategorySlug: "mirror", styleSlugs: ["modern", "luxury"],
+    categorySlug: "decor", subCategorySlug: "mirror", styleSlugs: ["modern", "neoclassical"],
     price: 4900000, currency: "تومان", rating: 4.7, reviewsCount: 36, purchaseCount: 125,
     images: [IMG.decor8],
     colors: [COLORS.gold, COLORS.charcoal], materials: ["فلز برنزی", "آینه"],
@@ -114,7 +114,7 @@ export const products: Product[] = [
   },
   {
     id: "p10", slug: "floor-lamp-arc", name: "آباژور قوسی لوکس", brand: "لوامینا", storeId: "st3",
-    categorySlug: "lighting", subCategorySlug: "floor-lamp", styleSlugs: ["luxury", "contemporary"],
+    categorySlug: "lighting", subCategorySlug: "floor-lamp", styleSlugs: ["art-deco", "contemporary"],
     price: 8900000, currency: "تومان", rating: 4.6, reviewsCount: 48, purchaseCount: 161,
     images: [IMG.decor3],
     colors: [COLORS.gold, COLORS.charcoal], materials: ["فلز", "مرمر"],
@@ -295,7 +295,7 @@ export const products: Product[] = [
   },
   {
     id: "p27", slug: "outdoor-lounge-set", name: "ست مبلمان بالکن", brand: "بالکن‌کو", storeId: "st9",
-    categorySlug: "outdoor", subCategorySlug: "outdoor-furniture", styleSlugs: ["modern", "boho"],
+    categorySlug: "outdoor", subCategorySlug: "outdoor-furniture", styleSlugs: ["modern", "mediterranean"],
     price: 32000000, currency: "تومان", rating: 4.4, reviewsCount: 23, purchaseCount: 86,
     images: [IMG.living5],
     colors: [COLORS.charcoal, COLORS.sage], materials: ["حصیر", "آلومینیوم", "کوسن ضدآب"],
@@ -306,7 +306,7 @@ export const products: Product[] = [
   },
   {
     id: "p28", slug: "planter-terracotta", name: "گلدان تراکوتای بزرگ", brand: "بالکن‌کو", storeId: "st9",
-    categorySlug: "outdoor", subCategorySlug: "planter", styleSlugs: ["rustic", "boho"],
+    categorySlug: "outdoor", subCategorySlug: "planter", styleSlugs: ["rustic", "mediterranean"],
     price: 1500000, currency: "تومان", rating: 4.3, reviewsCount: 31, purchaseCount: 110,
     images: [IMG.decor10],
     colors: [COLORS.terracotta], materials: ["تراکوتا"],
@@ -339,7 +339,7 @@ export const products: Product[] = [
   },
   {
     id: "p31", slug: "wall-sconce-brass", name: "چراغ دیواری برنجی", brand: "لوامینا", storeId: "st3",
-    categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["classic", "luxury"],
+    categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["classic", "art-deco"],
     price: 2400000, currency: "تومان", rating: 4.4, reviewsCount: 26, purchaseCount: 95,
     images: [IMG.decor3],
     colors: [COLORS.gold], materials: ["برنج", "شیشه"],
@@ -371,7 +371,7 @@ export const products: Product[] = [
   },
   {
     id: "p34", slug: "chandelier-nor", name: "لوستر کریستالی «نُر»", brand: "لوامینا", storeId: "st3",
-    categorySlug: "lighting", subCategorySlug: "ceiling", styleSlugs: ["luxury", "classic"],
+    categorySlug: "lighting", subCategorySlug: "ceiling", styleSlugs: ["neoclassical", "classic"],
     price: 24000000, currency: "تومان", rating: 4.7, reviewsCount: 54, purchaseCount: 179,
     images: [IMG.living5, IMG.decor3],
     colors: [COLORS.gold, COLORS.white], materials: ["کریستال", "فلز برنجی"],
@@ -404,7 +404,7 @@ export const products: Product[] = [
   },
   {
     id: "p37", slug: "wall-sconce-zar", name: "دیوارکوب برنجی «زَر»", brand: "لوامینا", storeId: "st3",
-    categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["classic", "luxury"],
+    categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["neoclassical", "art-deco"],
     price: 2900000, currency: "تومان", rating: 4.4, reviewsCount: 22, purchaseCount: 83,
     images: [IMG.decor3],
     colors: [COLORS.gold], materials: ["برنج", "شیشه"],

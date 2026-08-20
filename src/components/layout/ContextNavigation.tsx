@@ -14,7 +14,7 @@ interface RouteContext {
 const exact: Record<string, RouteContext> = {
   "/products": { parentHref: "/", parentLabel: "خانه", currentLabel: "محصولات" },
   "/stores": { parentHref: "/", parentLabel: "خانه", currentLabel: "فروشگاه‌ها" },
-  "/styles": { parentHref: "/", parentLabel: "خانه", currentLabel: "سبک‌ها" },
+  "/styles": { parentHref: "/", parentLabel: "خانه", currentLabel: "معرفی سبک‌ها" },
   "/inspiration": { parentHref: "/", parentLabel: "خانه", currentLabel: "الهام" },
   "/search": { parentHref: "/", parentLabel: "خانه", currentLabel: "جستجو" },
   "/cart": { parentHref: "/products", parentLabel: "محصولات", currentLabel: "سبد خرید" },
@@ -41,7 +41,7 @@ const sections: { prefix: string; parentHref: string; parentLabel: string; curre
   { prefix: "/products/", parentHref: "/products", parentLabel: "محصولات", currentLabel: "جزئیات محصول" },
   { prefix: "/category/", parentHref: "/products", parentLabel: "محصولات", currentLabel: "دسته‌بندی" },
   { prefix: "/stores/", parentHref: "/stores", parentLabel: "فروشگاه‌ها", currentLabel: "فروشگاه" },
-  { prefix: "/styles/", parentHref: "/styles", parentLabel: "سبک‌ها", currentLabel: "راهنمای سبک" },
+  { prefix: "/styles/", parentHref: "/styles", parentLabel: "معرفی سبک‌ها", currentLabel: "راهنمای سبک" },
   { prefix: "/inspiration/", parentHref: "/inspiration", parentLabel: "الهام", currentLabel: "جزئیات ایده" },
   { prefix: "/ai/result/", parentHref: "/ai/history", parentLabel: "تاریخچه طراحی", currentLabel: "نتیجه طراحی" },
   { prefix: "/magazine/", parentHref: "/magazine", parentLabel: "مجله", currentLabel: "مقاله" },

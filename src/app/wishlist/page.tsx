@@ -2,11 +2,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Heart, Package, ImageIcon, Sparkles, Store as StoreIcon, Lightbulb } from "lucide-react";
-import { Container, PageHeader, ProductGrid } from "@/components/shared";
-import { Button, EmptyState, LogoBlock, Chip } from "@/components/ui/primitives";
-import { ProductCard, StoreCard, InspirationCard } from "@/components/cards";
+import { Container, PageHeader } from "@/components/shared";
+import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
+import { Button, EmptyState } from "@/components/ui/primitives";
+import { StoreCard, InspirationCard } from "@/components/cards";
 import { useWishlist } from "@/stores/useShop";
 import { getProductById } from "@/data/products";
+import { getStyle } from "@/data/styles";
 import { getInspiration } from "@/data/inspirations";
 import { getAiDesign } from "@/data/inspirations";
 import { getStoreById } from "@/data/stores";
@@ -55,15 +57,18 @@ export default function WishlistPage() {
               products.forEach((p) => { p?.styleSlugs.forEach((s) => { styleCounts[s] = (styleCounts[s] || 0) + 1; }); });
               const topStyles = Object.entries(styleCounts).sort((a, b) => b[1] - a[1]).slice(0, 2);
               if (topStyles.length > 0) {
-                const labels: Record<string, string> = { modern: "مدرن", scandinavian: "اسکاندیناوی", minimalist: "مینیمال", japandi: "ژاپندی", classic: "کلاسیک", luxury: "لوکس", industrial: "صنعتی", bohemian: "بوهمی", rustic: "روستیک", contemporary: "معاصر" };
                 return (
-                  <p className="flex items-center gap-1 text-[11px] text-ink-muted"><Lightbulb size={12} className="text-gold" /> {toFa(products.length)} محصول ذخیره کرده‌ای که عمدتاً با سبک <b className="text-ink">{topStyles.map(([s]) => labels[s] || s).join(" و ")}</b> هماهنگ هستند.</p>
+                  <p className="flex items-center gap-1 text-[11px] text-ink-muted"><Lightbulb size={12} className="text-gold" /> {toFa(products.length)} محصول ذخیره کرده‌ای که عمدتاً با سبک <b className="text-ink">{topStyles.map(([slug]) => getStyle(slug)?.name ?? slug).join(" و ")}</b> هماهنگ هستند.</p>
                 );
               }
               return null;
             })()}
           </div>
-          <ProductGrid products={products as never} />
+          <FilterableProductGrid
+            products={products.filter((product) => product != null)}
+            layout="compact"
+            emptyDescription="فیلتر سبک یا سایر فیلترهای علاقه‌مندی‌ها را تغییر بده."
+          />
         </>
       ) : <EmptyState icon={<Heart size={28} />} title="محصولی ذخیره نکرده‌ای" action={<Link href="/products"><Button>کاوش محصولات</Button></Link>} />)}
       {tab === "inspirations" && (insp.length ? <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">{insp.map((i, idx) => i && <InspirationCard key={i.id} insp={i} index={idx} />)}</div> : <EmptyState icon={<ImageIcon size={28} />} title="ایده‌ای ذخیره نکرده‌ای" action={<Link href="/inspiration"><Button>گالری الهام</Button></Link>} />)}
