@@ -61,6 +61,9 @@
   --shadow-gold: 0 0 0 1px rgba(190, 154, 79, 0.3), 0 16px 50px rgba(190, 154, 79, 0.22);
 
   /* ---- Easing ---- */
+  /* ---- SPACING (baseline section rhythm) ---- */
+  --space-section: clamp(3.5rem, 8vw, 7.5rem);
+
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
 
@@ -163,6 +166,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @layer components {
   .container-px { @apply px-5 sm:px-8 lg:px-12; }
   .container-wide { @apply mx-auto w-full max-w-[1400px]; }
+  /* Restored baseline spacing rhythm used by the marketplace home sections */
+  .section-space { padding-block: var(--space-section); }
+  .section-space-sm { padding-block: clamp(2.5rem, 6vw, 5rem); }
 
   /* Premium frosted glass with warm tint */
   .glass {
@@ -182,6 +188,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-soft);
   }
+
+  /* Restored baseline interactive card hover (home category/style cards) */
+  .card-interactive {
+    transition: transform 350ms var(--ease-out-expo), border-color 250ms ease, box-shadow 350ms var(--ease-out-expo);
+  }
+  .card-interactive:hover { border-color: color-mix(in oklab, var(--color-gold) 42%, var(--color-clay)); box-shadow: var(--shadow-card); transform: translateY(-3px); }
 
   /* Dark luxury surface for moody sections */
   .surface-emerald {
@@ -246,6 +258,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  /* Restored baseline edge fade for horizontal style rail */
+  .scroll-fade { mask-image: linear-gradient(to left, transparent, black 18px, black calc(100% - 18px), transparent); }
 
   .grain {
     background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
@@ -279,6 +293,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     background: linear-gradient(120deg, var(--color-terracotta-soft), var(--color-terracotta));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+}
+
+@media (max-width: 639px) {
+  .section-space { padding-block: 3.75rem; }
+}
+
+@media (hover: none) {
+  .card-interactive:hover { transform: none; }
 }
 
 /* reduced motion */

@@ -125,13 +125,13 @@ export function Spinner({ className }: { className?: string }) {
 }
 
 /* ---------- Section heading ---------- */
-export function SectionHeading({ eyebrow, title, desc, action }: { eyebrow?: string; title: string; desc?: string; action?: ReactNode }) {
+export function SectionHeading({ eyebrow, title, desc, action, inverse = false }: { eyebrow?: string; title: string; desc?: string; action?: ReactNode; inverse?: boolean }) {
   return (
     <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-xl">
-        {eyebrow && <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-deep">{eyebrow}</div>}
-        <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl text-balance">{title}</h2>
-        {desc && <p className="mt-2 text-sm text-ink-muted">{desc}</p>}
+        {eyebrow && <div className={cn("mb-2 text-xs font-semibold uppercase tracking-[0.2em]", inverse ? "text-gold-soft" : "text-terracotta-deep")}>{eyebrow}</div>}
+        <h2 className={cn("font-display text-2xl font-bold sm:text-3xl text-balance", inverse ? "text-cream" : "text-ink")}>{title}</h2>
+        {desc && <p className={cn("mt-2 text-sm", inverse ? "text-cream/65" : "text-ink-muted")}>{desc}</p>}
       </div>
       {action}
     </div>

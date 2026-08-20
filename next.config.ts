@@ -5,7 +5,7 @@ import type { NextConfig } from "next";
  *
  *  • Image optimization enabled for our stock CDN (Pexels).
  *  • Security headers hardened (HSTS, Referrer-Policy, Frame guard, etc.).
- *  • Legacy `/ai/design` deep link redirects into the current AI Designer.
+ *  • `/ai` legacy visits redirect straight into the AI Designer at `/ai/design` (no intro page).
  *  • Server-only providers keep AI/LLM keys out of the client bundle
  *    (see `src/services/ai/provider.ts` — they are never re-exported).
  */
@@ -30,11 +30,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        // AI entry is DIRECT: /ai/design (old studio link) always lands on
-        // the AI Designer at /ai — no intro page ever again. Query strings
-        // (e.g. ?session=…) are forwarded.
-        source: "/ai/design",
-        destination: "/ai",
+        // AI entry is DIRECT: the AI Designer lives at /ai/design; the old
+        // /ai intro page is gone, so legacy visits land on the Designer —
+        // no intro page ever again. Query strings (e.g. ?session=…) are
+        // forwarded.
+        source: "/ai",
+        destination: "/ai/design",
         permanent: false,
       },
     ];
