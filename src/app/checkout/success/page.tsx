@@ -24,7 +24,7 @@ export default function SuccessPage() {
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/account/orders"><Button><Package size={16} /> پیگیری سفارش</Button></Link>
           <Link href="/products"><Button variant="ghost">ادامه خرید</Button></Link>
-          <Link href="/ai"><Button variant="outline"><Sparkles size={16} /> طراحی اتاق با AI</Button></Link>
+          <Link href="/ai/design"><Button variant="outline"><Sparkles size={16} /> طراحی اتاق با AI</Button></Link>
         </div>
         <Link href="/" className="mt-6 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><Home size={15} /> بازگشت به خانه</Link>
       </div>

@@ -29,7 +29,7 @@ export default function AccountOverview() {
           <h1 className="font-display text-xl font-black text-ink">سلام، {user?.name} 👋</h1>
           <p className="text-sm text-ink-muted">{user?.email}</p>
         </div>
-        <Link href="/ai"><Button><Wand2 size={16} /> طراحی جدید</Button></Link>
+        <Link href="/ai/design"><Button><Wand2 size={16} /> طراحی جدید</Button></Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

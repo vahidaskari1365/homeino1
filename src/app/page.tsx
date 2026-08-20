@@ -137,7 +137,7 @@ export default function HomePage() {
                 <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-cream px-6 py-3 font-bold text-ink transition hover:translate-y-[-2px] hover:shadow-gold">
                   <Search size={18} /> کشف محصولات
                 </Link>
-                <Link href="/ai" className="inline-flex items-center justify-center gap-2 rounded-xl border border-cream/30 px-5 py-3 font-medium text-cream transition hover:bg-white/10">
+                <Link href="/ai/design" className="inline-flex items-center justify-center gap-2 rounded-xl border border-cream/30 px-5 py-3 font-medium text-cream transition hover:bg-white/10">
                   <Wand2 size={18} /> طراحی فضای من با AI
                 </Link>
               </motion.div>

@@ -28,7 +28,7 @@ const exact: Record<string, RouteContext> = {
   "/projects": { parentHref: "/", parentLabel: "خانه", currentLabel: "پروژه‌ها" },
   "/ai": { parentHref: "/", parentLabel: "خانه", currentLabel: "طراحی هوشمند اتاق" },
   "/ai/design": { parentHref: "/", parentLabel: "خانه", currentLabel: "طراحی هوشمند اتاق" },
-  "/ai/history": { parentHref: "/ai", parentLabel: "طراحی هوشمند", currentLabel: "تاریخچه طراحی" },
+  "/ai/history": { parentHref: "/ai/design", parentLabel: "طراحی هوشمند", currentLabel: "تاریخچه طراحی" },
   "/account": { parentHref: "/", parentLabel: "خانه", currentLabel: "حساب کاربری" },
   "/vendor": { parentHref: "/", parentLabel: "خانه", currentLabel: "پنل فروشنده" },
   "/admin": { parentHref: "/", parentLabel: "خانه", currentLabel: "پنل مدیریت" },
