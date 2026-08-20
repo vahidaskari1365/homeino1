@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, TrendingUp, Lightbulb, ArrowLeft } from "lucide-react";
+import { Search, X, TrendingUp, Clock, ArrowLeft } from "lucide-react";
 import { useUi } from "@/stores/useApp";
 import { products } from "@/data/products";
 import { stores } from "@/data/stores";
@@ -12,7 +12,7 @@ import { SmartImage } from "../ui/SmartImage";
 import { Rating } from "../ui/primitives";
 import { formatPrice } from "@/lib/utils";
 
-const SUGGESTIONS = ["مبل کرم پذیرایی", "چراغ رومیزی چوبی", "فرش دستبافت"];
+const RECENT = ["مبل کرم پذیرایی", "چراغ رومیزی چوبی", "فرش دستبافت"];
 const TRENDING = ["کاناپه مدرن", "ژاپندی", "آینه طاقی", "ست کوسن خاکی", "لوکس"];
 
 export function SearchOverlay() {
@@ -47,11 +47,11 @@ export function SearchOverlay() {
   const go = (path: string) => { setSearch(false); setQ(""); router.push(path); };
 
   return (
-    <div className="fixed inset-0 z-[140] flex flex-col bg-ink/55 p-0 backdrop-blur-sm sm:p-5" onClick={() => setSearch(false)}>
-      <div role="dialog" aria-modal="true" aria-label="جستجو در Homeino" className="mx-auto w-full max-w-3xl animate-[fadeUp_0.3s_ease]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex max-h-[100svh] flex-col overflow-hidden bg-cream shadow-[var(--shadow-lift)] sm:max-h-[88svh] sm:rounded-[var(--radius-xl)]">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-ink/40 backdrop-blur-sm" onClick={() => setSearch(false)}>
+      <div className="mx-auto mt-0 w-full max-w-3xl animate-[fadeUp_0.3s_ease]" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-cream shadow-[var(--shadow-lift)]">
           {/* input */}
-          <div className="flex min-w-0 items-center gap-2 border-b border-clay/40 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
+          <div className="flex items-center gap-3 border-b border-clay/40 px-5 py-4">
             <Search size={22} className="text-ink-muted" />
             <input
               autoFocus
@@ -59,14 +59,14 @@ export function SearchOverlay() {
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && q.trim() && go(`/search?q=${encodeURIComponent(q.trim())}`)}
               placeholder="مثلاً: مبل کرم برای پذیرایی کوچک…"
-              className="min-w-0 flex-1 border-0 bg-transparent px-0 text-base text-ink outline-none placeholder:text-ink-muted/60 focus:shadow-none sm:text-lg"
+              className="flex-1 bg-transparent text-lg text-ink outline-none placeholder:text-ink-muted/60"
             />
             <button onClick={() => setSearch(false)} className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted hover:bg-ivory-2" aria-label="بستن">
               <X size={20} />
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+          <div className="max-h-[70vh] overflow-y-auto p-5">
             {!results && (
               <div className="space-y-6">
                 <div>
@@ -78,9 +78,9 @@ export function SearchOverlay() {
                   </div>
                 </div>
                 <div>
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-ink-muted"><Lightbulb size={14} /> پیشنهاد برای شروع</div>
+                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-ink-muted"><Clock size={14} /> جستجوهای اخیر</div>
                   <div className="space-y-1">
-                    {SUGGESTIONS.map((r) => (
+                    {RECENT.map((r) => (
                       <button key={r} onClick={() => setQ(r)} className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-sm text-ink transition hover:bg-ivory-2">
                         <span>{r}</span><ArrowLeft size={15} className="text-ink-muted" />
                       </button>

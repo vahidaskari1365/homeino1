@@ -7,8 +7,7 @@ export default function AdminVendorsPage() {
   return (
     <div className="space-y-5">
       <h1 className="font-display text-xl font-black text-ink">مدیریت فروشندگان</h1>
-      <div className="card-surface overflow-hidden">
-        <div className="table-shell">
+      <div className="overflow-hidden card-surface">
         <table className="w-full min-w-[560px] text-sm">
           <thead><tr className="border-b border-clay/40 bg-ivory-2 text-right text-xs text-ink-muted"><th className="p-3 font-medium">فروشگاه</th><th className="p-3 font-medium">محصول</th><th className="p-3 font-medium">امتیاز</th><th className="p-3 font-medium">وضعیت</th></tr></thead>
           <tbody>
@@ -22,7 +21,6 @@ export default function AdminVendorsPage() {
             ))}
           </tbody>
         </table>
-        </div>
       </div>
     </div>
   );

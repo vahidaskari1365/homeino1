@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Wand2, Sparkles, Copy, Share2 } from "lucide-react";
-import { Badge, ButtonLink, EmptyState } from "@/components/ui/primitives";
-import { SmartImage } from "@/components/ui/SmartImage";
+import { Wand2, Sparkles, MoreHorizontal, Copy, Share2 } from "lucide-react";
+import { Badge, Button, EmptyState } from "@/components/ui/primitives";
 import { aiDesigns } from "@/data/inspirations";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
@@ -13,7 +12,7 @@ export default function MyDesignsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-black text-ink">طراحی‌های من</h1>
-        <ButtonLink href="/ai"><Wand2 size={16} /> طراحی جدید</ButtonLink>
+        <Link href="/ai/design"><Button><Wand2 size={16} /> طراحی جدید</Button></Link>
       </div>
 
       {aiDesigns.length ? (
@@ -21,14 +20,8 @@ export default function MyDesignsPage() {
           {aiDesigns.map((d) => (
             <div key={d.id} className="card-surface overflow-hidden">
               <Link href={`/ai/result/${d.id}`} className="group relative block">
-                <SmartImage src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full transition group-hover:scale-105" />
-                {d.beforeImage && (
-                  <SmartImage
-                    src={d.beforeImage}
-                    alt=""
-                    className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream"
-                  />
-                )}
+                <img src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full object-cover transition group-hover:scale-105" />
+                {d.beforeImage && <img src={d.beforeImage} alt="" className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream object-cover" />}
                 <div className="absolute right-2 top-2 flex gap-1"><Badge tone="dark">{d.room}</Badge></div>
               </Link>
               <div className="p-4">
@@ -50,7 +43,7 @@ export default function MyDesignsPage() {
             </div>
           ))}
         </div>
-      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<ButtonLink href="/ai">اولین طراحی‌ات را بساز</ButtonLink>} />}
+      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<Link href="/ai/design"><Button>اولین طراحی‌ات را بساز</Button></Link>} />}
     </div>
   );
 }

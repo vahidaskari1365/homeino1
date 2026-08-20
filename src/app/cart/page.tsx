@@ -1,107 +1,142 @@
 "use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Truck, ShieldCheck, Sparkles, Lightbulb, Plus as PlusIcon } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, ButtonLink, ConfirmDialog, EmptyState, LogoBlock, Badge } from "@/components/ui/primitives";
+import { Button, EmptyState, LogoBlock, Badge } from "@/components/ui/primitives";
 import { PLATFORM } from "@/config/platform";
-import { products as allProducts, getProductById } from "@/data/products";
+import { products as allProducts } from "@/data/products";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
+import { getProductById } from "@/data/products";
 import { getStoreById } from "@/data/stores";
 import { toFa, formatPrice } from "@/lib/utils";
 
 export default function CartPage() {
   const { items, setQty, remove, add: addToCart } = useCart();
   const { toast } = useUi();
-  const [pendingRemove, setPendingRemove] = useState<string | null>(null);
-  const rows = items.flatMap((item) => {
-    const product = getProductById(item.productId);
-    return product ? [{ item, product }] : [];
-  });
-  const byStore = rows.reduce<Record<string, typeof rows>>((groups, row) => {
-    (groups[row.product.storeId] ??= []).push(row);
-    return groups;
+  const rows = items.map((i) => ({ item: i, product: getProductById(i.productId)! })).filter((r) => r.product);
+  const byStore = rows.reduce<Record<string, typeof rows>>((acc, r) => {
+    (acc[r.product.storeId] ??= []).push(r);
+    return acc;
   }, {});
-  const subtotal = rows.reduce((sum, row) => sum + row.product.price * row.item.qty, 0);
-  const shipping = subtotal >= PLATFORM.policies.freeShippingThreshold ? 0 : rows.length ? 120000 : 0;
-  const suggestions = allProducts.filter((product) => !items.some((item) => item.productId === product.id) && product.inStock).slice(0, 6);
+  const subtotal = rows.reduce((s, r) => s + r.product.price * r.item.qty, 0);
+  const shipping = rows.length ? 120000 : 0;
 
   if (rows.length === 0) {
     return (
-      <Container className="py-12 sm:py-16">
+      <Container className="py-16">
         <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "سبد خرید" }]} />
-        <div className="mt-7"><EmptyState icon={<ShoppingBag size={32} />} title="سبد خریدت خالی است" desc="محصولات دلخواهت را پیدا کن؛ هر زمان آماده بودی اینجا ادامه می‌دهیم." action={<ButtonLink href="/products">شروع خرید</ButtonLink>} /></div>
+        <div className="mt-8"><EmptyState icon={<ShoppingBag size={32} />} title="سبد خریدت خالیه" desc="محصولات دلخواهت را اضافه کن و اینجا برگرد." action={<Link href="/products"><Button>شروع خرید</Button></Link>} /></div>
       </Container>
     );
   }
 
   return (
-    <Container className="py-8 sm:py-10">
+    <Container className="py-10">
       <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "سبد خرید" }]} />
-      <div className="mt-5 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-black text-ink">سبد خرید</h1><p className="mt-1 text-sm text-ink-muted">{toFa(rows.length)} محصول از {toFa(Object.keys(byStore).length)} فروشگاه</p></div><Link href="/products" className="text-sm font-bold text-terracotta-deep">ادامه خرید</Link></div>
+      <h1 className="mt-5 font-display text-3xl font-black text-ink">سبد خرید ({toFa(rows.length)} محصول)</h1>
 
-      <div className="mt-7 grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0 space-y-5">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+        {/* items grouped by store */}
+        <div className="space-y-5">
           {Object.entries(byStore).map(([storeId, group]) => {
             const store = getStoreById(storeId);
-            const storeSubtotal = group.reduce((sum, row) => sum + row.product.price * row.item.qty, 0);
+            const storeSub = group.reduce((s, r) => s + r.product.price * r.item.qty, 0);
             return (
-              <section key={storeId} className="card-surface overflow-hidden">
-                <div className="flex flex-col gap-2 border-b border-clay/35 bg-ivory-2/65 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-                  <Link href={`/stores/${store?.slug}`} className="flex min-w-0 items-center gap-2">{store && <LogoBlock char={store.logo} color={store.logoColor} size={34} />}<span className="truncate text-sm font-black text-ink">{store?.name}</span><Badge>فروشگاه</Badge></Link>
-                  <span className="text-xs text-ink-muted">جمع فروشگاه: <b className="text-ink">{toFa(formatPrice(storeSubtotal))} تومان</b></span>
+              <div key={storeId} className="card-surface overflow-hidden">
+                <div className="flex items-center justify-between border-b border-clay/40 bg-ivory-2 px-4 py-3">
+                  <Link href={`/stores/${store?.slug}`} className="flex items-center gap-2">
+                    {store && <LogoBlock char={store.logo} color={store.logoColor} size={32} />}
+                    <span className="font-display font-bold text-ink">{store?.name}</span>
+                    <Badge>فروشگاه</Badge>
+                  </Link>
+                  <span className="text-sm text-ink-muted">جمع: {toFa(formatPrice(storeSub))} تومان</span>
                 </div>
-                <div className="divide-y divide-clay/30">
-                  {group.map(({ item, product }) => (
-                    <div key={product.id} className="flex min-w-0 gap-3 p-3 sm:gap-4 sm:p-4">
-                      <Link href={`/products/${product.slug}`} className="shrink-0"><SmartImage src={product.images[0]} alt={product.name} className="h-20 w-20 rounded-xl sm:h-24 sm:w-24" /></Link>
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><Link href={`/products/${product.slug}`} className="line-clamp-2 text-sm font-bold leading-6 text-ink hover:text-terracotta-deep">{product.name}</Link><div className="mt-0.5 text-xs text-ink-muted">{product.brand}</div></div><button type="button" onClick={() => setPendingRemove(product.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink-muted transition hover:bg-danger/8 hover:text-danger" aria-label={`حذف ${product.name}`}><Trash2 size={16} /></button></div>
-                        <div className="mt-auto flex flex-col gap-2 pt-2 min-[390px]:flex-row min-[390px]:items-end min-[390px]:justify-between">
-                          <div className="flex w-fit items-center rounded-lg border border-clay/55 bg-cream p-0.5"><button type="button" onClick={() => setQty(product.id, item.qty - 1)} aria-label="کاهش تعداد" className="grid h-9 w-9 place-items-center rounded-md hover:bg-ivory-2"><Minus size={14} /></button><span className="w-7 text-center text-sm font-bold">{toFa(item.qty)}</span><button type="button" onClick={() => setQty(product.id, item.qty + 1)} aria-label="افزایش تعداد" className="grid h-9 w-9 place-items-center rounded-md hover:bg-ivory-2"><Plus size={14} /></button></div>
-                          <span className="text-sm font-black text-ink">{toFa(formatPrice(product.price * item.qty))} <span className="text-[10px] font-normal text-ink-muted">تومان</span></span>
+                {group.map(({ item, product }) => (
+                  <div key={product.id} className="flex gap-4 p-4">
+                    <Link href={`/products/${product.slug}`}><SmartImage src={product.images[0]} alt={product.name} className="h-24 w-24 shrink-0 rounded-xl" /></Link>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <Link href={`/products/${product.slug}`} className="line-clamp-1 font-medium text-ink hover:text-terracotta-deep">{product.name}</Link>
+                      <div className="text-xs text-ink-muted">{product.brand}</div>
+                      <div className="mt-1 flex gap-1">{product.colors.slice(0, 3).map((c) => <span key={c.name} className="h-4 w-4 rounded-full border border-clay/40" style={{ background: c.hex }} />)}</div>
+                      <div className="mt-auto flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-1 rounded-lg border border-clay/60 p-1">
+                          <button onClick={() => setQty(product.id, item.qty - 1)} aria-label="کاهش تعداد" className="grid h-9 w-9 place-items-center rounded-md transition hover:bg-ivory-2"><Minus size={15} /></button>
+                          <span className="w-8 text-center font-medium text-sm">{toFa(item.qty)}</span>
+                          <button onClick={() => setQty(product.id, item.qty + 1)} aria-label="افزایش تعداد" className="grid h-9 w-9 place-items-center rounded-md transition hover:bg-ivory-2"><Plus size={15} /></button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-ink">{toFa(formatPrice(product.price * item.qty))} <span className="text-[10px] text-ink-muted">تومان</span></span>
+                          <button onClick={() => remove(product.id)} className="text-ink-muted transition hover:text-danger"><Trash2 size={17} /></button>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </section>
+                  </div>
+                ))}
+              </div>
             );
           })}
-
-          <section className="rounded-[var(--radius-lg)] border border-clay/35 bg-cream/70 p-4">
-            <h2 className="mb-3 flex items-center gap-1.5 text-sm font-black text-ink"><Sparkles size={15} className="text-gold" /> شاید این‌ها هم به کارت بیاید</h2>
-            <div className="hide-scrollbar flex max-w-full snap-x gap-3 overflow-x-auto pb-2">
-              {suggestions.map((product) => (
-                <article key={product.id} className="flex w-36 shrink-0 snap-start flex-col rounded-xl border border-clay/35 bg-cream p-2">
-                  <Link href={`/products/${product.slug}`}><SmartImage src={product.images[0]} alt={product.name} className="mb-2 aspect-square w-full rounded-lg" /></Link>
-                  <Link href={`/products/${product.slug}`} className="line-clamp-2 min-h-8 text-[11px] font-bold leading-4 text-ink">{product.name}</Link>
-                  <p className="mt-1 text-[10px] font-bold text-terracotta-deep">{toFa(formatPrice(product.price))} ت</p>
-                  <button type="button" onClick={() => { addToCart(product.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-2 flex min-h-9 items-center justify-center gap-1 rounded-lg text-[10px] font-bold"><PlusIcon size={11} /> افزودن</button>
-                </article>
-              ))}
-            </div>
-          </section>
         </div>
 
-        <aside className="card-surface h-fit p-5 sm:p-6 lg:sticky lg:top-24">
-          <h2 className="mb-4 text-lg font-black text-ink">خلاصه سفارش</h2>
-          {subtotal < PLATFORM.policies.freeShippingThreshold ? (
-            <div className="mb-4 rounded-xl border border-terracotta/25 bg-terracotta/5 p-3"><p className="mb-2 flex items-start gap-1.5 text-xs leading-6 text-ink"><Truck size={14} className="mt-1 shrink-0 text-terracotta-deep" /> فقط <b>{toFa(formatPrice(PLATFORM.policies.freeShippingThreshold - subtotal))} تومان</b> تا ارسال رایگان</p><div className="h-2 overflow-hidden rounded-full bg-sand/50"><div className="h-full rounded-full bg-gradient-to-l from-terracotta-soft to-terracotta" style={{ width: `${Math.min(100, (subtotal / PLATFORM.policies.freeShippingThreshold) * 100)}%` }} /></div></div>
-          ) : <div className="mb-4 flex items-center gap-2 rounded-xl border border-sage/25 bg-sage/10 p-3 text-xs font-bold text-success"><ShieldCheck size={15} /> ارسال این سفارش رایگان است</div>}
+        {/* CROSS-SELL: "You might also need" — increases AOV naturally */}
+        {rows.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-clay/40 bg-cream p-4">
+            <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-ink"><Sparkles size={15} className="text-gold" /> ممکنه اینم لازم داشته باشی</h3>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {allProducts
+                .filter((p) => !useCart.getState().items.find((i) => i.productId === p.id) && p.inStock)
+                .slice(0, 6)
+                .map((p) => (
+                  <div key={p.id} className="flex w-32 shrink-0 flex-col rounded-xl border border-clay/40 bg-ivory-2 p-2">
+                    <img src={p.images[0]} alt={p.name} className="mb-1.5 aspect-square w-full rounded-lg object-cover" />
+                    <p className="line-clamp-1 text-[10px] font-bold text-ink">{p.name}</p>
+                    <p className="text-[10px] text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
+                    <button onClick={() => { addToCart(p.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-1.5 flex items-center justify-center gap-1 rounded-md py-1 text-[9px] font-bold"><PlusIcon size={10} /> افزودن</button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
-          <div className="space-y-3 text-sm"><div className="flex justify-between gap-3"><span className="text-ink-muted">جمع کالا</span><span className="font-bold text-ink">{toFa(formatPrice(subtotal))} تومان</span></div><div className="flex justify-between gap-3"><span className="flex items-center gap-1 text-ink-muted"><Truck size={15} /> ارسال</span><span className="font-bold text-ink">{shipping === 0 ? "رایگان" : `${toFa(formatPrice(shipping))} تومان`}</span></div><div className="rounded-lg bg-sage/8 p-2.5 text-xs leading-6 text-success">مرسوله هر فروشگاه جداگانه و قابل پیگیری ارسال می‌شود.</div></div>
-          <div className="mt-4 flex items-end justify-between gap-3 border-t border-clay/35 pt-4"><span className="font-bold text-ink">قابل پرداخت</span><span className="text-lg font-black text-ink">{toFa(formatPrice(subtotal + shipping))} <small className="text-[10px] font-normal text-ink-muted">تومان</small></span></div>
-          <ButtonLink href="/checkout" size="lg" className="mt-5 w-full">ادامه و پرداخت امن <ArrowLeft size={16} /></ButtonLink>
-          <div className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-muted"><ShieldCheck size={13} className="shrink-0 text-success" /> پرداخت امن · ضمانت بازگشت {toFa(PLATFORM.policies.returnDays)} روزه</div>
-          <div className="mt-4 grid grid-cols-2 gap-2"><Link href="/ai" className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-gold/25 bg-gold/5 px-2 text-[10px] font-bold text-[#80601f]"><Sparkles size={13} /> طراحی با AI</Link><Link href="/inspiration" className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-clay/45 bg-ivory-2 px-2 text-[10px] font-bold text-ink-muted"><Lightbulb size={13} /> الهام بگیر</Link></div>
+        {/* summary */}
+        <aside className="card-surface h-fit p-6 lg:sticky lg:top-24">
+          <h3 className="mb-4 font-display font-bold text-ink">خلاصه سفارش</h3>
+
+          {/* Free shipping progress — urgency + reciprocity */}
+          {subtotal < PLATFORM.policies.freeShippingThreshold && (
+            <div className="mb-4 rounded-xl border border-terracotta/30 bg-terracotta/5 p-3">
+              <p className="mb-2 flex items-center gap-1.5 text-xs text-ink"><Truck size={14} className="text-terracotta-deep" /> <b>{toFa(formatPrice(PLATFORM.policies.freeShippingThreshold - subtotal))} تومان</b> دیگه تا ارسال رایگان!</p>
+              <div className="h-2 overflow-hidden rounded-full bg-sand/60"><div className="h-full rounded-full bg-gradient-to-l from-terracotta-soft to-terracotta transition-all" style={{ width: `${Math.min(100, (subtotal / PLATFORM.policies.freeShippingThreshold) * 100)}%` }} /></div>
+            </div>
+          )}
+          {subtotal >= PLATFORM.policies.freeShippingThreshold && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl border border-sage/30 bg-sage/10 p-3 text-xs font-bold text-success"><BadgeCheck /> تبریک! ارسال این سفارش رایگانه</div>
+          )}
+
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-ink-muted">جمع کالا</span><span className="font-medium text-ink">{toFa(formatPrice(subtotal))} تومان</span></div>
+            <div className="flex justify-between"><span className="flex items-center gap-1 text-ink-muted"><Truck size={15} /> ارسال</span><span className="font-medium text-ink">{toFa(formatPrice(shipping))} تومان</span></div>
+            <div className="flex items-center gap-2 rounded-lg bg-sage/10 p-2 text-xs text-success">
+              <BadgeCheck /> ارسال از چند فروشگاه به‌صورت جداگانه انجام می‌شود
+            </div>
+          </div>
+          <div className="mt-4 flex justify-between border-t border-clay/40 pt-4">
+            <span className="font-display font-bold text-ink">مبلغ قابل پرداخت</span>
+            <span className="font-display text-lg font-black text-ink">{toFa(formatPrice(subtotal + shipping))}</span>
+          </div>
+          <Link href="/checkout"><Button size="lg" className="mt-5 w-full">ادامه و پرداخت امن <ArrowLeft size={16} /></Button></Link>
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-muted"><ShieldCheck size={13} className="text-sage" /> پرداخت رمزنگاری‌شده · ضمانت بازگشت ۷ روزه</div>
+          <Link href="/products" className="mt-2 block text-center text-sm text-terracotta-deep hover:underline">ادامه خرید</Link>
+          {/* Loop back to AI + Inspiration */}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Link href="/ai/design" className="flex items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/5 py-2.5 text-[11px] font-bold text-gold transition hover:bg-gold/10"><Sparkles size={13} /> طراحی با AI</Link>
+            <Link href="/inspiration" className="flex items-center justify-center gap-1.5 rounded-xl border border-clay/50 bg-ivory-2 py-2.5 text-[11px] font-bold text-ink-muted transition hover:text-ink"><Lightbulb size={13} /> الهام بگیر</Link>
+          </div>
         </aside>
       </div>
-
-      <ConfirmDialog open={pendingRemove != null} onClose={() => setPendingRemove(null)} onConfirm={() => { if (pendingRemove) { remove(pendingRemove); toast("محصول از سبد حذف شد", "info"); } }} title="حذف از سبد خرید؟" description="این محصول از سبد حذف می‌شود؛ هر زمان خواستی می‌توانی دوباره آن را اضافه کنی." confirmLabel="حذف محصول" destructive />
     </Container>
   );
 }
+
+function BadgeCheck() { return <span className="grid h-4 w-4 place-items-center">✓</span>; }

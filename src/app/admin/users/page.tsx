@@ -16,8 +16,7 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-5">
       <h1 className="font-display text-xl font-black text-ink">مدیریت کاربران</h1>
-      <div className="card-surface overflow-hidden">
-        <div className="table-shell">
+      <div className="overflow-hidden card-surface">
         <table className="w-full min-w-[560px] text-sm">
           <thead><tr className="border-b border-clay/40 bg-ivory-2 text-right text-xs text-ink-muted">
             <th className="p-3 font-medium">کاربر</th><th className="p-3 font-medium">نقش</th><th className="p-3 font-medium">وضعیت</th><th className="p-3 font-medium"></th>
@@ -33,7 +32,6 @@ export default function AdminUsersPage() {
             ))}
           </tbody>
         </table>
-        </div>
       </div>
       <p className="text-xs text-ink-muted">نمایش {toFa(USERS.length)} کاربر از مجموع ۱۸٬۴۰۰ (داده‌ی نمونه)</p>
     </div>

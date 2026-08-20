@@ -1,7 +1,8 @@
 "use client";
 import { Package, Truck, CheckCircle2, Clock } from "lucide-react";
-import { Badge, EmptyState, Button, ButtonLink } from "@/components/ui/primitives";
+import { Badge, EmptyState, Button } from "@/components/ui/primitives";
 import { toFa } from "@/lib/utils";
+import Link from "next/link";
 
 const ORDERS = [
   { id: "102456", date: "۱۴۰۳/۰۸/۱۵", status: "delivered", total: 53200000, items: ["کاناپه هلیم ۳ نفره", "ست کوسن پالت خاکی"], store: "نور مبلمان" },
@@ -40,7 +41,7 @@ export default function OrdersPage() {
             </div>
           </div>
         );
-      }) : <EmptyState icon={<Package size={28} />} title="هنوز سفارشی نداری" action={<ButtonLink href="/products">شروع خرید</ButtonLink>} />}
+      }) : <EmptyState icon={<Package size={28} />} title="هنوز سفارشی نداری" action={<Link href="/products"><Button>شروع خرید</Button></Link>} />}
     </div>
   );
 }
