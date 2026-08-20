@@ -30,7 +30,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
 
   return (
     <Container className="py-8">
-      <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "AI استودیو", href: "/ai" }, { label: "نتیجه طراحی" }]} />
+      <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "AI استودیو", href: "/ai/design" }, { label: "نتیجه طراحی" }]} />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         {/* image */}

@@ -553,7 +553,7 @@ function DesignInner() {
           </div>
           </>
         )}
-        <div className="mt-6 text-center"><Link href="/ai" className="text-xs text-ink-muted hover:text-ink">← بازگشت به استودیو</Link></div>
+        <div className="mt-6 text-center"><Link href="/ai/design" className="text-xs text-ink-muted hover:text-ink">← بازگشت به استودیو</Link></div>
       </Container>
     </div>
   );

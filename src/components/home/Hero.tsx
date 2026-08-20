@@ -183,7 +183,7 @@ export function Hero() {
                 </span>
                 <ArrowLeft size={18} className="shrink-0 text-terracotta" />
               </button>
-              <ButtonLink href="/ai" variant="gold" size="lg" className="min-h-14 rounded-2xl px-5">
+              <ButtonLink href="/ai/design" variant="gold" size="lg" className="min-h-14 rounded-2xl px-5">
                 <Wand2 size={18} /> شروع طراحی AI
               </ButtonLink>
             </motion.div>

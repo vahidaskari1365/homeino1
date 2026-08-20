@@ -113,7 +113,7 @@ export function AIPanel() {
               <Send size={16} />
             </button>
           </div>
-          <button onClick={() => { setAiPanel(false); router.push("/ai"); }} className="mt-2 w-full text-center text-xs text-terracotta-deep hover:underline">
+          <button onClick={() => { setAiPanel(false); router.push("/ai/design"); }} className="mt-2 w-full text-center text-xs text-terracotta-deep hover:underline">
             ورود به AI استودیو ←
           </button>
         </div>
