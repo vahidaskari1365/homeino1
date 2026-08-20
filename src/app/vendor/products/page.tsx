@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { ButtonLink, Badge, Rating } from "@/components/ui/primitives";
-import { SmartImage } from "@/components/ui/SmartImage";
+import { Button, Badge, Rating } from "@/components/ui/primitives";
 import { products } from "@/data/products";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useState } from "react";
@@ -14,7 +13,7 @@ export default function VendorProductsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-xl font-black text-ink">محصولات ({toFa(list.length)})</h1>
-        <ButtonLink href="/vendor/products/new"><Plus size={16} /> افزودن محصول</ButtonLink>
+        <Link href="/vendor/products/new"><Button><Plus size={16} /> افزودن محصول</Button></Link>
       </div>
       <div className="flex items-center rounded-xl border border-clay/60 bg-cream px-3 focus-within:border-ink">
         <Search size={17} className="text-ink-muted" />
@@ -29,7 +28,7 @@ export default function VendorProductsPage() {
             <tbody>
               {list.map((p) => (
                 <tr key={p.id} className="border-b border-clay/30 hover:bg-ivory-2/50">
-                  <td className="p-3"><div className="flex items-center gap-2"><SmartImage src={p.images[0]} alt="" className="h-10 w-10 shrink-0 rounded-lg" /><span className="line-clamp-1 font-medium text-ink">{p.name}</span></div></td>
+                  <td className="p-3"><div className="flex items-center gap-2"><img src={p.images[0]} alt="" className="h-10 w-10 rounded-lg object-cover" /><span className="line-clamp-1 font-medium text-ink">{p.name}</span></div></td>
                   <td className="p-3 whitespace-nowrap text-ink">{toFa(formatPrice(p.price))} ت</td>
                   <td className="p-3 text-ink">{toFa(p.stockCount)}</td>
                   <td className="p-3"><Rating value={p.rating} /></td>

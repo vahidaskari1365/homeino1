@@ -6,8 +6,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const cat = getCategory(slug);
   if (!cat) return { title: "دسته‌بندی یافت نشد" };
   return {
-    title: `خرید ${cat.name} — مقایسه محصولات و فروشگاه‌ها`,
-    description: cat.description?.slice(0, 155) || `محصولات ${cat.name} را از فروشگاه‌های مختلف Homeino کشف و مقایسه کنید.`,
+    title: `خرید ${cat.name} — بهترین قیمت و کیفیت`,
+    description: cat.description?.slice(0, 155) || `خرید آنلاین ${cat.name} با بهترین قیمت از فروشگاه‌های معتبر Homeino`,
     alternates: { canonical: `/category/${cat.slug}` },
     openGraph: { title: `${cat.name} | Homeino`, description: cat.description, type: "website", locale: "fa_IR", images: [{ url: cat.image }] },
   };

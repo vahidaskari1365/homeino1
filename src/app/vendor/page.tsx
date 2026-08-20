@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Package, ShoppingCart, DollarSign, Eye, Plus } from "lucide-react";
-import { ButtonLink, Badge, LogoBlock } from "@/components/ui/primitives";
+import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
 import { toFa } from "@/lib/utils";
 
 const stats = [
@@ -28,7 +28,7 @@ export default function VendorDashboard() {
           <LogoBlock char="ن" color="var(--color-terracotta)" size={52} />
           <div><h1 className="font-display text-xl font-black text-ink">خوش آمدی، نور مبلمان</h1><p className="text-sm text-ink-muted">نمای کلی فروش این ماه</p></div>
         </div>
-        <ButtonLink href="/vendor/products/new"><Plus size={16} /> افزودن محصول</ButtonLink>
+        <Link href="/vendor/products/new"><Button><Plus size={16} /> افزودن محصول</Button></Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

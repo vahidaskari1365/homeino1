@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Heart, ShoppingBag, Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, ButtonLink, Badge } from "@/components/ui/primitives";
+import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { getInspiration, inspirations } from "@/data/inspirations";
 import { getProductById } from "@/data/products";
@@ -45,8 +45,8 @@ export default function InspirationDetailPage({ params }: { params: Promise<{ id
             <Button variant={wished ? "primary" : "outline"} onClick={() => { wl.toggleInspiration(insp!.id); toast(wished ? "حذف شد" : "ذخیره شد"); }}>
               <Heart size={16} className={cn(wished && "fill-current")} /> {wished ? "ذخیره شد" : "ذخیره ایده"}
             </Button>
-            <ButtonLink href="/ai" variant="accent"><Wand2 size={16} /> بساز مشابهش با AI</ButtonLink>
-            {style && <ButtonLink href={`/styles/${style.slug}`} variant="ghost">سبک {style.name} ←</ButtonLink>}
+            <Link href="/ai/design"><Button className="btn-accent"><Wand2 size={16} /> بساز مشابهش با AI</Button></Link>
+            {style && <Link href={`/styles/${style.slug}`}><Button variant="ghost">سبک {style.name} ←</Button></Link>}
           </div>
 
           <div className="mt-5 flex items-center gap-1">

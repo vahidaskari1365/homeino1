@@ -19,7 +19,6 @@ export default function AdminAiPage() {
         <div className="card-surface p-5"><Sparkles size={20} className="text-terracotta-deep" /><div className="mt-2 font-display text-2xl font-black text-ink">{toFa("۹۸٪")}</div><div className="text-xs text-ink-muted">نرخ موفقیت</div></div>
       </div>
       <div className="card-surface overflow-hidden">
-        <div className="table-shell">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-clay/40 bg-ivory-2 text-right text-xs text-ink-muted"><th className="p-3 font-medium">عملیات</th><th className="p-3 font-medium">تعداد</th><th className="p-3 font-medium">اعتبار مصرفی</th></tr></thead>
           <tbody>
@@ -28,7 +27,6 @@ export default function AdminAiPage() {
             ))}
           </tbody>
         </table>
-        </div>
       </div>
     </div>
   );

@@ -56,12 +56,9 @@ export function AIPanel() {
   };
 
   return (
-    <div className="fixed inset-0 z-[140] flex justify-end bg-ink/55 backdrop-blur-sm" onClick={() => setAiPanel(false)}>
+    <div className="fixed inset-0 z-[100] flex justify-end bg-ink/40 backdrop-blur-sm" onClick={() => setAiPanel(false)}>
       <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label="دستیار هوشمند Homeino"
-        className="flex h-[100svh] w-full max-w-md min-w-0 flex-col overflow-hidden bg-cream shadow-[var(--shadow-lift)] animate-[fadeUp_0.35s_ease]"
+        className="flex h-full w-full max-w-md flex-col bg-cream shadow-[var(--shadow-lift)] animate-[fadeUp_0.35s_ease]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* header */}
@@ -90,9 +87,9 @@ export function AIPanel() {
         </div>
 
         {/* quick actions */}
-        <div className="hide-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 pb-2 sm:flex-wrap sm:px-5">
+        <div className="flex flex-wrap gap-2 px-5 pb-2">
           {QUICK.map((q) => (
-            <button key={q.label} onClick={() => send(q.label)} className="flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-clay/60 bg-ivory-2 px-3 py-1.5 text-xs text-ink transition hover:border-ink">
+            <button key={q.label} onClick={() => send(q.label)} className="flex items-center gap-1.5 rounded-full border border-clay/60 bg-ivory-2 px-3 py-1.5 text-xs text-ink transition hover:border-ink">
               <q.icon size={13} /> {q.label}
             </button>
           ))}
@@ -101,7 +98,7 @@ export function AIPanel() {
         {/* input */}
         <div className="border-t border-clay/40 p-4">
           <div className="flex items-end gap-2 rounded-2xl border border-clay/60 bg-cream p-2 focus-within:border-ink">
-            <button onClick={() => router.push("/ai")} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-ink-muted transition hover:bg-ivory-2" aria-label="آپلود تصویر">
+            <button onClick={() => router.push("/ai/design")} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-ink-muted transition hover:bg-ivory-2" aria-label="آپلود تصویر">
               <ImagePlus size={18} />
             </button>
             <textarea
@@ -110,14 +107,14 @@ export function AIPanel() {
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
               rows={1}
               placeholder="پیامت رو بنویس…"
-              className="max-h-28 min-h-9 min-w-0 flex-1 resize-none border-0 bg-transparent px-0 py-1.5 text-sm text-ink outline-none placeholder:text-ink-muted/60 focus:shadow-none"
+              className="max-h-28 flex-1 resize-none bg-transparent py-1.5 text-sm text-ink outline-none placeholder:text-ink-muted/60"
             />
             <button onClick={() => send(input)} disabled={busy || !input.trim()} className="btn-accent grid h-9 w-9 shrink-0 place-items-center rounded-xl disabled:opacity-40" aria-label="ارسال">
               <Send size={16} />
             </button>
           </div>
           <button onClick={() => { setAiPanel(false); router.push("/ai"); }} className="mt-2 w-full text-center text-xs text-terracotta-deep hover:underline">
-            رفتن به طراحی هوشمند اتاق ←
+            ورود به AI استودیو ←
           </button>
         </div>
       </aside>

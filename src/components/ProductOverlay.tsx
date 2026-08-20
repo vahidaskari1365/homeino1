@@ -97,9 +97,6 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
         onPointerUp={endDrag}
         onPointerLeave={endDrag}
       >
-        {/* Interactive stage — user's uploaded image (often a data URL / blob).
-            next/image can't optimize blob URLs and the stage needs real pixel-level layout math. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={roomImage} alt="اتاق شما" className="h-full w-full object-cover" draggable={false} onLoad={onImageLoad} />
 
         {placements.map((pl) => {
@@ -124,8 +121,6 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
               onKeyDown={(e) => onKeyDown(e, pl)}
               onClick={(e) => { e.stopPropagation(); setSelected(p.id); }}
             >
-              {/* Drag-to-position sprite — needs intrinsic width flow inside a transformed parent. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.images[0]} alt={p.name} className={cn("h-auto w-full rounded-lg object-contain drop-shadow-2xl", isSel && "ring-2 ring-gold")} draggable={false} />
 
               {/* resize handle */}

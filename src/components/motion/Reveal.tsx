@@ -29,10 +29,9 @@ export function Reveal({
       ...(scale && !reduce ? { scale: 0.95 } : {}),
     },
     show: {
-      opacity: 1,
-      y: 0,
-      ...(blur && !reduce ? { filter: "blur(0px)" } : {}),
-      ...(scale && !reduce ? { scale: 1 } : {}),
+      opacity: 1, y: 0,
+      filter: "blur(0px)",
+      scale: 1,
       transition: { duration: blur ? 0.9 : 0.7, ease: [0.16, 1, 0.3, 1], delay },
     },
   };
