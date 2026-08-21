@@ -38,7 +38,7 @@ export function MobileNav() {
               <button onClick={() => setMobileNav(false)} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-ivory-2"><X size={20} /></button>
             </div>
             <nav className="space-y-1">
-              {[["خانه", "/"], ["همه محصولات", "/products"], ["دسته‌بندی‌ها", "/category/furniture"], ["فروشگاه‌ها", "/stores"], ["الهام", "/inspiration"], ["معرفی سبک‌ها", "/styles"], ["AI استودیو", "/ai/design"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["سبد خرید", "/cart"], ["حساب کاربری", "/account"], ["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"]].map(([label, href]) => (
+              {[["خانه", "/"], ["همه محصولات", "/products"], ["دسته‌بندی‌ها", "/category/furniture"], ["فروشگاه‌ها", "/stores"], ["الهام", "/inspiration"], ["سبک‌ها", "/styles"], ["AI استودیو", "/ai/design"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["سبد خرید", "/cart"], ["حساب کاربری", "/account"], ["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"]].map(([label, href]) => (
                 <Link key={href} href={href} onClick={() => setMobileNav(false)} className={cn("block rounded-lg px-3 py-2.5 text-sm font-medium transition", pathname === href ? "bg-ink text-cream" : "text-ink hover:bg-ivory-2")}>{label}</Link>
               ))}
             </nav>

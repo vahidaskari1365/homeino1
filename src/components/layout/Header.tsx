@@ -15,7 +15,7 @@ const NAV = [
   { label: "دسته‌بندی‌ها", href: "/category/furniture", mega: "categories" },
   { label: "فروشگاه‌ها", href: "/stores" },
   { label: "الهام", href: "/inspiration" },
-  { label: "معرفی سبک‌ها", href: "/styles", mega: "styles" },
+  { label: "سبک‌ها", href: "/styles", mega: "styles" },
   { label: "دسته دوم", href: "/second-hand" },
   { label: "AI استودیو", href: "/ai/design", accent: true },
 ];
