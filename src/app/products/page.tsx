@@ -1,10 +1,11 @@
 import { Container, PageHeader } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
-import { products } from "@/data/products";
+import { getProductsForSite } from "@/lib/server/catalog";
 import { stores } from "@/data/stores";
 import { toFa } from "@/lib/utils";
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const products = await getProductsForSite();
   return (
     <Container className="py-10">
       <PageHeader
