@@ -6,8 +6,7 @@ import { useWishlist, useCompare, useCart } from "@/stores/useShop";
 import { useUi as useUiStore } from "@/stores/useApp";
 import { cn, toFa, formatPrice } from "@/lib/utils";
 import { SmartImage } from "./ui/SmartImage";
-import { Badge, Rating, LogoBlock } from "./ui/primitives";
-import { getStyle } from "@/data/styles";
+import { Badge, Price, Rating, LogoBlock } from "./ui/primitives";
 
 export function ProductCard({ product }: { product: Product }) {
   const wl = useWishlist();
@@ -16,7 +15,6 @@ export function ProductCard({ product }: { product: Product }) {
   const toast = useUiStore((s) => s.toast);
   const wished = wl.products.includes(product.id);
   const compared = cmp.has(product.id);
-  const primaryStyle = product.styleSlugs[0] ? getStyle(product.styleSlugs[0]) : undefined;
 
   return (
     <div className="group relative overflow-hidden rounded-[var(--radius-lg)] bg-ink shadow-[var(--shadow-soft)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] sm:aspect-[3/4]">
@@ -28,7 +26,6 @@ export function ProductCard({ product }: { product: Product }) {
           {product.discount ? <Badge tone="accent">٪{product.discount} تخفیف</Badge> : null}
           {product.isNew && <Badge tone="dark">جدید</Badge>}
           {product.aiRecommended && <Badge tone="gold">پیشنهاد AI</Badge>}
-          {primaryStyle && <Badge className="bg-cream/90 backdrop-blur" tone="neutral">سبک {primaryStyle.name}</Badge>}
         </div>
       </Link>
 

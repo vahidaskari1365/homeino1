@@ -5,7 +5,7 @@ export const inspirations: InspirationImage[] = [
   { id: "i1", title: "پذیرایی گرم و خاکی", image: IMG.living2, styleSlug: "modern", room: "پذیرایی", tags: ["گرم", "خاکی", "نور"], productIds: ["p1", "p9", "p15"] },
   { id: "i2", title: "اتاق خواب اسکاندیناوی", image: IMG.bed2, styleSlug: "scandinavian", room: "اتاق خواب", tags: ["آرام", "چوب"], productIds: ["p19", "p20", "p21"] },
   { id: "i3", title: "گوشه‌ی مطالعه‌ی مینیمال", image: IMG.decor7, styleSlug: "minimal", room: "فضای کار", tags: ["مطالعه", "نور"], productIds: ["p9", "p23"] },
-  { id: "i4", title: "ناهارخوری آرت دکو", image: IMG.styleArtDeco, styleSlug: "art-deco", room: "ناهارخوری", tags: ["آرت دکو", "شیک"], productIds: ["p4", "p10"] },
+  { id: "i4", title: "ناهارخوری لوکس", image: IMG.living9, styleSlug: "art-deco", room: "ناهارخوری", tags: ["لوکس", "شیک"], productIds: ["p4", "p10"] },
   { id: "i5", title: "پالت تک‌رنگ طوسی", image: IMG.living7, styleSlug: "minimal", room: "پذیرایی", tags: ["تک‌رنگ", "طوسی"], productIds: ["p29", "p15"] },
   { id: "i6", title: "بافت‌های طبیعی ژاپنی", image: IMG.decor6, styleSlug: "japandi", room: "پذیرایی", tags: ["بافت", "طبیعی"], productIds: ["p3", "p6"] },
   { id: "i7", title: "بوهمیین رنگین", image: IMG.living3, styleSlug: "boho", room: "پذیرایی", tags: ["رنگین", "الگو"], productIds: ["p2", "p12", "p15"] },
