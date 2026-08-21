@@ -32,10 +32,11 @@ export const userStatusEnum = pgEnum("user_status", [
 export const users = pgTable(
   "users",
   {
-    id: id(),
+    // Supabase Auth is the identity source of truth. This id is populated from
+    // auth.users.id by the on_auth_user_created database trigger.
+    id: uuid("id").primaryKey(),
     email: varchar("email", { length: 320 }).notNull(),
     phone: varchar("phone", { length: 32 }),
-    passwordHash: text("password_hash").notNull(),
     role: userRoleEnum("role").notNull().default("customer"),
     status: userStatusEnum("status").notNull().default("pending"),
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
@@ -86,29 +87,7 @@ export const userAddresses = pgTable(
   (t) => [index("user_addresses_user_idx").on(t.userId)],
 );
 
-export const userSessions = pgTable(
-  "user_sessions",
-  {
-    id: id(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    tokenHash: text("token_hash").notNull(),
-    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    revokedAt: timestamp("revoked_at", { withTimezone: true }),
-    ip: varchar("ip", { length: 64 }),
-    userAgent: text("user_agent"),
-    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
-  },
-  (t) => [
-    uniqueIndex("user_sessions_token_hash_unique").on(t.tokenHash),
-    index("user_sessions_user_idx").on(t.userId),
-  ],
-);
-
 // ---- Shared scalar type helpers ----
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
-export type UserSession = typeof userSessions.$inferSelect;

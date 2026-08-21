@@ -75,4 +75,18 @@ export const categoryRelations = pgTable(
   ],
 );
 
+/** Closure table for efficient ancestor/descendant catalog queries. */
+export const categoryHierarchy = pgTable(
+  "category_hierarchy",
+  {
+    ancestorId: uuid("ancestor_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+    descendantId: uuid("descendant_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+    depth: integer("depth").notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("category_hierarchy_unique").on(t.ancestorId, t.descendantId),
+    index("category_hierarchy_descendant_idx").on(t.descendantId),
+  ],
+);
+
 export type Category = typeof categories.$inferSelect;

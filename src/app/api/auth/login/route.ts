@@ -1,44 +1,25 @@
-import { eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { users } from "@/db/schema";
-import { ApiError } from "@/lib/api/errors";
 import { validate, isEmail, isPassword } from "@/lib/api/validate";
-import { createSession, sessionCookieName, verifyPassword } from "@/lib/api/auth";
+import { sessionCookieName, refreshCookieName } from "@/lib/api/auth";
 import { guard, readBody } from "@/lib/api/http";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/api/rateLimit";
+import { ApiError } from "@/lib/api/errors";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
 export const POST = guard(async (req) => {
-  const body = await readBody(req);
-  const input = validate(body, { email: isEmail, password: isPassword });
-
+  const input = validate(await readBody(req), { email: isEmail, password: isPassword });
   rateLimit(`login:${input.email}`, { windowMs: 60_000, max: 10 });
-
-  const [user] = await getDb().select().from(users).where(eq(users.email, input.email)).limit(1);
-  if (!user || !(await verifyPassword(input.password, user.passwordHash))) {
-    throw ApiError.unauthorized("ایمیل یا رمز عبور اشتباه است");
-  }
-  if (user.status === "suspended") throw ApiError.forbidden("حساب شما مسدود شده است");
-
-  await getDb().update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
-
-  const { token, expiresAt } = await createSession(user.id, {
-    ip: req.headers.get("x-forwarded-for") ?? undefined,
-    userAgent: req.headers.get("user-agent") ?? undefined,
+  const { data, error } = await createSupabaseServerClient().auth.signInWithPassword({
+    email: input.email,
+    password: input.password,
   });
+  if (error || !data.session || !data.user) throw ApiError.unauthorized("ایمیل یا رمز عبور اشتباه است");
 
-  const res = NextResponse.json({
-    ok: true,
-    data: { id: user.id, email: user.email, role: user.role },
-  });
-  res.cookies.set(sessionCookieName, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: expiresAt,
-  });
+  const secure = process.env.NODE_ENV === "production";
+  const res = NextResponse.json({ ok: true, data: { id: data.user.id, email: data.user.email, role: data.user.app_metadata.role ?? "customer" } });
+  res.cookies.set(sessionCookieName, data.session.access_token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: data.session.expires_in });
+  res.cookies.set(refreshCookieName, data.session.refresh_token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: 30 * 24 * 60 * 60 });
   return res;
 });

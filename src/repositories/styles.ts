@@ -1,12 +1,35 @@
-import type { Style } from "@/types";
-import { styles, getStyle } from "@/data/styles";
+import type { Style, StyleSlug } from "@/types";
+import { styles as mockStyles, getStyle } from "@/data/styles";
+import { asc, eq } from "drizzle-orm";
+import { getDb } from "@/db";
+import { styleColors, styleFeatures, styleMaterials, styles } from "@/db/schema";
 
-export interface StylesRepository {
-  list(): Promise<Style[]>;
-  bySlug(slug: string): Promise<Style | undefined>;
+export interface StylesRepository { list(): Promise<Style[]>; bySlug(slug: string): Promise<Style | undefined>; }
+const hasDatabase = () => Boolean(process.env.DATABASE_URL);
+
+async function listRemote(): Promise<Style[]> {
+  const db = getDb();
+  const [rows, colors, materials, features] = await Promise.all([
+    db.select().from(styles).where(eq(styles.isPublished, true)).orderBy(asc(styles.name)),
+    db.select().from(styleColors).orderBy(asc(styleColors.position)),
+    db.select().from(styleMaterials).orderBy(asc(styleMaterials.position)),
+    db.select().from(styleFeatures).orderBy(asc(styleFeatures.position)),
+  ]);
+  return rows.map(s => ({
+    id: s.id, slug: s.slug as StyleSlug, name: s.name, nameEn: s.nameEn ?? s.slug,
+    tagline: s.tagline ?? "", shortDescription: s.shortDescription ?? "", description: s.description ?? "",
+    image: s.image ?? "", imageAlt: s.imageAlt ?? s.name,
+    colorPalette: colors.filter(c => c.styleId === s.id).map(c => ({ name: c.name, hex: c.hex })),
+    materials: materials.filter(m => m.styleId === s.id).map(m => m.material),
+    keyFeatures: features.filter(f => f.styleId === s.id).map(f => f.feature),
+    furnitureCharacteristics: s.furnitureCharacteristics ?? "", lightingCharacteristics: s.lightingCharacteristics ?? "",
+    formCharacteristics: s.formCharacteristics ?? "", decorCharacteristics: s.decorCharacteristics ?? "",
+    visualDensity: s.visualDensity ?? "", suitableFor: s.suitableFor ?? "", suitableRooms: s.suitableRooms ?? [],
+    comparisonNote: s.comparisonNote ?? undefined,
+  }));
 }
 
 export const stylesRepository: StylesRepository = {
-  list: async () => styles,
-  bySlug: async (slug) => getStyle(slug),
+  list: async () => hasDatabase() ? listRemote() : mockStyles,
+  bySlug: async slug => hasDatabase() ? (await listRemote()).find(s => s.slug === slug) : getStyle(slug),
 };

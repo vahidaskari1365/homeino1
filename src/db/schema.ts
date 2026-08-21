@@ -12,6 +12,7 @@ export * from "./schema/commerce";
 export * from "./schema/ai";
 export * from "./schema/content";
 export * from "./schema/system";
+export * from "./schema/supabase";
 
 import * as users from "./schema/users";
 import * as vendors from "./schema/vendors";
@@ -21,6 +22,7 @@ import * as commerce from "./schema/commerce";
 import * as ai from "./schema/ai";
 import * as content from "./schema/content";
 import * as system from "./schema/system";
+import * as supabase from "./schema/supabase";
 
 /** Flat namespace of every table — consumes cleanly as the schema map. */
 export const schema = {
@@ -32,9 +34,10 @@ export const schema = {
   ...ai,
   ...content,
   ...system,
+  ...supabase,
 };
 
-export type { User, Profile, UserSession, NewUser } from "./schema/users";
+export type { User, Profile, NewUser } from "./schema/users";
 export type { Vendor } from "./schema/vendors";
 export type { Product, NewProduct } from "./schema/products";
 export type { Order, OrderItem } from "./schema/commerce";

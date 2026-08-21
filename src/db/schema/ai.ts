@@ -214,8 +214,8 @@ export const creditTransactions = pgTable(
   ],
 );
 
-export const aiUsage = pgTable(
-  "ai_usage",
+export const aiUsageLogs = pgTable(
+  "ai_usage_logs",
   {
     id: id(),
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
@@ -233,6 +233,9 @@ export const aiUsage = pgTable(
   },
   (t) => [uniqueIndex("ai_usage_generation_unique").on(t.generationId)],
 );
+
+/** Backwards-compatible service alias. */
+export const aiUsage = aiUsageLogs;
 
 // ---------------------------------------------------------------
 // AI providers / models / pricing — admin managed
