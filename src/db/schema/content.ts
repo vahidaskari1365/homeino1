@@ -96,9 +96,7 @@ export const collections = pgTable(
   "collections",
   {
     id: id(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     slug: varchar("slug", { length: 200 }),
     title: varchar("title", { length: 160 }).notNull(),
     subtitle: varchar("subtitle", { length: 240 }),
@@ -110,8 +108,8 @@ export const collections = pgTable(
   (t) => [index("collections_user_idx").on(t.userId)],
 );
 
-export const collectionItems = pgTable(
-  "collection_items",
+export const collectionProducts = pgTable(
+  "collection_products",
   {
     collectionId: uuid("collection_id")
       .notNull()
@@ -123,6 +121,9 @@ export const collectionItems = pgTable(
   },
   (t) => [
     uniqueIndex("collection_items_pk").on(t.collectionId, t.productId),
-    index("collection_items_product_idx").on(t.productId),
+    index("collection_products_product_idx").on(t.productId),
   ],
 );
+
+/** Backwards-compatible application alias; physical table is collection_products. */
+export const collectionItems = collectionProducts;
