@@ -71,6 +71,38 @@ src/
 
 اتصال دیتابیس به‌صورت lazy انجام می‌شود، بنابراین بدون `DATABASE_URL` هم برنامه بیلد و اجرا می‌شود.
 
+## اتصال به Supabase
+
+پروژه آماده‌ی اتصال مستقیم به Supabase است (Auth + Storage + PostgreSQL):
+
+1. فایل `.env` را از روی `.env.example` بسازید و مقادیر پروژه‌ی Supabase خود را وارد کنید:
+
+   ```bash
+   SUPABASE_URL="https://<project-ref>.supabase.co"
+   SUPABASE_ANON_KEY="eyJ..."
+   SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+   NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+   DATABASE_URL="postgres://postgres.<project-ref>:<password>@aws-1-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
+   ```
+
+2. نصب وابستگی‌ها و ساخت جدول‌ها در Supabase (مایگریشن):
+
+   ```bash
+   npm install
+   npm run db:migrate
+   ```
+
+   این دستور فایل‌های `supabase/migrations/*.sql` را به‌ترتیب و به‌صورت idempotent روی دیتابیس Supabase اعمال می‌کند (جدول‌ها، تریگر همگام‌سازی `auth.users`، RLS، باکت‌های Storage و داده‌های seed).
+
+3. اجرای سایت:
+
+   ```bash
+   npm run dev
+   ```
+
+با تنظیم `DATABASE_URL`، لایه‌ی Repository به‌صورت خودکار از داده‌ی واقعی دیتابیس (از طریق `catalogService`) استفاده می‌کند و Auth هم به Supabase Auth متصل است.
+
 ## آمادگی برای اتصال Backend
 
 Frontend این پروژه کاملاً محصولِ آماده لانچ است — با یک لایه Repository (در `src/repositories/`) که تنها اتصال UI به داده‌ی زیرین است. برای مهاجرت به Supabase یا هر backend دیگر فقط پیاده‌سازی repositoryها را عوض کنید. جزئیات کامل در `docs/PRODUCTION_READY.md`.
