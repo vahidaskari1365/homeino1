@@ -1,0 +1,3 @@
+const { Client } = require('pg');
+const c = new Client({ connectionString: 'postgres://postgres.agriyxnnleeltidvglma:Vahid%400142!%40%23@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=disable', ssl: { rejectUnauthorized: false } });
+c.connect().then(() => c.query("select table_name from information_schema.columns where column_name = 'id' and table_schema = 'public'")).then(r => { console.log('Tables with id column:', r.rows.map(x => x.table_name)); c.end(); }).catch(e => { console.log('Error:', e.message); c.end(); });

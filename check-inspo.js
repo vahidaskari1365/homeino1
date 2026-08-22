@@ -1,0 +1,3 @@
+const { Client } = require('pg');
+const c = new Client({ connectionString: 'postgres://postgres.agriyxnnleeltidvglma:Vahid%400142!%40%23@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=disable', ssl: { rejectUnauthorized: false } });
+c.connect().then(() => c.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'inspirations' AND table_schema = 'public'")).then(r => { console.log('inspirations columns:', r.rows.map(x => x.column_name)); c.end(); }).catch(e => console.log('Error:', e.message));
