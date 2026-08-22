@@ -10,30 +10,30 @@ begin
 end $$;
 
 -- Public, published marketplace/editorial reads.
-create policy public_read_active_vendors on public.vendors for select using (status = 'active');
-create policy public_read_categories on public.categories for select using (is_active);
-create policy public_read_styles on public.styles for select using (is_published);
+create policy if not exists public_read_active_vendors on public.vendors for select using (status = 'active');
+create policy if not exists public_read_categories on public.categories for select using (is_active);
+create policy if not exists public_read_styles on public.styles for select using (is_published);
 create policy public_read_style_features on public.style_features for select using (exists (select 1 from public.styles s where s.id = style_id and s.is_published));
 create policy public_read_style_materials on public.style_materials for select using (exists (select 1 from public.styles s where s.id = style_id and s.is_published));
 create policy public_read_style_colors on public.style_colors for select using (exists (select 1 from public.styles s where s.id = style_id and s.is_published));
-create policy public_read_active_products on public.products for select using (status in ('active','out_of_stock') and deleted_at is null);
-create policy public_read_product_images on public.product_images for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
-create policy public_read_product_variants on public.product_variants for select using (is_active and exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
-create policy public_read_product_attributes on public.product_attributes for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
-create policy public_read_product_categories on public.product_categories for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
-create policy public_read_product_styles on public.product_styles for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
-create policy public_read_materials on public.materials for select using (true);
-create policy public_read_product_materials on public.product_materials for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
-create policy public_read_inspirations on public.inspirations for select using (status = 'published');
-create policy public_read_inspiration_images on public.inspiration_images for select using (exists (select 1 from public.inspirations i where i.id = inspiration_id and i.status = 'published'));
-create policy public_read_inspiration_styles on public.inspiration_styles for select using (exists (select 1 from public.inspirations i where i.id = inspiration_id and i.status = 'published'));
-create policy public_read_inspiration_products on public.inspiration_products for select using (exists (select 1 from public.inspirations i where i.id = inspiration_id and i.status = 'published'));
-create policy public_read_public_collections on public.collections for select using (is_public or user_id = auth.uid());
-create policy public_read_collection_products on public.collection_products for select using (exists (select 1 from public.collections c where c.id = collection_id and (c.is_public or c.user_id = auth.uid())));
-create policy public_read_published_projects on public.projects for select using (status = 'published');
-create policy public_read_published_articles on public.magazine_articles for select using (status = 'published');
-create policy public_read_approved_reviews on public.reviews for select using (status = 'approved');
-create policy public_read_credit_packages on public.credit_packages for select using (is_active);
+create policy if not exists public_read_active_products on public.products for select using (status in ('active','out_of_stock') and deleted_at is null);
+create policy if not exists public_read_product_images on public.product_images for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
+create policy if not exists public_read_product_variants on public.product_variants for select using (is_active and exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
+create policy if not exists public_read_product_attributes on public.product_attributes for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
+create policy if not exists public_read_product_categories on public.product_categories for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
+create policy if not exists public_read_product_styles on public.product_styles for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
+create policy if not exists public_read_materials on public.materials for select using (true);
+create policy if not exists public_read_product_materials on public.product_materials for select using (exists (select 1 from public.products p where p.id = product_id and p.status in ('active','out_of_stock') and p.deleted_at is null));
+create policy if not exists public_read_inspirations on public.inspirations for select using (status = 'published');
+create policy if not exists public_read_inspiration_images on public.inspiration_images for select using (exists (select 1 from public.inspirations i where i.id = inspiration_id and i.status = 'published'));
+create policy if not exists public_read_inspiration_styles on public.inspiration_styles for select using (exists (select 1 from public.inspirations i where i.id = inspiration_id and i.status = 'published'));
+create policy if not exists public_read_inspiration_products on public.inspiration_products for select using (exists (select 1 from public.inspirations i where i.id = inspiration_id and i.status = 'published'));
+create policy if not exists public_read_public_collections on public.collections for select using (is_public or user_id = auth.uid());
+create policy if not exists public_read_collection_products on public.collection_products for select using (exists (select 1 from public.collections c where c.id = collection_id and (c.is_public or c.user_id = auth.uid())));
+create policy if not exists public_read_published_projects on public.projects for select using (status = 'published');
+create policy if not exists public_read_published_articles on public.magazine_articles for select using (status = 'published');
+create policy if not exists public_read_approved_reviews on public.reviews for select using (status = 'approved');
+create policy if not exists public_read_credit_packages on public.credit_packages for select using (is_active);
 
 -- User-owned root records.
 create policy users_read_self on public.users for select to authenticated using (id = auth.uid());
@@ -99,8 +99,8 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
   ('vendor-images','vendor-images',true,10485760,array['image/jpeg','image/png','image/webp','image/avif']),
   ('inspiration-images','inspiration-images',true,15728640,array['image/jpeg','image/png','image/webp','image/avif']),
   ('room-images','room-images',false,20971520,array['image/jpeg','image/png','image/webp']),
-  ('ai-generations','ai-generations',false,20971520,array['image/jpeg','image/png','image/webp']),
-  ('ai-assets','ai-assets',false,20971520,array['image/jpeg','image/png','image/webp','application/json'])
+  ('ai-generations','ai-generations',false,20971520,array['image/jpeg','imagepng','image/webp']),
+  ('ai-assets','ai-assets',false,20971520,array['image/jpeg','imagepng','image/webp','application/json'])
 on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
 create policy storage_public_catalog_read on storage.objects for select using (bucket_id in ('avatars','product-images','vendor-images','inspiration-images'));
