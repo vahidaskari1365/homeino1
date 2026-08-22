@@ -15,6 +15,7 @@
 //   Hard cap: ≤ 220 completion tokens per intent call.
 // ============================================================
 import type { RoomElement } from "../roomState";
+import type { EditScope } from "../scope";
 
 /** What kind of design request the user made. */
 export type DesignIntentType =
@@ -37,6 +38,15 @@ export interface IntentRequest {
   changeScope?: "targeted" | "full";
   /** Elements the user explicitly picked as "change these". */
   selectedTargets?: RoomElement[];
+  // ---- Design memory (Phase 15) — compact continuation context ----
+  /** Targets of the previous request, e.g. ["sofa"] so that
+   *  «کمی روشن‌ترش کن» still points at the same sofa. */
+  previousTargets?: RoomElement[];
+  /** Short phrases of what was changed last time. */
+  previousChanges?: string[];
+  /** Compact structured room context (see services/ai/context.ts). */
+  roomContext?: string;
+  budget?: { min?: number; max?: number; currency?: string };
 }
 
 /**
@@ -52,6 +62,10 @@ export interface IntentAnalysis {
   changes: string[];
   /** Elements that MUST stay untouched. */
   preservedElements: RoomElement[];
+  /** Change scope (Phase 4) — computed server-side when absent. */
+  scope?: EditScope;
+  /** Extra protected elements beyond preservedElements (Phase 5). */
+  protectedElements?: RoomElement[];
   style?: string;
   colors?: string[];
   /** 0..1 — how sure the model is about the intent. */

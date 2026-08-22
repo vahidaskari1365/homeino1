@@ -31,6 +31,8 @@ function buildEditPayload(req: OraliEditRequest): Record<string, unknown> {
     prompt: req.instruction,
     ...(req.mask ? { mask: req.mask.replace(/^data:image\/\w+;base64,/, "") } : {}),
     preserve_structure: req.preserveArchitecture,
+    ...(req.protectedElements?.length ? { protected_elements: req.protectedElements } : {}),
+    ...(req.targetRegion ? { target_region: req.targetRegion } : {}),
     ...(req.style ? { style: req.style } : {}),
     ...(req.colors?.length ? { palette: req.colors } : {}),
     strength: req.strength ?? 0.65,
