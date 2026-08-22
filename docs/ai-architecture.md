@@ -21,24 +21,44 @@ UI (AI Designer — /ai)
 aiService (src/services/ai/index.ts)
    │  fetch /api/ai  { action, payload }
    ▼
-/api/ai route  (validation · rate limit · sanitization)
+/api/ai route  (validation · rate limit · sanitization · requestId ·
+                duplicate-request join · standardized AI errors)
    │
    ├─ action "understand" ──► LLM Service (src/services/ai/llm)
-   │                             ├─ openaiCompatLlm  (env LLM_API_* — any OpenAI-compatible endpoint)
-   │                             └─ heuristicLlm     (deterministic fallback — never fails)
+   │                             ├─ openaiCompatLlm  (env LLM_API_* — any OpenAI-compatible endpoint,
+   │                             │                    schema-validated, bounded retry ×3)
+   │                             └─ heuristicLlm     (deterministic fallback — never fails,
+   │                                                  scope-aware + design-memory aware)
    │
    └─ action "pipeline" ──► Design Pipeline (src/services/ai/pipeline.ts)
-                              1. LLM Intent Understanding   → { intent, target, changes,
-                                                                  preservedElements, style,
-                                                                  colors, confidence }
-                              2. Design Instruction         → targets + hard preservation constraints
-                              3. Image / Overlay Generation → Orali first (real overlay metadata),
+                              0. AI Context Engine     → AIContext (room/objects/intent/style/
+                                                         products/budget/previousState) — compact ≤700 chars
+                              1. LLM Intent Understanding → { intent, target, changes, scope,
+                                                              preservedElements, style, colors, confidence }
+                              2. Change Scope           → single_item | area | room | whole_home
+                              3. Protected Elements     → structural defaults + untouched objects
+                              4. Product Placement      → real-product targetRegion plan (no random)
+                              5. Design Instruction     → targets + hard preservation constraints
+                              6. Image / Overlay Generation → Orali first (real overlay metadata),
                                                               base provider fallback (mock/gemini/…)
-                              4. Result Validation          → completed | preview | failed (never fake success)
-                              5. Result Display             → PipelineResult contract consumed by the UI
+                              7. Result Validation      → completed | preview | failed (never fake success)
+                              8. Result Display         → PipelineResult contract consumed by the UI
 ```
 
+Supporting engine modules (all pure / server-only):
+
+| Module | Responsibility |
+|---|---|
+| `scope.ts` | Change-scope detection (Phase 4) — conservative, never widens implicitly |
+| `context.ts` | Structured AI context + compact serialization (Phases 2/12/15) |
+| `placement.ts` | Product-aware placement planner (Phases 7/8) |
+| `validation.ts` | LLM JSON schema validation + bounded retry (Phase 13) |
+| `errors.ts` | Standardized AI error codes + safe messages (Phase 18) |
+| `telemetry.ts` | Per-request observability, structured `[ai]` logs (Phase 20) |
+| `serverCredits.ts` | Opt-in server-side credit gate: reserve → run → finalize/refund (Phase 17) |
+
 Swapping the LLM or the image engine is **env-only** — zero UI changes.
+See `docs/ai-engine-upgrade.md` for the full phase-by-phase report.
 
 ## Environment variables
 

@@ -26,6 +26,18 @@ export type { PipelineInput, DesignInstruction, PipelineResult, PipelineOutcome,
 export { AI_PHASE_LABEL, AI_WAIT_TIPS, PIPELINE_STEPS, isBusyPhase, stepIndexForPhase } from "./states";
 export type { AiPhase, PipelineStepKey } from "./states";
 
+// ---- AI Engine core (Phases 2–15) — pure, client-safe ----
+export { detectScope, scopeToEditStrength, scopeToIntentType, isFullScope, scopeSummary, EDIT_SCOPE_LABELS } from "./scope";
+export type { EditScope, ScopeDecision } from "./scope";
+export { buildAIContext, compactContextForLlm, contextSummary, CONTEXT_STRUCTURAL_HINTS } from "./context";
+export type { AIContext, ContextProduct, BuildContextInput } from "./context";
+export { planProductPlacement, productPlacementPrompt } from "./placement";
+export type { PlacementProduct, ProductPlacementPlan } from "./placement";
+export { extractJsonPayload, validateIntentPayload, withBoundedRetry } from "./validation";
+export type { RetryResult } from "./validation";
+export { AiError, classifyAiError, toPublicAiError, AI_ERROR_MESSAGE } from "./errors";
+export type { AiErrorCode, PublicAiError } from "./errors";
+
 /** Low-level server call. Automatically attaches userId from localStorage
  *  (optimistic — backend will use the authenticated session instead). */
 export async function callAiServer<T>(action: string, payload: unknown): Promise<T> {

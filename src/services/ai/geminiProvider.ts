@@ -23,6 +23,11 @@ function buildPrompt(input: GenerateDesignInput): string {
     input.room && `Room: ${input.room}`,
     input.color && `Color palette: ${input.color}`,
     input.mood && `Mood: ${input.mood}`,
+    // Golden rule (Phase 4/5): when editing an existing photo, only the
+    // requested elements change; structure & untouched objects survive.
+    input.referenceImage &&
+      "The uploaded image is the ORIGINAL room. Change ONLY what the user requested. Do NOT move, add or remove walls, windows, doors, the ceiling, the floor, or any object the user did not mention. Keep the exact same camera angle, perspective, room dimensions and lighting.",
+    input.mask && "Edit ONLY inside the highlighted mask region; everything outside the mask must remain pixel-identical.",
     "Professional interior design photograph, realistic, natural lighting, high detail.",
   ].filter(Boolean).join("\n");
 }

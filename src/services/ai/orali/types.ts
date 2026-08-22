@@ -44,6 +44,10 @@ export interface OraliEditRequest {
   mask?: string;
   /** Hard preservation rule — architecture must survive. */
   preserveArchitecture: boolean;
+  /** Phase 5 — Persian labels of elements that must stay untouched. */
+  protectedElements?: string[];
+  /** Phase 8 — normalized target region for product placement. */
+  targetRegion?: OverlayBox;
   style?: string;
   colors?: string[];
   /** 0..1 — how much artistic freedom the engine may take. */

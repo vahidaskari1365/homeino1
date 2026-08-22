@@ -98,11 +98,12 @@ export function detectIntent(text: string, style?: string): AiIntent {
     if (keywords.some((k) => lower.includes(k))) targets.add(element);
   }
 
-  // Color change without specific element
+  // Color request («رنگ», «کرم», «آبی», …) — with OR without a target:
+  // «رنگ مبل را کرم کن» → color_change on [sofa], NOT a full restyle.
   const colorKeywords = ["رنگ", "color", "سبز", "کرم", "آبی", "قرمز", "طوسی", "زرد", "طلایی", "بژ"];
-  const isColorOnly = colorKeywords.some((k) => lower.includes(k)) && targets.size === 0;
+  const hasColor = colorKeywords.some((k) => lower.includes(k));
 
-  if (targets.size === 0 && !isColorOnly) {
+  if (targets.size === 0 && !hasColor) {
     return {
       type: "inquiry",
       targets: [],
@@ -116,7 +117,7 @@ export function detectIntent(text: string, style?: string): AiIntent {
 
   const targetList = [...targets];
   return {
-    type: isColorOnly ? "color_change" : "partial_edit",
+    type: hasColor ? "color_change" : "partial_edit",
     targets: targetList,
     style,
     requestedChanges: [text],
@@ -328,6 +329,86 @@ function scoreReason(p: ProductCatalogEntry, intent: AiIntent): string {
   if (intent.targets.includes("lighting") && p.category === "lighting") return "روشنایی مناسب فضای شما";
   if (intent.targets.includes("rug") && p.category === "rugs") return "فرش متناسب با چیدمان";
   return "پیشنهاد هوشمند بر اساس تحلیل فضا";
+}
+
+// ============================================================
+// ROOM UNDERSTANDING (Phase 3) — structured knowledge about the
+// room BEFORE any generation. Filled by the vision/analysis layer
+// when available; the deterministic default keeps every object
+// "unknown" so the engine never invents facts about the photo.
+// ============================================================
+
+export type ObjectImportance = "keep" | "replaceable" | "unknown";
+
+/** One detected/known object in the room photo. */
+export interface RoomObject {
+  id: string;
+  /** Element vocabulary key (sofa, wall, window, …). */
+  type: RoomElement | string;
+  importance: ObjectImportance;
+  /** Approximate location as fraction of image (0..1, origin top-left). */
+  location?: { x: number; y: number };
+  /** Relative size (fraction of image). */
+  size?: { w: number; h: number };
+  /** Approximate orientation in degrees (0 = aligned with camera). */
+  orientation?: number;
+  /** Bounding region (0..1). */
+  boundingBox?: { x: number; y: number; w: number; h: number };
+}
+
+export interface RoomArchitecture {
+  walls?: boolean;
+  ceiling?: boolean;
+  doors?: number;
+  windows?: number;
+}
+
+export interface RoomUnderstanding {
+  roomType?: string;
+  floor?: string;
+  layout?: "open" | "closed" | "unknown";
+  lighting?: "natural" | "warm" | "cold" | "mixed" | "unknown";
+  architecture?: RoomArchitecture;
+  /** Structural objects (walls/floor/…) that must survive edits. */
+  objects: RoomObject[];
+  /** 0..1 — how confident the analysis is. */
+  confidence: number;
+}
+
+/** Honest empty understanding — used when no vision engine ran. */
+export function emptyRoomUnderstanding(roomType?: string): RoomUnderstanding {
+  return {
+    roomType,
+    layout: "unknown",
+    lighting: "unknown",
+    objects: [],
+    confidence: 0,
+  };
+}
+
+/** Structural elements that must NEVER change without explicit permission. */
+export const PROTECTED_STRUCTURAL_ELEMENTS: RoomElement[] = [
+  "wall", "floor", "ceiling", "door", "window",
+];
+
+/**
+ * Phase 5 — Protected Elements resolution.
+ * Golden rule: "When uncertain, preserve more and change less."
+ *
+ * - whole_home → nothing is protected (user explicitly asked).
+ * - room       → structural elements only.
+ * - area/single_item → structural elements + every untouched object.
+ */
+export function resolveProtectedElements(params: {
+  targets: RoomElement[];
+  scope: "single_item" | "area" | "room" | "whole_home";
+  explicitLocked?: RoomElement[];
+}): RoomElement[] {
+  const { targets, scope, explicitLocked = [] } = params;
+  if (scope === "whole_home") return [];
+  const structural = PROTECTED_STRUCTURAL_ELEMENTS;
+  if (scope === "room") return [...new Set([...structural, ...explicitLocked])];
+  return [...new Set([...ALL_ELEMENTS.filter((e) => !targets.includes(e)), ...explicitLocked])];
 }
 
 // ============================================================
