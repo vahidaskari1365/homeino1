@@ -51,8 +51,21 @@ const ROOM_PATTERNS = [
   "این اتاق", "اتاق کامل", "کامل اتاق", "کل فضا", "کل فضای", "کل سالن",
   "کل پذیرایی", "کل نشیمن", "کل خواب", "redesign", "بازطراحی", "از نو",
   "صفر تا صد", "دوباره طراحی", "طراحی کامل", "تغییر کلی", "دکور کامل",
+  // Named rooms as the redesign subject (style/verb applied to the room itself).
+  // Keep these specific; do NOT match «میز اتاق خواب» location phrases alone.
+  "اتاق خواب را", "اتاق خواب رو", "اتاق نشیمن را", "اتاق نشیمن رو",
+  "پذیرایی را", "پذیرایی رو", "آشپزخانه را", "آشپزخانه رو",
+  "سالن را", "سالن رو",
   // «همه چیز را عوض کن» → the current space (room), never wider without «خانه».
   "همه چیز", "همه چی", "everything",
+];
+
+/** Style/redesign verbs that turn a named room into room scope
+ *  e.g. «اتاق خواب را ژاپندی کن» — but not «میز اتاق خواب را عوض کن». */
+const ROOM_STYLE_VERBS = [
+  "مدرن", "مینیمال", "ژاپندی", "japandi", "کلاسیک", "لوکس", "بوهو", "boho",
+  "اسکاندیناوی", "scandinavian", "صنعتی", "لافت", "industrial", "روستیک",
+  "نئوکلاسیک", "مدیترانه", "بازطراحی", "طراحی", "دکور", "بهتر", "زیبا",
 ];
 
 /** Zone / area-level phrases. */
@@ -90,10 +103,28 @@ export function detectScope(text: string, targets: RoomElement[] = [], uiScope?:
 
   // 2) ROOM — explicit room-level phrase, or the UI asked for a full redesign.
   const roomHits = countMatches(lower, ROOM_PATTERNS) + (ROOM_EN.some((p) => lower.includes(p)) ? 1 : 0);
-  if (roomHits > 0 || uiScope === "full") {
+  // «اتاق خواب را ژاپندی کن» / «اتاق را مدرن کن» — room + style verb, even if
+  // keyword map leaked a furniture target (e.g. «خواب» → bed).
+  const roomSubjectStyle =
+    /(این\s*)?(اتاق(\s*خواب|\s*نشیمن)?|پذیرایی|آشپزخانه|سالن|فضا)\s*(را|رو)/.test(lower) &&
+    ROOM_STYLE_VERBS.some((v) => lower.includes(v));
+  if (roomHits > 0 || uiScope === "full" || roomSubjectStyle) {
     // «فقط مبل اتاق رو عوض کن» → single item wins despite «اتاق رو».
     if (targets.length > 0 && SINGLE_ITEM_PATTERNS.some((p) => lower.includes(p))) {
       return { scope: "single_item", confidence: 0.9, reason: "با وجود اشاره به اتاق، «فقط» یعنی فقط همان المان تغییر کند." };
+    }
+    // «میز اتاق خواب را عوض کن» — furniture object + location, not room redesign.
+    // If targets name a non-structural object and there is NO style/redesign verb, keep single_item.
+    const furnitureTargets = targets.filter((t) => !["wall", "floor", "ceiling", "door", "window"].includes(t));
+    if (
+      furnitureTargets.length > 0 &&
+      !roomSubjectStyle &&
+      !uiScope &&
+      roomHits > 0 &&
+      !ROOM_STYLE_VERBS.some((v) => lower.includes(v)) &&
+      /(عوض|تغییر|حذف|بردار)/.test(lower)
+    ) {
+      return { scope: "single_item", confidence: 0.85, reason: "اشاره به اتاق فقط مکان است — فقط همان المان تغییر می‌کند." };
     }
     return { scope: "room", confidence: uiScope === "full" ? 0.85 : 0.8, reason: "درخواست بازطراحی کل اتاق است." };
   }
