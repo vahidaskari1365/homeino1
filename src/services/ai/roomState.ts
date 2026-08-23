@@ -20,6 +20,18 @@ export const ALL_ELEMENTS: RoomElement[] = [
   "table", "chair", "tv", "plant", "art", "door", "window", "shelf", "bed",
 ];
 
+/** Structural / architectural elements — ALWAYS protected by default even in full redesign. */
+export const STRUCTURAL_ELEMENTS: RoomElement[] = [
+  "wall", "floor", "ceiling", "door", "window",
+];
+
+export const PROTECTED_STRUCTURAL_ELEMENTS: RoomElement[] = STRUCTURAL_ELEMENTS;
+
+/** Designable / furniture / decor elements that AI can freely redesign in room or whole_home redesign. */
+export const DESIGNABLE_ELEMENTS: RoomElement[] = [
+  "sofa", "rug", "curtain", "lighting", "table", "chair", "tv", "plant", "art", "shelf", "bed",
+];
+
 export type ChangeScope = RoomElement | "full_room";
 
 // ---- ELEMENT LABELS (Persian) ----
@@ -79,14 +91,19 @@ export function detectIntent(text: string, style?: string): AiIntent {
     return { type: "inquiry", targets: [], style, requestedChanges: [], lockedElements: ALL_ELEMENTS, confidence: 0.3, requiresClarification: true };
   }
 
+  const archTargets = detectArchitecturalTargets(lower);
+  const explicitLocked = detectExplicitLocked(lower);
+
   // Full-room redesign
-  if (FULL_KEYWORDS.some((k) => lower.includes(k))) {
+  if (FULL_KEYWORDS.some((k) => lower.includes(k)) || /اتاق\s*(را|رو)\s*(ژاپندی|مدرن|زیبا|مینیمال)/.test(lower)) {
+    const targets = [...DESIGNABLE_ELEMENTS, ...archTargets].filter((e) => !explicitLocked.includes(e));
+    const lockedElements = STRUCTURAL_ELEMENTS.filter((e) => !archTargets.includes(e));
     return {
       type: "full_redesign",
-      targets: [...ALL_ELEMENTS],
+      targets: targets.length ? targets : [...DESIGNABLE_ELEMENTS],
       style,
       requestedChanges: ["بازطراحی کامل فضا"],
-      lockedElements: [],
+      lockedElements: [...new Set([...lockedElements, ...explicitLocked])],
       confidence: 0.95,
       requiresClarification: false,
     };
@@ -95,12 +112,15 @@ export function detectIntent(text: string, style?: string): AiIntent {
   // Collect ALL targets mentioned
   const targets = new Set<RoomElement>();
   for (const { keywords, element } of KEYWORD_MAP) {
-    if (keywords.some((k) => lower.includes(k))) targets.add(element);
+    if (keywords.some((k) => matchesWord(lower, k) || (k.length >= 3 && k !== "مبل" && k !== "میز" && k !== "تخت" && k !== "فرش" && k !== "نور" && k !== "تور" && k !== "پوف" && k !== "شلف" && lower.includes(k)))) {
+      targets.add(element);
+    }
   }
+  archTargets.forEach((t) => targets.add(t));
 
   // Color request («رنگ», «کرم», «آبی», …) — with OR without a target:
   // «رنگ مبل را کرم کن» → color_change on [sofa], NOT a full restyle.
-  const colorKeywords = ["رنگ", "color", "سبز", "کرم", "آبی", "قرمز", "طوسی", "زرد", "طلایی", "بژ"];
+  const colorKeywords = ["رنگ", "color", "سبز", "کرم", "آبی", "قرمز", "طوسی", "زرد", "طلایی", "بژ", "سفید", "مشکی", "دودی", "قهوه‌ای"];
   const hasColor = colorKeywords.some((k) => lower.includes(k));
 
   if (targets.size === 0 && !hasColor) {
@@ -139,7 +159,14 @@ export interface ScopedChange {
 
 export function computeChangeScope(intent: AiIntent): ScopedChange {
   if (intent.type === "full_redesign") {
-    return { targets: [...ALL_ELEMENTS], lockedElements: [], summary: "بازطراحی کامل فضا — همه‌چیز قابل تغییر است" };
+    const lockedLabels = intent.lockedElements.map((l) => ELEMENT_LABELS[l]).join("، ");
+    return {
+      targets: intent.targets,
+      lockedElements: intent.lockedElements,
+      summary: lockedLabels
+        ? `بازطراحی فضا — عناصر معماری (${lockedLabels}) حفظ می‌شوند`
+        : "بازطراحی کامل فضا",
+    };
   }
 
   const locked = intent.lockedElements;
@@ -356,21 +383,101 @@ export interface RoomObject {
   boundingBox?: { x: number; y: number; w: number; h: number };
 }
 
+/** Checks if a Persian/English word exists with proper boundary delimiters. */
+export function matchesWord(text: string, word: string): boolean {
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(?:^|[^\\u0600-\\u06FFa-zA-Z0-9])${escaped}(?:[^\\u0600-\\u06FFa-zA-Z0-9]|$)`, "i");
+  return regex.test(text);
+}
+
+/**
+ * Explicit architectural intent detection.
+ * Identifies if user explicitly requested changing a structural element (wall/floor/ceiling/door/window).
+ */
+export function detectArchitecturalTargets(text: string): RoomElement[] {
+  const lower = text.toLowerCase();
+  const targets = new Set<RoomElement>();
+
+  const hasWord = (w: string) => matchesWord(lower, w);
+  const hasAction = /(خراب|تخریب|بردار|حذف|عوض|تغییر|تعویض|رنگ|کاغذ|رنگ‌آمیزی|پوشش|نو|نصب)/.test(lower);
+
+  // Wall modifications
+  if ((hasWord("دیوار") || hasWord("دیوارها") || hasWord("wall")) && (hasAction || /(رنگ\s*دیوار|کاغذ\s*دیواری)/.test(lower))) {
+    targets.add("wall");
+  }
+  // Floor modifications
+  if ((hasWord("کف") || hasWord("پارکت") || hasWord("سرامیک") || hasWord("لمینت") || hasWord("کفپوش") || hasWord("floor")) && (hasAction || /(عوض\s*کردن\s*کف|تغییر\s*کف)/.test(lower))) {
+    targets.add("floor");
+  }
+  // Ceiling modifications
+  if ((hasWord("سقف") || hasWord("کناف") || hasWord("ceiling")) && (hasAction || /تغییر\s*سقف/.test(lower))) {
+    targets.add("ceiling");
+  }
+  // Window modifications
+  if ((hasWord("پنجره") || hasWord("پنجره‌ها") || hasWord("window")) && (hasAction || /(اضافه|بزرگ|پنجره\s*اضافه)/.test(lower))) {
+    targets.add("window");
+  }
+  // Door modifications — must not match 'در' inside 'مدرن'
+  if ((hasWord("در") || hasWord("درب") || hasWord("درها") || hasWord("درب‌ها") || hasWord("door")) && (hasAction || /(جابه‌جا|جابجایی)/.test(lower))) {
+    targets.add("door");
+  }
+
+  return [...targets];
+}
+
+/** Explicit locked constraints mentioned in text (e.g. «مبل فعلی بماند»). */
+export function detectExplicitLocked(text: string): RoomElement[] {
+  const lower = text.toLowerCase();
+  const locked = new Set<RoomElement>();
+  if (/مبل\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|دست\s*نخور|حفظ|تغییر\s*نکند)/.test(lower) || /ولی\s*مبل/.test(lower) || /مبل\s*فعلی\s*بماند/.test(lower)) {
+    locked.add("sofa");
+  }
+  if (/فرش\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|دست\s*نخور|حفظ|تغییر\s*نکند)/.test(lower) || /ولی\s*فرش/.test(lower)) {
+    locked.add("rug");
+  }
+  if (/پرده\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|دست\s*نخور|حفظ|تغییر\s*نکند)/.test(lower) || /ولی\s*پرده/.test(lower)) {
+    locked.add("curtain");
+  }
+  if (/لوستر|چراغ|روشنایی\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|دست\s*نخور|حفظ)/.test(lower)) {
+    locked.add("lighting");
+  }
+  if (/تخت\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|دست\s*نخور|حفظ)/.test(lower)) {
+    locked.add("bed");
+  }
+  if (/میز\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|دست\s*نخور|حفظ)/.test(lower)) {
+    locked.add("table");
+  }
+  return [...locked];
+}
+
 export interface RoomArchitecture {
-  walls?: boolean;
-  ceiling?: boolean;
-  doors?: number;
-  windows?: number;
+  walls?: boolean | string;
+  floor?: string;
+  ceiling?: boolean | string;
+  doors?: number | string;
+  windows?: number | string;
+  openings?: string[];
 }
 
 export interface RoomUnderstanding {
   roomType?: string;
+  style?: string;
+  likelyStyle?: { style: string; confidence: number };
+  palette?: string[];
+  mood?: string;
   floor?: string;
+  walls?: string;
+  ceiling?: string;
   layout?: "open" | "closed" | "unknown";
-  lighting?: "natural" | "warm" | "cold" | "mixed" | "unknown";
+  lighting?: "natural" | "warm" | "cold" | "mixed" | "unknown" | string;
   architecture?: RoomArchitecture;
   /** Structural objects (walls/floor/…) that must survive edits. */
   objects: RoomObject[];
+  furnitureTypes?: string[];
+  materials?: string[];
+  emptySpaces?: string[];
+  functionalIssues?: string[];
+  designOpportunities?: string[];
   /** 0..1 — how confident the analysis is. */
   confidence: number;
 }
@@ -386,28 +493,33 @@ export function emptyRoomUnderstanding(roomType?: string): RoomUnderstanding {
   };
 }
 
-/** Structural elements that must NEVER change without explicit permission. */
-export const PROTECTED_STRUCTURAL_ELEMENTS: RoomElement[] = [
-  "wall", "floor", "ceiling", "door", "window",
-];
-
 /**
- * Phase 5 — Protected Elements resolution.
+ * Phase 5 / Rule 6 — Protected Elements resolution.
  * Golden rule: "When uncertain, preserve more and change less."
+ * ARCHITECTURE IS ALWAYS PROTECTED BY DEFAULT:
+ *   walls, floor, ceiling, windows, doors, structural elements,
+ *   room geometry, camera perspective
+ * ONLY change when user explicitly requests (e.g. «دیوار را خراب کن», «کف را عوض کن»).
  *
- * - whole_home → nothing is protected (user explicitly asked).
- * - room       → structural elements only.
- * - area/single_item → structural elements + every untouched object.
+ * - whole_home / room → structural elements protected by default unless explicitly targeted.
+ * - single_item / area → structural elements + every untouched object protected.
  */
 export function resolveProtectedElements(params: {
   targets: RoomElement[];
   scope: "single_item" | "area" | "room" | "whole_home";
   explicitLocked?: RoomElement[];
+  explicitStructuralTargets?: RoomElement[];
 }): RoomElement[] {
-  const { targets, scope, explicitLocked = [] } = params;
-  if (scope === "whole_home") return [];
-  const structural = PROTECTED_STRUCTURAL_ELEMENTS;
-  if (scope === "room") return [...new Set([...structural, ...explicitLocked])];
+  const { targets, scope, explicitLocked = [], explicitStructuralTargets = [] } = params;
+
+  if (scope === "whole_home" || scope === "room") {
+    // Structural elements are ALWAYS protected by default unless explicitly targeted
+    const structuralProtected = STRUCTURAL_ELEMENTS.filter(
+      (el) => !targets.includes(el) && !explicitStructuralTargets.includes(el),
+    );
+    return [...new Set([...structuralProtected, ...explicitLocked])];
+  }
+
   return [...new Set([...ALL_ELEMENTS.filter((e) => !targets.includes(e)), ...explicitLocked])];
 }
 

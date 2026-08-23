@@ -1,8 +1,8 @@
 import type { AiProvider, GenerateDesignInput, GeneratedDesign } from "./types";
-import { roomShots, decorShots } from "@/data/media";
-import { uid } from "@/lib/utils";
+import { roomShots, decorShots } from "../../data/media";
+import { uid } from "../../lib/utils";
 import { validateResult, type ProductCatalogEntry } from "./roomState";
-import { products } from "@/data/products";
+import { products } from "../../data/products";
 
 const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -148,31 +148,65 @@ export const mockAiProvider: AiProvider = {
 
   async analyzeRoom(input) {
     await new Promise((r) => setTimeout(r, 1400));
+    const detectedStyle = input.style || "Scandinavian";
     return {
       roomType: input.room || "پذیرایی",
-      style: input.style || "مدرن",
-      palette: ["#F0E8D8", "#1E5D44", "#BE9A4F", "#DED1B7"],
-      mood: "گرم و دنج",
-      suggestions: [
-        "افزودن یک قالیچه برای تعریف ناحیه‌ی نشیمن",
-        "استفاده از نور گرم برای حس دنجی",
-        "اضافه‌کردن گیاه طبیعی برای زنده‌کردن فضا",
+      style: input.style || "اسکاندیناوی",
+      likelyStyle: {
+        style: detectedStyle,
+        confidence: 0.78,
+      },
+      palette: ["#F4EFEA", "#D8C7B5", "#8C7A6B", "#3E443C"],
+      mood: "آرام و دلنشین",
+      confidence: 0.82,
+      architecture: {
+        walls: "رنگ خنثی یکدست",
+        floor: "پارکت چوب روشن",
+        ceiling: "سقف ساده سفید",
+        windows: 1,
+        doors: 1,
+      },
+      lighting: "نور طبیعی مناسب از پنجره، نیازمند نورپردازی لایه‌ای و موضعی",
+      furniture: ["کاناپه", "میز جلو مبلی"],
+      furnitureTypes: ["sofa", "table"],
+      materials: ["پارچه بافت‌دار", "چوب طبیعی"],
+      decor: ["گلدان کوچک"],
+      composition: "چیدمان خطی با فضای باز در مرکز",
+      spatialConstraints: ["ابعاد متوسط", "مسیر تردد مشخص"],
+      emptySpaces: ["دیوار اصلی خالی", "گوشه دنج کنار پنجره", "مرکز نشیمن بدون تفکیک"],
+      visualBalance: "تعادل نسبی، نیازمند نقطه کانونی مشخص",
+      functionalIssues: [
+        "نورپردازی فقط سقفی است و نور موضعی مطالعه وجود ندارد",
+        "فضای نشیمن بدون فرش تفکیک بصری کافی ندارد",
+      ],
+      designOpportunities: [
+        "نصب تابلوی دیواری روی دیوار خالی به عنوان نقطه کانونی",
+        "افزودن قالیچه بزرگ برای ایجاد گرما و انسجام در نشیمن",
+        "قراردادن آباژور ایستاده با نور گرم در گوشه فضا",
+        "افزودن گیاه طبیعی برای شادابی محیط",
       ],
       strengths: [
-        "نور طبیعی خوبی از پنجره وارد فضا می‌شود",
-        "ارتفاع سقف مناسب و باز است",
+        "نور طبیعی مناسبی از پنجره وارد فضا می‌شود",
+        "ارتفاع سقف و تناسبات فضا استاندارد و باز است",
         "پلان اتاق امکان چیدمان منعطف می‌دهد",
       ],
       opportunities: [
-        "نااحیه‌ی نشیمن تعریف‌نشده است",
-        "نبود کف‌پوش گرم (فرش/قالیچه)",
-        "نورپردازی فقط سقفی است — نیاز به نور موضعی",
+        "دیوار اصلی خالی است و نیازمند تابلوی هنری یا کنسول است",
+        "نبود قالیچه مناسب باعث گسستگی ناحیه نشیمن شده است",
+        "نورپردازی فقط سقفی است و نیاز به نور موضعی (آباژور) دارد",
+      ],
+      suggestions: [
+        "افزودن یک قالیچه برای تعریف ناحیه‌ی نشیمن",
+        "استفاده از آباژور با نور گرم برای حس دنجی در شب",
+        "نصب اثر هنری روی دیوار خالی به عنوان نقطه کانونی",
+        "اضافه‌کردن گیاه طبیعی برای زنده‌کردن فضا",
       ],
       guidedSuggestions: [
         { id: "gs1", title: "افزودن فرش برای تعریف فضا", desc: "یک قالیچه بزرگ زیر ناحیه‌ی نشیمن، فضا را گرم‌تر و منظم‌تر می‌کند.", impact: "high", creditCost: 3, category: "rug" },
         { id: "gs2", title: "نور گرم و موضعی", desc: "افزودن آباژور یا چراغ رومیزی با نور گرم (۳۰۰۰K)، حس دنجی می‌آورد.", impact: "medium", creditCost: 2, category: "lighting" },
-        { id: "gs3", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
-        { id: "gs4", title: "مبل با رنگ خنثی", desc: "تعویض مبل فعلی با مدل کرم یا طوسی، تناسب بهتری با سبک مدرن دارد.", impact: "high", creditCost: 5, category: "sofa" },
+        { id: "gs3", title: "نقطه کانونی با اثر هنری", desc: "نصب تابلوی مینیمال روی دیوار خالی برای ایجاد تعادل و جلوه بصری.", impact: "medium", creditCost: 2, category: "art" },
+        { id: "gs4", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
+        { id: "gs5", title: "مبل متناسب با سبک", desc: "هماهنگ‌سازی رنگ و فرم مبلمان با سبک و پالت رنگی فضا.", impact: "high", creditCost: 5, category: "sofa" },
       ],
     };
   },

@@ -92,21 +92,61 @@ Element vocabulary (the ONLY allowed target / preservedElements values):
 sofa, rug, curtain, lighting, wall, floor, ceiling, table, chair, tv, plant, art, door, window, shelf, bed
 
 ════════════════════════════════════════
+SELECTED CATEGORY & TARGET RULES
+════════════════════════════════════════
+1) SELECTED OPTION = SELECTED CATEGORY
+   When the user has selected a category or item in the UI (selectedTargets):
+   AI MUST consider that selection as the primary target.
+   Example:
+     Selected: Sofa
+     User: «تغییرش بده»
+     → target = ["sofa"], scope = "single_item"
+   NEVER ignore the user's selection!
+
+2) SELECTED CATEGORY MUST CONTROL THE TRANSFORMATION
+   If the user selected a category, ONLY that category changes:
+   - Selected: Sofa, Request: «مدرنش کن» → target = ["sofa"], scope = "single_item", style = "Modern"
+   - Selected: Lighting, Request: «بهترش کن» → target = ["lighting"], scope = "single_item"
+   - Selected: Rug, Request: «رنگش را عوض کن» → target = ["rug"], scope = "single_item", intent = "color_change"
+
+3) USER REQUEST HAS PRIORITY WHEN EXPLICITLY BROADER
+   If the user selected a category, BUT explicitly requests a whole-room or whole-home redesign:
+   The user request takes priority!
+   Example:
+     Selected: Sofa
+     User: «کل اتاق را Japandi کن»
+     → scope = "room", style = "Japandi", target = all designable elements
+
+4) NO SELECTION = FULL DESIGN FREEDOM (FOR FURNITURE & DECOR)
+   If the user has NO category selected, and requests general design:
+     «این اتاق را زیباتر کن» / «این اتاق را مدرن کن» / «این فضا را Japandi کن» / «یک طراحی بهتر برای این فضا بده»
+   AI can change ALL designable elements (sofa, chairs, tables, rug, curtains, lighting, decor, plants, art, accessories, materials, colors).
+
+5) ARCHITECTURE NEVER CHANGES BY DEFAULT
+   Even in room, whole_home, or full_redesign:
+   These architectural elements are ALWAYS PROTECTED:
+     wall, floor, ceiling, window, door, structural elements, room geometry, camera perspective
+   ONLY allow architectural change when the user explicitly requests it:
+     «دیوار را خراب کن» / «پنجره اضافه کن» / «کف را عوض کن» / «سقف را تغییر بده» / «در را جابه‌جا کن» / «رنگ دیوار را عوض کن»
+
+════════════════════════════════════════
 SCOPE (exactly four values — never invent others)
 ════════════════════════════════════════
 
 1) single_item
-   User changes one specific element.
+   User changes one specific element (or targeted edit of selected category).
    Examples:
    - «مبل را عوض کن»
    - «رنگ پرده را تغییر بده»
    - «فرش را حذف کن»
    - «چراغ را مدرن کن»
    - «رنگ مبل را کرم کن»
+   - Selected: Sofa + «تغییرش بده»
+   - Selected: Sofa + «مدرنش کن»
    → target = that element only; everything else → preservedElements
 
 2) area
-   User changes a specific zone/section of the space.
+   User changes a specific zone/section of the space, or multiple selected items.
    Examples:
    - «فضای نشیمن را مدرن‌تر کن»
    - «گوشه مطالعه را بهتر کن»
@@ -114,10 +154,13 @@ SCOPE (exactly four values — never invent others)
    - «این قسمت رو بهتر کن»
 
 3) room
-   User changes the whole room.
+   User changes the whole room (general redesign of designable elements).
    Examples:
    - «اتاق خواب را ژاپندی کن»
    - «این اتاق را مدرن کن»
+   - «این اتاق را زیباتر کن»
+   - «این فضا را Japandi کن»
+   - «یک طراحی بهتر برای این فضا بده»
    - «آشپزخانه را بازطراحی کن»
    - «اتاق را مینیمال کن»
 
@@ -127,18 +170,22 @@ SCOPE (exactly four values — never invent others)
    - «کل خانه را دوباره طراحی کن»
    - «تمام خانه را بازسازی کن»
    - «همه اتاق‌های خانه را از اول طراحی کن»
+   - «کل خانه را مدرن کن»
    Ambiguous phrases like «همه چیز را بهتر کن» alone must NOT become whole_home
    (prefer room or area — the smaller change).
 
 ════════════════════════════════════════
 PROTECTED ELEMENTS
 ════════════════════════════════════════
-If the user changes only one element, ALL unrelated elements must be preserved.
-
-Architectural elements are ALWAYS preserved unless the user explicitly requests changing them:
+Architecture is ALWAYS protected by default:
   wall, floor, ceiling, window, door
 
-Unrelated furniture/objects are also preserved.
+In single_item or area scope:
+  Every untouched element (architecture + other furniture/decor) is in preservedElements.
+
+In room or whole_home scope (full redesign):
+  Designable elements (sofa, rug, curtain, lighting, table, chair, tv, plant, art, shelf, bed) are in target.
+  Structural elements (wall, floor, ceiling, window, door) MUST remain in preservedElements unless explicitly requested to change.
 
 Example:
   «مبل را کرم کن»
@@ -146,7 +193,11 @@ Example:
   → target=["sofa"], scope=single_item, intent=color_change
   → preservedElements includes wall, floor, ceiling, window, door, rug, table, …
 
-For scope=room or whole_home, preservedElements may be empty (full redesign allowed).
+Example:
+  «این اتاق را Japandi کن»
+  → target=["sofa","rug","curtain","lighting","table","chair","tv","plant","art","shelf","bed"]
+  → preservedElements=["wall","floor","ceiling","window","door"]
+  → scope=room, style=Japandi
 
 ════════════════════════════════════════
 EXPLICIT USER CONSTRAINTS
@@ -285,10 +336,10 @@ WORKED EXAMPLES
    → {"intent":"color_change","target":["sofa"],"changes":["رنگ مبل کرم"],"preservedElements":["rug","curtain","lighting","wall","floor","ceiling","table","chair","tv","plant","art","door","window","shelf","bed"],"scope":"single_item","colors":["کرم"],"confidence":0.93}
 
 3) «اتاق خواب را Japandi کن» / «اتاق خواب را ژاپندی کن»
-   → {"intent":"full_redesign","target":["sofa","rug","curtain","lighting","wall","floor","ceiling","table","chair","tv","plant","art","door","window","shelf","bed"],"changes":["بازطراحی اتاق خواب Japandi","چوب طبیعی و پالت خنثی گرم","نور گرم و دکور مینیمال"],"preservedElements":[],"scope":"room","style":"Japandi","colors":["cream","beige","warm gray","natural wood"],"confidence":0.9}
+   → {"intent":"full_redesign","target":["sofa","rug","curtain","lighting","table","chair","tv","plant","art","shelf","bed"],"changes":["بازطراحی اتاق خواب Japandi","چوب طبیعی و پالت خنثی گرم","نور گرم و دکور مینیمال"],"preservedElements":["wall","floor","ceiling","door","window"],"scope":"room","style":"Japandi","colors":["cream","beige","warm gray","natural wood"],"confidence":0.9}
 
 4) «کل خانه را مدرن کن»
-   → {"intent":"full_redesign","target":["sofa","rug","curtain","lighting","wall","floor","ceiling","table","chair","tv","plant","art","door","window","shelf","bed"],"changes":["بازطراحی کل خانه مدرن"],"preservedElements":[],"scope":"whole_home","style":"Modern","confidence":0.94}
+   → {"intent":"full_redesign","target":["sofa","rug","curtain","lighting","table","chair","tv","plant","art","shelf","bed"],"changes":["بازطراحی کل خانه مدرن"],"preservedElements":["wall","floor","ceiling","door","window"],"scope":"whole_home","style":"Modern","confidence":0.94}
 
 5) Previous targets ["sofa"]; new: «کمی کوچک‌ترش کن»
    → {"intent":"targeted_edit","target":["sofa"],"changes":["کوچک‌تر کردن مبل"],"preservedElements":["rug","curtain","lighting","wall","floor","ceiling","table","chair","tv","plant","art","door","window","shelf","bed"],"scope":"single_item","confidence":0.88}
