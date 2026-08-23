@@ -19,7 +19,40 @@ const BROAD_PHRASES = [
   "مدرن کن", "مدرنش کن", "کلاسیک کن", "لوکس کن", "مینیمال کن", "بازطراحی",
   "طراحی کامل", "تغییر کلی", "همه رو", "همه را", "کل اتاق", "کل فضا",
   "کل خانه", "همه چیز", "از نو", "صفر تا صد", "دکور کامل", "full room", "redesign",
+  // Style-as-verb transformations (Homeino style intelligence)
+  "ژاپندی کن", "ژاپندی‌ش کن", "japandi", "اسکاندیناوی کن", "بوهو کن",
+  "صنعتی کن", "لافت کن", "نئوکلاسیک کن", "روستیک کن", "مدیترانه‌ای کن",
 ];
+
+/**
+ * Style cues in Persian/English → canonical Homeino style names.
+ * Used when the user embeds a style in the prompt without selecting one in UI.
+ */
+const STYLE_CUES: { cues: string[]; style: string }[] = [
+  { cues: ["ژاپندی", "japandi"], style: "Japandi" },
+  { cues: ["اسکاندیناوی", "scandinavian"], style: "Scandinavian" },
+  { cues: ["مینیمال", "minimalist", "minimal"], style: "Modern Minimalist" },
+  { cues: ["صنعتی", "لافت", "industrial", "loft"], style: "Industrial Loft" },
+  { cues: ["بوهو", "بوهمین", "boho", "bohemian"], style: "Bohemian / Boho" },
+  { cues: ["میدسنچری", "mid-century", "midcentury"], style: "Mid-Century Modern" },
+  { cues: ["لوکس معاصر", "luxury contemporary"], style: "Luxury Contemporary" },
+  { cues: ["نئوکلاسیک", "neoclassical"], style: "Neoclassical" },
+  { cues: ["مدیتران", "mediterranean"], style: "Mediterranean" },
+  { cues: ["آرت دکو", "art deco"], style: "Art Deco" },
+  { cues: ["روستیک", "rustic"], style: "Rustic" },
+  { cues: ["معاصر", "contemporary"], style: "Contemporary" },
+  { cues: ["کلاسیک", "classic"], style: "Classic" },
+  { cues: ["لوکس", "luxury"], style: "Luxury Contemporary" },
+  { cues: ["مدرن", "modern"], style: "Modern" },
+];
+
+function detectStyleFromText(text: string, fallback?: string): string | undefined {
+  const lower = text.toLowerCase();
+  for (const { cues, style } of STYLE_CUES) {
+    if (cues.some((c) => lower.includes(c.toLowerCase()))) return style;
+  }
+  return fallback;
+}
 
 /** Removal detection → remove_item. */
 const REMOVE_PHRASES = ["حذف کن", "بردار", "حذف شود", "نباشه", "remove"];
@@ -83,28 +116,48 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
     };
   }
 
-  const isBroad = BROAD_PHRASES.some((p) => lower.includes(p));
+  const mentionsBroadPhrase = BROAD_PHRASES.some((p) => lower.includes(p));
   const isRemove = REMOVE_PHRASES.some((p) => lower.includes(p));
   const colors = extractColors(text);
+  const resolvedStyle = detectStyleFromText(text, req.style);
 
-  // ---- FULL REDESIGN: only on explicit broad request ----
-  if (isBroad || req.changeScope === "full") {
+  // ---- TARGETED candidates first (needed to avoid widening «چراغ را مدرن کن») ----
+  const targetSet = new Set<RoomElement>([...detected.targets, ...selected]);
+
+  // Space-level redesign cues (room / home / area). Furniture-only style verbs
+  // like «چراغ را مدرن کن» must stay single_item (minimal-change rule).
+  const SPACE_REDESIGN =
+    /اتاق|خانه|خونه|فضا|سالن|پذیرایی|آشپزخانه|نشیمن|کل|همه\s*چیز|تمام|تموم|بازطراحی|از\s*نو|redesign|full\s*room|دکور\s*کامل|طراحی\s*کامل|تغییر\s*کلی|صفر\s*تا\s*صد/;
+  const isSpaceLevel = SPACE_REDESIGN.test(lower) || req.changeScope === "full";
+  const isBroad = req.changeScope === "full" || (mentionsBroadPhrase && isSpaceLevel);
+
+  // ---- FULL REDESIGN: only on explicit broad / space-level request ----
+  if (isBroad) {
     const scope = resolveScopeFor(text, [...ALL_ELEMENTS], req.changeScope);
+    // Explicit keep constraints: «ولی مبل فعلی بماند»
+    const keepSofa =
+      /مبل\s*(فعلی|الان|کنونی)?\s*(بماند|باشه|نخور|دست\s*نخور)/.test(lower) ||
+      /ولی\s*مبل/.test(lower) ||
+      /مبل\s*فعلی\s*بماند/.test(lower);
+    const explicitLocked: RoomElement[] = keepSofa ? ["sofa"] : [];
+    const targets = ALL_ELEMENTS.filter((e) => !explicitLocked.includes(e));
     return {
       intent: "full_redesign",
-      target: [...ALL_ELEMENTS],
-      changes: [`بازطراحی ${req.room ?? "فضا"}${req.style ? ` با سبک ${req.style}` : ""}`],
-      preservedElements: [],
+      target: targets.length ? targets : [...ALL_ELEMENTS],
+      changes: [
+        `بازطراحی ${req.room ?? "فضا"}${resolvedStyle ? ` با سبک ${resolvedStyle}` : ""}`,
+        ...(explicitLocked.length ? ["حفظ مبل فعلی"] : []),
+      ].slice(0, 3),
+      preservedElements: explicitLocked,
       scope,
-      style: req.style,
+      style: resolvedStyle,
       colors: req.colors?.length ? req.colors : colors,
       confidence: 0.92,
-      note: "درخواست گسترده است — اجازه تغییر کل فضا داده شد.",
+      note: explicitLocked.length
+        ? "بازطراحی فضا با حفظ عناصر درخواستی کاربر."
+        : "درخواست گسترده است — اجازه تغییر کل فضا داده شد.",
     };
   }
-
-  // ---- TARGETED: union of detected + user-selected, never wider ----
-  const targetSet = new Set<RoomElement>([...detected.targets, ...selected]);
 
   // ---- CONTINUATION (Phase 15): «کمی روشن‌ترش کن» → previous target ----
   if (targetSet.size === 0) {
@@ -116,7 +169,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
         changes: [text.slice(0, 60)],
         preservedElements: ALL_ELEMENTS.filter((e) => !prev.includes(e)),
         scope: "single_item",
-        style: req.style,
+        style: resolvedStyle,
         colors: req.colors?.length ? req.colors : colors,
         confidence: 0.85,
         note: "این درخواست ادامه‌ی تغییر قبلی است — همان المان قبلی هدف است.",
@@ -136,7 +189,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
         changes: [`اعمال رنگ ${colors.join("، ")}`],
         preservedElements: ALL_ELEMENTS.filter((e) => e !== "wall"),
         scope: "single_item",
-        style: req.style,
+        style: resolvedStyle,
         colors,
         confidence: 0.7,
         ambiguous: true,
@@ -149,7 +202,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
       changes: [],
       preservedElements: [...ALL_ELEMENTS],
       scope,
-      style: req.style,
+      style: resolvedStyle,
       colors: req.colors,
       confidence: 0.4,
       ambiguous: true,
@@ -172,7 +225,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
     ],
     preservedElements: ALL_ELEMENTS.filter((e) => !targets.includes(e)),
     scope,
-    style: req.style,
+    style: resolvedStyle,
     colors: req.colors?.length ? [...new Set([...req.colors, ...colors])] : colors,
     confidence: detected.requiresClarification ? 0.6 : 0.9,
     note: "فقط عناصر خواسته‌شده تغییر می‌کنند — بقیه فضا قفل است.",

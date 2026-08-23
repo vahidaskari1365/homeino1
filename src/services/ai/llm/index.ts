@@ -12,10 +12,12 @@
 import type { IntentRequest, IntentAnalysis, LlmProvider } from "./types";
 import { heuristicLlmProvider, heuristicUnderstandIntent } from "./heuristicLlm";
 import { openAiCompatLlmProvider, isOpenAiCompatConfigured, normalizeIntentAnalysis } from "./openaiCompatLlm";
+import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "./systemPrompt";
 
 export type { IntentRequest, IntentAnalysis, LlmProvider, DesignIntentType } from "./types";
 export { INTENT_LABELS } from "./types";
 export { heuristicUnderstandIntent, heuristicLlmProvider, openAiCompatLlmProvider };
+export { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT };
 
 export interface ResolvedLlm {
   llm: LlmProvider;

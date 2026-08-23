@@ -20,6 +20,7 @@ import { ALL_ELEMENTS, type RoomElement } from "../roomState";
 import { heuristicUnderstandIntent } from "./heuristicLlm";
 import { extractJsonPayload, validateIntentPayload, withBoundedRetry } from "../validation";
 import type { EditScope } from "../scope";
+import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "./systemPrompt";
 
 const BASE = () => (process.env.LLM_API_BASE_URL || "").replace(/\/+$/, "");
 const KEY = () => process.env.LLM_API_KEY || "";
@@ -27,31 +28,8 @@ const MODEL = () => process.env.LLM_MODEL || "auto";
 
 export const isOpenAiCompatConfigured = (): boolean => Boolean(BASE() && KEY());
 
-const SYSTEM_PROMPT = `You are the intent-analysis module of Homeino, an interior-design AI.
-Your ONLY job: convert the user's (Persian) request into a tiny JSON object. Never chat. Never explain.
-
-Return EXACTLY this JSON shape and nothing else:
-{"intent":"targeted_edit|full_redesign|color_change|add_item|remove_item|inquiry","target":["sofa"],"changes":["short phrase"],"preservedElements":["wall","floor"],"scope":"single_item|area|room|whole_home","style":"modern","colors":["کرم"],"confidence":0.9}
-
-Element vocabulary (the ONLY allowed target/preservedElements values):
-sofa, rug, curtain, lighting, wall, floor, ceiling, table, chair, tv, plant, art, door, window, shelf, bed
-
-SCOPE RULES (very important — never widen without permission):
-- "مبل را عوض کن" → scope single_item, target ONLY ["sofa"]. Everything else goes to preservedElements.
-- "فضای نشیمن را مدرن‌تر کن" → scope area.
-- "کل اتاق را ژاپندی کن" → scope room.
-- "کل خانه را از اول طراحی کن" → scope whole_home, target = all elements, preservedElements = [].
-- "این اتاق را مدرن کن" (broad) → scope room.
-- A request with a single object + a color («مبل را کرم کن») is single_item color_change, NOT a full redesign.
-
-PRESERVATION RULES:
-- preservedElements must ALWAYS include walls, floor, windows, doors, ceiling unless scope is room/whole_home.
-- If the user only mentions one object, every other object in the room must be preserved.
-
-CONTINUATION (previous request exists): if the new prompt refers to the previous target with pronouns («کمی روشن‌ترش کن», «آن را کوچک‌تر کن», «همین را») and names NO new element, target = the previous target and scope = single_item.
-
-- changes: max 3 short phrases. No long text. JSON only.
-- If the request is unclear → intent inquiry, ambiguous, confidence < 0.5.`;
+/** Final Homeino Interior Design Intelligence system prompt (see systemPrompt.ts). */
+const SYSTEM_PROMPT = HOMEINO_SYSTEM_PROMPT;
 
 /** Serialize the user turn — only the fields this request needs (Phase 12). */
 function buildUserMessage(req: IntentRequest): string {
@@ -80,8 +58,8 @@ async function callCompat(req: IntentRequest): Promise<IntentAnalysis> {
       try {
         let userContent = buildUserMessage(req);
         if (attempt > 0) {
-          // Self-correction: tell the model exactly what it got wrong.
-          userContent += `\n\nPrevious attempt returned invalid JSON. Return ONLY the exact JSON object with the exact keys listed in the system prompt. No markdown, no comments.`;
+          // Self-correction: tell the model exactly what it got wrong (bounded retry).
+          userContent += `\n\n${HOMEINO_RETRY_HINT}`;
         }
         const res = await fetch(`${BASE()}/chat/completions`, {
           method: "POST",
@@ -90,7 +68,7 @@ async function callCompat(req: IntentRequest): Promise<IntentAnalysis> {
           body: JSON.stringify({
             model: MODEL(),
             temperature: 0.2,
-            max_tokens: 220, // HARD CAP — intent analysis must stay tiny
+            max_tokens: 280, // structured intent JSON — still capped, room for full preservedElements lists
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: SYSTEM_PROMPT },

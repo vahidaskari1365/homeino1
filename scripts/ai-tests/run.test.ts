@@ -21,6 +21,7 @@ import { detectIntent, ALL_ELEMENTS, resolveProtectedElements, ELEMENT_LABELS } 
 import { detectScope, scopeToEditStrength, isFullScope, scopeToIntentType } from "../../src/services/ai/scope";
 import { heuristicUnderstandIntent } from "../../src/services/ai/llm/heuristicLlm";
 import { normalizeIntentAnalysis } from "../../src/services/ai/llm/openaiCompatLlm";
+import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "../../src/services/ai/llm/systemPrompt";
 import { buildAIContext, compactContextForLlm } from "../../src/services/ai/context";
 import { planProductPlacement, productPlacementPrompt } from "../../src/services/ai/placement";
 import { validateIntentPayload, withBoundedRetry, extractJsonPayload } from "../../src/services/ai/validation";
@@ -263,6 +264,63 @@ test("normalizeIntentAnalysis clamps invalid elements and fills preserved defaul
   assert.deepEqual(out.target, ["sofa"]);
   assert.ok(out.preservedElements.includes("wall"));
   assert.equal(out.confidence, 0.95);
+});
+
+// ------------------------------------------------------------
+// Final Homeino System Prompt (AI Intelligence Upgrade)
+// ------------------------------------------------------------
+test("HOMEINO_SYSTEM_PROMPT: identity, minimal-change, scope, style, product, JSON-only", () => {
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("Homeino's Interior Design Intelligence"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("When uncertain, preserve more and change less"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("single_item"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("area"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("room"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("whole_home"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("Japandi"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("Scandinavian"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("previousTargets"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("preservedElements"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("NEVER invent product"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("JSON ONLY") || HOMEINO_SYSTEM_PROMPT.includes("JSON only"));
+  assert.ok(HOMEINO_SYSTEM_PROMPT.includes("do not chat") || HOMEINO_SYSTEM_PROMPT.includes("do not chat".toUpperCase()) || HOMEINO_SYSTEM_PROMPT.includes("You do not chat"));
+  assert.ok(HOMEINO_RETRY_HINT.includes("invalid JSON"));
+  // Prompt must stay server-side (llm layer) — not a UI string dump requirement,
+  // but it must be non-trivial intelligence content.
+  assert.ok(HOMEINO_SYSTEM_PROMPT.length > 2000, "final prompt must be substantial");
+});
+
+// ------------------------------------------------------------
+// Spec scenarios from final AI system prompt integration
+// ------------------------------------------------------------
+test("Spec scenarios: curtain, rug, Japandi room, better-room, protect sofa", () => {
+  const rug = heuristicUnderstandIntent({ prompt: "فرش را عوض کن" });
+  assert.deepEqual(rug.target, ["rug"]);
+  assert.equal(rug.scope, "single_item");
+
+  const curtain = heuristicUnderstandIntent({ prompt: "پرده را روشن‌تر کن" });
+  assert.ok(curtain.target.includes("curtain"));
+  assert.equal(curtain.scope, "single_item");
+
+  const japandi = heuristicUnderstandIntent({ prompt: "اتاق خواب را ژاپندی کن", style: "Japandi" });
+  assert.equal(japandi.intent, "full_redesign");
+  assert.equal(japandi.scope, "room");
+
+  const modernRoom = heuristicUnderstandIntent({ prompt: "اتاق را مدرن کن" });
+  assert.equal(modernRoom.intent, "full_redesign");
+  assert.ok(modernRoom.scope === "room" || isFullScope(modernRoom.scope!));
+
+  // Ambiguous «این اتاق را بهتر کن» must not become whole_home
+  const better = detectScope("این اتاق را بهتر کن");
+  assert.notEqual(better.scope, "whole_home");
+
+  // Explicit protect sofa while modernizing room — scope stays room;
+  // protected layer keeps sofa when targets exclude it.
+  const protectedSofa = resolveProtectedElements({
+    targets: ALL_ELEMENTS.filter((e) => e !== "sofa"),
+    scope: "room",
+    explicitLocked: ["sofa"],
+  });
+  assert.ok(protectedSofa.includes("sofa"), "explicit keep sofa must protect sofa");
 });
 
 // ------------------------------------------------------------
