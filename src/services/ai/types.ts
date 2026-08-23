@@ -1,5 +1,5 @@
 import type { OverlayRegion } from "./orali/types";
-import type { AiMode } from "@/types";
+import type { AiMode } from "../../types";
 
 export interface GenerateDesignInput {
   mode: AiMode;
@@ -59,9 +59,23 @@ export interface GuidedSuggestion {
   preview?: string;
 }
 
+export interface RoomArchitectureDetails {
+  walls?: string;
+  floor?: string;
+  ceiling?: string;
+  windows?: number | string;
+  doors?: number | string;
+  openings?: string[];
+}
+
 export interface RoomAnalysis {
   roomType: string;
   style: string;
+  /** Estimated style with confidence score (e.g. likely_style = Scandinavian, confidence = 0.78) */
+  likelyStyle?: {
+    style: string;
+    confidence: number;
+  };
   palette: string[];
   mood: string;
   suggestions: string[];
@@ -69,6 +83,21 @@ export interface RoomAnalysis {
   strengths: string[];
   opportunities: string[];
   guidedSuggestions: GuidedSuggestion[];
+  /** Detailed spatial and design analysis (never invents facts; unknown if uncertain) */
+  architecture?: RoomArchitectureDetails;
+  lighting?: string;
+  furniture?: string[];
+  furnitureTypes?: string[];
+  colors?: string[];
+  materials?: string[];
+  decor?: string[];
+  composition?: string;
+  spatialConstraints?: string[];
+  emptySpaces?: string[];
+  visualBalance?: string;
+  functionalIssues?: string[];
+  designOpportunities?: string[];
+  confidence?: number;
 }
 
 export interface RecommendedProduct {

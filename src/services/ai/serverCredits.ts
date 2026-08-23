@@ -47,7 +47,7 @@ export async function reserveCreditsForAi(opts: {
     return { charged: false, cost: opts.cost };
   }
   try {
-    const { startGeneration } = await import("@/services/aiService");
+    const { startGeneration } = await import("../aiService");
     const generation = await startGeneration(opts.userId, {
       productId: opts.productId,
       prompt: opts.prompt.slice(0, 500),
@@ -70,7 +70,7 @@ export async function reserveCreditsForAi(opts: {
 export async function finalizeCreditsForAi(generationId: string, data: { durationMs?: number; outputAssetUrl?: string }) {
   if (!serverCreditsEnabled()) return;
   try {
-    const { completeGeneration } = await import("@/services/aiService");
+    const { completeGeneration } = await import("../aiService");
     await completeGeneration(generationId, {
       outputAssetUrl: data.outputAssetUrl,
       durationMs: data.durationMs,
@@ -84,7 +84,7 @@ export async function finalizeCreditsForAi(generationId: string, data: { duratio
 export async function refundCreditsForAi(generationId: string, error: string) {
   if (!serverCreditsEnabled()) return;
   try {
-    const { failGeneration } = await import("@/services/aiService");
+    const { failGeneration } = await import("../aiService");
     await failGeneration(generationId, error.slice(0, 500));
   } catch (err) {
     console.warn("[ai-credits] refund failed:", err instanceof Error ? err.message : err);

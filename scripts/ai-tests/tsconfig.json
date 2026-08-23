@@ -10,6 +10,10 @@
     "noEmit": false,
     "outDir": "../../node_modules/.cache/ai-tests",
     "rootDir": "../..",
+    "baseUrl": "../..",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "types": ["node"]
   },
   "files": ["./run.test.ts"]

@@ -20,7 +20,7 @@ import type { OverlayRegion } from "./orali";
 import { understandIntent } from "./llm";
 import type { IntentAnalysis, IntentRequest } from "./llm";
 import {
-  ALL_ELEMENTS, ELEMENT_LABELS, buildDesignConstraints, constraintsToPrompt,
+  ALL_ELEMENTS, STRUCTURAL_ELEMENTS, DESIGNABLE_ELEMENTS, ELEMENT_LABELS, buildDesignConstraints, constraintsToPrompt,
   validateResult, resolveProtectedElements,
   type RoomElement, type DesignConstraints, type RoomUnderstanding,
 } from "./roomState";
@@ -30,7 +30,7 @@ import { planProductPlacement, productPlacementPrompt, type PlacementProduct, ty
 import { createRequestId, withAiTelemetry } from "./telemetry";
 import { reserveCreditsForAi, finalizeCreditsForAi, refundCreditsForAi } from "./serverCredits";
 import type { GeneratedDesign } from "./types";
-import { uid } from "@/lib/utils";
+import { uid } from "../../lib/utils";
 
 export type ChangeScope = "targeted" | "full";
 
@@ -114,17 +114,20 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
   if (input.intent && input.intent.target.length >= 0 && input.intent.intent) {
     return input.intent; // user already confirmed the reading
   }
+  const effectiveTargets = [...new Set([...(input.targets ?? []), ...(input.intent?.target ?? [])])];
+  const detectedScopeObj = detectScope(input.prompt, effectiveTargets, input.scope, input.targets);
+
   // Build the structured context BEFORE the model call (Phase 2).
   const ctx = buildAIContext({
     prompt: input.prompt,
     style: input.style,
     room: input.room,
     colors: input.colors,
-    targets: [...new Set([...(input.targets ?? []), ...(input.intent?.target ?? [])])],
-    scope: detectScope(input.prompt, input.targets ?? [], input.scope).scope,
+    targets: effectiveTargets,
+    scope: detectedScopeObj.scope,
     protectedElements: resolveProtectedElements({
-      targets: input.targets ?? [],
-      scope: detectScope(input.prompt, input.targets ?? [], input.scope).scope,
+      targets: effectiveTargets,
+      scope: detectedScopeObj.scope,
       explicitLocked: input.preservedExtra,
     }),
     roomUnderstanding: input.roomUnderstanding,
@@ -140,7 +143,7 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     room: input.room,
     colors: input.colors,
     changeScope: input.scope,
-    selectedTargets: input.scope === "targeted" ? input.targets : undefined,
+    selectedTargets: input.targets?.length ? input.targets : undefined,
     previousTargets: input.previousTargets,
     previousChanges: input.previousChanges,
     // Phase 12 — only the context slice the model needs (≤ ~700 chars).
@@ -155,22 +158,24 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
 
 export function buildDesignInstruction(input: PipelineInput, intent: IntentAnalysis): DesignInstruction {
   // Phase 4 — scope: explicit > LLM > heuristic (never widened implicitly).
-  const heuristicScope = detectScope(input.prompt, [...new Set([...(input.targets ?? []), ...intent.target])], input.scope).scope;
+  const heuristicScope = detectScope(input.prompt, [...new Set([...(input.targets ?? []), ...intent.target])], input.scope, input.targets).scope;
   const scope: EditScope = input.editScope ?? intent.scope ?? heuristicScope;
   const isFull = isFullScope(scope) || intent.intent === "full_redesign" || input.scope === "full";
 
-  const targets = isFull ? [...ALL_ELEMENTS] : [...new Set([...(input.targets ?? []), ...intent.target])];
-  // Phase 5 — protected elements: structural defaults + untouched objects.
-  const protectedElements = isFull
-    ? []
-    : resolveProtectedElements({
-        targets,
-        scope,
-        explicitLocked: input.preservedExtra,
-      });
-  const preserved = isFull
-    ? []
-    : ALL_ELEMENTS.filter((e) => !targets.includes(e) && !(input.preservedExtra ?? []).includes(e));
+  const targets = isFull
+    ? (intent.target.length > 0 ? intent.target : [...DESIGNABLE_ELEMENTS])
+    : (input.targets?.length && !isFull ? input.targets : [...new Set([...(input.targets ?? []), ...intent.target])]);
+
+  // Phase 5 / Rule 6 — protected elements:
+  // Structural elements (walls, floor, ceiling, windows, doors) are ALWAYS protected by default
+  // even in full redesign, unless explicitly requested in targets.
+  const protectedElements = resolveProtectedElements({
+    targets,
+    scope,
+    explicitLocked: input.preservedExtra,
+  });
+
+  const preserved = ALL_ELEMENTS.filter((e) => !targets.includes(e) || protectedElements.includes(e));
 
   const constraints = buildDesignConstraints({
     type: isFull ? "full_redesign" : intent.intent === "color_change" ? "color_change" : "partial_edit",
@@ -189,17 +194,17 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
     placement = planProductPlacement(product);
   }
 
-  const targetLabels = targets.map((t) => ELEMENT_LABELS[t]).join("، ");
+  const targetLabels = targets.map((t) => ELEMENT_LABELS[t] || t).join("، ");
   const enginePrompt = [
     isFull
-      ? `Full ${scope === "whole_home" ? "home" : "room"} redesign in ${input.style ?? "modern"} style.`
+      ? `Full ${scope === "whole_home" ? "home" : "room"} redesign in ${input.style ?? "modern"} style. Redesign furniture, decor, lighting and styling freely.`
       : `Edit ONLY these elements: ${targetLabels}. Everything else must remain pixel-identical.`,
     input.prompt?.trim() && `User request: ${input.prompt.trim()}`,
     input.style && `Decor style: ${input.style}`,
     input.colors?.length && `Color palette: ${input.colors.join("، ")}`,
     input.room && `Room type: ${input.room}`,
     protectedElements.length > 0 &&
-      `PROTECTED — do NOT change, move or restyle: ${protectedElements.slice(0, 6).map((e) => ELEMENT_LABELS[e]).join("، ")}.`,
+      `PROTECTED ARCHITECTURE & UNTOUCHED ELEMENTS — do NOT change, move, remove or restyle: ${protectedElements.slice(0, 8).map((e) => ELEMENT_LABELS[e] || e).join("، ")}. Keep exact walls, floor structure, ceiling, windows, doors, camera angle and room geometry unchanged.`,
     placement && product && productPlacementPrompt(product, placement),
     constraintsToPrompt(constraints),
     "Photorealistic interior photograph, consistent perspective and lighting, high detail.",

@@ -48,6 +48,13 @@ export interface AIContext {
     protectedElements: RoomElement[];
   };
   style?: { id: string; name: string };
+  analysisContext?: {
+    likelyStyle?: string;
+    confidence?: number;
+    emptySpaces?: string[];
+    functionalIssues?: string[];
+    designOpportunities?: string[];
+  };
   products?: ContextProduct[];
   budget?: { min?: number; max?: number; currency?: string };
   previousState?: {
@@ -80,6 +87,23 @@ export interface BuildContextInput {
 /** Build the full structured context for one AI request. */
 export function buildAIContext(input: BuildContextInput): AIContext {
   const roomType = input.roomUnderstanding?.roomType ?? input.room;
+  // User style overrides analyzed style (Rule 14: USER OVERRIDES ANALYSIS)
+  const resolvedStyle = input.style
+    ? { id: input.style, name: input.styleLabel ?? input.style }
+    : input.roomUnderstanding?.likelyStyle
+      ? { id: input.roomUnderstanding.likelyStyle.style, name: input.roomUnderstanding.likelyStyle.style }
+      : undefined;
+
+  const analysisContext = input.roomUnderstanding
+    ? {
+        likelyStyle: input.roomUnderstanding.likelyStyle?.style ?? input.roomUnderstanding.style,
+        confidence: input.roomUnderstanding.likelyStyle?.confidence ?? input.roomUnderstanding.confidence,
+        emptySpaces: input.roomUnderstanding.emptySpaces,
+        functionalIssues: input.roomUnderstanding.functionalIssues,
+        designOpportunities: input.roomUnderstanding.designOpportunities,
+      }
+    : undefined;
+
   return {
     room: {
       type: roomType,
@@ -95,7 +119,8 @@ export function buildAIContext(input: BuildContextInput): AIContext {
       requestedChanges: [],
       protectedElements: input.protectedElements,
     },
-    style: input.style ? { id: input.style, name: input.styleLabel ?? input.style } : undefined,
+    style: resolvedStyle,
+    analysisContext,
     products: input.products?.length ? input.products.slice(0, 12) : undefined,
     budget: input.budget,
     previousState:

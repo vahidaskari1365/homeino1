@@ -16,7 +16,7 @@
 // back to the model — infinite retry is forbidden.
 // ============================================================
 import type { IntentRequest, IntentAnalysis, LlmProvider } from "./types";
-import { ALL_ELEMENTS, type RoomElement } from "../roomState";
+import { ALL_ELEMENTS, STRUCTURAL_ELEMENTS, DESIGNABLE_ELEMENTS, type RoomElement } from "../roomState";
 import { heuristicUnderstandIntent } from "./heuristicLlm";
 import { extractJsonPayload, validateIntentPayload, withBoundedRetry } from "../validation";
 import type { EditScope } from "../scope";
@@ -122,8 +122,8 @@ export function normalizeIntentAnalysis(raw: unknown, req: IntentRequest): Inten
   const validElements = (v: unknown): RoomElement[] =>
     Array.isArray(v) ? v.filter((x): x is RoomElement => typeof x === "string" && (ALL_ELEMENTS as string[]).includes(x)) : [];
 
-  const target = validElements(obj.target);
-  const preserved = validElements(obj.preservedElements).filter((e) => !target.includes(e));
+  const rawTarget = validElements(obj.target);
+  const preserved = validElements(obj.preservedElements);
   const intent = ["targeted_edit", "full_redesign", "color_change", "add_item", "remove_item", "inquiry"].includes(String(obj.intent))
     ? (String(obj.intent) as IntentAnalysis["intent"])
     : "inquiry";
@@ -134,19 +134,28 @@ export function normalizeIntentAnalysis(raw: unknown, req: IntentRequest): Inten
     ? (String(obj.scope) as EditScope)
     : undefined;
 
-  if (intent === "inquiry" || target.length === 0) {
+  if (intent === "inquiry" || (rawTarget.length === 0 && intent !== "full_redesign")) {
     // Invalid/empty reading → fall back to the deterministic engine.
     const fb = heuristicUnderstandIntent(req);
     return fb.confidence >= confidence ? fb : { ...fb, confidence };
   }
 
   const isFull = intent === "full_redesign";
+  const target = isFull
+    ? (rawTarget.length > 0 ? rawTarget : [...DESIGNABLE_ELEMENTS])
+    : (req.selectedTargets?.length && !/اتاق|خانه|خونه|فضا|بازطراحی/.test(req.prompt.toLowerCase()) ? req.selectedTargets : rawTarget);
+
+  // Architecture (walls, floor, ceiling, window, door) MUST remain preserved by default in full redesign
+  const preservedElements = isFull
+    ? [...new Set([...STRUCTURAL_ELEMENTS.filter((e) => !target.includes(e)), ...preserved.filter((e) => !target.includes(e))])]
+    : (preserved.length ? preserved.filter((e) => !target.includes(e)) : ALL_ELEMENTS.filter((e) => !target.includes(e)));
+
   return {
     intent,
-    target: isFull ? [...ALL_ELEMENTS] : target,
+    target,
     changes: Array.isArray(obj.changes) ? obj.changes.filter((c): c is string => typeof c === "string").slice(0, 3) : [req.prompt.slice(0, 60)],
-    preservedElements: isFull ? [] : (preserved.length ? preserved : ALL_ELEMENTS.filter((e) => !target.includes(e))),
-    scope,
+    preservedElements,
+    scope: scope || (isFull ? "room" : target.length === 1 ? "single_item" : "area"),
     style: style || req.style,
     colors: colors?.length ? colors : req.colors,
     confidence,

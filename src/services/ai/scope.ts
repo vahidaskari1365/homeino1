@@ -44,8 +44,10 @@ const WHOLE_HOME_PATTERNS = [
   "همه جای خانه", "همه جای خونه", "تمام فضای خانه",
 ];
 
-/** Room-level redesign phrases. NOTE: bare «اتاق» is NOT enough —
- *  «میز اتاق خواب را عوض کن» must stay single_item. */
+/**
+ * Room-level redesign phrases. NOTE: bare «اتاق» is NOT enough —
+ * «میز اتاق خواب را عوض کن» must stay single_item.
+ */
 const ROOM_PATTERNS = [
   "کل اتاق", "همه اتاق", "تموم اتاق", "تمام اتاق", "اتاق رو", "اتاق را",
   "این اتاق", "اتاق کامل", "کامل اتاق", "کل فضا", "کل فضای", "کل سالن",
@@ -55,7 +57,8 @@ const ROOM_PATTERNS = [
   // Keep these specific; do NOT match «میز اتاق خواب» location phrases alone.
   "اتاق خواب را", "اتاق خواب رو", "اتاق نشیمن را", "اتاق نشیمن رو",
   "پذیرایی را", "پذیرایی رو", "آشپزخانه را", "آشپزخانه رو",
-  "سالن را", "سالن رو",
+  "سالن را", "سالن رو", "این فضا را", "این فضا رو", "این فضا",
+  "طراحی بهتر برای این فضا", "یک طراحی بهتر", "طراحی بهتر برای",
   // «همه چیز را عوض کن» → the current space (room), never wider without «خانه».
   "همه چیز", "همه چی", "everything",
 ];
@@ -65,7 +68,8 @@ const ROOM_PATTERNS = [
 const ROOM_STYLE_VERBS = [
   "مدرن", "مینیمال", "ژاپندی", "japandi", "کلاسیک", "لوکس", "بوهو", "boho",
   "اسکاندیناوی", "scandinavian", "صنعتی", "لافت", "industrial", "روستیک",
-  "نئوکلاسیک", "مدیترانه", "بازطراحی", "طراحی", "دکور", "بهتر", "زیبا",
+  "نئوکلاسیک", "مدیترانه", "بازطراحی", "طراحی", "دکور", "بهتر", "زیبا", "زیباتر",
+  "قشنگ", "قشنگتر",
 ];
 
 /** Zone / area-level phrases. */
@@ -89,11 +93,17 @@ function countMatches(text: string, patterns: string[]): number {
 /**
  * Detect the change scope of a Persian/English interior request.
  *
- * @param text      raw user prompt
- * @param targets   elements already detected in the prompt (sofa, rug, …)
- * @param uiScope   optional scope hint from the caller ("targeted" | "full")
+ * @param text            raw user prompt
+ * @param targets         elements already detected in the prompt (sofa, rug, …)
+ * @param uiScope         optional scope hint from the caller ("targeted" | "full")
+ * @param selectedTargets elements explicitly chosen in UI (e.g. ["sofa"])
  */
-export function detectScope(text: string, targets: RoomElement[] = [], uiScope?: "targeted" | "full"): ScopeDecision {
+export function detectScope(
+  text: string,
+  targets: RoomElement[] = [],
+  uiScope?: "targeted" | "full",
+  selectedTargets: RoomElement[] = [],
+): ScopeDecision {
   const lower = text.trim().toLowerCase();
 
   // 1) WHOLE HOME — highest bar, explicit only.
@@ -101,14 +111,27 @@ export function detectScope(text: string, targets: RoomElement[] = [], uiScope?:
     return { scope: "whole_home", confidence: 0.95, reason: "درخواست «کل خانه» است — کل فضا قابل تغییر است." };
   }
 
-  // 2) ROOM — explicit room-level phrase, or the UI asked for a full redesign.
+  // Check if prompt is an explicit room redesign
   const roomHits = countMatches(lower, ROOM_PATTERNS) + (ROOM_EN.some((p) => lower.includes(p)) ? 1 : 0);
-  // «اتاق خواب را ژاپندی کن» / «اتاق را مدرن کن» — room + style verb, even if
-  // keyword map leaked a furniture target (e.g. «خواب» → bed).
   const roomSubjectStyle =
-    /(این\s*)?(اتاق(\s*خواب|\s*نشیمن)?|پذیرایی|آشپزخانه|سالن|فضا)\s*(را|رو)/.test(lower) &&
+    /(این\s*)?(اتاق(\s*خواب|\s*نشیمن)?|پذیرایی|آشپزخانه|سالن|فضا)\s*(را|رو)?/.test(lower) &&
     ROOM_STYLE_VERBS.some((v) => lower.includes(v));
-  if (roomHits > 0 || uiScope === "full" || roomSubjectStyle) {
+  const generalDesignPrompt =
+    /یک\s*طراحی\s*بهتر|طراحی\s*بهتر|فضای\s*بهتر|زیباتر\s*کن|زیبا\s*کن/.test(lower);
+
+  const isExplicitRoomRedesign = roomHits > 0 || roomSubjectStyle || generalDesignPrompt;
+
+  // 2) User explicitly selected a Category/Target in UI:
+  // RULE 1 & 2: Selected Category controls the transformation UNLESS user prompt is explicitly wider (Rule 3).
+  if (selectedTargets.length > 0 && !isExplicitRoomRedesign) {
+    if (selectedTargets.length === 1) {
+      return { scope: "single_item", confidence: 0.92, reason: "فقط دسته/عنصر انتخابی تغییر می‌کند." };
+    }
+    return { scope: "area", confidence: 0.85, reason: "چند عنصر انتخابی تغییر می‌کنند — بقیه فضا قفل است." };
+  }
+
+  // 3) ROOM — explicit room-level phrase, or the UI asked for a full redesign without single selection.
+  if (isExplicitRoomRedesign || uiScope === "full") {
     // «فقط مبل اتاق رو عوض کن» → single item wins despite «اتاق رو».
     if (targets.length > 0 && SINGLE_ITEM_PATTERNS.some((p) => lower.includes(p))) {
       return { scope: "single_item", confidence: 0.9, reason: "با وجود اشاره به اتاق، «فقط» یعنی فقط همان المان تغییر کند." };
@@ -119,6 +142,7 @@ export function detectScope(text: string, targets: RoomElement[] = [], uiScope?:
     if (
       furnitureTargets.length > 0 &&
       !roomSubjectStyle &&
+      !generalDesignPrompt &&
       !uiScope &&
       roomHits > 0 &&
       !ROOM_STYLE_VERBS.some((v) => lower.includes(v)) &&
@@ -126,21 +150,21 @@ export function detectScope(text: string, targets: RoomElement[] = [], uiScope?:
     ) {
       return { scope: "single_item", confidence: 0.85, reason: "اشاره به اتاق فقط مکان است — فقط همان المان تغییر می‌کند." };
     }
-    return { scope: "room", confidence: uiScope === "full" ? 0.85 : 0.8, reason: "درخواست بازطراحی کل اتاق است." };
+    return { scope: "room", confidence: uiScope === "full" ? 0.85 : 0.88, reason: "درخواست بازطراحی کل اتاق است." };
   }
 
-  // 3) AREA — one zone of the room.
+  // 4) AREA — one zone of the room.
   const areaHits = countMatches(lower, AREA_PATTERNS) + (AREA_EN.some((p) => lower.includes(p)) ? 1 : 0);
   if (areaHits > 0) {
     return { scope: "area", confidence: 0.8, reason: "فقط یک ناحیه از فضا هدف است." };
   }
 
-  // 4) Multiple explicit targets → area (several items together).
+  // 5) Multiple explicit targets → area (several items together).
   if (targets.length > 1) {
     return { scope: "area", confidence: 0.75, reason: "چند المان با هم تغییر می‌کنند — بقیه فضا قفل است." };
   }
 
-  // 5) Default — the safest scope: change the least.
+  // 6) Default — the safest scope: change the least.
   if (targets.length === 1) {
     return { scope: "single_item", confidence: 0.9, reason: "فقط همان المان درخواست‌شده تغییر می‌کند." };
   }
@@ -169,8 +193,8 @@ export function isFullScope(scope: EditScope): boolean {
 
 /** Persian human label for scope reasons / summaries. */
 export function scopeSummary(scope: EditScope, targets: RoomElement[], labels: Record<RoomElement, string>): string {
-  if (scope === "whole_home") return "کل خانه تغییر می‌کند — همه‌چیز قابل تغییر است.";
-  if (scope === "room") return "کل اتاق بازطراحی می‌شود.";
+  if (scope === "whole_home") return "کل خانه بازطراحی می‌شود — معماری ساختاری حفظ می‌شود.";
+  if (scope === "room") return "کل اتاق بازطراحی می‌شود — معماری ساختاری حفظ می‌شود.";
   if (scope === "area") return `ناحیه‌ی ${targets.map((t) => labels[t]).join("، ")} تغییر می‌کند — بقیه فضا حفظ می‌شود.`;
   return `فقط «${targets.map((t) => labels[t]).join("، ")}» تغییر می‌کند — بقیه فضا حفظ می‌شود.`;
 }
