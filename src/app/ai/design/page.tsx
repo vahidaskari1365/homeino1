@@ -11,6 +11,9 @@ import Link from "next/link";
 import { Container, Breadcrumb } from "@/components/shared";
 import { ProductOverlay, type Placement } from "@/components/ProductOverlay";
 import { costForMode, aiService } from "@/services/ai";
+import type { PipelineInput, PipelineResult } from "@/services/ai/pipeline";
+import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/placement";
+import type { RoomElement } from "@/services/ai/roomState";
 import { costOf } from "@/services/ai/credits";
 import type { RoomAnalysis, GuidedSuggestion } from "@/services/ai/types";
 import { products, getProductById } from "@/data/products";
@@ -114,6 +117,79 @@ const SECOND_HAND_AS_PRODUCTS: Record<string, Product[]> = (() => {
 })();
 const DEFAULT_ROOM_IDS = ["p1", "p3", "p9", "p12", "p15", "p6"];
 
+/** Parse dimension strings like "220x80x90" or "W:220 D:90 H:80" to numeric cm. */
+function parseProductDimensions(raw?: string): { width?: number; height?: number; depth?: number } | undefined {
+  if (!raw) return undefined;
+  const nums = (raw.match(/\d+(?:\.\d+)?/g) ?? []).map(Number).filter((n) => n > 0 && n < 1000);
+  if (nums.length < 2) return undefined;
+  // Heuristic: for furniture the order is usually W x H x D or W x D x H.
+  const [w, d, h] = nums;
+  return { width: w, height: nums.length >= 3 ? h : d, depth: nums.length >= 3 ? d : undefined };
+}
+
+/** Map real selected products back to RoomElement vocabulary for pipeline targeting. */
+function deriveTargetsFromProducts(productsArr: Product[]): RoomElement[] {
+  const out = new Set<RoomElement>();
+  for (const p of productsArr) {
+    const cat = (p.categorySlug ?? "").toLowerCase();
+    const name = p.name.toLowerCase();
+    if (/furniture|sofa|مبل|کاناپه/.test(cat + name)) out.add("sofa");
+    if (/rug|carpet|فرش|قالی/.test(cat + name)) out.add("rug");
+    if (/curtain|textile|پرده/.test(cat + name)) out.add("curtain");
+    if (/light|lamp|lighting|چراغ|لوستر|آباژور/.test(cat + name)) out.add("lighting");
+    if (/bed|تخت/.test(cat + name)) out.add("bed");
+    if (/tv|تلویزیون/.test(cat + name)) out.add("tv");
+    if (/plant|گل/.test(cat + name)) out.add("plant");
+    if (/art|decor|تابلو|آینه/.test(cat + name)) out.add("art");
+    if (/shelf|bookcase|قفسه|شلف/.test(cat + name)) out.add("shelf");
+    if (/table|chair|dining|office|میز|صندلی/.test(cat + name)) out.add("table");
+  }
+  return [...out];
+}
+
+/** Translate the pipeline placement plan into ProductOverlay Placement[] coords (0..1). */
+function buildPlacementsFromPlan(productsArr: Product[], plan: ProductPlacementPlan): Placement[] {
+  // If there's a single product match by productId, use it; otherwise apply to first.
+  const target = productsArr.find((p) => p.id === plan.productId) ?? productsArr[0];
+  const rest = productsArr.filter((p) => p.id !== target.id);
+  const placements: Placement[] = [];
+  // Anchor point: center of the target region.
+  const cx = plan.targetRegion.x + plan.targetRegion.width / 2;
+  const cy = plan.targetRegion.y + plan.targetRegion.height / 2;
+  placements.push({
+    product: target,
+    xNorm: Math.min(0.95, Math.max(0.05, cx)),
+    yNorm: Math.min(0.95, Math.max(0.05, cy)),
+    scale: Math.min(2, Math.max(0.3, plan.scale)),
+    rotation: plan.rotation,
+  });
+  // Lay out any extra products deterministically around the main placement.
+  rest.forEach((p, idx) => {
+    const angle = ((idx + 1) * Math.PI * 2) / Math.max(1, rest.length);
+    const r = 0.22;
+    placements.push({
+      product: p,
+      xNorm: Math.min(0.95, Math.max(0.05, cx + Math.cos(angle) * r)),
+      yNorm: Math.min(0.95, Math.max(0.05, cy + Math.sin(angle) * r)),
+      scale: 0.85,
+      rotation: 0,
+    });
+  });
+  return placements;
+}
+
+/** Persian summary string surfaced in the existing scope card — UI shape unchanged. */
+function buildScopeSummary(
+  res: PipelineResult,
+  fallback: { targets: RoomElement[]; summary: string; lockedElements: RoomElement[] },
+): string {
+  const targets = res.instruction.targets.length ? res.instruction.targets : fallback.targets;
+  if (res.scope === "whole_home") return "بازطراحی کل خانه — همه چیز قابل تغییر است";
+  if (res.scope === "room") return "بازطراحی کل اتاق";
+  if (res.scope === "area") return `ناحیه ${targets.join("، ")} تغییر می‌کند`;
+  return fallback.summary;
+}
+
 function DesignInner() {
   const sp = useSearchParams();
   const presetSlug = sp.get("product");
@@ -133,7 +209,6 @@ function DesignInner() {
   const [inspirationMatches, setInspirationMatches] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const spend = useCredits((s) => s.spend);
   const addToCart = useCart((s) => s.add);
   const wl = useWishlist();
   const { toast } = useUi();
@@ -216,30 +291,187 @@ function DesignInner() {
 
   const generate = async () => {
     if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
-    const intentText = prompt || (placedProducts.length ? placedProducts.map((p) => p.name).join("، ") : "بازطراحی کامل");
-    const intent = detectIntent(intentText, style); const scope = computeChangeScope(intent);
-    setLastIntent(intent); setLastScope(scope);
-    const isFullSet = placedProducts.length === 0;
-    const chosen = placedProducts.length ? placedProducts : DEFAULT_ROOM_IDS.map(getProductById).filter(Boolean) as Product[];
-    const opCost = costOf(isFullSet ? "generate" : "placement");
-    trackEvent("ai_started", { metadata: { style: styleLabel, items: chosen.length, fullSet: isFullSet, scope: scope.targets.join("، ") } });
-    setLoading(true); setError(null); setPlacements([]);
-    let i = 0; setStage(STAGE_ORDER[1]);
-    const timer = setInterval(() => { i++; if (i < STAGE_ORDER.length) setStage(STAGE_ORDER[i]); }, 1200);
-    const result = await useCredits.getState().runAiOperation(isFullSet ? "طراحی کامل" : "چیدمان وسایل", opCost, async () => {
-      const elems = designElements.map((e) => `${e.cat} — ${e.label}: ${e.desc}`).join("\n");
-      return aiService.generate({ mode: "room-redesign", prompt: `${prompt}\n${elems}\nسبک: ${styleLabel}\nقفل‌شده: ${scope.lockedElements.join("، ")}`, style, room: style === "office" ? "فضای اداری" : "نشیمن", referenceImage: imageBase64 });
+
+    // Build pipeline input from the REAL designer state — no fake data.
+    const chosen: Product[] = placedProducts.length
+      ? placedProducts
+      : DEFAULT_ROOM_IDS.map(getProductById).filter(Boolean) as Product[];
+
+    const isFullSet = designElements.length === 0;
+    const uiIntent = detectIntent(prompt, style);
+    const uiScope = computeChangeScope(uiIntent);
+    const isFullRoom = isFullSet || uiIntent.type === "full_redesign";
+    const opCost = costOf(isFullRoom ? "generate" : (presetProduct ? "placement" : "edit"));
+
+    const lastTargets: RoomElement[] = (rs.placements ?? [])
+      .slice(-1)
+      .flatMap((p): RoomElement[] => {
+        // Map previously placed product categories back to room elements.
+        const cat = (getProductById(p.productId)?.categorySlug ?? "").toLowerCase();
+        if (/furniture|sofa/.test(cat)) return ["sofa"];
+        if (/rug|carpet/.test(cat)) return ["rug"];
+        if (/curtain|textile/.test(cat)) return ["curtain"];
+        if (/light|lamp/.test(cat)) return ["lighting"];
+        if (/bed/.test(cat)) return ["bed"];
+        if (/tv/.test(cat)) return ["tv"];
+        if (/plant/.test(cat)) return ["plant"];
+        if (/art|decor/.test(cat)) return ["art"];
+        if (/shelf|bookcase/.test(cat)) return ["shelf"];
+        if (/table|chair|dining|office/.test(cat)) return ["table"];
+        return [];
+      });
+
+    const previousTargets: RoomElement[] = lastTargets.length ? lastTargets : uiScope.targets;
+    const previousChanges: string[] = rs.appliedChanges.slice(-3);
+
+    // Convert real selected products to PlacementProduct for the pipeline.
+    const pipelineProducts: PlacementProduct[] = chosen.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.categorySlug,
+      material: p.materials?.[0],
+      color: p.colors?.[0]?.name,
+      style: p.styleSlugs?.[0],
+      dimensions: parseProductDimensions(p.dimensions),
+    }));
+
+    const budgetNum = Number(budget.replace(/[^\d]/g, "")) || undefined;
+
+    // Detect target room elements from chosen categories + prompt intent.
+    const derivedTargets: RoomElement[] = deriveTargetsFromProducts(chosen);
+    const targets: RoomElement[] = [...new Set([...uiScope.targets, ...derivedTargets])];
+
+    const pipelineInput: PipelineInput = {
+      prompt: prompt || (isFullRoom ? "بازطراحی کامل فضا" : chosen.map((p) => p.name).join("، ")),
+      style,
+      room: style === "office" ? "فضای اداری" : (rs.roomType || "نشیمن"),
+      colors: roomAnalysis?.palette ?? rs.detectedColors ?? undefined,
+      scope: isFullRoom ? "full" : "targeted",
+      targets: targets.length ? targets : undefined,
+      preservedExtra: undefined,
+      referenceImage: imageBase64,
+      mask: undefined,
+      previousTargets: previousTargets.length ? previousTargets : undefined,
+      previousChanges: previousChanges.length ? previousChanges : undefined,
+      productId: presetProduct?.id ?? (chosen.length === 1 ? chosen[0].id : undefined),
+      products: pipelineProducts.length ? pipelineProducts : undefined,
+      budget: budgetNum ? { min: budgetNum, currency: "تومان" } : undefined,
+      roomUnderstanding: roomAnalysis
+        ? {
+            roomType: roomAnalysis.roomType,
+            layout: "unknown",
+            lighting: "unknown",
+            objects: [],
+            confidence: 0.6,
+          }
+        : undefined,
+    };
+
+    trackEvent("ai_started", {
+      metadata: { style: styleLabel, items: chosen.length, fullSet: isFullRoom, scope: uiScope.targets.join("، ") },
     });
-    if (!result.ok) { clearInterval(timer); setLoading(false); if (result.reason === "insufficient") { setError("اعتبار کافی نیست"); return toast("اعتبار کافی نیست", "error"); } setError("خطا"); trackEvent("ai_failed", {}); return toast("خطا — اعتبار برگردانده شد", "error"); }
+
+    setLoading(true);
+    setError(null);
+    setPlacements([]);
+    setStage("ANALYZING_SPACE");
+
+    // Animated progress only — each stage label is the same one the UI already uses.
+    const stageTimer = setInterval(() => {
+      setStage((cur) => {
+        const i = STAGE_ORDER.indexOf(cur);
+        if (i < STAGE_ORDER.length - 1) return STAGE_ORDER[i + 1];
+        return cur;
+      });
+    }, 900);
+
+    const opLabel = isFullRoom ? "طراحی کامل" : (presetProduct ? "جای‌گذاری محصول" : "چیدمان وسایل");
+
+    const result = await useCredits.getState().runAiOperation(opLabel, opCost, async () => {
+      // THE SINGLE REAL AI CALL — no aiService.generate(), no fake setTimeout.
+      return aiService.pipeline(pipelineInput);
+    });
+
+    clearInterval(stageTimer);
+
+    if (!result.ok) {
+      setLoading(false);
+      if (result.reason === "insufficient") {
+        setError("اعتبار کافی نیست");
+        return toast("اعتبار کافی نیست", "error");
+      }
+      if (result.reason === "duplicate") {
+        setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
+        return;
+      }
+      setError("خطا در پردازش — لطفاً دوباره تلاش کن");
+      trackEvent("ai_failed", {});
+      return toast("خطا در پردازش AI — اعتبار برگردانده شد", "error");
+    }
+
     try {
-      const pd = chosen.map((p, idx) => { const cols = Math.min(chosen.length, 3); const col = idx % cols; const row = Math.floor(idx / cols); const rows = Math.ceil(chosen.length / cols); const x = cols === 1 ? 0.5 : 0.22 + (0.56 * col) / (cols - 1); const y = rows === 1 ? 0.62 : 0.42 + (0.4 * row) / Math.max(1, rows - 1); return { productId: p.id, category: p.categorySlug, reason: scope.targets.join("، "), placement: { x, y, scale: 1, rotation: 0 } }; });
-      setPlacements(makePlacements(chosen));
-      rs.commitChange({ label: isFullSet ? "چیدمان کامل" : scope.targets.join("، "), placements: pd, change: scope.summary, scope: scope.targets.join("، ") });
+      const pipelineRes: PipelineResult = result.result;
+      const inst = pipelineRes.instruction;
+      const plan: ProductPlacementPlan | undefined = pipelineRes.placement ?? inst.placement;
+
+      setLastIntent(uiIntent);
+      setLastScope({
+        targets: inst.targets.length ? inst.targets : uiScope.targets,
+        lockedElements: inst.preserved.length ? inst.preserved : uiScope.lockedElements,
+        summary: buildScopeSummary(pipelineRes, uiScope),
+      });
+
+      // Render placements from the REAL pipeline placement plan when available,
+      // otherwise fall back to the deterministic client layout (same visual grid).
+      const renderedPlacements = plan && chosen.length >= 1
+        ? buildPlacementsFromPlan(chosen, plan)
+        : makePlacements(chosen);
+      setPlacements(renderedPlacements);
+
+      // Use the real edited image (Orali/provider) when the pipeline produced one,
+      // otherwise keep the original and let the UI show the preview badge.
+      const editedImage = pipelineRes.result.afterImage;
+      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
+      const outputImage = isPreview ? imageBase64 : editedImage;
+
+      rs.commitChange({
+        label: isFullRoom ? "چیدمان کامل" : (inst.targets.map((t) => t).join("، ") || uiScope.targets.join("، ")),
+        image: outputImage,
+        placements: renderedPlacements.map((pl, idx) => ({
+          productId: pl.product.id,
+          category: pl.product.categorySlug,
+          reason: plan?.rationale ?? uiScope.summary,
+          placement: {
+            x: pl.xNorm,
+            y: pl.yNorm,
+            scale: pl.scale,
+            rotation: pl.rotation ?? 0,
+          },
+        })),
+        change: pipelineRes.intent.changes?.[0] ?? (prompt || uiScope.summary),
+        scope: pipelineRes.scope,
+      });
+
       setStage("RENDERING");
-      trackEvent("ai_finished", { metadata: { count: chosen.length, preview: result.result.preview ?? false } });
-      toast(result.result.preview ? "چیدمان آماده شد — [پیش‌نمایش]" : "چیدمان آماده شد");
-    } catch { setError("خطا"); }
-    finally { clearInterval(timer); setLoading(false); }
+      trackEvent("ai_finished", {
+        metadata: {
+          count: chosen.length,
+          preview: isPreview,
+          engine: pipelineRes.imageEngine,
+          requestId: pipelineRes.requestId,
+        },
+      });
+
+      if (isPreview) {
+        toast("نتیجه به‌صورت پیش‌نمایش آماده شد (موتور تصویر در دسترس نیست)");
+      } else {
+        toast("چیدمان آماده شد");
+      }
+    } catch (e) {
+      setError("خطا در نمایش نتیجه");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const router = useRouter();
@@ -252,13 +484,102 @@ function DesignInner() {
   const placePresetInRoom = async () => {
     if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
     if (!presetProduct) return;
-    if (useCredits.getState().balance < cost) return toast("اعتبار کافی نیست", "error");
-    if (!spend(cost, "جای‌گذاری")) return toast("اعتبار کافی نیست", "error");
-    setLoading(true); setError(null); setPlacements([]); setStage("ANALYZING_SPACE");
-    let i = 0; const timer = setInterval(() => { i++; if (i < STAGE_ORDER.length) setStage(STAGE_ORDER[i]); }, 1100);
-    try { await new Promise((r) => setTimeout(r, 2200)); setPlacements([{ product: presetProduct, xNorm: 0.5, yNorm: 0.6, scale: 1 }]); setStage("RENDERING"); setTab("design"); toast("محصول در عکس قرار گرفت"); }
-    catch { setError("خطا"); }
-    finally { clearInterval(timer); setLoading(false); }
+
+    // Real product-in-room pipeline — no fake setTimeout, no fake success.
+    const opCost = costOf("placement");
+    const pipelineProduct: PlacementProduct = {
+      id: presetProduct.id,
+      name: presetProduct.name,
+      category: presetProduct.categorySlug,
+      material: presetProduct.materials?.[0],
+      color: presetProduct.colors?.[0]?.name,
+      style: presetProduct.styleSlugs?.[0],
+      dimensions: parseProductDimensions(presetProduct.dimensions),
+    };
+
+    const targets: RoomElement[] = deriveTargetsFromProducts([presetProduct]);
+
+    const pipelineInput: PipelineInput = {
+      prompt: prompt || `محصول «${presetProduct.name}» را در اتاق قرار بده`,
+      style,
+      room: style === "office" ? "فضای اداری" : (rs.roomType || "نشیمن"),
+      scope: "targeted",
+      targets,
+      referenceImage: imageBase64,
+      productId: presetProduct.id,
+      products: [pipelineProduct],
+      previousTargets: deriveTargetsFromProducts(placedProducts),
+      previousChanges: rs.appliedChanges.slice(-3),
+    };
+
+    setLoading(true);
+    setError(null);
+    setPlacements([]);
+    setStage("ANALYZING_SPACE");
+
+    const timer = setInterval(() => {
+      setStage((cur) => {
+        const i = STAGE_ORDER.indexOf(cur);
+        if (i < STAGE_ORDER.length - 1) return STAGE_ORDER[i + 1];
+        return cur;
+      });
+    }, 900);
+
+    const result = await useCredits.getState().runAiOperation("جای‌گذاری محصول", opCost, async () => {
+      return aiService.pipeline(pipelineInput);
+    });
+
+    clearInterval(timer);
+
+    if (!result.ok) {
+      setLoading(false);
+      if (result.reason === "insufficient") {
+        setError("اعتبار کافی نیست");
+        return toast("اعتبار کافی نیست", "error");
+      }
+      if (result.reason === "duplicate") {
+        setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
+        return;
+      }
+      setError("خطا در پردازش");
+      return toast("خطا در جای‌گذاری — اعتبار برگردانده شد", "error");
+    }
+
+    try {
+      const pipelineRes: PipelineResult = result.result;
+      const plan = pipelineRes.placement ?? pipelineRes.instruction.placement;
+      const fallbackPlacement: Placement = { product: presetProduct, xNorm: 0.5, yNorm: 0.6, scale: 1 };
+      const newPlacements = plan
+        ? buildPlacementsFromPlan([presetProduct], plan)
+        : [fallbackPlacement];
+
+      const editedImage = pipelineRes.result.afterImage;
+      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
+      const outputImage = isPreview ? imageBase64 : editedImage;
+
+      setPlacements(newPlacements);
+      setStage("RENDERING");
+      setTab("design");
+
+      rs.commitChange({
+        label: `جای‌گذاری ${presetProduct.name}`,
+        image: outputImage,
+        placements: newPlacements.map((pl) => ({
+          productId: pl.product.id,
+          category: pl.product.categorySlug,
+          reason: plan?.rationale ?? "جای‌گذاری محصول",
+          placement: { x: pl.xNorm, y: pl.yNorm, scale: pl.scale, rotation: pl.rotation ?? 0 },
+        })),
+        change: prompt || `قرار دادن ${presetProduct.name} در اتاق`,
+        scope: pipelineRes.scope,
+      });
+
+      toast(isPreview ? "محصول به‌صورت پیش‌نمایش قرار گرفت (موتور تصویر در دسترس نیست)" : "محصول در عکس قرار گرفت");
+    } catch {
+      setError("خطا در نمایش نتیجه");
+    } finally {
+      setLoading(false);
+    }
   };
   const buyTheLook = () => { if (!placedProducts.length) return; placedProducts.forEach((p) => addToCart(p.id)); toast("چیدمان به سبد اضافه شد"); };
   const handleSaveToWishlist = () => { placedProducts.forEach((p) => wl.toggleProduct(p.id)); toast("طراحی ذخیره شد"); };
@@ -502,7 +823,7 @@ function DesignInner() {
                   {placements.length > 0 && <div className="flex gap-1"><button onClick={() => toast("ذخیره شد")} className="grid h-7 w-7 place-items-center rounded-md bg-ivory-2 text-ink-muted hover:text-ink" aria-label="دانلود"><Download size={12} /></button><button onClick={async () => { const res = await shareContent({ title: "طراحی هوشمند خانه من", text: "با Homeino طراحی کردم", url: buildShareUrl("/ai") }); toast(res.method === "clipboard" ? "لینک کپی شد" : res.method === "native" ? "اشتراک‌گذاری شد" : "خطا", res.method === "failed" ? "error" : "success"); }} className="grid h-9 w-9 place-items-center rounded-md bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="اشتراک‌گذاری"><Share2 size={13} /></button></div>}
                 </div>
                 {placements.length > 0 && imageBase64 ? (
-                  <ProductOverlay mode="interactive" roomImage={imageBase64} placements={placements} onChange={updatePlacement} onRemove={removePlacement} onCart={overlayCart} onWishlist={overlayWishlist} onView={overlayView} />
+                  <ProductOverlay mode={rs.currentImage && rs.currentImage !== imageBase64 ? "real_edit" : "interactive"} roomImage={rs.currentImage ?? imageBase64} placements={placements} onChange={updatePlacement} onRemove={removePlacement} onCart={overlayCart} onWishlist={overlayWishlist} onView={overlayView} />
                 ) : (
                   <div className="flex aspect-video items-center justify-center rounded-xl border border-dashed border-clay/50 bg-ivory-2"><div className="p-6 text-center"><Wand2 size={28} className="mx-auto mb-2 text-clay" /><p className="text-xs font-medium text-ink-muted">نتیجه اینجا نمایش داده می‌شه</p></div></div>
                 )}
