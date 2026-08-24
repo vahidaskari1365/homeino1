@@ -13,16 +13,26 @@ import { ProductOverlay, type Placement } from "@/components/ProductOverlay";
 import { costForMode, aiService } from "@/services/ai";
 import type { PipelineInput, PipelineResult } from "@/services/ai/pipeline";
 import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/placement";
+import { parseProductDimensions } from "@/services/ai/placement";
 import type { RoomElement } from "@/services/ai/roomState";
+import {
+  detectIntent,
+  computeChangeScope,
+  type AiIntent,
+  type ScopedChange,
+  categoryToRoomElement,
+  detectCategorySkuConflict,
+  matchStoreProducts,
+  type MatchedStoreProduct,
+} from "@/services/ai/roomState";
 import { costOf } from "@/services/ai/credits";
 import type { RoomAnalysis, GuidedSuggestion } from "@/services/ai/types";
-import { products, getProductById } from "@/data/products";
+import { products, getProductById, getProductBySkuOrCode } from "@/data/products";
 import { secondHandProducts } from "@/data/secondHand";
 import { IMG } from "@/data/media";
 import { useCredits, useUi } from "@/stores/useApp";
 import { useCart, useWishlist } from "@/stores/useShop";
 import { useRoomState } from "@/stores/useRoomState";
-import { detectIntent, computeChangeScope, type AiIntent, type ScopedChange } from "@/services/ai/roomState";
 import { trackEvent } from "@/lib/tracking";
 import { toFa, formatPrice, cn } from "@/lib/utils";
 import { shareContent, buildShareUrl } from "@/lib/share";
@@ -117,32 +127,13 @@ const SECOND_HAND_AS_PRODUCTS: Record<string, Product[]> = (() => {
 })();
 const DEFAULT_ROOM_IDS = ["p1", "p3", "p9", "p12", "p15", "p6"];
 
-/** Parse dimension strings like "220x80x90" or "W:220 D:90 H:80" to numeric cm. */
-function parseProductDimensions(raw?: string): { width?: number; height?: number; depth?: number } | undefined {
-  if (!raw) return undefined;
-  const nums = (raw.match(/\d+(?:\.\d+)?/g) ?? []).map(Number).filter((n) => n > 0 && n < 1000);
-  if (nums.length < 2) return undefined;
-  // Heuristic: for furniture the order is usually W x H x D or W x D x H.
-  const [w, d, h] = nums;
-  return { width: w, height: nums.length >= 3 ? h : d, depth: nums.length >= 3 ? d : undefined };
-}
-
 /** Map real selected products back to RoomElement vocabulary for pipeline targeting. */
 function deriveTargetsFromProducts(productsArr: Product[]): RoomElement[] {
   const out = new Set<RoomElement>();
   for (const p of productsArr) {
     const cat = (p.categorySlug ?? "").toLowerCase();
     const name = p.name.toLowerCase();
-    if (/furniture|sofa|مبل|کاناپه/.test(cat + name)) out.add("sofa");
-    if (/rug|carpet|فرش|قالی/.test(cat + name)) out.add("rug");
-    if (/curtain|textile|پرده/.test(cat + name)) out.add("curtain");
-    if (/light|lamp|lighting|چراغ|لوستر|آباژور/.test(cat + name)) out.add("lighting");
-    if (/bed|تخت/.test(cat + name)) out.add("bed");
-    if (/tv|تلویزیون/.test(cat + name)) out.add("tv");
-    if (/plant|گل/.test(cat + name)) out.add("plant");
-    if (/art|decor|تابلو|آینه/.test(cat + name)) out.add("art");
-    if (/shelf|bookcase|قفسه|شلف/.test(cat + name)) out.add("shelf");
-    if (/table|chair|dining|office|میز|صندلی/.test(cat + name)) out.add("table");
+    out.add(categoryToRoomElement(cat, `${p.subCategorySlug ?? ""} ${name}`));
   }
   return [...out];
 }
@@ -199,9 +190,12 @@ function DesignInner() {
   const [style, setStyle] = useState("modern");
   const [prompt, setPrompt] = useState("");
   const [budget, setBudget] = useState("");
+  const [skuInput, setSkuInput] = useState("");
+  const [skuWarning, setSkuWarning] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<Stage>("UPLOADING");
   const [placements, setPlacements] = useState<Placement[]>([]);
+  const [matchedStoreProducts, setMatchedStoreProducts] = useState<MatchedStoreProduct[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set(["furniture"]));
   const [selectedSubTypes, setSelectedSubTypes] = useState<Record<string, string[]>>({});
@@ -238,11 +232,9 @@ function DesignInner() {
 
   // ---- GUIDED DESIGN: apply or customize AI suggestions ----
   const applySuggestion = (sg: GuidedSuggestion) => {
-    // Map suggestion category to a product category and auto-select it
     const catMap: Record<string, string> = { rug: "carpet", lighting: "lighting", plant: "plants", sofa: "furniture" };
     const catSlug = catMap[sg.category] || "furniture";
     setOpenCats((s) => new Set(s).add(catSlug));
-    // Auto-select first subtype in that category
     const cat = CATEGORIES.find((c) => c.slug === catSlug);
     if (cat && cat.subTypes[0]) {
       setSelectedSubTypes((s) => ({ ...s, [catSlug]: [cat.subTypes[0].label] }));
@@ -284,6 +276,27 @@ function DesignInner() {
   }, [designElements]);
   const total = placedProducts.reduce((s, p) => s + p.price, 0);
 
+  const handleSkuChange = (val: string) => {
+    setSkuInput(val);
+    const trimmed = val.trim();
+    if (!trimmed) {
+      setSkuWarning(null);
+      return;
+    }
+    const found = getProductBySkuOrCode(trimmed);
+    if (!found) {
+      setSkuWarning("کد محصول نامعتبر است — محصولی با این کد در کاتالوگ فروشگاه‌ها یافت نشد.");
+      return;
+    }
+    const catSlugs = designElements.map((e) => e.catSlug);
+    const conflict = detectCategorySkuConflict(catSlugs, found);
+    if (conflict.hasConflict) {
+      setSkuWarning(conflict.message || "توجه: دسته‌بندی انتخاب‌شده با کد محصول همخوانی ندارد.");
+    } else {
+      setSkuWarning(null);
+    }
+  };
+
   function makePlacements(prods: Product[]): Placement[] {
     const n = prods.length; if (!n) return [];
     return prods.map((p, i) => { const cols = Math.min(n, 3); const col = i % cols; const row = Math.floor(i / cols); const rows = Math.ceil(n / cols); const x = cols === 1 ? 0.5 : 0.22 + (0.56 * col) / (cols - 1); const y = rows === 1 ? 0.62 : 0.42 + (0.4 * row) / Math.max(1, rows - 1); return { product: p, xNorm: x, yNorm: y, scale: 1 }; });
@@ -292,7 +305,6 @@ function DesignInner() {
   const generate = async () => {
     if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
 
-    // Build pipeline input from the REAL designer state — no fake data.
     const chosen: Product[] = placedProducts.length
       ? placedProducts
       : DEFAULT_ROOM_IDS.map(getProductById).filter(Boolean) as Product[];
@@ -306,7 +318,6 @@ function DesignInner() {
     const lastTargets: RoomElement[] = (rs.placements ?? [])
       .slice(-1)
       .flatMap((p): RoomElement[] => {
-        // Map previously placed product categories back to room elements.
         const cat = (getProductById(p.productId)?.categorySlug ?? "").toLowerCase();
         if (/furniture|sofa/.test(cat)) return ["sofa"];
         if (/rug|carpet/.test(cat)) return ["rug"];
@@ -324,7 +335,6 @@ function DesignInner() {
     const previousTargets: RoomElement[] = lastTargets.length ? lastTargets : uiScope.targets;
     const previousChanges: string[] = rs.appliedChanges.slice(-3);
 
-    // Convert real selected products to PlacementProduct for the pipeline.
     const pipelineProducts: PlacementProduct[] = chosen.map((p) => ({
       id: p.id,
       name: p.name,
@@ -337,9 +347,10 @@ function DesignInner() {
 
     const budgetNum = Number(budget.replace(/[^\d]/g, "")) || undefined;
 
-    // Detect target room elements from chosen categories + prompt intent.
+    const resolvedSkuProduct = skuInput.trim() ? getProductBySkuOrCode(skuInput.trim()) : undefined;
+    const categoryTargets = designElements.map((e) => categoryToRoomElement(e.catSlug, e.label));
     const derivedTargets: RoomElement[] = deriveTargetsFromProducts(chosen);
-    const targets: RoomElement[] = [...new Set([...uiScope.targets, ...derivedTargets])];
+    const finalTargets: RoomElement[] = [...new Set([...uiScope.targets, ...derivedTargets, ...categoryTargets])];
 
     const pipelineInput: PipelineInput = {
       prompt: prompt || (isFullRoom ? "بازطراحی کامل فضا" : chosen.map((p) => p.name).join("، ")),
@@ -347,13 +358,24 @@ function DesignInner() {
       room: style === "office" ? "فضای اداری" : (rs.roomType || "نشیمن"),
       colors: roomAnalysis?.palette ?? rs.detectedColors ?? undefined,
       scope: isFullRoom ? "full" : "targeted",
-      targets: targets.length ? targets : undefined,
+      targets: finalTargets.length ? finalTargets : undefined,
       preservedExtra: undefined,
       referenceImage: imageBase64,
       mask: undefined,
       previousTargets: previousTargets.length ? previousTargets : undefined,
       previousChanges: previousChanges.length ? previousChanges : undefined,
-      productId: presetProduct?.id ?? (chosen.length === 1 ? chosen[0].id : undefined),
+      previousProductId: rs.placements?.[rs.placements.length - 1]?.productId,
+      previousSKU: getProductById(rs.placements?.[rs.placements.length - 1]?.productId ?? "")?.sku,
+      sku: skuInput.trim() || undefined,
+      productCode: skuInput.trim() || undefined,
+      productId: resolvedSkuProduct?.id ?? presetProduct?.id ?? (chosen.length === 1 ? chosen[0].id : undefined),
+      selection: designElements.length > 0
+        ? {
+            category: designElements[0].catSlug,
+            subTypes: designElements.map((e) => e.label),
+            targets: finalTargets,
+          }
+        : undefined,
       products: pipelineProducts.length ? pipelineProducts : undefined,
       budget: budgetNum ? { min: budgetNum, currency: "تومان" } : undefined,
       roomUnderstanding: roomAnalysis
@@ -376,7 +398,6 @@ function DesignInner() {
     setPlacements([]);
     setStage("ANALYZING_SPACE");
 
-    // Animated progress only — each stage label is the same one the UI already uses.
     const stageTimer = setInterval(() => {
       setStage((cur) => {
         const i = STAGE_ORDER.indexOf(cur);
@@ -388,7 +409,6 @@ function DesignInner() {
     const opLabel = isFullRoom ? "طراحی کامل" : (presetProduct ? "جای‌گذاری محصول" : "چیدمان وسایل");
 
     const result = await useCredits.getState().runAiOperation(opLabel, opCost, async () => {
-      // THE SINGLE REAL AI CALL — no aiService.generate(), no fake setTimeout.
       return aiService.pipeline(pipelineInput);
     });
 
@@ -421,23 +441,31 @@ function DesignInner() {
         summary: buildScopeSummary(pipelineRes, uiScope),
       });
 
-      // Render placements from the REAL pipeline placement plan when available,
-      // otherwise fall back to the deterministic client layout (same visual grid).
       const renderedPlacements = plan && chosen.length >= 1
         ? buildPlacementsFromPlan(chosen, plan)
         : makePlacements(chosen);
       setPlacements(renderedPlacements);
 
-      // Use the real edited image (Orali/provider) when the pipeline produced one,
-      // otherwise keep the original and let the UI show the preview badge.
       const editedImage = pipelineRes.result.afterImage;
       const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
       const outputImage = isPreview ? imageBase64 : editedImage;
 
+      const realMatched = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
+        ? pipelineRes.matchedProducts
+        : matchStoreProducts({
+            sku: skuInput.trim() || undefined,
+            productId: resolvedSkuProduct?.id,
+            targets: inst.targets.length ? inst.targets : finalTargets,
+            style,
+            roomType: rs.roomType,
+            budget: budgetNum,
+          });
+      setMatchedStoreProducts(realMatched);
+
       rs.commitChange({
         label: isFullRoom ? "چیدمان کامل" : (inst.targets.map((t) => t).join("، ") || uiScope.targets.join("، ")),
         image: outputImage,
-        placements: renderedPlacements.map((pl, idx) => ({
+        placements: renderedPlacements.map((pl) => ({
           productId: pl.product.id,
           category: pl.product.categorySlug,
           reason: plan?.rationale ?? uiScope.summary,
@@ -467,7 +495,7 @@ function DesignInner() {
       } else {
         toast("چیدمان آماده شد");
       }
-    } catch (e) {
+    } catch {
       setError("خطا در نمایش نتیجه");
     } finally {
       setLoading(false);
@@ -485,7 +513,6 @@ function DesignInner() {
     if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
     if (!presetProduct) return;
 
-    // Real product-in-room pipeline — no fake setTimeout, no fake success.
     const opCost = costOf("placement");
     const pipelineProduct: PlacementProduct = {
       id: presetProduct.id,
@@ -560,6 +587,16 @@ function DesignInner() {
       setPlacements(newPlacements);
       setStage("RENDERING");
       setTab("design");
+
+      const matchedStore = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
+        ? pipelineRes.matchedProducts
+        : matchStoreProducts({
+            productId: presetProduct.id,
+            targets,
+            style,
+            roomType: rs.roomType,
+          });
+      setMatchedStoreProducts(matchedStore);
 
       rs.commitChange({
         label: `جای‌گذاری ${presetProduct.name}`,
@@ -648,125 +685,86 @@ function DesignInner() {
                   {inspirationMatches.length > 0 && (<><div className="grid grid-cols-3 gap-2">{inspirationMatches.map((p) => { const isSel = !!selected[p.id]; return (
                     <button key={p.id} onClick={() => toggleProduct(p)} className={cn("overflow-hidden rounded-lg border text-right transition", isSel ? "border-terracotta ring-1 ring-terracotta/40" : "border-clay/50 hover:border-terracotta/50")}>
                       <div className="relative aspect-square"><img src={p.images[0]} alt="" className="h-full w-full object-cover" />{isSel && <span className="absolute right-1 top-1 grid h-4 w-4 place-items-center rounded-full bg-terracotta text-[8px] text-white">✓</span>}</div>
-                      <div className="p-1"><p className="line-clamp-1 text-[9px] font-bold text-ink">{p.name}</p><p className="text-[9px] font-bold text-terracotta-deep">{toFa(formatPrice(p.price))}</p></div>
-                    </button>); })}</div>
-                    <button onClick={() => { setTab("design"); toast("به محیط چیدمان منتقل شد"); }} className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-clay/50 bg-ivory-2 py-2 text-xs font-bold text-ink hover:bg-clay/20">انتقال به چیدمان ←</button>
-                  </>)}
+                      <p className="line-clamp-1 p-1 text-[9px] font-bold text-ink">{p.name}</p>
+                    </button>
+                  ); })}</div><button onClick={() => { setTab("design"); toast("محصولات اضافه شدند"); }} className="btn-accent mt-3 w-full py-2 text-xs font-bold">طراحی با این محصولات</button></>)}
                 </div>
               </div>
             )}
-            <button onClick={() => setTab("design")} className="mt-3 text-[11px] text-ink-muted hover:text-ink">← بازگشت</button>
           </div>
         )}
 
         {tab === "design" && (
           <>
-          {/* JOURNEY BAR — visual progress (reduces cognitive load) */}
-          <div className="mb-4 flex items-center gap-1 text-[10px]">
-            {(() => {
-              let step = 1;
-              if (imageBase64) step = 2;
-              if (analyzing || roomAnalysis) step = 3;
-              if (designElements.length > 0) step = 4;
-              if (placements.length > 0) step = 5;
-              const labels = ["آپلود", "تحلیل", "انتخاب", "تولید", "خرید"];
-              return labels.map((label, i) => {
-                const num = i + 1;
-                const active = num <= step;
-                const current = num === step;
-                return (
-                  <div key={label} className="flex flex-1 items-center gap-1">
-                    <div className={cn("flex items-center gap-1 rounded-full px-2 py-1 transition", active ? "bg-terracotta/15 text-terracotta-deep" : "text-ink-muted/50", current && "ring-1 ring-terracotta/40")}>
-                      <span className={cn("grid h-4 w-4 place-items-center rounded-full text-[8px] font-bold", active ? "bg-terracotta text-white" : "bg-clay/40 text-ink-muted")}>{toFa(num)}</span>
-                      {label}
-                    </div>
-                    {i < labels.length - 1 && <div className={cn("h-px flex-1", active ? "bg-terracotta/30" : "bg-clay/30")} />}
+          {roomAnalysis && !loading && (
+            <div className="mb-4 rounded-xl border border-clay/40 bg-cream p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-terracotta/10 text-terracotta-deep"><Sparkles size={12} /></span>
+                  <div>
+                    <span className="text-[11px] font-bold text-ink">تحلیل اتاق: {roomAnalysis.roomType || "نشیمن"} · سبک فعلی {roomAnalysis.style}</span>
+                    <span className="mr-2 text-[10px] text-ink-muted">(اطمینان {toFa(Math.round((roomAnalysis.confidence ?? 0.6) * 100))}٪)</span>
                   </div>
-                );
-              });
-            })()}
-          </div>
-
-          <div className="grid items-start gap-4 lg:grid-cols-12">
-            {/* LEFT: Controls */}
-            <div className="space-y-3 lg:col-span-5">
-              {/* Upload */}
-              <div className={panelCls}>
-                <div className="mb-2 flex items-center justify-between border-b border-clay/30 pb-2">
-                  <h2 className="flex items-center gap-1.5 text-xs font-bold text-ink"><span className={stepBadge}>۱</span> تصویر اتاق</h2>
-                  {imageBase64 && <button onClick={() => { setImageBase64(null); setPlacements([]); }} className="text-[10px] text-danger hover:underline">حذف</button>}
                 </div>
-                {!imageBase64 ? (
-                  <div onClick={() => inputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }} className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 py-6 text-center transition hover:border-terracotta">
-                    <Upload size={20} className="mb-1.5 text-ink-muted" /><p className="text-[11px] font-medium text-ink">عکس اتاقت را آپلود کن</p>
-                    <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                {roomAnalysis.palette && roomAnalysis.palette.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-ink-muted">پالت:</span>
+                    {roomAnalysis.palette.slice(0, 4).map((c, i) => <span key={i} className="rounded-full bg-ivory-2 px-1.5 py-0.5 text-[8px] text-ink">{c}</span>)}
                   </div>
-                ) : <div className="overflow-hidden rounded-lg border border-clay/40"><img src={imageBase64} alt="اتاق" className="aspect-video w-full object-cover" /></div>}
+                )}
               </div>
-
-              {/* GUIDED DESIGN ASSISTANT — AI analysis + actionable suggestions */}
-              {(analyzing || roomAnalysis) && imageBase64 && (
-                <div className="rounded-xl border border-gold/25 bg-gold/5 p-3">
-                  <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-gold"><Sparkles size={12} /> تحلیل هوشمند فضا</h3>
-                  {analyzing ? (
-                    <div className="flex items-center gap-1.5 py-1 text-[10px] text-ink-muted"><Loader2 size={12} className="animate-spin text-gold" /> در حال تحلیل فضا، نور و سبک…</div>
-                  ) : roomAnalysis && (
-                    <div className="space-y-2.5">
-                      {/* tags */}
-                      <div className="flex flex-wrap gap-1.5">{[roomAnalysis.roomType, roomAnalysis.style, roomAnalysis.mood].map((t) => <span key={t} className="rounded-md bg-cream px-2 py-0.5 text-[10px] font-medium text-ink">{t}</span>)}</div>
-                      {/* palette */}
-                      <div className="flex items-center gap-1">{roomAnalysis.palette.map((hex) => <span key={hex} className="h-4 w-4 rounded border border-clay/40" style={{ background: hex }} />)}</div>
-                      {/* strengths */}
-                      {roomAnalysis.strengths?.length > 0 && (
-                        <div className="space-y-0.5">
-                          <span className="text-[9px] font-bold text-success">نقاط قوت:</span>
-                          {roomAnalysis.strengths.map((s, i) => <div key={i} className="flex gap-1 text-[10px] leading-5 text-ink"><Check size={10} className="mt-0.5 shrink-0 text-success" /> {s}</div>)}
-                        </div>
-                      )}
-                      {/* opportunities */}
-                      {roomAnalysis.opportunities?.length > 0 && (
-                        <div className="space-y-0.5">
-                          <span className="text-[9px] font-bold text-terracotta-deep">فرصت‌های بهبود:</span>
-                          {roomAnalysis.opportunities.map((s, i) => <div key={i} className="flex gap-1 text-[10px] leading-5 text-ink-muted"><Lightbulb size={10} className="mt-0.5 shrink-0 text-gold" /> {s}</div>)}
-                        </div>
-                      )}
-                      {/* GUIDED SUGGESTIONS — actionable cards */}
-                      {roomAnalysis.guidedSuggestions?.length > 0 && (
-                        <div className="space-y-2 pt-1">
-                          <span className="text-[9px] font-bold text-ink">پیشنهادهای هوشمند:</span>
-                          {roomAnalysis.guidedSuggestions.map((sg) => {
-                            const impactColor = sg.impact === "high" ? "text-danger" : sg.impact === "medium" ? "text-gold" : "text-ink-muted";
-                            const impactLabel = sg.impact === "high" ? "تأثیر بالا" : sg.impact === "medium" ? "تأثیر متوسط" : "تأثیر کم";
-                            return (
-                              <div key={sg.id} className="rounded-lg border border-clay/40 bg-cream p-2.5">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1">
-                                    <p className="text-[11px] font-bold text-ink">{sg.title}</p>
-                                    <p className="text-[10px] leading-5 text-ink-muted">{sg.desc}</p>
-                                  </div>
-                                  <div className="flex shrink-0 flex-col items-end gap-0.5">
-                                    <span className={cn("text-[8px] font-bold", impactColor)}>{impactLabel}</span>
-                                    <span className="text-[8px] text-gold">{toFa(sg.creditCost)} اعتبار</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2 flex gap-1.5">
-                                  <button onClick={() => applySuggestion(sg)} className="flex-1 rounded-md bg-terracotta py-1.5 text-[9px] font-bold text-white transition hover:bg-terracotta-deep">اعمال پیشنهاد</button>
-                                  <button onClick={() => customizeSuggestion(sg)} className="rounded-md border border-clay/50 bg-ivory-2 px-2 py-1.5 text-[9px] font-medium text-ink-muted hover:text-ink">سفارشی</button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
+              {roomAnalysis.opportunities && roomAnalysis.opportunities.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1 border-t border-clay/20 pt-2">
+                  <span className="text-[9px] text-ink-muted">فرصت‌ها:</span>
+                  {roomAnalysis.opportunities.slice(0, 3).map((op, i) => <span key={i} className="rounded bg-ivory-2 px-1.5 py-0.5 text-[9px] text-ink-muted">{op}</span>)}
                 </div>
               )}
+              {roomAnalysis.guidedSuggestions && roomAnalysis.guidedSuggestions.length > 0 && (
+                <div className="mt-2.5 border-t border-clay/20 pt-2">
+                  <span className="mb-1.5 block text-[10px] font-bold text-terracotta-deep">پیشنهادهای هوشمند AI:</span>
+                  <div className="grid gap-1.5 sm:grid-cols-2 md:grid-cols-3">
+                    {roomAnalysis.guidedSuggestions.slice(0, 3).map((sg) => (
+                      <div key={sg.id} className="flex flex-col justify-between rounded-lg border border-clay/30 bg-ivory-2 p-2">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-ink">{sg.title}</span>
+                            <span className="rounded bg-gold/15 px-1 py-0.2 text-[8px] font-bold text-gold">{sg.category}</span>
+                          </div>
+                          <p className="mt-0.5 line-clamp-2 text-[9px] leading-4 text-ink-muted">{sg.desc}</p>
+                        </div>
+                        <div className="mt-1.5 flex gap-1 pt-1 border-t border-clay/20">
+                          <button onClick={() => applySuggestion(sg)} className="flex-1 rounded bg-ink px-1.5 py-0.5 text-[8px] font-bold text-cream transition hover:bg-terracotta-deep">اعمال</button>
+                          <button onClick={() => customizeSuggestion(sg)} className="rounded border border-clay/40 bg-cream px-1.5 py-0.5 text-[8px] text-ink-muted hover:text-ink">شخصی‌سازی</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid gap-4 lg:grid-cols-12">
+            {/* LEFT: Controls */}
+            <div className="space-y-3 lg:col-span-5">
+              {/* Photo */}
+              <div className={panelCls}>
+                <h2 className="mb-2 flex items-center gap-1.5 border-b border-clay/30 pb-2 text-xs font-bold text-ink"><span className={stepBadge}>۱</span> عکس خانه</h2>
+                {!imageBase64 ? (
+                  <div onClick={() => inputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }} className="flex aspect-video cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 text-center transition hover:border-terracotta">
+                    <Upload size={22} className="mb-1 text-ink-muted" /><p className="text-xs font-medium text-ink">عکس اتاقت را بنداز اینجا</p><p className="text-[10px] text-ink-muted">یا کلیک کن برای انتخاب</p>
+                  </div>
+                ) : (
+                  <div className="relative overflow-hidden rounded-xl border border-clay/40"><img src={imageBase64} alt="" className="aspect-video w-full object-cover" /><button onClick={() => { setImageBase64(null); setPlacements([]); rs.reset(); setRoomAnalysis(null); setMatchedStoreProducts([]); }} className="absolute left-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-ink/80 text-cream hover:bg-danger" aria-label="حذف"><X size={12} /></button></div>
+                )}
+                <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                {analyzing && <p className="mt-1.5 flex items-center gap-1 text-[10px] text-ink-muted"><Loader2 size={11} className="animate-spin text-terracotta-deep" /> در حال تحلیل هوشمند فضا...</p>}
+              </div>
 
               {/* Style */}
               <div className={panelCls}>
-                <h2 className="mb-2 flex items-center gap-1.5 border-b border-clay/30 pb-2 text-xs font-bold text-ink"><span className={stepBadge}>۲</span> سبک</h2>
-                <div className="grid grid-cols-3 gap-1.5">
+                <h2 className="mb-2 flex items-center gap-1.5 border-b border-clay/30 pb-2 text-xs font-bold text-ink"><span className={stepBadge}>۲</span> سبک دکوراسیون</h2>
+                <div className="grid grid-cols-5 gap-1.5">
                   {STYLES.map((s) => (
                     <button key={s.id} onClick={() => selectStyle(s.id)} className={cn("overflow-hidden rounded-lg border text-center transition", style === s.id ? "border-terracotta ring-1 ring-terracotta/40" : "border-clay/40 hover:border-terracotta/50")}>
                       <div className="relative aspect-square"><img src={s.image} alt={s.label} className="h-full w-full object-cover" />{style === s.id && <span className="absolute inset-0 grid place-items-center bg-terracotta/20"><Check size={14} className="text-white" /></span>}</div>
@@ -795,10 +793,35 @@ function DesignInner() {
                 ); })}
               </div>
 
+              {/* SKU / Product Code Input */}
+              <div className="rounded-xl border border-clay/50 bg-cream p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-ink-muted">کد کالا / SKU (اختیاری)</span>
+                  {skuInput && (
+                    <button onClick={() => handleSkuChange("")} className="text-[9px] text-ink-muted hover:text-danger">
+                      حذف کد
+                    </button>
+                  )}
+                </div>
+                <input
+                  value={skuInput}
+                  onChange={(e) => handleSkuChange(e.target.value)}
+                  placeholder="مثلاً SKU-SOFA-01 یا CHR-3011..."
+                  dir="ltr"
+                  className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-2 py-1.5 font-mono text-xs text-ink outline-none focus:border-terracotta"
+                />
+                {skuWarning && (
+                  <p className="mt-1.5 flex items-center gap-1 text-[9px] font-medium text-warning">
+                    <AlertCircle size={11} className="shrink-0 text-warning" />
+                    <span>{skuWarning}</span>
+                  </p>
+                )}
+              </div>
+
               {/* Budget + Prompt */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl border border-clay/50 bg-cream p-3"><span className="mb-1 block text-[10px] font-bold text-ink-muted">بودجه</span><input type="text" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^\d]/g, ""))} placeholder="تومان" dir="ltr" className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-terracotta" /></div>
-                <div className="rounded-xl border border-clay/50 bg-cream p-3"><span className="mb-1 block text-[10px] font-bold text-ink-muted">دستور به AI</span><input value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="مثلاً نور گرم‌تر..." className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-terracotta" /></div>
+                <div className="rounded-xl border border-clay/50 bg-cream p-3"><span className="mb-1 block text-[10px] font-bold text-ink-muted">دستور به AI (اختیاری)</span><input value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="مثلاً نور گرم‌تر..." className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-terracotta" /></div>
               </div>
 
               {/* Generate */}
@@ -867,6 +890,56 @@ function DesignInner() {
                   <div className="mt-2 space-y-2">
                     <button onClick={buyTheLook} className="btn-accent flex w-full items-center justify-center gap-1.5 py-3 text-xs font-bold"><CreditCard size={14} /> خرید این چیدمان ({toFa(placedProducts.length)} کالا)</button>
                     <button onClick={handleSaveToWishlist} className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-clay/50 bg-ivory-2 py-2.5 text-[11px] font-bold text-ink transition hover:bg-clay/20"><Heart size={13} /> ذخیره در علاقه‌مندی</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Matched Real Store Products */}
+              {matchedStoreProducts.length > 0 && (
+                <div className="rounded-xl border border-clay/50 bg-cream p-4">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-clay/30 pb-2">
+                    <h3 className="flex items-center gap-1.5 text-[11px] font-bold text-ink">
+                      <Store size={13} className="text-terracotta-deep" />
+                      کالاهای هماهنگ از فروشگاه‌ها ({toFa(matchedStoreProducts.length)})
+                    </h3>
+                    <span className="text-[9px] text-ink-muted">تطابق هوشمند کاتالوگ</span>
+                  </div>
+                  <div className="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                    {matchedStoreProducts.map((item) => (
+                      <div key={item.productId} className="flex flex-col justify-between rounded-lg border border-clay/30 bg-ivory-2 p-2.5">
+                        <div className="flex items-start gap-2">
+                          <img src={item.image} alt={item.name} className="h-12 w-12 shrink-0 rounded-md object-cover" />
+                          <div className="min-w-0 flex-1">
+                            <Link href={item.productUrl} className="line-clamp-1 text-[11px] font-bold text-ink hover:text-terracotta-deep">
+                              {item.name}
+                            </Link>
+                            <p className="mt-0.5 flex items-center gap-1 text-[9px] text-ink-muted">
+                              <Store size={9} />
+                              <span>{item.storeName}</span>
+                              {item.storeVerified && <Check size={9} className="text-success" />}
+                            </p>
+                            {item.sku && <p className="font-mono text-[8px] text-ink-muted">SKU: {item.sku}</p>}
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between border-t border-clay/20 pt-1.5">
+                          <span className="text-[10px] font-black text-gold">{toFa(formatPrice(item.price))} ت</span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => { addToCart(item.productId); toast("به سبد اضافه شد"); }}
+                              className="rounded bg-terracotta/10 px-2 py-0.5 text-[9px] font-bold text-terracotta-deep transition hover:bg-terracotta hover:text-white"
+                            >
+                              افزودن
+                            </button>
+                            <Link
+                              href={item.productUrl}
+                              className="rounded border border-clay/50 bg-cream px-2 py-0.5 text-[9px] font-medium text-ink transition hover:bg-ivory"
+                            >
+                              مشاهده
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

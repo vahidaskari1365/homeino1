@@ -1,116 +1,203 @@
 // ============================================================
-// Heuristic LLM Provider (default — zero dependency, zero cost).
-// Deterministic Persian interior design intelligence.
+// HOMEINO AI ENGINE — HEURISTIC LLM (PERSISTENT INTENT PARSER)
 //
-// IMPLEMENTS THE CANONICAL DECISION TREE — single source of truth:
-//   scope.ts → resolveScope()
-//   1. Explicit user target (named element)     → single_item
-//   2. Explicit UI selection + targeted request → selected category
-//   3. Explicit area                            → area
-//   4. Explicit whole-home redesign             → whole_home
-//   5. Explicit one-room redesign               → room
-//   6. Continuation of previous target          → previous target
-//   7. Conservative fallback                    → preserve more, change less
+// Fast, deterministic intent engine for the Persian interior design
+// domain. Uses the canonical decision tree in scope.ts as its single
+// source of truth — eliminating divergence between heuristic, LLM,
+// and pipeline scopes.
 //
-// GOLDEN RULES:
-//   • User selection controls the transformation unless the request is
-//     explicitly broader (room / whole-home) — Priority rule
-//   • Generic «همه/کل/همه چیز» ALONE never widens the scope
-//   • Architecture (walls, floor, ceiling, windows, doors, geometry,
-//     camera) NEVER changes unless explicitly requested
-//   • Continuation memory («کمی روشن‌ترش کن») preserves previous targets
+// Priority order:
+//   1. Explicit user prompt (if contains element/style/scope words)
+//   2. SKU / Product Code resolution & Target deduction
+//   3. UI selection (selectedTargets, selection.category, changeScope)
+//   4. Continuation memory (previousTargets, previousScope, previousProductId)
+//   5. Conservative single_item fallback
 // ============================================================
-import type { IntentRequest, IntentAnalysis, DesignIntentType, LlmProvider } from "./types";
+
+import type {
+  AiIntent,
+  DesignIntentType,
+  EditScope,
+  IntentRequest,
+  LlmProvider,
+  RoomElement,
+} from "./types";
 import {
   ALL_ELEMENTS,
   ELEMENT_LABELS,
-  detectExplicitLocked,
   resolveProtectedElements,
-  type RoomElement,
+  categoryToRoomElement,
+  detectCategorySkuConflict,
 } from "../roomState";
-import { resolveScope, type EditScope, type ScopeSource } from "../scope";
+import { resolveScope, extractExplicitPreserved } from "../scope";
+import { getProductBySkuOrCode, getProductById } from "../../../data/products";
 
-/**
- * Style cues in Persian/English → canonical Homeino style names.
- * Used when the user embeds a style in the prompt without selecting one in UI.
- */
-const STYLE_CUES: { cues: string[]; style: string }[] = [
-  { cues: ["ژاپندی", "japandi"], style: "Japandi" },
-  { cues: ["اسکاندیناوی", "scandinavian"], style: "Scandinavian" },
-  { cues: ["مینیمال", "minimalist", "minimal"], style: "Modern Minimalist" },
-  { cues: ["صنعتی", "لافت", "industrial", "loft"], style: "Industrial Loft" },
-  { cues: ["بوهو", "بوهمین", "boho", "bohemian"], style: "Bohemian / Boho" },
-  { cues: ["میدسنچری", "mid-century", "midcentury"], style: "Mid-Century Modern" },
-  { cues: ["لوکس معاصر", "luxury contemporary"], style: "Luxury Contemporary" },
-  { cues: ["نئوکلاسیک", "neoclassical"], style: "Neoclassical" },
-  { cues: ["مدیتران", "mediterranean"], style: "Mediterranean" },
-  { cues: ["آرت دکو", "art deco"], style: "Art Deco" },
-  { cues: ["روستیک", "rustic"], style: "Rustic" },
-  { cues: ["معاصر", "contemporary"], style: "Contemporary" },
-  { cues: ["کلاسیک", "classic"], style: "Classic" },
-  { cues: ["لوکس", "luxury"], style: "Luxury Contemporary" },
-  { cues: ["مدرن", "modern"], style: "Modern" },
-];
-
-function detectStyleFromText(text: string, fallback?: string): string | undefined {
-  const lower = text.toLowerCase();
-  for (const { cues, style } of STYLE_CUES) {
-    if (cues.some((c) => lower.includes(c.toLowerCase()))) return style;
-  }
-  return fallback;
-}
-
-/** Removal detection → remove_item. */
-const REMOVE_PHRASES = ["حذف کن", "بردار", "حذف شود", "نباشه", "remove", "پاک کن"];
-
-const COLOR_WORDS = ["کرم", "سفید", "طوسی", "سبز", "آبی", "سرمه‌ای", "قرمز", "زرد", "طلایی", "بژ", "دودی", "گلبهی", "مشکی", "قهوه‌ای", "شنی", "یشمی", "زیتونی"];
-
-function extractColors(text: string): string[] {
-  return COLOR_WORDS.filter((c) => text.includes(c));
-}
-
-const NOTES: Record<ScopeSource, string> = {
-  explicit_target: "فقط عناصر خواسته‌شده تغییر می‌کنند — بقیه فضا حفظ می‌شود.",
-  ui_selection: "فقط دسته/عنصر انتخابی تغییر می‌کند — بقیه فضا کاملاً قفل و دست‌نخورده است.",
-  area: "یک ناحیه از فضا تغییر می‌کند — سایر بخش‌ها حفظ می‌شوند.",
-  whole_home: "بازطراحی کل خانه — عناصر معماری به‌طور پیش‌فرض محافظت می‌شوند.",
-  room: "بازطراحی اتاق — مبلمان و دکوراسیون تغییر می‌کنند و معماری محافظت شده است.",
-  continuation: "این درخواست ادامه‌ی تغییر قبلی است — همان المان قبلی هدف است.",
-  conservative: "مخاطب تغییر مشخص نیست؛ لطفاً عنصر موردنظر را انتخاب یا دقیق‌تر بنویسید.",
+const STYLES: Record<string, string> = {
+  modern: "Modern",
+  مدرن: "Modern",
+  minimal: "Minimalist",
+  مینیمال: "Minimalist",
+  classic: "Classic",
+  کلاسیک: "Classic",
+  neoclassic: "Neoclassic",
+  نئوکلاسیک: "Neoclassic",
+  traditional: "Traditional Persian",
+  سنتی: "Traditional Persian",
+  boho: "Boho",
+  بوهو: "Boho",
+  industrial: "Industrial",
+  صنعتی: "Industrial",
+  scandinavian: "Scandinavian",
+  اسکاندیناوی: "Scandinavian",
+  japandi: "Japandi",
+  ژاپندی: "Japandi",
+  luxury: "Luxury Contemporary",
+  لوکس: "Luxury Contemporary",
+  coastal: "Coastal",
+  ساحلی: "Coastal",
+  rustic: "Rustic",
+  روستیک: "Rustic",
 };
 
-/**
- * Heuristic Interior Design Intelligence — deterministic reasoning.
- *
- * Scope & target resolution is DELEGATED to the canonical decision tree
- * (scope.ts / resolveScope) — this provider only derives the intent type,
- * style, colors and human-readable phrases on top of it. It never
- * re-decides scope by its own rules (fix 3 — single source of truth).
- */
-export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
-  const text = req.prompt.trim();
-  const lower = text.toLowerCase();
-  const selected = req.selectedTargets ?? [];
-  const resolvedStyle = detectStyleFromText(text, req.style);
-  const colors = extractColors(text);
-  const explicitLocked = detectExplicitLocked(lower);
+const COLORS: Record<string, string> = {
+  کرم: "کرم",
+  طوسی: "طوسی",
+  سفید: "سفید",
+  مشکی: "مشکی",
+  قهوه‌ای: "قهوه‌ای",
+  خردلی: "خردلی",
+  سبز: "سبز",
+  آبی: "آبی",
+  سرمه‌ای: "سرمه‌ای",
+  زرشکی: "زرشکی",
+  نسکافه‌ای: "نسکافه‌ای",
+  بژ: "بژ",
+  طلایی: "طلایی",
+  نقره‌ای: "نقره‌ای",
+  طوسی_روشن: "طوسی روشن",
+};
 
-  // ---- 1. EMPTY PROMPT: User only made a UI selection or nothing ----
+const REMOVE_PHRASES = ["حذف", "بردار", "پاک کن", "remove", "delete"];
+
+const NOTES: Record<string, string> = {
+  explicit_full: "بازطراحی کامل فضا با حفظ عناصر معماری.",
+  explicit_target: "تغییر هدفمند فقط روی عناصر مشخص‌شده — بقیه فضا دست‌نخورده می‌ماند.",
+  ui_selection: "تغییر بر اساس انتخاب رابط کاربری — سایر اجزا محافظت می‌شوند.",
+  continuation: "ادامه طراحی روی تغییرات قبلی.",
+  conservative: "تفسیر محافظه‌کارانه — عناصر اصلی اتاق حفظ می‌شوند.",
+};
+
+/** Parse freeform Persian request + selection into structured intent. */
+export function heuristicUnderstandIntent(req: IntentRequest): AiIntent {
+  const text = (req.prompt || "").trim();
+  const lower = text.toLowerCase();
+
+  // ---- Extract requested style ----
+  let resolvedStyle: string | undefined = req.style;
+  for (const [k, v] of Object.entries(STYLES)) {
+    if (lower.includes(k)) {
+      resolvedStyle = v;
+      break;
+    }
+  }
+
+  // ---- Extract requested colors ----
+  const colors: string[] = [];
+  for (const [k, v] of Object.entries(COLORS)) {
+    if (lower.includes(k) && !colors.includes(v)) {
+      colors.push(v);
+    }
+  }
+
+  // ---- Product & SKU Resolution ----
+  const rawSku = req.sku || req.productCode;
+  const resolvedProduct = rawSku
+    ? getProductBySkuOrCode(rawSku)
+    : req.productId
+      ? getProductById(req.productId)
+      : undefined;
+
+  // Selected targets from UI / Request / Category / SKU
+  const selected: RoomElement[] = [];
+  if (req.selectedTargets && req.selectedTargets.length > 0) {
+    selected.push(...req.selectedTargets);
+  }
+
+  // If selection has category info, derive target element
+  if (req.selection?.category) {
+    const catTarget = categoryToRoomElement(
+      req.selection.category,
+      req.selection.subTypes?.join(" "),
+    );
+    if (!selected.includes(catTarget)) {
+      selected.push(catTarget);
+    }
+  }
+
+  // If SKU product resolved, derive target element
+  if (resolvedProduct) {
+    const productTarget = categoryToRoomElement(
+      resolvedProduct.categorySlug,
+      `${resolvedProduct.subCategorySlug ?? ""} ${resolvedProduct.name}`,
+    );
+    if (!selected.includes(productTarget)) {
+      selected.push(productTarget);
+    }
+  }
+
+  // Check Category vs SKU conflict if both are present
+  const conflict =
+    resolvedProduct && req.selection?.category
+      ? detectCategorySkuConflict(
+          [req.selection.category, ...(req.selection.subTypes ?? [])],
+          resolvedProduct,
+        )
+      : undefined;
+
+  // Explicit locked elements from prompt
+  const explicitLocked = extractExplicitPreserved(text);
+
+  // ---- 1. EMPTY PROMPT HANDLING ----
   if (!text) {
+    // If raw SKU was invalid
+    if (rawSku && !resolvedProduct) {
+      return {
+        intent: "inquiry",
+        target: [],
+        changes: [],
+        preservedElements: [...ALL_ELEMENTS],
+        scope: "single_item",
+        style: req.style,
+        colors: req.colors,
+        confidence: 0.2,
+        ambiguous: true,
+        note: "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.",
+      };
+    }
+
     if (selected.length > 0) {
       const scope: EditScope = selected.length === 1 ? "single_item" : "area";
       return {
         intent: "targeted_edit",
         target: selected,
-        changes: [selected.length === 1 ? `تغییر ${ELEMENT_LABELS[selected[0]] || selected[0]}` : `تغییر ${selected.length} عنصر انتخابی`],
+        changes: [
+          resolvedProduct
+            ? `قرار دادن محصول ${resolvedProduct.name} (${resolvedProduct.sku || rawSku})`
+            : selected.length === 1
+              ? `تغییر ${ELEMENT_LABELS[selected[0]] || selected[0]}`
+              : `تغییر ${selected.length} عنصر انتخابی`,
+        ],
         preservedElements: resolveProtectedElements({ targets: selected, scope, explicitLocked }),
         scope,
-        style: req.style,
+        style: resolvedStyle || req.style,
         colors: req.colors,
-        confidence: 0.85,
-        note: "دستوری نوشته نشده — فقط عناصر انتخابی شما تغییر می‌کنند.",
+        confidence: 0.9,
+        note: conflict?.hasConflict
+          ? conflict.message
+          : "انتخاب از رابط کاربری دریافت شد — طراحی طبق عنصر انتخابی انجام می‌شود.",
       };
     }
+
     return {
       intent: "inquiry",
       target: [],
@@ -166,13 +253,19 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
   } else if (intent === "color_change") {
     changeDescription = `تغییر رنگ ${labels(targets)}${colors.length ? ` به ${colors.join("، ")}` : ""}`;
   } else if (intent !== "inquiry") {
-    changeDescription = text.slice(0, 60);
+    changeDescription = resolvedProduct
+      ? `طراحی با محصول ${resolvedProduct.name}${resolvedStyle ? ` در سبک ${resolvedStyle}` : ""}`
+      : text.slice(0, 60);
   }
 
   const note =
-    isFull && explicitLocked.length > 0
-      ? "بازطراحی با حفظ عناصر درخواستی شما و حفاظت از معماری."
-      : NOTES[source];
+    rawSku && !resolvedProduct
+      ? "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید."
+      : conflict?.hasConflict
+        ? conflict.message
+        : isFull && explicitLocked.length > 0
+          ? "بازطراحی با حفظ عناصر درخواستی شما و حفاظت از معماری."
+          : NOTES[source];
 
   return {
     intent,
@@ -182,9 +275,14 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
       : [],
     preservedElements,
     scope,
-    style: resolvedStyle,
+    style: resolvedStyle || req.style,
     colors: req.colors?.length ? [...new Set([...req.colors, ...colors])] : colors,
-    confidence: wallDefault ? 0.7 : intent === "inquiry" ? Math.min(resolution.confidence, 0.4) : resolution.confidence,
+    confidence:
+      wallDefault
+        ? 0.7
+        : intent === "inquiry"
+          ? Math.min(resolution.confidence, 0.4)
+          : resolution.confidence,
     ambiguous: intent === "inquiry" || wallDefault ? true : undefined,
     note,
   };

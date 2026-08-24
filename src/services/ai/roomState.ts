@@ -9,6 +9,10 @@
 // Everything else is locked and preserved.
 // ============================================================
 
+import type { Product } from "../../types";
+import { products as defaultCatalog, SKU_ALIASES } from "../../data/products";
+import { stores as defaultStores } from "../../data/stores";
+
 // ---- Element taxonomy ----
 export type RoomElement =
   | "sofa" | "rug" | "curtain" | "lighting" | "wall" | "floor"
@@ -79,7 +83,7 @@ const KEYWORD_MAP: { keywords: string[]; element: RoomElement }[] = [
   { keywords: ["تابلو", "آینه", "art", "painting"], element: "art" },
   { keywords: ["تخت", "bed", "خواب"], element: "bed" },
   { keywords: ["طاقچه", "شلف", "قفسه", "shelf"], element: "shelf" },
-  { keywords: ["در", "door", "درب"], element: "door" },
+  { keywords: ["درب", "درها", "درب‌ها", "door", "در ورودی", "در اتاق", "درب ورودی"], element: "door" },
   { keywords: ["پنجره", "window"], element: "window" },
 ];
 
@@ -394,6 +398,305 @@ function scoreReason(p: ProductCatalogEntry, intent: AiIntent): string {
 }
 
 // ============================================================
+// CATEGORY TAXONOMY & REAL STORE MATCHING (MULTI-STORE RELEVANCE)
+// ============================================================
+
+export const ELEMENT_TO_CATEGORIES: Record<RoomElement, string[]> = {
+  sofa: ["furniture"],
+  rug: ["rugs", "carpet"],
+  curtain: ["textiles", "curtain"],
+  lighting: ["lighting"],
+  wall: ["decor"],
+  floor: ["rugs", "carpet"],
+  ceiling: ["lighting"],
+  table: ["furniture", "dining", "workspace"],
+  chair: ["furniture", "workspace"],
+  tv: ["furniture", "tv-console"],
+  plant: ["decor", "outdoor", "plants"],
+  art: ["decor", "art", "accessories"],
+  door: [],
+  window: ["textiles", "curtain"],
+  shelf: ["furniture", "bedroom", "bookcase-shoe"],
+  bed: ["bedroom", "bedding"],
+};
+
+/**
+ * Maps Category Slug + subType/title to RoomElement vocabulary.
+ * Ensures consistent target classification across UI selection, SKU resolution, and intent pipeline.
+ */
+export function categoryToRoomElement(categorySlug: string, subTypeOrName?: string): RoomElement {
+  const cat = (categorySlug || "").toLowerCase();
+  const sub = (subTypeOrName || "").toLowerCase();
+  const full = `${cat} ${sub}`;
+
+  if (cat === "lighting" || /light|lamp|chandelier|نور|چراغ|لوستر|آباژور|دیوارکوب/.test(full)) return "lighting";
+  if (cat === "carpet" || cat === "rugs" || /rug|carpet|فرش|قالی|گلیم/.test(full)) return "rug";
+  if (cat === "curtain" || /curtain|drape|پرده|تور|textile/.test(full)) return "curtain";
+  if (/chair|armchair|صندلی|پاف|پوف/.test(full)) return "chair";
+  if (cat === "dining" || /table|desk|dining|میز|جلومبلی|ناهارخوری|کنسول/.test(full)) return "table";
+  if (/sofa|couch|sectional|مبل|کاناپه/.test(full)) return "sofa";
+  if (cat === "bedding" || cat === "bedroom" || /bed|تخت|خواب/.test(full)) return "bed";
+  if (cat === "tv-console" || /tv|تلویزیون/.test(full)) return "tv";
+  if (cat === "plants" || /plant|flower|گیاه|گلدان/.test(full)) return "plant";
+  if (cat === "art" || cat === "decor" || cat === "accessories" || /art|painting|mirror|sculpture|candle|تابلو|آینه|مجسمه|شمع/.test(full)) return "art";
+  if (cat === "bookcase-shoe" || /shelf|bookcase|wardrobe|organizer|قفسه|شلف|کمد|جاکفشی|نظم‌دهنده/.test(full)) return "shelf";
+  if (/wall|دیوار/.test(full)) return "wall";
+  if (/floor|کف/.test(full)) return "floor";
+  if (/ceiling|سقف/.test(full)) return "ceiling";
+
+  if (cat === "office" || cat === "workspace") return /chair|صندلی/.test(sub) ? "chair" : "table";
+  if (cat === "furniture") return "sofa";
+  return "sofa";
+}
+
+/** Detects if an entered SKU belongs to a different category than the UI selection. */
+export function detectCategorySkuConflict(
+  selectedCategoryOrCategories?: string | string[] | RoomElement[],
+  selectedTargetsOrProduct?: RoomElement[] | Product,
+  maybeProduct?: Product,
+): { hasConflict: boolean; message?: string; productElement: RoomElement } {
+  let product: Product | undefined;
+  let selectedTargets: RoomElement[] = [];
+
+  if (maybeProduct && typeof maybeProduct === "object" && "id" in maybeProduct) {
+    product = maybeProduct;
+    if (Array.isArray(selectedTargetsOrProduct)) {
+      selectedTargets = selectedTargetsOrProduct;
+    }
+  } else if (
+    selectedTargetsOrProduct &&
+    typeof selectedTargetsOrProduct === "object" &&
+    "id" in selectedTargetsOrProduct
+  ) {
+    product = selectedTargetsOrProduct as Product;
+  }
+
+  if (!product) {
+    return { hasConflict: false, productElement: "sofa" };
+  }
+
+  const productElement = categoryToRoomElement(
+    product.categorySlug,
+    `${product.subCategorySlug ?? ""} ${product.name}`,
+  );
+
+  // If selectedTargets wasn't explicitly given, derive from selectedCategoryOrCategories
+  if (selectedTargets.length === 0 && selectedCategoryOrCategories) {
+    const rawList = Array.isArray(selectedCategoryOrCategories)
+      ? selectedCategoryOrCategories
+      : [selectedCategoryOrCategories];
+    for (const item of rawList) {
+      if (typeof item === "string") {
+        if (ALL_ELEMENTS.includes(item as RoomElement)) {
+          selectedTargets.push(item as RoomElement);
+        } else {
+          selectedTargets.push(categoryToRoomElement(item));
+        }
+      }
+    }
+  }
+
+  if (selectedTargets.length > 0) {
+    if (!selectedTargets.includes(productElement)) {
+      const productElementLabel = ELEMENT_LABELS[productElement] || productElement;
+      const targetLabels = selectedTargets.map((t) => ELEMENT_LABELS[t] || t).join("، ");
+      return {
+        hasConflict: true,
+        message: `کد محصول واردشده (${product.sku || product.name}) مربوط به دسته‌بندی «${productElementLabel}» است، در حالی که در انتخاب شما «${targetLabels}» مشخص شده است.`,
+        productElement,
+      };
+    }
+  }
+  return { hasConflict: false, productElement };
+}
+
+export interface MatchedStoreProduct {
+  productId: string;
+  slug: string;
+  name: string;
+  brand: string;
+  storeId: string;
+  storeName: string;
+  storeLogo?: string;
+  storeVerified?: boolean;
+  image: string;
+  price: number;
+  oldPrice?: number;
+  currency: string;
+  sku?: string;
+  categorySlug: string;
+  categoryName?: string;
+  styleSlugs: string[];
+  inStock: boolean;
+  stockCount?: number;
+  productUrl: string;
+  score: number;
+  matchReasons: string[];
+}
+
+export interface StoreMatchingOptions {
+  sku?: string;
+  productId?: string;
+  targets?: RoomElement[];
+  category?: string;
+  style?: string;
+  colors?: string[];
+  roomType?: string;
+  budget?: number;
+  maxResults?: number;
+  limit?: number;
+  catalog?: Product[];
+}
+
+/**
+ * Matches REAL store products from the catalog according to priority rules:
+ *   Priority 1: exact SKU
+ *   Priority 2: exact product ID / slug
+ *   Priority 3: category match (target room elements / category slug)
+ *   Priority 4: style compatibility
+ *   Priority 5: color compatibility
+ *   Priority 6: category + room compatibility
+ * Multi-store support: aggregates across all vendors and ranks by score.
+ * Never invents fake products, fake stores, or fake prices.
+ */
+export function matchStoreProducts(options: StoreMatchingOptions): MatchedStoreProduct[] {
+  const catalog = options.catalog ?? defaultCatalog;
+  const storeMap = new Map(defaultStores.map((s) => [s.id, s]));
+
+  const skuQuery = options.sku?.trim().toLowerCase();
+  const productIdQuery = options.productId?.trim().toLowerCase();
+  const targetElements = options.targets ?? [];
+  const styleQuery = options.style?.trim().toLowerCase();
+  const roomQuery = options.roomType?.trim().toLowerCase();
+  const colorsQuery = options.colors ?? [];
+
+  const scored = catalog.map((p) => {
+    let score = 0;
+    const matchReasons: string[] = [];
+
+    // Priority 1: Exact SKU match
+    if (skuQuery) {
+      const pSku = p.sku?.toLowerCase();
+      const isAlias = skuQuery in SKU_ALIASES && SKU_ALIASES[skuQuery] === p.id.toLowerCase();
+      if (pSku === skuQuery || isAlias) {
+        score += 1000;
+        matchReasons.push(`تطابق دقیق با کد محصول (${p.sku || skuQuery.toUpperCase()})`);
+      }
+    }
+
+    // Priority 2: Exact Product ID or Slug match
+    if (productIdQuery) {
+      if (p.id.toLowerCase() === productIdQuery || p.slug.toLowerCase() === productIdQuery) {
+        score += 500;
+        matchReasons.push("محصول انتخابی شما");
+      }
+    }
+
+    // Priority 3: Category match
+    const productElement = categoryToRoomElement(p.categorySlug, `${p.subCategorySlug ?? ""} ${p.name}`);
+    const isTargetMatch = targetElements.includes(productElement);
+    const isCatMatch =
+      options.category &&
+      (p.categorySlug.toLowerCase() === options.category.toLowerCase() ||
+        (ELEMENT_TO_CATEGORIES[productElement] || []).includes(options.category.toLowerCase()));
+
+    if (isTargetMatch || isCatMatch) {
+      score += 100;
+      matchReasons.push(`دسته‌بندی مرتبط (${ELEMENT_LABELS[productElement] || productElement})`);
+    }
+
+    // Priority 4: Style compatibility
+    if (styleQuery) {
+      const styleMatch = p.styleSlugs.some(
+        (s) => s.toLowerCase().includes(styleQuery) || styleQuery.includes(s.toLowerCase()),
+      );
+      if (styleMatch) {
+        score += 30;
+        matchReasons.push(`سازگار با سبک ${options.style}`);
+      }
+    }
+
+    // Priority 5: Color compatibility
+    if (colorsQuery.length > 0) {
+      const colorMatch = p.colors?.some((c) =>
+        colorsQuery.some((reqC) => c.name.includes(reqC) || reqC.includes(c.name)),
+      );
+      if (colorMatch) {
+        score += 15;
+        matchReasons.push("هماهنگ با پالت رنگ درخواستی");
+      }
+    }
+
+    // Priority 6: Room compatibility
+    if (roomQuery) {
+      const roomMatch =
+        p.tags?.some((t) => t.toLowerCase().includes(roomQuery) || roomQuery.includes(t.toLowerCase())) ||
+        (roomQuery.includes("living") || roomQuery.includes("نشیمن") || roomQuery.includes("پذیرایی")
+          ? ["furniture", "lighting", "rugs", "decor", "textiles"].includes(p.categorySlug)
+          : roomQuery.includes("bedroom") || roomQuery.includes("خواب")
+            ? ["bedroom", "lighting", "rugs", "decor", "textiles"].includes(p.categorySlug)
+            : roomQuery.includes("office") || roomQuery.includes("کار") || roomQuery.includes("workspace")
+              ? ["workspace", "lighting", "decor"].includes(p.categorySlug)
+              : true);
+      if (roomMatch) {
+        score += 5;
+        matchReasons.push(`متناسب با فضای ${options.roomType}`);
+      }
+    }
+
+    // Stock availability
+    if (p.inStock) {
+      score += 2;
+    } else {
+      score -= 50;
+    }
+
+    // Budget compliance
+    if (options.budget && options.budget > 0) {
+      if (p.price <= options.budget) {
+        score += 5;
+      } else {
+        score -= 20;
+      }
+    }
+
+    const store = storeMap.get(p.storeId);
+    const storeName = store?.name || p.brand || "فروشگاه هومینو";
+
+    const matched: MatchedStoreProduct = {
+      productId: p.id,
+      slug: p.slug,
+      name: p.name,
+      brand: p.brand,
+      storeId: p.storeId,
+      storeName,
+      storeLogo: store?.logo,
+      storeVerified: store?.verified,
+      image: p.images[0] || "",
+      price: p.price,
+      oldPrice: p.oldPrice,
+      currency: p.currency || "تومان",
+      sku: p.sku,
+      categorySlug: p.categorySlug,
+      categoryName: ELEMENT_LABELS[productElement] || p.categorySlug,
+      styleSlugs: p.styleSlugs,
+      inStock: p.inStock,
+      stockCount: p.stockCount,
+      productUrl: `/products/${p.slug}`,
+      score,
+      matchReasons: matchReasons.length > 0 ? matchReasons : ["پیشنهاد هوشمند بر اساس فضا"],
+    };
+
+    return matched;
+  });
+
+  const relevant = scored.filter((p) => p.score > 0);
+  const pool = relevant.length > 0 ? relevant : scored;
+
+  return pool.sort((a, b) => b.score - a.score).slice(0, options.limit ?? options.maxResults ?? 6);
+}
+
+// ============================================================
 // ROOM UNDERSTANDING (Phase 3) — structured knowledge about the
 // room BEFORE any generation. Filled by the vision/analysis layer
 // when available; the deterministic default keeps every object
@@ -452,8 +755,16 @@ export function detectArchitecturalTargets(text: string): RoomElement[] {
   if ((hasWord("پنجره") || hasWord("پنجره‌ها") || hasWord("window")) && (hasAction || /(اضافه|بزرگ|پنجره\s*اضافه)/.test(lower))) {
     targets.add("window");
   }
-  // Door modifications — must not match 'در' inside 'مدرن'
-  if ((hasWord("در") || hasWord("درب") || hasWord("درها") || hasWord("درب‌ها") || hasWord("door")) && (hasAction || /(جابه‌جا|جابجایی)/.test(lower))) {
+  // Door modifications — must not match preposition 'در' (e.g. 'در نشیمن')
+  const isExplicitDoor =
+    hasWord("درب") ||
+    hasWord("درها") ||
+    hasWord("درب‌ها") ||
+    hasWord("door") ||
+    /(در\s*اتاق|در\s*ورودی|درب\s*ورودی)/.test(lower) ||
+    /(\bدر\s*(را|رو)\s*(عوض|تغییر|حذف|رنگ|بردار|نو))/.test(lower) ||
+    /((عوض|تغییر|تعویض|رنگ|حذف)\s*در\b(?!\s*(نشیمن|پذیرایی|خواب|اتاق|فضا|آشپزخانه|سالن|کنار|گوشه|وسط|مرکز|دیوار|کف|سقف)))/.test(lower);
+  if (isExplicitDoor && (hasAction || /(جابه‌جا|جابجایی)/.test(lower))) {
     targets.add("door");
   }
 

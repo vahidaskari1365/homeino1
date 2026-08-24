@@ -22,7 +22,7 @@ import { createRequestId, logAiRequest } from "@/services/ai/telemetry";
 //   • No keys, providers, or model names reach the client
 // ============================================================
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         p[key] = sanitizeUserPrompt(p[key] as string);
       }
     }
-    for (const key of ["style", "room", "color", "mood"]) {
+    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU"]) {
       if (key in p && typeof p[key] === "string") {
         p[key] = (p[key] as string).replace(/<[^>]+>/g, "").slice(0, 200);
       }
@@ -211,6 +211,20 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
 
   try {
     // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----
+    if (action === "resolve-sku") {
+      const code = typeof p.code === "string" ? p.code : typeof p.sku === "string" ? p.sku : "";
+      const { getProductBySkuOrCode } = await import("@/data/products");
+      const product = getProductBySkuOrCode(code);
+      if (!product) {
+        return json({ error: "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.", code: "INVALID_SKU" }, 404, requestId);
+      }
+      return json({ product }, 200, requestId);
+    }
+    if (action === "match-products") {
+      const { matchStoreProducts } = await import("@/services/ai/roomState");
+      const matches = matchStoreProducts(p as never);
+      return json({ products: matches }, 200, requestId);
+    }
     if (action === "understand") {
       const { analysis, source, degraded } = await understandIntent(p as unknown as IntentRequest);
       finish(degraded ? "degraded" : "ok", { provider: source });

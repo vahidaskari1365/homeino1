@@ -15,12 +15,28 @@
 
 export interface PlacementProduct {
   id: string;
+  sku?: string;
   name?: string;
   category?: string;
   material?: string;
   color?: string;
   style?: string;
   dimensions?: { width?: number; height?: number; depth?: number };
+}
+
+/** Parse dimension strings like "220x80x90" or "W:220 D:90 H:80" or "۸۵ × ۸۰ × ۹۰" to numeric cm. */
+export function parseProductDimensions(
+  raw?: string | { width?: number; height?: number; depth?: number },
+): { width?: number; height?: number; depth?: number } | undefined {
+  if (!raw) return undefined;
+  if (typeof raw === "object") return raw;
+  const latin = raw
+    .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d).toString())
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString());
+  const nums = (latin.match(/\d+(?:\.\d+)?/g) ?? []).map(Number).filter((n) => n > 0 && n < 1000);
+  if (nums.length < 2) return undefined;
+  const [w, d, h] = nums;
+  return { width: w, height: nums.length >= 3 ? h : d, depth: nums.length >= 3 ? d : undefined };
 }
 
 /** Normalized target region + transform for one product. */

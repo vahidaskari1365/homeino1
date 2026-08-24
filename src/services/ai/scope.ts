@@ -52,6 +52,8 @@ export interface ScopeDecision {
 
 export const EDIT_SCOPES: readonly EditScope[] = ["single_item", "area", "room", "whole_home"];
 
+export { detectExplicitLocked as extractExplicitPreserved } from "./roomState";
+
 export const EDIT_SCOPE_LABELS: Record<EditScope, string> = {
   single_item: "فقط یک المان",
   area: "یک ناحیه از فضا",

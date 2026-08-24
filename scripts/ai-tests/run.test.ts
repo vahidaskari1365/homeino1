@@ -781,3 +781,235 @@ test("Patch T15: room/whole_home redesign opens designable elements, keeps archi
     }
   }
 });
+
+// ============================================================
+// AI PRODUCT SELECTION + SKU + REAL STORE MATCHING PATCH TESTS
+// ============================================================
+
+import {
+  categoryToRoomElement,
+  detectCategorySkuConflict,
+  matchStoreProducts,
+  type MatchedStoreProduct,
+} from "../../src/services/ai/roomState";
+import { getProductBySkuOrCode, getProductById, products as seedCatalog } from "../../src/data/products";
+import { parseProductDimensions } from "../../src/services/ai/placement";
+import { runDesignPipeline } from "../../src/services/ai/pipeline";
+import { productsRepository } from "../../src/repositories/products";
+
+// Scenario 1: Selection-only intent
+test("Scenario 1: UI Selection-only intent — Sofa selected with empty prompt -> target: sofa, scope: single_item", () => {
+  const intent = heuristicUnderstandIntent({
+    prompt: "",
+    selectedTargets: ["sofa"],
+  });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+  assert.equal(intent.intent, "targeted_edit");
+  assert.ok(intent.preservedElements.includes("wall"));
+  assert.ok(intent.preservedElements.includes("floor"));
+  assert.ok(!intent.preservedElements.includes("sofa"));
+});
+
+// Scenario 2: Selection + text prompt
+test("Scenario 2: Selection + text prompt — Sofa selected + «مدرنش کن» -> target: sofa, style: Modern", () => {
+  const intent = heuristicUnderstandIntent({
+    prompt: "مدرنش کن",
+    selectedTargets: ["sofa"],
+  });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+  assert.equal(intent.style, "Modern");
+  assert.equal(intent.intent, "targeted_edit");
+  assert.ok(intent.preservedElements.includes("rug"));
+  assert.ok(intent.preservedElements.includes("lighting"));
+});
+
+// Scenario 3: User prompt override
+test("Scenario 3: User prompt override — Sofa selected + «کل اتاق را Japandi کن» -> scope: room, style: Japandi, architecture preserved", () => {
+  const intent = heuristicUnderstandIntent({
+    prompt: "کل اتاق را Japandi کن",
+    selectedTargets: ["sofa"],
+  });
+  assert.equal(intent.scope, "room");
+  assert.equal(intent.style, "Japandi");
+  assert.equal(intent.intent, "full_redesign");
+  for (const el of STRUCTURAL_ELEMENTS) {
+    assert.ok(intent.preservedElements.includes(el), `${el} must be preserved`);
+    assert.ok(!intent.target.includes(el), `${el} must not be targeted`);
+  }
+});
+
+// Scenario 4: No selection + text prompt
+test("Scenario 4: No selection + text prompt — «اتاق را Japandi کن» -> scope: room, style: Japandi, architecture preserved", () => {
+  const intent = heuristicUnderstandIntent({
+    prompt: "اتاق را Japandi کن",
+  });
+  assert.equal(intent.scope, "room");
+  assert.equal(intent.style, "Japandi");
+  assert.equal(intent.intent, "full_redesign");
+  for (const el of STRUCTURAL_ELEMENTS) {
+    assert.ok(intent.preservedElements.includes(el), `${el} must be preserved`);
+  }
+});
+
+// Scenario 5: SKU Resolution
+test("Scenario 5: SKU Resolution — Valid SKU resolves to real product, category, and dimensions", async () => {
+  const product = getProductBySkuOrCode("SKU-SOFA-01") || getProductBySkuOrCode("SKU-SOFA-MIN") || seedCatalog[0];
+  assert.ok(product, "Product should be found");
+  assert.ok(product.sku, "Product must have SKU");
+  assert.ok(product.name, "Product must have name");
+  assert.ok(product.categorySlug, "Product must have category");
+
+  // Repository lookup
+  const repoProduct = await productsRepository.bySku(product.sku!);
+  assert.ok(repoProduct, "Repository must resolve SKU");
+  assert.equal(repoProduct?.id, product.id);
+
+  // Dimension parser
+  const dims = parseProductDimensions(product.dimensions);
+  if (product.dimensions) {
+    assert.ok(dims, "Dimensions should parse");
+    assert.ok(dims.width && dims.width > 0);
+  }
+});
+
+// Scenario 6: Invalid SKU
+test("Scenario 6: Invalid SKU — INVALID-SKU-999 returns safe Persian error, does not invent product", async () => {
+  const invalid = getProductBySkuOrCode("INVALID-SKU-999");
+  assert.equal(invalid, undefined, "Invalid SKU must not return a product");
+
+  const repoLookup = await productsRepository.bySku("INVALID-SKU-999");
+  assert.ok(!repoLookup, "Repository must return undefined/null for invalid SKU");
+
+  const intent = heuristicUnderstandIntent({
+    prompt: "",
+    sku: "INVALID-SKU-999",
+  });
+  assert.ok(intent.ambiguous, "Should flag as ambiguous / invalid");
+  assert.ok(intent.note?.includes("پیدا نشد") || intent.note?.includes("بررسی کنید"));
+});
+
+// Scenario 7: Category / SKU Conflict
+test("Scenario 7: Category / SKU Conflict — User selects Sofa + Lamp SKU -> detects conflict and warns", () => {
+  const lamp = seedCatalog.find((p) => p.categorySlug === "lighting")!;
+  assert.ok(lamp, "Lamp product must exist");
+
+  const conflict = detectCategorySkuConflict(["sofa"], ["sofa"], lamp);
+  assert.ok(conflict.hasConflict, "Must detect conflict between sofa and lamp");
+  assert.equal(conflict.productElement, "lighting");
+  assert.ok(conflict.message?.includes("روشنایی") || conflict.message?.includes("lighting") || conflict.message?.includes("همخوانی"));
+});
+
+// Scenario 8: Real Store Product Matching
+test("Scenario 8: Real Store Product Matching — exact SKU > exact product > category > style > room", () => {
+  const sampleProduct = seedCatalog[0];
+  const matches = matchStoreProducts({
+    sku: sampleProduct.sku,
+    targets: ["sofa"],
+    style: "modern",
+    roomType: "living",
+  });
+
+  assert.ok(matches.length > 0, "Matches must not be empty");
+  // Top match should be the exact SKU
+  assert.equal(matches[0].productId, sampleProduct.id);
+  assert.ok(matches[0].score >= 100, "Exact SKU match should have top score");
+  assert.ok(matches[0].storeName, "Must have real store name");
+  assert.ok(matches[0].productUrl, "Must have real product URL");
+});
+
+// Scenario 9: Multi-store ranking
+test("Scenario 9: Multi-store ranking — Products from multiple stores correctly ranked by relevance", () => {
+  const matches = matchStoreProducts({
+    targets: ["sofa", "lighting"],
+    style: "modern",
+    roomType: "living",
+    limit: 8,
+  });
+
+  assert.ok(matches.length > 1, "Should find multiple store products");
+  const storeNames = new Set(matches.map((m) => m.storeName));
+  assert.ok(storeNames.size >= 2, "Should include products from multiple distinct stores");
+
+  // Verify descending score order
+  for (let i = 0; i < matches.length - 1; i++) {
+    assert.ok(matches[i].score >= matches[i + 1].score, "Matches must be sorted by score descending");
+  }
+});
+
+// Scenario 10: Image Pipeline context
+test("Scenario 10: Image Pipeline context — Product visual features included in engine prompt", () => {
+  const sampleProduct = seedCatalog[0];
+  const placementProduct = {
+    id: sampleProduct.id,
+    name: sampleProduct.name,
+    category: sampleProduct.categorySlug,
+    material: sampleProduct.materials?.[0] || "چرم",
+    color: sampleProduct.colors?.[0]?.name || "مشکی",
+    style: sampleProduct.styleSlugs?.[0] || "modern",
+    dimensions: parseProductDimensions(sampleProduct.dimensions),
+  };
+
+  const plan = planProductPlacement(placementProduct);
+  const prompt = productPlacementPrompt(placementProduct, plan);
+
+  assert.ok(prompt.includes(placementProduct.name), "Engine prompt must include product name");
+  if (placementProduct.material) {
+    assert.ok(prompt.includes(placementProduct.material), "Engine prompt must include product material");
+  }
+});
+
+// Scenario 11: Continuation memory
+test("Scenario 11: Continuation memory — Turn 2 retains previous SKU, product ID, and targets", () => {
+  const sample = seedCatalog[0];
+  const turn1 = heuristicUnderstandIntent({
+    prompt: "این مبل را در نشیمن قرار بده",
+    sku: sample.sku,
+    productId: sample.id,
+    selectedTargets: ["sofa"],
+  });
+
+  assert.deepEqual(turn1.target, ["sofa"]);
+
+  const turn2 = heuristicUnderstandIntent({
+    prompt: "کمی بزرگترش کن",
+    previousTargets: turn1.target,
+    previousProductId: sample.id,
+    previousSKU: sample.sku,
+  });
+
+  assert.deepEqual(turn2.target, ["sofa"], "Continuation turn must retain target sofa");
+  assert.equal(turn2.scope, "single_item");
+});
+
+// Scenario 12: Room analysis integration
+test("Scenario 12: Room analysis integration — Room analysis passed into AI context, influencing product ranking", () => {
+  const matches = matchStoreProducts({
+    roomType: "bedroom",
+    style: "minimal",
+    targets: ["bed"],
+  });
+
+  assert.ok(matches.length > 0);
+  const topMatch = matches[0];
+  assert.ok(topMatch.categorySlug === "bedding" || topMatch.categorySlug === "furniture" || topMatch.styleSlugs.includes("minimal"));
+});
+
+// Scenario 13: No fake products
+test("Scenario 13: No fake products — Matched products only from real repository, all fields valid", () => {
+  const allMatches = matchStoreProducts({
+    style: "modern",
+    limit: 20,
+  });
+
+  for (const m of allMatches) {
+    const realProd = getProductById(m.productId);
+    assert.ok(realProd, `Product ${m.productId} must exist in seed/DB catalog`);
+    assert.equal(m.name, realProd.name);
+    assert.equal(m.price, realProd.price);
+    assert.ok(m.storeName.length > 0, "Must have real store name");
+    assert.ok(m.productUrl.startsWith("/products/"), "Must have real valid URL path");
+    assert.ok(m.image.length > 0, "Must have real product image");
+  }
+});
