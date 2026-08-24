@@ -36,7 +36,7 @@ import {
   matchProducts,
   type ProductCatalogEntry,
 } from "../../src/services/ai/roomState";
-import { detectScope, scopeToEditStrength, isFullScope, scopeToIntentType } from "../../src/services/ai/scope";
+import { detectScope, resolveScope, scopeToEditStrength, isFullScope, scopeToIntentType } from "../../src/services/ai/scope";
 import { heuristicUnderstandIntent } from "../../src/services/ai/llm/heuristicLlm";
 import { normalizeIntentAnalysis } from "../../src/services/ai/llm/openaiCompatLlm";
 import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "../../src/services/ai/llm/systemPrompt";
@@ -506,4 +506,278 @@ test("Test 23: matchProducts uses real catalog entries only", () => {
 
   assert.ok(matched.length > 0);
   assert.equal(matched[0].productId, "p1");
+});
+
+// ============================================================
+// ============================================================
+//  AI ACCURACY PATCH — TARGETED REGRESSION TESTS (spec section 9)
+//  1. Sofa vs Chair        2. Generic "all" keywords
+//  3. Single Source of Truth for Scope   4. Explicit Structural
+//  5. UI Selection Priority  (+ continuation & LLM normalization)
+// ============================================================
+// ============================================================
+
+// ------------------------------------------------------------
+// Patch Test 1: «مبل را عوض کن» → target = sofa, scope = single_item
+// ------------------------------------------------------------
+test("Patch T1: «مبل را عوض کن» → target=sofa, scope=single_item", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "مبل را عوض کن" });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+  assert.equal(intent.intent, "targeted_edit");
+  // Scope engine (single source of truth) agrees with the heuristic.
+  assert.equal(resolveScope({ text: "مبل را عوض کن" }).scope, "single_item");
+  assert.equal(detectScope("مبل را عوض کن").scope, "single_item");
+});
+
+// ------------------------------------------------------------
+// Patch Test 2: «صندلی را عوض کن» → target = chair, scope = single_item
+// ------------------------------------------------------------
+test("Patch T2: «صندلی را عوض کن» → target=chair, scope=single_item (chair ≠ sofa)", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "صندلی را عوض کن" });
+  assert.deepEqual(intent.target, ["chair"]);
+  assert.equal(intent.scope, "single_item");
+  assert.ok(!intent.target.includes("sofa"), "صندلی must never map to sofa");
+
+  // The reverse must hold too: sofa requests never map to chair.
+  const sofa = heuristicUnderstandIntent({ prompt: "مبل را عوض کن" });
+  assert.ok(!sofa.target.includes("chair"), "مبل must never map to chair");
+  const kanapeh = heuristicUnderstandIntent({ prompt: "کاناپه را عوض کن" });
+  assert.deepEqual(kanapeh.target, ["sofa"]);
+});
+
+// ------------------------------------------------------------
+// Patch Test 3: «chair را تغییر بده» → target = chair
+// ------------------------------------------------------------
+test("Patch T3: «chair را تغییر بده» → target=chair, scope=single_item", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "chair را تغییر بده" });
+  assert.ok(intent.target.includes("chair"));
+  assert.ok(!intent.target.includes("sofa"), "chair must never map to sofa");
+  assert.equal(intent.scope, "single_item");
+});
+
+// ------------------------------------------------------------
+// Patch Test 4: «همه رو بهتر کن» → NOT whole_home (generic "all" alone)
+// ------------------------------------------------------------
+test("Patch T4: generic «همه…» prompts never become whole_home / full_redesign", () => {
+  for (const prompt of [
+    "همه رو بهتر کن",
+    "همه اینا رو تغییر بده",
+    "همه چیز خوب نیست",
+    "همه رو عوض نکن",
+  ]) {
+    const intent = heuristicUnderstandIntent({ prompt });
+    assert.notEqual(intent.scope, "whole_home", `${prompt} must NOT be whole_home`);
+    assert.notEqual(intent.intent, "full_redesign", `${prompt} must NOT be full_redesign`);
+    // Conservative interpretation: preserve more, change less.
+    assert.equal(resolveScope({ text: prompt }).scope, "single_item", `${prompt} → conservative single_item`);
+    assert.equal(detectScope(prompt).scope, "single_item", `${prompt} → detectScope conservative`);
+  }
+});
+
+// ------------------------------------------------------------
+// Patch Test 5: «کل خانه را مدرن کن» → scope = whole_home, style = Modern
+// ------------------------------------------------------------
+test("Patch T5: «کل خانه را مدرن کن» → scope=whole_home, style=Modern, architecture protected", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "کل خانه را مدرن کن" });
+  assert.equal(intent.scope, "whole_home");
+  assert.equal(intent.style, "Modern");
+  assert.equal(intent.intent, "full_redesign");
+  for (const el of STRUCTURAL_ELEMENTS) {
+    assert.ok(intent.preservedElements.includes(el), `${el} must stay protected in whole_home`);
+  }
+});
+
+// ------------------------------------------------------------
+// Patch Test 6: «اتاق را Japandi کن» → scope = room, style = Japandi
+// ------------------------------------------------------------
+test("Patch T6: «اتاق را Japandi کن» → scope=room, style=Japandi, architecture stays protected", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "اتاق را Japandi کن" });
+  assert.equal(intent.scope, "room");
+  assert.equal(intent.style, "Japandi");
+  assert.equal(intent.intent, "full_redesign");
+  // Architectural elements remain protected — never targeted.
+  for (const el of STRUCTURAL_ELEMENTS) {
+    assert.ok(intent.preservedElements.includes(el), `${el} must be preserved`);
+    assert.ok(!intent.target.includes(el), `${el} must NOT be targeted by a room restyle`);
+  }
+});
+
+// ------------------------------------------------------------
+// Patch Test 7: «دیوار را تغییر بده» → target = wall (explicit structural OK)
+// ------------------------------------------------------------
+test("Patch T7: «دیوار را تغییر بده» → target=wall (explicit structural modification allowed)", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "دیوار را تغییر بده" });
+  assert.ok(intent.target.includes("wall"), "explicit wall request must target wall");
+  assert.equal(intent.scope, "single_item");
+  // The rest of the architecture stays protected.
+  assert.ok(intent.preservedElements.includes("floor"));
+  assert.ok(intent.preservedElements.includes("ceiling"));
+  assert.ok(intent.preservedElements.includes("window"));
+  assert.ok(intent.preservedElements.includes("door"));
+});
+
+// ------------------------------------------------------------
+// Patch Test 8: UI Selected = Sofa + «مدرنش کن» → sofa + single_item
+// ------------------------------------------------------------
+test("Patch T8: UI Selected=Sofa + «مدرنش کن» → target=sofa, scope=single_item", () => {
+  const intent = heuristicUnderstandIntent({ selectedTargets: ["sofa"], prompt: "مدرنش کن" });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+  assert.equal(intent.style, "Modern");
+  assert.ok(intent.preservedElements.includes("chair"), "chair must stay untouched");
+});
+
+// ------------------------------------------------------------
+// Patch Test 9: UI Selected = Sofa + «کل اتاق را Japandi کن» → room (user intent priority)
+// ------------------------------------------------------------
+test("Patch T9: UI Selected=Sofa + «کل اتاق را Japandi کن» → scope=room, style=Japandi (NOT single_item)", () => {
+  const intent = heuristicUnderstandIntent({ selectedTargets: ["sofa"], prompt: "کل اتاق را Japandi کن" });
+  assert.equal(intent.scope, "room");
+  assert.equal(intent.style, "Japandi");
+  assert.notEqual(intent.scope, "single_item");
+  assert.equal(intent.intent, "full_redesign");
+  for (const el of STRUCTURAL_ELEMENTS) {
+    assert.ok(intent.preservedElements.includes(el), `${el} must be preserved`);
+  }
+});
+
+// ------------------------------------------------------------
+// Patch Test 10: continuation — «مبل را عوض کن» → «کمی کوچک‌ترش کن»
+// ------------------------------------------------------------
+test("Patch T10: continuation keeps the previous sofa target (single_item)", () => {
+  const first = heuristicUnderstandIntent({ prompt: "مبل را عوض کن" });
+  assert.deepEqual(first.target, ["sofa"]);
+
+  const second = heuristicUnderstandIntent({
+    prompt: "کمی کوچک‌ترش کن",
+    previousTargets: first.target,
+    previousChanges: ["تعویض مبل"],
+  });
+  assert.deepEqual(second.target, ["sofa"], "continuation must keep the previous target");
+  assert.equal(second.scope, "single_item");
+});
+
+// ------------------------------------------------------------
+// Patch T10b: a NEW named target replaces the previous continuation target
+// ------------------------------------------------------------
+test("Patch T10b: «کمی صندلی را کوچک‌تر کن» replaces previous sofa target with chair", () => {
+  const intent = heuristicUnderstandIntent({
+    prompt: "کمی صندلی را کوچک‌تر کن",
+    previousTargets: ["sofa"],
+  });
+  assert.deepEqual(intent.target, ["chair"]);
+  assert.equal(intent.scope, "single_item");
+});
+
+// ------------------------------------------------------------
+// Patch T11: never trust LLM blindly — over-broad LLM answer is normalized
+// ------------------------------------------------------------
+test("Patch T11: LLM over-broad answer (all elements / whole_home) normalizes to the user's sofa", () => {
+  const normalized = normalizeIntentAnalysis(
+    {
+      intent: "full_redesign",
+      target: [...DESIGNABLE_ELEMENTS, ...STRUCTURAL_ELEMENTS],
+      changes: ["بازطراحی کامل"],
+      preservedElements: [],
+      scope: "whole_home",
+      confidence: 0.9,
+    },
+    { prompt: "مبل را عوض کن" },
+  );
+  assert.deepEqual(normalized.target, ["sofa"], "LLM scope must normalize down to the user's target");
+  assert.equal(normalized.scope, "single_item");
+  assert.notEqual(normalized.intent, "full_redesign");
+});
+
+test("Patch T11b: LLM may narrow targets within the tree's decision, never widen", () => {
+  // Prompt names two items; LLM says only the sofa → narrowing accepted.
+  const narrowed = normalizeIntentAnalysis(
+    {
+      intent: "targeted_edit",
+      target: ["sofa"],
+      changes: ["تعویض مبل"],
+      preservedElements: [],
+      scope: "single_item",
+      confidence: 0.9,
+    },
+    { prompt: "مبل و فرش را عوض کن" },
+  );
+  assert.deepEqual(narrowed.target, ["sofa"]);
+  assert.equal(narrowed.scope, "area"); // tree decision wins over the LLM's scope
+});
+
+// ------------------------------------------------------------
+// Patch T12: «میز اتاق خواب را عوض کن» stays single_item — no bed false-positive
+// ------------------------------------------------------------
+test("Patch T12: «میز اتاق خواب را عوض کن» → table only (خواب in room name ≠ bed)", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "میز اتاق خواب را عوض کن" });
+  assert.deepEqual(intent.target, ["table"]);
+  assert.equal(intent.scope, "single_item");
+  assert.ok(!intent.target.includes("bed"), "room name «اتاق خواب» must not target the bed");
+});
+
+// ------------------------------------------------------------
+// Patch T13: explicit whole-home phrases still resolve to whole_home
+// ------------------------------------------------------------
+test("Patch T13: valid explicit whole-home phrases → whole_home", () => {
+  for (const prompt of [
+    "کل خانه را طراحی کن",
+    "کل خونه رو مدرن کن",
+    "تمام خانه را بازطراحی کن",
+    "همه اتاق‌های خانه را دوباره طراحی کن",
+    "خانه را از اول طراحی کن",
+  ]) {
+    assert.equal(resolveScope({ text: prompt }).scope, "whole_home", prompt);
+    assert.equal(heuristicUnderstandIntent({ prompt }).scope, "whole_home", prompt);
+  }
+});
+
+// ------------------------------------------------------------
+// Patch T14: single source of truth — heuristic, scope engine, pipeline agree
+// ------------------------------------------------------------
+test("Patch T14: heuristic, scope engine and pipeline produce ONE consistent final scope", () => {
+  const prompts = [
+    "مبل را عوض کن",
+    "صندلی را عوض کن",
+    "chair را تغییر بده",
+    "کل خانه را مدرن کن",
+    "اتاق را Japandi کن",
+    "دیوار را تغییر بده",
+    "همه رو بهتر کن",
+    "میز اتاق خواب را عوض کن",
+  ];
+  for (const prompt of prompts) {
+    const heuristic = heuristicUnderstandIntent({ prompt });
+    const scopeEngine = detectScope(prompt);
+    assert.equal(heuristic.scope, scopeEngine.scope, `scope mismatch for: ${prompt}`);
+    // The pipeline instruction must carry the same final scope (fix 3).
+    const inst = buildDesignInstruction({ prompt, scope: "targeted" }, heuristic);
+    assert.equal(inst.scope, heuristic.scope, `pipeline scope mismatch for: ${prompt}`);
+    // Structural protection must hold end-to-end.
+    for (const el of STRUCTURAL_ELEMENTS) {
+      if (!inst.targets.includes(el)) {
+        assert.ok(
+          inst.protectedElements.includes(el) || inst.preserved.includes(el),
+          `${el} must be protected for: ${prompt}`,
+        );
+      }
+    }
+  }
+});
+
+// ------------------------------------------------------------
+// Patch T15: full redesign targets ALL DESIGNABLE elements, never architecture
+// ------------------------------------------------------------
+test("Patch T15: room/whole_home redesign opens designable elements, keeps architecture protected", () => {
+  for (const prompt of ["اتاق را Japandi کن", "کل خانه را Luxury Contemporary کن"]) {
+    const intent = heuristicUnderstandIntent({ prompt });
+    assert.ok(isFullScope(intent.scope ?? "single_item"), `${prompt} must be full scope`);
+    for (const el of DESIGNABLE_ELEMENTS) {
+      assert.ok(intent.target.includes(el), `${prompt}: designable ${el} must be targetable`);
+    }
+    for (const el of STRUCTURAL_ELEMENTS) {
+      assert.ok(!intent.target.includes(el), `${prompt}: structural ${el} must stay protected`);
+    }
+  }
 });

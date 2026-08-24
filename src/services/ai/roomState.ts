@@ -60,8 +60,13 @@ export interface AiIntent {
 }
 
 // ---- Keyword → Element mapping ----
+// Canonical category mapping (AI ACCURACY PATCH — fix 1):
+//   مبل / کاناپه / sofa / couch / sectional               → sofa
+//   صندلی / chair / armchair / accent chair / dining chair → chair
+// "chair" and "sofa" are DIFFERENT elements and must NEVER be merged.
 const KEYWORD_MAP: { keywords: string[]; element: RoomElement }[] = [
-  { keywords: ["مبل", "کاناپه", "sofa", "صندلی", "chair", "پوف"], element: "sofa" },
+  { keywords: ["مبل", "کاناپه", "sofa", "couch", "sectional", "پوف"], element: "sofa" },
+  { keywords: ["صندلی", "chair", "armchair", "accent chair", "dining chair", "reading chair"], element: "chair" },
   { keywords: ["پرده", "curtain", "drape", "تور"], element: "curtain" },
   { keywords: ["فرش", "قالی", "rug", "carpet", "گلیم"], element: "rug" },
   { keywords: ["چراغ", "نور", "لوستر", "lamp", "light", "آباژور", "دیوارکوب"], element: "lighting" },
@@ -78,14 +83,40 @@ const KEYWORD_MAP: { keywords: string[]; element: RoomElement }[] = [
   { keywords: ["پنجره", "window"], element: "window" },
 ];
 
-const FULL_KEYWORDS = ["کل", "همه", "کامل", "دوباره", "مجدد", "redesign", "everything", "full room", "طراحی کامل", "همه رو", "کل فضا", "همه چیز"];
+/**
+ * Explicit FULL-REDESIGN triggers.
+ * AI ACCURACY PATCH (fix 2): generic "all" words — «همه», «کل», «همه رو»,
+ * «همه چیز», «everything» — ALONE must NEVER unlock a full redesign.
+ * Only phrases that name a scope (room / space / home) or carry an explicit
+ * redesign verb are allowed here.
+ */
+const FULL_KEYWORDS = [
+  // Explicit scope-named phrases (room / space / home)
+  "کل اتاق", "کل فضا", "کل فضای", "کل سالن", "کل پذیرایی", "کل نشیمن",
+  "کل خانه", "کل خونه", "کل ملک", "کل ویلا",
+  // Explicit redesign verbs
+  "بازطراحی", "دوباره طراحی", "از اول طراحی", "طراحی کامل", "تغییر کلی", "دکور کامل", "صفر تا صد", "از نو",
+  "full room", "full redesign", "redesign",
+  "whole room", "entire room", "whole home", "whole house", "entire home", "entire house",
+];
+
+/**
+ * «اتاق خواب» / «اتاق نشیمن» are ROOM NAMES — the word «خواب» inside them
+ * must not false-positive as the bed element (fix 1 — wrong synonym guard).
+ */
+export function normalizeRoomNamePhrases(text: string): string {
+  return text
+    .replace(/اتاق\s*خواب/g, "اتاق")
+    .replace(/اتاق\s*نشیمن/g, "اتاق");
+}
 
 /**
  * MULTI-TARGET intent detection.
  * "مبل و فرش و پرده" → targets = ["sofa", "rug", "curtain"]
  */
 export function detectIntent(text: string, style?: string): AiIntent {
-  const lower = text.toLowerCase().trim();
+  // Normalize room-name phrases so «خواب» in «اتاق خواب» is not read as the bed element.
+  const lower = normalizeRoomNamePhrases(text).toLowerCase().trim();
 
   if (!lower) {
     return { type: "inquiry", targets: [], style, requestedChanges: [], lockedElements: ALL_ELEMENTS, confidence: 0.3, requiresClarification: true };
@@ -94,8 +125,12 @@ export function detectIntent(text: string, style?: string): AiIntent {
   const archTargets = detectArchitecturalTargets(lower);
   const explicitLocked = detectExplicitLocked(lower);
 
-  // Full-room redesign
-  if (FULL_KEYWORDS.some((k) => lower.includes(k)) || /اتاق\s*(را|رو)\s*(ژاپندی|مدرن|زیبا|مینیمال)/.test(lower)) {
+  // Full-redesign request — explicit scope-named phrases or redesign verbs only
+  // (generic «همه/کل/همه چیز» alone are NOT in FULL_KEYWORDS).
+  if (
+    FULL_KEYWORDS.some((k) => lower.includes(k)) ||
+    /اتاق\s*(را|رو)?\s*(ژاپندی|japandi|مدرن|مینیمال|زیبا|لوکس|کلاسیک|بوهو|اسکاندیناوی|scandinavian)/.test(lower)
+  ) {
     const targets = [...DESIGNABLE_ELEMENTS, ...archTargets].filter((e) => !explicitLocked.includes(e));
     const lockedElements = STRUCTURAL_ELEMENTS.filter((e) => !archTargets.includes(e));
     return {
