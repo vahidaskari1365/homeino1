@@ -15,6 +15,8 @@ export type AiErrorCode =
   | "INVALID_AI_OUTPUT"     // model returned unusable output (after retries)
   | "IMAGE_PROCESSING_ERROR" // image decode / encode / storage failure
   | "DUPLICATE_REQUEST"     // identical generation already in flight
+  | "PRODUCT_NOT_FOUND"     // SKU / product code is not in the real catalog
+  | "CATEGORY_SKU_CONFLICT" // UI category and SKU point at different targets
   | "INTERNAL";             // anything unexpected — never leak details
 
 /** Safe, user-facing Persian messages per code. */
@@ -27,6 +29,8 @@ export const AI_ERROR_MESSAGE: Record<AiErrorCode, string> = {
   INVALID_AI_OUTPUT: "نتیجه‌ی AI قابل قبول نبود — دوباره تلاش کن.",
   IMAGE_PROCESSING_ERROR: "پردازش تصویر ممکن نشد — تصویر دیگری امتحان کن.",
   DUPLICATE_REQUEST: "همین درخواست در حال اجراست — کمی صبر کن.",
+  PRODUCT_NOT_FOUND: "این کد محصول در کاتالوگ Homeino پیدا نشد.\nلطفاً کد محصول را بررسی کنید.",
+  CATEGORY_SKU_CONFLICT: "کد محصول مربوط به دستهٔ دیگری است. لطفاً دسته را با کد محصول هماهنگ کنید.",
   INTERNAL: "خطای سرور — کمی بعد دوباره تلاش کن.",
 };
 
@@ -71,6 +75,12 @@ export class AiError extends Error {
   static duplicate(message?: string) {
     return new AiError("DUPLICATE_REQUEST", message, { status: 409, retriable: false });
   }
+  static productNotFound(message?: string) {
+    return new AiError("PRODUCT_NOT_FOUND", message, { status: 404, retriable: false });
+  }
+  static categorySkuConflict(message?: string) {
+    return new AiError("CATEGORY_SKU_CONFLICT", message, { status: 409, retriable: false });
+  }
 }
 
 function statusFor(code: AiErrorCode): number {
@@ -78,7 +88,9 @@ function statusFor(code: AiErrorCode): number {
     case "RATE_LIMIT": return 429;
     case "INVALID_REQUEST": return 400;
     case "INSUFFICIENT_CREDITS": return 422;
-    case "DUPLICATE_REQUEST": return 409;
+    case "DUPLICATE_REQUEST":
+    case "CATEGORY_SKU_CONFLICT": return 409;
+    case "PRODUCT_NOT_FOUND": return 404;
     case "TIMEOUT": return 504;
     case "INVALID_AI_OUTPUT":
     case "PROVIDER_ERROR":

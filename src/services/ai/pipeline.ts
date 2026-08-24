@@ -24,9 +24,21 @@ import {
   validateResult, resolveProtectedElements, detectArchitecturalTargets,
   type RoomElement, type DesignConstraints, type RoomUnderstanding,
 } from "./roomState";
-import { resolveScope, isFullScope, scopeToEditStrength, type EditScope } from "./scope";
-import { buildAIContext, compactContextForLlm, contextSummary, type ContextProduct } from "./context";
-import { planProductPlacement, productPlacementPrompt, type PlacementProduct, type ProductPlacementPlan } from "./placement";
+import { resolveScope, isFullScope, scopeToEditStrength, continuationTargets, type EditScope } from "./scope";
+import { buildAIContext, buildFinalAiContext, compactContextForLlm, contextSummary, type ContextProduct, type SelectedProductContext } from "./context";
+import { planProductPlacement, productIdentityPrompt, productPlacementPrompt, type PlacementProduct, type ProductPlacementPlan } from "./placement";
+import {
+  categoryToTarget,
+  matchAfterGeneration,
+  resolveProductCode,
+  toMatchableProduct,
+  type CatalogOffer,
+  type CatalogStore,
+  type MatchableProduct,
+  type ProductResolution,
+  type StoreProductMatch,
+} from "./productMatching";
+import { AiError } from "./errors";
 import { createRequestId, withAiTelemetry } from "./telemetry";
 import { reserveCreditsForAi, finalizeCreditsForAi, refundCreditsForAi } from "./serverCredits";
 import type { GeneratedDesign } from "./types";
@@ -59,6 +71,12 @@ export interface PipelineInput {
   // ---- Phase 7/8 — product-aware overlay ----
   productId?: string;
   products?: PlacementProduct[];
+  /** User-entered product code / SKU (resolved against the real catalog). */
+  sku?: string;
+  productCode?: string;
+  selectedProduct?: SelectedProductContext;
+  previousProductId?: string;
+  previousSku?: string;
   // ---- Phase 2 — budget slice of the context ----
   budget?: { min?: number; max?: number; currency?: string };
   // ---- Phase 3 — room understanding (vision layer output) ----
@@ -108,6 +126,13 @@ export interface PipelineResult {
   /** Debugging: compact context + request id (no secrets). */
   requestId?: string;
   contextSummary?: string;
+  /** Real selected / SKU-resolved product that reached the image pipeline. */
+  selectedProduct?: SelectedProductContext;
+  /** Real store catalog hits shown under the generated image. */
+  matchedProducts?: StoreProductMatch[];
+  productResolution?: ProductResolution;
+  /** Spec §20 — only fields that actually exist. */
+  finalContext?: Record<string, unknown>;
 }
 
 /* ---------------- Step 1: Intent ---------------- */
@@ -144,6 +169,11 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     budget: input.budget,
     previousTargets: input.previousTargets,
     previousChanges: input.previousChanges,
+    selectedProduct: input.selectedProduct,
+    productCode: input.productCode,
+    sku: input.sku,
+    previousSku: input.previousSku,
+    previousProductId: input.previousProductId,
   });
 
   const req: IntentRequest = {
@@ -156,6 +186,10 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     previousTargets: input.previousTargets,
     previousChanges: input.previousChanges,
     previousScope: input.previousScope,
+    selectedProduct: input.selectedProduct,
+    sku: input.sku ?? input.productCode,
+    previousSku: input.previousSku,
+    previousProductId: input.previousProductId,
     // Phase 12 — only the context slice the model needs (≤ ~700 chars).
     roomContext: compactContextForLlm(ctx),
     budget: input.budget,
@@ -255,7 +289,7 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
     input.room && `Room type: ${input.room}`,
     protectedElements.length > 0 &&
       `PROTECTED ARCHITECTURE & UNTOUCHED ELEMENTS — do NOT change, move, remove or restyle: ${protectedElements.slice(0, 8).map((e) => ELEMENT_LABELS[e] || e).join("، ")}. Keep exact walls, floor structure, ceiling, windows, doors, camera angle and room geometry unchanged.`,
-    placement && product && productPlacementPrompt(product, placement),
+    product && (placement ? productPlacementPrompt(product, placement) : productIdentityPrompt(product)),
     constraintsToPrompt(constraints),
     "Photorealistic interior photograph, consistent perspective and lighting, high detail.",
   ]
@@ -359,45 +393,207 @@ function creditsCostFor(instruction: DesignInstruction): number {
   return isFullScope(instruction.scope) ? 5 : 3;
 }
 
+/* ---------------- Catalog (real products only) ---------------- */
+
+export async function loadMatchingCatalog(): Promise<{
+  catalog: MatchableProduct[];
+  stores: CatalogStore[];
+  offers: CatalogOffer[];
+}> {
+  try {
+    const { productsRepository } = await import("../../repositories/products");
+    const { storesRepository } = await import("../../repositories/stores");
+    const { PRODUCT_SKUS } = await import("../../data/products");
+    const { offers } = await import("../../data/offers");
+    const [list, storeList] = await Promise.all([
+      productsRepository.list(),
+      storesRepository.list(),
+    ]);
+    return {
+      catalog: list.map((p) => toMatchableProduct(p, p.sku ?? PRODUCT_SKUS[p.id])),
+      stores: storeList.map((s) => ({ id: s.id, name: s.name, slug: s.slug })),
+      offers: offers.map((o) => ({
+        productId: o.productId,
+        storeId: o.storeId,
+        price: o.price,
+        inStock: o.inStock,
+        sellerSku: o.sellerSku,
+      })),
+    };
+  } catch {
+    const { products, PRODUCT_SKUS } = await import("../../data/products");
+    const { stores } = await import("../../data/stores");
+    const { offers } = await import("../../data/offers");
+    return {
+      catalog: products.map((p) => toMatchableProduct(p, PRODUCT_SKUS[p.id])),
+      stores: stores.map((s) => ({ id: s.id, name: s.name, slug: s.slug })),
+      offers: offers.map((o) => ({
+        productId: o.productId,
+        storeId: o.storeId,
+        price: o.price,
+        inStock: o.inStock,
+        sellerSku: o.sellerSku,
+      })),
+    };
+  }
+}
+
+function extraCodesFrom(offers: CatalogOffer[]): { sku: string; productId: string }[] {
+  return offers
+    .filter((o): o is CatalogOffer & { sellerSku: string } => Boolean(o.sellerSku))
+    .map((o) => ({ sku: o.sellerSku, productId: o.productId }));
+}
+
+function mergeResolvedProduct(input: PipelineInput, product: NonNullable<ProductResolution["product"]>): PipelineInput {
+  const target = categoryToTarget(product);
+  const targets = [...new Set([...(input.targets ?? []), ...(target ? [target] : [])])];
+  const already = input.products?.some((p) => p.id === product.id);
+  const asPlacement: PlacementProduct = {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    material: product.material,
+    color: product.color,
+    style: product.style,
+    sku: product.sku,
+    storeId: product.storeId,
+    image: product.image,
+  };
+  return {
+    ...input,
+    targets: targets.length ? targets : input.targets,
+    productId: product.id,
+    sku: product.sku ?? input.sku,
+    productCode: input.productCode ?? product.sku,
+    selectedProduct: {
+      id: product.id,
+      sku: product.sku,
+      name: product.name,
+      category: product.category,
+      storeId: product.storeId,
+      image: product.image,
+    },
+    products: already ? input.products : [asPlacement, ...(input.products ?? [])],
+  };
+}
+
+/** Resolve SKU / selected product against the real catalog. Throws on invalid SKU. */
+export async function resolvePipelineProduct(
+  input: PipelineInput,
+  catalogPack?: Awaited<ReturnType<typeof loadMatchingCatalog>>,
+): Promise<{ input: PipelineInput; resolution: ProductResolution }> {
+  const pack = catalogPack ?? await loadMatchingCatalog();
+  const isContinuation = Boolean(continuationTargets(input.prompt, input.previousTargets));
+  const code = input.sku || input.productCode || (isContinuation ? input.previousSku : undefined);
+
+  if (code) {
+    const resolution = resolveProductCode(code, pack.catalog, {
+      selectedTargets: input.targets,
+      extraCodes: extraCodesFrom(pack.offers),
+    });
+    if (resolution.status === "not_found") throw AiError.productNotFound(resolution.message);
+    if (resolution.status === "conflict") throw AiError.categorySkuConflict(resolution.message);
+    if (resolution.status === "ok" && resolution.product) {
+      return { input: mergeResolvedProduct(input, resolution.product), resolution };
+    }
+    return { input, resolution };
+  }
+
+  const productId = input.selectedProduct?.id || input.productId || (isContinuation ? input.previousProductId : undefined);
+  if (productId) {
+    const found = pack.catalog.find((p) => p.id === productId);
+    if (found) {
+      const product = {
+        id: found.id,
+        sku: found.sku,
+        name: found.name,
+        category: found.categorySlug ?? found.category,
+        storeId: found.storeId,
+        image: found.images?.[0],
+        material: found.materials?.[0],
+        color: typeof found.colors?.[0] === "string" ? found.colors[0] : found.colors?.[0]?.name,
+        style: found.styleSlugs?.[0],
+      };
+      return {
+        input: mergeResolvedProduct(input, product),
+        resolution: { status: "ok", product, productTarget: categoryToTarget(found) },
+      };
+    }
+  }
+
+  return { input, resolution: { status: "empty" } };
+}
+
+export function matchPipelineProducts(
+  input: PipelineInput,
+  instruction: DesignInstruction,
+  pack: Awaited<ReturnType<typeof loadMatchingCatalog>>,
+  generatedImage?: string,
+): StoreProductMatch[] {
+  return matchAfterGeneration({
+    catalog: pack.catalog,
+    stores: pack.stores,
+    offers: pack.offers,
+    sku: input.sku ?? input.selectedProduct?.sku,
+    productId: input.productId ?? input.selectedProduct?.id,
+    targets: instruction.targets,
+    style: input.style ?? instruction.style,
+    colors: input.colors ?? instruction.colors,
+    room: input.roomUnderstanding?.roomType ?? input.room,
+    roomAnalysis: input.roomUnderstanding
+      ? {
+          roomType: input.roomUnderstanding.roomType,
+          furnitureTypes: input.roomUnderstanding.furnitureTypes,
+          emptySpaces: input.roomUnderstanding.emptySpaces,
+        }
+      : undefined,
+    generatedImage,
+    maxResults: 8,
+  });
+}
+
 /* ---------------- Steps 4+5: Validate → Result ---------------- */
 
 export async function runDesignPipeline(input: PipelineInput): Promise<PipelineResult> {
   const requestId = createRequestId();
+  const pack = await loadMatchingCatalog();
+  const resolved = await resolvePipelineProduct(input, pack);
+  const working = resolved.input;
 
   return withAiTelemetry(
     {
       requestId,
-      userId: input.userId ?? null,
+      userId: working.userId ?? null,
       action: "pipeline",
       provider: "pipeline",
-      promptHint: input.prompt,
-      credits: input.scope === "full" ? 5 : 3,
+      promptHint: working.prompt,
+      credits: working.scope === "full" ? 5 : 3,
     },
     async () => {
-      // Phase 17 — server-side credit gate (before any AI work).
-      const credit = input.userId
+      // Phase 17 — server-side credit gate (after SKU resolution, before AI work).
+      const credit = working.userId
         ? await reserveCreditsForAi({
-            userId: input.userId,
-            mode: input.scope === "full" ? "generate" : "edit",
-            prompt: input.prompt,
-            productId: input.productId,
-            cost: input.scope === "full" ? 5 : 3,
+            userId: working.userId,
+            mode: working.scope === "full" ? "generate" : "edit",
+            prompt: working.prompt,
+            productId: working.productId,
+            cost: working.scope === "full" ? 5 : 3,
           })
         : { charged: false, cost: 0 };
 
       try {
         // 1) UNDERSTAND — structured, tiny, cached when pre-confirmed
-        const intent = await runIntentUnderstanding(input);
+        const intent = await runIntentUnderstanding(working);
 
         // 2) PLAN — compile the engine-facing instruction
-        const instruction = buildDesignInstruction(input, intent);
+        const instruction = buildDesignInstruction(working, intent);
 
         // 3) GENERATE — Orali (real overlay) or base provider
-        const { design, engine } = await generateVisual(input, instruction);
+        const { design, engine } = await generateVisual(working, instruction);
 
         // 4) VALIDATE — never fake success
         const validation = validateResult({
-          beforeImage: input.referenceImage,
+          beforeImage: working.referenceImage,
           afterImage: design.afterImage,
           intent: {
             type: instruction.scope === "whole_home" || instruction.scope === "room" ? "full_redesign" : intent.intent === "color_change" ? "color_change" : "partial_edit",
@@ -411,31 +607,64 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           providerMarkedPreview: design.preview,
         });
 
-        // 5) FINALIZE — server credits only on real completion.
+        // 5) MATCH real store products — does NOT re-run generation or rewrite the image.
+        const generatedImage = design.afterImage;
+        const matchedProducts = matchPipelineProducts(working, instruction, pack, generatedImage);
+
+        // 6) FINALIZE — server credits only on real completion.
         if (credit.charged && credit.generationId) {
           await finalizeCreditsForAi(credit.generationId, { durationMs: undefined, outputAssetUrl: design.afterImage });
         }
 
         const ctx = buildAIContext({
-          prompt: input.prompt,
-          style: input.style,
-          styleLabel: input.style,
-          room: input.room,
-          colors: input.colors,
+          prompt: working.prompt,
+          style: working.style,
+          styleLabel: working.style,
+          room: working.room,
+          colors: working.colors,
           targets: instruction.targets,
           scope: instruction.scope,
           protectedElements: instruction.protectedElements,
-          roomUnderstanding: input.roomUnderstanding,
-          products: input.products as ContextProduct[] | undefined,
-          budget: input.budget,
-          previousTargets: input.previousTargets,
-          previousChanges: input.previousChanges,
+          roomUnderstanding: working.roomUnderstanding,
+          products: working.products as ContextProduct[] | undefined,
+          budget: working.budget,
+          previousTargets: working.previousTargets,
+          previousChanges: working.previousChanges,
+          selectedProduct: working.selectedProduct,
+          productCode: working.productCode,
+          sku: working.sku,
+          previousSku: working.previousSku,
+          previousProductId: working.previousProductId,
+        });
+
+        const finalContext = buildFinalAiContext({
+          room: ctx.room,
+          roomAnalysis: ctx.analysisContext,
+          selection: working.targets?.length ? { targets: working.targets } : undefined,
+          target: instruction.targets,
+          scope: instruction.scope,
+          style: ctx.style,
+          colors: working.colors,
+          description: working.prompt.trim() || undefined,
+          selectedProduct: working.selectedProduct,
+          productCode: working.productCode,
+          sku: working.sku,
+          previousTargets: working.previousTargets,
+          previousSku: working.previousSku,
+          previousProductId: working.previousProductId,
+          protectedElements: instruction.protectedElements,
+          designableElements: DESIGNABLE_ELEMENTS.filter((e) => instruction.targets.includes(e)),
         });
 
         return {
           intent,
           instruction,
-          result: { ...design, creditsUsed: design.creditsUsed || creditsCostFor(instruction) },
+          result: {
+            ...design,
+            afterImage: generatedImage,
+            creditsUsed: design.creditsUsed || creditsCostFor(instruction),
+            products: matchedProducts.map((m) => ({ label: m.name ?? m.productId, productId: m.productId })),
+          },
           validation: { status: validation.status, reasons: validation.reasons },
           imageEngine: engine,
           creditsCost: design.creditsUsed || creditsCostFor(instruction),
@@ -444,9 +673,13 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           placement: instruction.placement,
           requestId,
           contextSummary: contextSummary(ctx),
+          selectedProduct: working.selectedProduct,
+          matchedProducts,
+          productResolution: resolved.resolution,
+          finalContext,
         };
       } catch (err) {
-        // 6) REFUND — server credits on failure (idempotent).
+        // 7) REFUND — server credits on failure (idempotent).
         if (credit.charged && credit.generationId) {
           await refundCreditsForAi(credit.generationId, err instanceof Error ? err.message : String(err));
         }

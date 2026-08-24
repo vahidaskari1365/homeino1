@@ -29,10 +29,17 @@ export type { AiPhase, PipelineStepKey } from "./states";
 // ---- AI Engine core (Phases 2–15) — pure, client-safe ----
 export { detectScope, scopeToEditStrength, scopeToIntentType, isFullScope, scopeSummary, EDIT_SCOPE_LABELS } from "./scope";
 export type { EditScope, ScopeDecision } from "./scope";
-export { buildAIContext, compactContextForLlm, contextSummary, CONTEXT_STRUCTURAL_HINTS } from "./context";
-export type { AIContext, ContextProduct, BuildContextInput } from "./context";
-export { planProductPlacement, productPlacementPrompt } from "./placement";
+export { buildAIContext, buildFinalAiContext, compactContextForLlm, contextSummary, CONTEXT_STRUCTURAL_HINTS } from "./context";
+export type { AIContext, ContextProduct, BuildContextInput, SelectedProductContext } from "./context";
+export { planProductPlacement, productPlacementPrompt, productIdentityPrompt } from "./placement";
 export type { PlacementProduct, ProductPlacementPlan } from "./placement";
+export {
+  resolveProductCode, matchStoreProducts, matchAfterGeneration, mapUiSelectionToTargets,
+  mapLabelToTarget, categoryToTarget, toMatchableProduct, INVALID_SKU_MESSAGE, CATEGORY_SKU_CONFLICT_MESSAGE,
+} from "./productMatching";
+export type {
+  MatchableProduct, StoreProductMatch, ProductResolution, ResolvedProduct, MatchStoreProductsInput,
+} from "./productMatching";
 export { extractJsonPayload, validateIntentPayload, withBoundedRetry } from "./validation";
 export type { RetryResult } from "./validation";
 export { AiError, classifyAiError, toPublicAiError, AI_ERROR_MESSAGE } from "./errors";
@@ -78,6 +85,11 @@ export const aiService = {
   understand: (input: IntentRequest) => callAiServer<IntentAnalysis>("understand", input),
   /** Full design pipeline: understand → instruct → generate → validate. */
   pipeline: (input: PipelineInput) => callAiServer<PipelineResult>("pipeline", input),
+  /** Resolve a product code / SKU against the real catalog (no generation). */
+  resolveProduct: (input: { sku?: string; productCode?: string; targets?: string[] }) =>
+    callAiServer("resolveProduct", input),
+  /** Match real store products after a generation (does not re-run the image). */
+  matchProducts: (input: Record<string, unknown>) => callAiServer("matchProducts", input),
 };
 
 // type re-export for convenience (unused import suppression)

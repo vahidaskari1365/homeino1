@@ -323,6 +323,24 @@ Target output quality: photorealistic interior design —
 realistic proportions, scale, perspective, shadows, reflections, materials, lighting, depth, furniture placement.
 
 ════════════════════════════════════════
+UI SELECTION IS VALID INTENT (TEXT IS OPTIONAL)
+════════════════════════════════════════
+A UI category selection IS a valid design intent. Do NOT wait for a text prompt.
+  Selected: Sofa + empty prompt → target=["sofa"], scope=single_item
+  Selected: Lighting + empty prompt → target=["lighting"], scope=single_item
+  Selected: Rug + empty prompt → target=["rug"], scope=single_item
+Never return inquiry just because the prompt is empty when selectedTargets is present.
+Text is optional extra detail (color, style) on top of the selection.
+
+════════════════════════════════════════
+PRODUCT CODE / SKU
+════════════════════════════════════════
+If sku / selectedProduct is present, that REAL catalog product is the target.
+Never invent a product, SKU, price, store, or URL.
+If previousSku / previousProductId is present and the prompt is a continuation
+(«کمی کوچکترش کن»), keep the same product.
+
+════════════════════════════════════════
 PRODUCT INTELLIGENCE
 ════════════════════════════════════════
 If the context includes a real product (products slice / selected product):
@@ -330,6 +348,7 @@ If the context includes a real product (products slice / selected product):
   - NEVER invent product name, price, seller, dimensions, or attributes
   - Product placement is handled by the Placement Engine — do NOT invent random coordinates
   - If Product = Sofa, target should include "sofa"
+  - Preserve the selected product's shape, proportions, material, color and design language
 
 ════════════════════════════════════════
 EXISTING ROOM

@@ -50,6 +50,10 @@ function buildUserMessage(req: IntentRequest): string {
   if (req.previousChanges?.length) core.previousChanges = req.previousChanges.slice(0, 2);
   if (req.roomContext) core.roomContext = req.roomContext;
   if (req.budget) core.budget = req.budget;
+  if (req.selectedProduct) core.selectedProduct = req.selectedProduct;
+  if (req.sku) core.sku = req.sku;
+  if (req.previousSku) core.previousSku = req.previousSku;
+  if (req.previousProductId) core.previousProductId = req.previousProductId;
   return JSON.stringify(core);
 }
 

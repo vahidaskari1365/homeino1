@@ -20,6 +20,9 @@ export interface PlacementProduct {
   material?: string;
   color?: string;
   style?: string;
+  sku?: string;
+  storeId?: string;
+  image?: string;
   dimensions?: { width?: number; height?: number; depth?: number };
 }
 
@@ -162,6 +165,7 @@ export function planProductPlacement(
 export function productPlacementPrompt(product: PlacementProduct, plan: ProductPlacementPlan): string {
   const facts = [
     product.name && `product: ${product.name}`,
+    product.sku && `sku: ${product.sku}`,
     product.category && `category: ${product.category}`,
     product.material && `material: ${product.material}`,
     product.color && `color: ${product.color}`,
@@ -170,7 +174,26 @@ export function productPlacementPrompt(product: PlacementProduct, plan: ProductP
   const factsLine = facts.length ? ` (${facts.join(", ")})` : "";
   const r = plan.targetRegion;
   return [
+    productIdentityPrompt(product),
     `Place the selected product${factsLine} at normalized region x=${r.x.toFixed(2)}, y=${r.y.toFixed(2)}, width=${r.width.toFixed(2)}, height=${r.height.toFixed(2)}, rotation=${plan.rotation}deg.`,
     "Match perspective, scale, lighting and shadow of the photo; the product must look naturally integrated.",
+  ].join(" ");
+}
+
+/** Lock the selected catalog product's identity so the engine never invents a lookalike. */
+export function productIdentityPrompt(product: PlacementProduct): string {
+  const facts = [
+    product.name && `name: ${product.name}`,
+    product.sku && `sku: ${product.sku}`,
+    product.category && `category: ${product.category}`,
+    product.material && `material: ${product.material}`,
+    product.color && `color: ${product.color}`,
+    product.style && `style: ${product.style}`,
+  ].filter(Boolean);
+  return [
+    "IDENTITY LOCK — keep this exact product identity in the generated image.",
+    facts.length ? `Selected product (${facts.join(", ")}).` : "Keep the selected product unchanged.",
+    "Preserve the product's shape, proportions, material, color, and design language.",
+    "Do not invent a different product, brand, or lookalike.",
   ].join(" ");
 }

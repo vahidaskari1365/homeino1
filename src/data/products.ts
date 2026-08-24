@@ -438,6 +438,64 @@ export const products: Product[] = [
 
 export const getProduct = (slug: string) => products.find((p) => p.slug === slug);
 export const getProductById = (id: string) => products.find((p) => p.id === id);
+
+/** Deterministic product codes for the mock catalog (real rows only — never invented at match time). */
+export const PRODUCT_SKUS: Record<string, string> = {
+  p1: "SOF-1024",
+  p2: "SOF-1880",
+  p3: "TBL-3101",
+  p4: "DIN-4402",
+  p5: "CHR-5103",
+  p6: "DEC-6104",
+  p7: "DEC-7105",
+  p8: "DEC-8106",
+  p9: "LAMP-552",
+  p10: "LAMP-1010",
+  p11: "LAMP-1111",
+  p12: "RUG-1200",
+  p13: "RUG-1300",
+  p14: "CUR-1400",
+  p15: "TEX-1500",
+  p16: "TEX-1600",
+  p17: "KIT-1700",
+  p18: "KIT-1800",
+  p19: "BED-1900",
+  p20: "TBL-2000",
+  p21: "BED-2100",
+  p22: "WRD-2200",
+  p23: "DSK-2300",
+  p24: "CHR-2400",
+  p25: "DEC-2500",
+  p26: "DEC-2600",
+  p27: "OUT-2700",
+  p28: "PLT-2800",
+  p29: "HOME-SF-8821",
+  p30: "SHF-3000",
+  p31: "LAMP-3100",
+  p32: "TEX-3200",
+  p33: "SOF-3300",
+  p34: "LAMP-3400",
+  p35: "TBL-3500",
+  p36: "LAMP-3600",
+  p37: "LAMP-3700",
+  p38: "POF-3800",
+  p39: "CNS-3900",
+};
+
+export function skuOf(product: Product | string): string | undefined {
+  const id = typeof product === "string" ? product : product.id;
+  const explicit = typeof product === "string" ? undefined : product.sku;
+  return explicit ?? PRODUCT_SKUS[id];
+}
+
+export function getProductBySku(sku: string): Product | undefined {
+  const n = sku.trim().toUpperCase();
+  if (!n) return undefined;
+  const id = Object.entries(PRODUCT_SKUS).find(([, code]) => code.toUpperCase() === n)?.[0];
+  const found = id ? getProductById(id) : products.find((p) => (p.sku ?? "").toUpperCase() === n);
+  if (!found) return undefined;
+  return { ...found, sku: found.sku ?? (id ? PRODUCT_SKUS[id] : n) };
+}
 export const trendingProducts = products.filter((p) => p.trending);
 export const aiRecommendedProducts = products.filter((p) => p.aiRecommended);
 export const newProducts = products.filter((p) => p.isNew);

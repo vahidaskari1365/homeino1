@@ -14,9 +14,19 @@ import { costForMode, aiService } from "@/services/ai";
 import type { PipelineInput, PipelineResult } from "@/services/ai/pipeline";
 import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/placement";
 import type { RoomElement } from "@/services/ai/roomState";
+import {
+  CATEGORY_SKU_CONFLICT_MESSAGE,
+  INVALID_SKU_MESSAGE,
+  categoryToTarget,
+  mapUiSelectionToTargets,
+  resolveProductCode,
+  toMatchableProduct,
+  type StoreProductMatch,
+} from "@/services/ai/productMatching";
 import { costOf } from "@/services/ai/credits";
 import type { RoomAnalysis, GuidedSuggestion } from "@/services/ai/types";
-import { products, getProductById } from "@/data/products";
+import { products, getProductById, PRODUCT_SKUS } from "@/data/products";
+import { offers } from "@/data/offers";
 import { secondHandProducts } from "@/data/secondHand";
 import { IMG } from "@/data/media";
 import { useCredits, useUi } from "@/stores/useApp";
@@ -220,6 +230,10 @@ function DesignInner() {
   const [lastScope, setLastScope] = useState<ScopedChange | null>(null);
   const [roomAnalysis, setRoomAnalysis] = useState<RoomAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [productCode, setProductCode] = useState("");
+  const [sessionProduct, setSessionProduct] = useState<{ id: string; sku?: string; target?: RoomElement } | null>(null);
+  const [matchedStoreProducts, setMatchedStoreProducts] = useState<StoreProductMatch[]>([]);
+  const [generatedPreview, setGeneratedPreview] = useState<string | null>(null);
 
   const analyzeRoom = async (image: string) => {
     setAnalyzing(true); setRoomAnalysis(null);
@@ -290,18 +304,50 @@ function DesignInner() {
   }
 
   const generate = async () => {
-    if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
+    const uiTargets = mapUiSelectionToTargets({
+      slugs: designElements.map((e) => e.catSlug),
+      labels: designElements.map((e) => e.label),
+    });
+    const selectedExact = Object.values(selected);
+    const code = productCode.trim();
+    const catalog = products.map((p) => toMatchableProduct(p, PRODUCT_SKUS[p.id]));
+    const extraCodes = offers.map((o) => ({ sku: o.sellerSku, productId: o.productId }));
 
-    // Build pipeline input from the REAL designer state — no fake data.
-    const chosen: Product[] = placedProducts.length
-      ? placedProducts
-      : DEFAULT_ROOM_IDS.map(getProductById).filter(Boolean) as Product[];
+    let resolvedProduct: Product | undefined;
+    if (code) {
+      const resolution = resolveProductCode(code, catalog, { selectedTargets: uiTargets, extraCodes });
+      if (resolution.status === "not_found") {
+        setError(INVALID_SKU_MESSAGE);
+        return toast(INVALID_SKU_MESSAGE, "error");
+      }
+      if (resolution.status === "conflict") {
+        setError(CATEGORY_SKU_CONFLICT_MESSAGE);
+        return toast(CATEGORY_SKU_CONFLICT_MESSAGE, "error");
+      }
+      if (resolution.product) {
+        const found = getProductById(resolution.product.id);
+        if (found) resolvedProduct = { ...found, sku: resolution.product.sku ?? PRODUCT_SKUS[found.id] };
+      }
+    }
 
-    const isFullSet = designElements.length === 0;
+    const hasIntent = Boolean(
+      imageBase64 || uiTargets.length || resolvedProduct || presetProduct || selectedExact.length || prompt.trim(),
+    );
+    if (!hasIntent) {
+      return toast("یک دسته، محصول یا کد کالا انتخاب کنید", "error");
+    }
+
+    const chosen: Product[] = [
+      ...(resolvedProduct ? [resolvedProduct] : []),
+      ...placedProducts.filter((p) => p.id !== resolvedProduct?.id),
+      ...(presetProduct && !placedProducts.some((p) => p.id === presetProduct.id) && presetProduct.id !== resolvedProduct?.id ? [presetProduct] : []),
+    ];
+
+    const hasItemIntent = uiTargets.length > 0 || !!resolvedProduct || !!presetProduct || selectedExact.length > 0;
     const uiIntent = detectIntent(prompt, style);
     const uiScope = computeChangeScope(uiIntent);
-    const isFullRoom = isFullSet || uiIntent.type === "full_redesign";
-    const opCost = costOf(isFullRoom ? "generate" : (presetProduct ? "placement" : "edit"));
+    const isFullRoom = uiIntent.type === "full_redesign" || (!hasItemIntent && !prompt.trim() && !!imageBase64);
+    const opCost = costOf(isFullRoom ? "generate" : (presetProduct || resolvedProduct ? "placement" : "edit"));
 
     const lastTargets: RoomElement[] = (rs.placements ?? [])
       .slice(-1)
@@ -321,7 +367,9 @@ function DesignInner() {
         return [];
       });
 
-    const previousTargets: RoomElement[] = lastTargets.length ? lastTargets : uiScope.targets;
+    const previousTargets: RoomElement[] = sessionProduct?.target
+      ? [sessionProduct.target]
+      : (lastTargets.length ? lastTargets : uiScope.targets);
     const previousChanges: string[] = rs.appliedChanges.slice(-3);
 
     // Convert real selected products to PlacementProduct for the pipeline.
@@ -337,24 +385,38 @@ function DesignInner() {
 
     const budgetNum = Number(budget.replace(/[^\d]/g, "")) || undefined;
 
-    // Detect target room elements from chosen categories + prompt intent.
     const derivedTargets: RoomElement[] = deriveTargetsFromProducts(chosen);
-    const targets: RoomElement[] = [...new Set([...uiScope.targets, ...derivedTargets])];
+    const resolvedTarget = resolvedProduct ? categoryToTarget(resolvedProduct) : undefined;
+    const targets: RoomElement[] = [...new Set([
+      ...uiTargets,
+      ...uiScope.targets,
+      ...derivedTargets,
+      ...(resolvedTarget ? [resolvedTarget] : []),
+    ])];
 
     const pipelineInput: PipelineInput = {
-      prompt: prompt || (isFullRoom ? "بازطراحی کامل فضا" : chosen.map((p) => p.name).join("، ")),
+      prompt: prompt.trim(),
       style,
       room: style === "office" ? "فضای اداری" : (rs.roomType || "نشیمن"),
       colors: roomAnalysis?.palette ?? rs.detectedColors ?? undefined,
       scope: isFullRoom ? "full" : "targeted",
       targets: targets.length ? targets : undefined,
       preservedExtra: undefined,
-      referenceImage: imageBase64,
+      referenceImage: imageBase64 ?? undefined,
       mask: undefined,
       previousTargets: previousTargets.length ? previousTargets : undefined,
       previousChanges: previousChanges.length ? previousChanges : undefined,
-      productId: presetProduct?.id ?? (chosen.length === 1 ? chosen[0].id : undefined),
-      products: pipelineProducts.length ? pipelineProducts : undefined,
+      productId: resolvedProduct?.id ?? presetProduct?.id ?? (chosen.length === 1 ? chosen[0].id : undefined),
+      products: pipelineProducts.length ? pipelineProducts.map((p) => ({ ...p, sku: p.sku ?? PRODUCT_SKUS[p.id] })) : undefined,
+      sku: resolvedProduct?.sku ?? (code || undefined),
+      productCode: code || undefined,
+      selectedProduct: resolvedProduct
+        ? { id: resolvedProduct.id, sku: resolvedProduct.sku ?? PRODUCT_SKUS[resolvedProduct.id], name: resolvedProduct.name, category: resolvedProduct.categorySlug, storeId: resolvedProduct.storeId, image: resolvedProduct.images[0] }
+        : presetProduct
+          ? { id: presetProduct.id, sku: PRODUCT_SKUS[presetProduct.id], name: presetProduct.name, category: presetProduct.categorySlug, storeId: presetProduct.storeId, image: presetProduct.images[0] }
+          : undefined,
+      previousProductId: sessionProduct?.id,
+      previousSku: sessionProduct?.sku,
       budget: budgetNum ? { min: budgetNum, currency: "تومان" } : undefined,
       roomUnderstanding: roomAnalysis
         ? {
@@ -362,6 +424,8 @@ function DesignInner() {
             layout: "unknown",
             lighting: "unknown",
             objects: [],
+            furnitureTypes: roomAnalysis.furnitureTypes,
+            emptySpaces: roomAnalysis.emptySpaces,
             confidence: 0.6,
           }
         : undefined,
@@ -431,12 +495,12 @@ function DesignInner() {
       // Use the real edited image (Orali/provider) when the pipeline produced one,
       // otherwise keep the original and let the UI show the preview badge.
       const editedImage = pipelineRes.result.afterImage;
-      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
-      const outputImage = isPreview ? imageBase64 : editedImage;
+      const isPreview = !!pipelineRes.result.preview || (!!imageBase64 && editedImage === imageBase64);
+      const outputImage = isPreview ? (imageBase64 ?? editedImage) : editedImage;
 
       rs.commitChange({
         label: isFullRoom ? "چیدمان کامل" : (inst.targets.map((t) => t).join("، ") || uiScope.targets.join("، ")),
-        image: outputImage,
+        image: outputImage ?? undefined,
         placements: renderedPlacements.map((pl, idx) => ({
           productId: pl.product.id,
           category: pl.product.categorySlug,
@@ -451,6 +515,18 @@ function DesignInner() {
         change: pipelineRes.intent.changes?.[0] ?? (prompt || uiScope.summary),
         scope: pipelineRes.scope,
       });
+
+      setMatchedStoreProducts(pipelineRes.matchedProducts ?? []);
+      setGeneratedPreview(outputImage ?? editedImage ?? null);
+      const keptId = resolvedProduct?.id ?? pipelineRes.selectedProduct?.id;
+      if (keptId) {
+        const kept = resolvedProduct ?? getProductById(keptId);
+        setSessionProduct({
+          id: keptId,
+          sku: kept?.sku ?? pipelineRes.selectedProduct?.sku ?? resolvedProduct?.sku,
+          target: (kept ? categoryToTarget(kept) : undefined) ?? resolvedTarget,
+        });
+      }
 
       setStage("RENDERING");
       trackEvent("ai_finished", {
@@ -824,10 +900,29 @@ function DesignInner() {
                 </div>
                 {placements.length > 0 && imageBase64 ? (
                   <ProductOverlay mode={rs.currentImage && rs.currentImage !== imageBase64 ? "real_edit" : "interactive"} roomImage={rs.currentImage ?? imageBase64} placements={placements} onChange={updatePlacement} onRemove={removePlacement} onCart={overlayCart} onWishlist={overlayWishlist} onView={overlayView} />
+                ) : generatedPreview ? (
+                  <div className="overflow-hidden rounded-xl border border-clay/40"><img src={generatedPreview} alt="" className="aspect-video w-full object-cover" /></div>
                 ) : (
                   <div className="flex aspect-video items-center justify-center rounded-xl border border-dashed border-clay/50 bg-ivory-2"><div className="p-6 text-center"><Wand2 size={28} className="mx-auto mb-2 text-clay" /><p className="text-xs font-medium text-ink-muted">نتیجه اینجا نمایش داده می‌شه</p></div></div>
                 )}
               </div>
+
+              {matchedStoreProducts.length > 0 && !loading && (
+                <div className="rounded-xl border border-clay/50 bg-cream p-4">
+                  <h3 className="mb-2 flex items-center gap-1.5 border-b border-clay/30 pb-2 text-[11px] font-bold text-ink"><ShoppingBag size={13} className="text-terracotta-deep" /> محصولات پیشنهادی فروشگاه‌ها ({toFa(matchedStoreProducts.length)})</h3>
+                  <div className="grid max-h-48 grid-cols-1 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2">{matchedStoreProducts.map((p) => (
+                    <div key={`${p.productId}-${p.storeId ?? ""}-${p.sku ?? ""}`} className="flex items-center gap-2 rounded-lg border border-clay/30 bg-ivory-2 p-2">
+                      {p.image && <img src={p.image} alt="" className="h-10 w-10 rounded-md object-cover" />}
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-1 text-[10px] font-bold text-ink">{p.name}</p>
+                        {p.storeName && <p className="flex items-center gap-0.5 text-[9px] text-ink-muted"><Store size={9} /> {p.storeName}</p>}
+                        {p.sku && <p className="text-[9px] text-ink-muted" dir="ltr">{p.sku}</p>}
+                      </div>
+                      {typeof p.price === "number" && <span className="text-[10px] font-black text-gold">{toFa(formatPrice(p.price))}</span>}
+                    </div>
+                  ))}</div>
+                </div>
+              )}
 
               {lastScope && !loading && (
                 <div className="rounded-xl border border-gold/25 bg-gold/5 p-3">
