@@ -21,10 +21,10 @@ import { understandIntent } from "./llm";
 import type { IntentAnalysis, IntentRequest } from "./llm";
 import {
   ALL_ELEMENTS, STRUCTURAL_ELEMENTS, DESIGNABLE_ELEMENTS, ELEMENT_LABELS, buildDesignConstraints, constraintsToPrompt,
-  validateResult, resolveProtectedElements,
+  validateResult, resolveProtectedElements, detectArchitecturalTargets,
   type RoomElement, type DesignConstraints, type RoomUnderstanding,
 } from "./roomState";
-import { detectScope, isFullScope, scopeToEditStrength, type EditScope } from "./scope";
+import { resolveScope, isFullScope, scopeToEditStrength, type EditScope } from "./scope";
 import { buildAIContext, compactContextForLlm, contextSummary, type ContextProduct } from "./context";
 import { planProductPlacement, productPlacementPrompt, type PlacementProduct, type ProductPlacementPlan } from "./placement";
 import { createRequestId, withAiTelemetry } from "./telemetry";
@@ -54,6 +54,8 @@ export interface PipelineInput {
   // ---- Phase 15 — design memory (continuation) ----
   previousTargets?: RoomElement[];
   previousChanges?: string[];
+  /** Scope of the previous request (continuation fidelity). */
+  previousScope?: EditScope;
   // ---- Phase 7/8 — product-aware overlay ----
   productId?: string;
   products?: PlacementProduct[];
@@ -115,7 +117,14 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     return input.intent; // user already confirmed the reading
   }
   const effectiveTargets = [...new Set([...(input.targets ?? []), ...(input.intent?.target ?? [])])];
-  const detectedScopeObj = detectScope(input.prompt, effectiveTargets, input.scope, input.targets);
+  // Canonical scope for the pre-LLM context (single source of truth — scope.ts).
+  const resolution = resolveScope({
+    text: input.prompt,
+    selectedTargets: input.targets,
+    uiScope: input.scope,
+    previousTargets: input.previousTargets,
+    previousScope: input.previousScope,
+  });
 
   // Build the structured context BEFORE the model call (Phase 2).
   const ctx = buildAIContext({
@@ -124,10 +133,10 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     room: input.room,
     colors: input.colors,
     targets: effectiveTargets,
-    scope: detectedScopeObj.scope,
+    scope: resolution.scope,
     protectedElements: resolveProtectedElements({
       targets: effectiveTargets,
-      scope: detectedScopeObj.scope,
+      scope: resolution.scope,
       explicitLocked: input.preservedExtra,
     }),
     roomUnderstanding: input.roomUnderstanding,
@@ -146,6 +155,7 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     selectedTargets: input.targets?.length ? input.targets : undefined,
     previousTargets: input.previousTargets,
     previousChanges: input.previousChanges,
+    previousScope: input.previousScope,
     // Phase 12 — only the context slice the model needs (≤ ~700 chars).
     roomContext: compactContextForLlm(ctx),
     budget: input.budget,
@@ -157,18 +167,58 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
 /* ---------------- Step 2: Instruction ---------------- */
 
 export function buildDesignInstruction(input: PipelineInput, intent: IntentAnalysis): DesignInstruction {
-  // Phase 4 — scope: explicit > LLM > heuristic (never widened implicitly).
-  const heuristicScope = detectScope(input.prompt, [...new Set([...(input.targets ?? []), ...intent.target])], input.scope, input.targets).scope;
-  const scope: EditScope = input.editScope ?? intent.scope ?? heuristicScope;
-  const isFull = isFullScope(scope) || intent.intent === "full_redesign" || input.scope === "full";
+  // Phase 4 / AI ACCURACY PATCH (fix 3) — the canonical decision tree (scope.ts)
+  // is the SINGLE source of truth for scope & targets. An explicit editScope
+  // (set by the UI) still wins over the tree.
+  const resolution = resolveScope({
+    text: input.prompt,
+    selectedTargets: input.targets,
+    uiScope: input.scope,
+    previousTargets: input.previousTargets,
+    previousScope: input.previousScope,
+  });
+  const scope: EditScope = input.editScope ?? resolution.scope;
+  // Fix 8 — never trust the LLM blindly: the LLM's answer can never WIDEN the
+  // tree's scope. The UI "full" redesign mode also forces a full generation —
+  // unless the prompt explicitly names a narrower target (an explicit user
+  // target is priority 1 in the decision tree).
+  const isFull = isFullScope(scope) || (input.scope === "full" && resolution.source !== "explicit_target");
 
-  const targets = isFull
-    ? (intent.target.length > 0 ? intent.target : [...DESIGNABLE_ELEMENTS])
-    : (input.targets?.length && !isFull ? input.targets : [...new Set([...(input.targets ?? []), ...intent.target])]);
+  // Fix 4 — structural elements (walls, floor, ceiling, windows, doors,
+  // geometry, camera) are ALWAYS protected by default, even in a full
+  // redesign. They join the targets ONLY when the user explicitly requested
+  // them — neither the LLM nor the UI can add them silently.
+  const explicitStructural = detectArchitecturalTargets(String(input.prompt ?? "").toLowerCase());
+  const confirmedStructural = input.intent ? intent.target.filter((t) => STRUCTURAL_ELEMENTS.includes(t)) : [];
+  const allowedStructural = [...new Set([
+    ...explicitStructural,
+    ...resolution.targets.filter((t) => STRUCTURAL_ELEMENTS.includes(t)),
+    ...confirmedStructural.filter((t) => explicitStructural.includes(t)),
+  ])];
 
-  // Phase 5 / Rule 6 — protected elements:
-  // Structural elements (walls, floor, ceiling, windows, doors) are ALWAYS protected by default
-  // even in full redesign, unless explicitly requested in targets.
+  let targets: RoomElement[];
+  if (isFull) {
+    // FULL REDESIGN: ALL DESIGNABLE elements are permitted (never ALL
+    // elements) — architecture stays protected. A user-confirmed intent may
+    // carry its own designable target list; otherwise every designable
+    // element is open for redesign.
+    const confirmed = input.intent
+      ? intent.target.filter((t) => !STRUCTURAL_ELEMENTS.includes(t) || allowedStructural.includes(t))
+      : [];
+    targets = [...new Set([
+      ...(confirmed.length ? confirmed : [...DESIGNABLE_ELEMENTS]),
+      ...allowedStructural,
+    ])];
+  } else {
+    // NARROW SCOPE: the tree's targets are authoritative (fix 5/8) — the LLM
+    // may only narrow within them, never widen. A user-CONFIRMED intent
+    // (intent card) may contribute its targets since the user approved them.
+    targets = [...new Set([...resolution.targets, ...(input.intent ? intent.target : [])])]
+      .filter((t) => !STRUCTURAL_ELEMENTS.includes(t) || allowedStructural.includes(t));
+  }
+
+  // Fix 5 — protected elements: structural (unless explicitly targeted) +
+  // every untouched object.
   const protectedElements = resolveProtectedElements({
     targets,
     scope,

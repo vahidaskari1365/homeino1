@@ -42,6 +42,8 @@ export interface IntentRequest {
   /** Targets of the previous request, e.g. ["sofa"] so that
    *  «کمی روشن‌ترش کن» still points at the same sofa. */
   previousTargets?: RoomElement[];
+  /** Scope of the previous request (continuation fidelity). */
+  previousScope?: EditScope;
   /** Short phrases of what was changed last time. */
   previousChanges?: string[];
   /** Compact structured room context (see services/ai/context.ts). */

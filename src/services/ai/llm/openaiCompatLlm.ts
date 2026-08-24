@@ -16,10 +16,15 @@
 // back to the model — infinite retry is forbidden.
 // ============================================================
 import type { IntentRequest, IntentAnalysis, LlmProvider } from "./types";
-import { ALL_ELEMENTS, STRUCTURAL_ELEMENTS, DESIGNABLE_ELEMENTS, type RoomElement } from "../roomState";
+import {
+  ALL_ELEMENTS,
+  STRUCTURAL_ELEMENTS,
+  detectArchitecturalTargets,
+  type RoomElement,
+} from "../roomState";
 import { heuristicUnderstandIntent } from "./heuristicLlm";
 import { extractJsonPayload, validateIntentPayload, withBoundedRetry } from "../validation";
-import type { EditScope } from "../scope";
+import { resolveScope } from "../scope";
 import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "./systemPrompt";
 
 const BASE = () => (process.env.LLM_API_BASE_URL || "").replace(/\/+$/, "");
@@ -116,46 +121,85 @@ async function callCompat(req: IntentRequest): Promise<IntentAnalysis> {
   return result.value as IntentAnalysis;
 }
 
-/** Clamp / validate the LLM answer against the contract — never trust it blindly. */
+/**
+ * Clamp / validate the LLM answer against the contract — NEVER trust it
+ * blindly (fix 8).
+ *
+ * Pipeline: LLM → normalize → scope resolver → target resolver →
+ * structural protection → validation. The canonical decision tree
+ * (scope.ts / resolveScope) is the SINGLE authority for scope & targets:
+ *   • the LLM's scope is ignored — the tree's scope wins
+ *   • the LLM may only NARROW targets within what the tree allows
+ *   • structural elements are targeted only on explicit user request
+ *   • an over-broad LLM answer (e.g. target=all_elements when the user
+ *     only asked for the sofa) is normalized down to the user's target
+ */
 export function normalizeIntentAnalysis(raw: unknown, req: IntentRequest): IntentAnalysis {
   const obj = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
   const validElements = (v: unknown): RoomElement[] =>
     Array.isArray(v) ? v.filter((x): x is RoomElement => typeof x === "string" && (ALL_ELEMENTS as string[]).includes(x)) : [];
 
   const rawTarget = validElements(obj.target);
-  const preserved = validElements(obj.preservedElements);
-  const intent = ["targeted_edit", "full_redesign", "color_change", "add_item", "remove_item", "inquiry"].includes(String(obj.intent))
-    ? (String(obj.intent) as IntentAnalysis["intent"])
-    : "inquiry";
+  const rawIntent = String(obj.intent);
+  const intentValid = ["targeted_edit", "full_redesign", "color_change", "add_item", "remove_item", "inquiry"].includes(rawIntent);
   const confidence = Math.min(1, Math.max(0, Number(obj.confidence) || 0));
   const colors = Array.isArray(obj.colors) ? obj.colors.filter((c): c is string => typeof c === "string").slice(0, 5) : undefined;
   const style = typeof obj.style === "string" ? obj.style : undefined;
-  const scope = ["single_item", "area", "room", "whole_home"].includes(String(obj.scope))
-    ? (String(obj.scope) as EditScope)
-    : undefined;
 
-  if (intent === "inquiry" || (rawTarget.length === 0 && intent !== "full_redesign")) {
-    // Invalid/empty reading → fall back to the deterministic engine.
+  // CANONICAL RESOLUTION — single source of truth (scope.ts). The LLM answer
+  // is checked against the tree, never the other way around.
+  const resolution = resolveScope({
+    text: req.prompt,
+    selectedTargets: req.selectedTargets,
+    uiScope: req.changeScope,
+    previousTargets: req.previousTargets,
+    previousScope: req.previousScope,
+  });
+
+  // Nothing explicit in prompt / UI / memory → the LLM must not invent a
+  // scope: fall back to the conservative deterministic reading (fix 2).
+  if (resolution.source === "conservative" || (!intentValid && rawTarget.length === 0)) {
     const fb = heuristicUnderstandIntent(req);
     return fb.confidence >= confidence ? fb : { ...fb, confidence };
   }
 
-  const isFull = intent === "full_redesign";
-  const target = isFull
-    ? (rawTarget.length > 0 ? rawTarget : [...DESIGNABLE_ELEMENTS])
-    : (req.selectedTargets?.length && !/اتاق|خانه|خونه|فضا|بازطراحی/.test(req.prompt.toLowerCase()) ? req.selectedTargets : rawTarget);
+  const scope = resolution.scope;
+  const isFull = scope === "room" || scope === "whole_home";
 
-  // Architecture (walls, floor, ceiling, window, door) MUST remain preserved by default in full redesign
-  const preservedElements = isFull
-    ? [...new Set([...STRUCTURAL_ELEMENTS.filter((e) => !target.includes(e)), ...preserved.filter((e) => !target.includes(e))])]
-    : (preserved.length ? preserved.filter((e) => !target.includes(e)) : ALL_ELEMENTS.filter((e) => !target.includes(e)));
+  // TARGET RESOLUTION — the tree's targets are authoritative; the LLM may
+  // only narrow within them (e.g. «مبل و فرش» + LLM says ["sofa"]).
+  const narrowed = rawTarget.filter((t) => resolution.targets.includes(t));
+  const target = resolution.targets.length > 0
+    ? (narrowed.length > 0 && narrowed.length < resolution.targets.length ? narrowed : [...resolution.targets])
+    : rawTarget;
+
+  // STRUCTURAL PROTECTION (fix 4) — walls/floor/ceiling/window/door are only
+  // targeted when the user EXPLICITLY asked. The LLM can never add them.
+  const explicitStructural = detectArchitecturalTargets(String(req.prompt ?? "").toLowerCase());
+  const finalTarget = target.filter(
+    (t) => !STRUCTURAL_ELEMENTS.includes(t) || explicitStructural.includes(t),
+  );
+
+  let intent: IntentAnalysis["intent"];
+  if (isFull) intent = "full_redesign";
+  else if (finalTarget.length === 0) intent = "inquiry";
+  else if (rawIntent === "targeted_edit" || rawIntent === "color_change" || rawIntent === "remove_item" || rawIntent === "add_item") intent = rawIntent;
+  else intent = "targeted_edit";
+
+  // Architecture (walls, floor, ceiling, window, door) stays preserved by
+  // default in full redesign — preservedElements can only ADD protection.
+  const preservedRaw = validElements(obj.preservedElements);
+  const preservedElements = [...new Set([
+    ...ALL_ELEMENTS.filter((e) => !finalTarget.includes(e)),
+    ...preservedRaw.filter((e) => !finalTarget.includes(e)),
+  ])];
 
   return {
     intent,
-    target,
-    changes: Array.isArray(obj.changes) ? obj.changes.filter((c): c is string => typeof c === "string").slice(0, 3) : [req.prompt.slice(0, 60)],
+    target: finalTarget,
+    changes: Array.isArray(obj.changes) ? obj.changes.filter((c): c is string => typeof c === "string").slice(0, 3) : [String(req.prompt ?? "").slice(0, 60)],
     preservedElements,
-    scope: scope || (isFull ? "room" : target.length === 1 ? "single_item" : "area"),
+    scope,
     style: style || req.style,
     colors: colors?.length ? colors : req.colors,
     confidence,

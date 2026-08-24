@@ -130,8 +130,38 @@ SELECTED CATEGORY & TARGET RULES
      «دیوار را خراب کن» / «پنجره اضافه کن» / «کف را عوض کن» / «سقف را تغییر بده» / «در را جابه‌جا کن» / «رنگ دیوار را عوض کن»
 
 ════════════════════════════════════════
+TARGET CATEGORY MAPPING (canonical — never merge)
+════════════════════════════════════════
+Sofa category:
+  مبل, کاناپه, sofa, couch, sectional  →  "sofa"
+Chair category:
+  صندلی, chair, armchair, accent chair, dining chair, reading chair  →  "chair"
+
+"chair" and "sofa" are DIFFERENT elements and must NEVER be merged:
+  User: «صندلی را عوض کن»  → target = ["chair"], scope = "single_item"   (NEVER "sofa")
+  User: «مبل را عوض کن»    → target = ["sofa"],  scope = "single_item"   (NEVER "chair")
+  User: «chair را تغییر بده» → target = ["chair"]
+
+════════════════════════════════════════
+GENERIC "ALL" KEYWORDS — STRICT
+════════════════════════════════════════
+Bare generic words («همه», «کل», «همه چیز», «everything») ALONE must NEVER produce:
+  scope = "whole_home"   or   intent = "full_redesign"
+
+Whole-home scope is ONLY allowed with an explicit home reference:
+  «کل خانه…», «کل خونه…», «تمام خانه…», «همه اتاق‌های خانه…»,
+  «خانه را از اول طراحی کن», "whole home", "whole house"
+
+A generic request without a clear scope target must stay conservative
+(preserve more, change less — the smallest scope, or inquiry):
+  «همه رو بهتر کن» / «همه اینا رو تغییر بده» / «همه چیز خوب نیست» / «همه رو عوض نکن»
+  → NOT whole_home, NOT full_redesign
+
+════════════════════════════════════════
 SCOPE (exactly four values — never invent others)
 ════════════════════════════════════════
+SCOPE IS DECIDED BY HOMEINO'S SERVER-SIDE DECISION TREE. Your scope field must
+follow these rules exactly and can never be wider than the user's explicit request.
 
 1) single_item
    User changes one specific element (or targeted edit of selected category).
