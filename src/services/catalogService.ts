@@ -7,6 +7,7 @@ import {
   products,
   productImages,
   productStyles,
+  productVariants,
   vendors,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -67,6 +68,7 @@ export function serializeProduct(row: {
         }
       : undefined,
     categorySlugs: (row.categories ?? []).map((c) => c.slug),
+    sku: p.sku ?? null,
     createdAt: p.createdAt,
   };
 }
@@ -243,6 +245,67 @@ export async function descendantIds(categoryId: string): Promise<string[]> {
     .from(categories)
     .where(sql`${categories.path} LIKE ${`%/${categoryId}/%`}`);
   return rows.map((r) => r.id);
+}
+
+export async function getProductBySku(sku: string) {
+  const db = getDb();
+  const needle = sku.trim();
+  if (!needle) throw ApiError.notFound("محصول یافت نشد");
+  const upper = needle.toUpperCase();
+
+  const [row] = await db
+    .select({ product: products, vendor: vendors })
+    .from(products)
+    .innerJoin(vendors, eq(vendors.id, products.vendorId))
+    .where(and(
+      isNull(products.deletedAt),
+      or(
+        sql`upper(${products.sku}) = ${upper}`,
+        eq(products.slug, needle),
+      ),
+    ))
+    .limit(1);
+
+  let found = row;
+  if (!found) {
+    const [variant] = await db
+      .select()
+      .from(productVariants)
+      .where(sql`upper(${productVariants.sku}) = ${upper}`)
+      .limit(1);
+    if (variant) {
+      const [byVariant] = await db
+        .select({ product: products, vendor: vendors })
+        .from(products)
+        .innerJoin(vendors, eq(vendors.id, products.vendorId))
+        .where(and(eq(products.id, variant.productId), isNull(products.deletedAt)))
+        .limit(1);
+      found = byVariant;
+    }
+  }
+  if (!found) throw ApiError.notFound("محصول یافت نشد");
+
+  const [images, cats] = await Promise.all([
+    db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.productId, found.product.id))
+      .orderBy(asc(productImages.position)),
+    db
+      .select({ slug: categories.slug })
+      .from(productCategories)
+      .innerJoin(categories, eq(categories.id, productCategories.categoryId))
+      .where(eq(productCategories.productId, found.product.id)),
+  ]);
+
+  return {
+    ...serializeProduct({ product: found.product, vendor: found.vendor, images, categories: cats }),
+    description: found.product.description,
+    dimensions: found.product.dimensions,
+    material: found.product.material,
+    color: found.product.color,
+    sku: found.product.sku,
+  };
 }
 
 export async function getVendorBySlug(slug: string) {

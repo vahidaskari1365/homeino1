@@ -22,7 +22,7 @@ import { createRequestId, logAiRequest } from "@/services/ai/telemetry";
 //   • No keys, providers, or model names reach the client
 // ============================================================
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolveProduct", "matchProducts"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -155,6 +155,11 @@ export async function POST(req: NextRequest) {
         p[key] = (p[key] as string).replace(/<[^>]+>/g, "").slice(0, 200);
       }
     }
+    for (const key of ["sku", "productCode", "productId", "previousSku", "previousProductId"]) {
+      if (key in p && typeof p[key] === "string") {
+        p[key] = (p[key] as string).replace(/<[^>]+>/g, "").trim().slice(0, 80);
+      }
+    }
     // ---- Pipeline payloads: clamp enum arrays to the element vocabulary ----
     const VALID_ELEMENTS = new Set(ALL_ELEMENTS as string[]);
     for (const key of ["targets", "preservedExtra", "selectedTargets", "previousTargets"]) {
@@ -220,6 +225,37 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
       const result = await runDesignPipeline(p as unknown as PipelineInput);
       finish("ok", { provider: "pipeline" });
       return json({ ...result, _pipeline: true }, 200, requestId);
+    }
+    if (action === "resolveProduct" || action === "matchProducts") {
+      const { loadMatchingCatalog } = await import("@/services/ai/pipeline");
+      const { resolveProductCode, matchAfterGeneration } = await import("@/services/ai/productMatching");
+      const pack = await loadMatchingCatalog();
+      if (action === "resolveProduct") {
+        const code = String(p.sku ?? p.productCode ?? "");
+        const resolution = resolveProductCode(code, pack.catalog, {
+          selectedTargets: Array.isArray(p.targets) ? p.targets as never : undefined,
+          extraCodes: pack.offers
+            .filter((o) => o.sellerSku)
+            .map((o) => ({ sku: o.sellerSku as string, productId: o.productId })),
+        });
+        const status = resolution.status === "not_found" ? 404 : resolution.status === "conflict" ? 409 : 200;
+        finish(status === 200 ? "ok" : "error", { provider: "catalog", errorCode: resolution.status === "not_found" ? "PRODUCT_NOT_FOUND" : resolution.status === "conflict" ? "CATEGORY_SKU_CONFLICT" : undefined });
+        return json({ ...resolution }, status, requestId);
+      }
+      const matches = matchAfterGeneration({
+        catalog: pack.catalog,
+        stores: pack.stores,
+        offers: pack.offers,
+        sku: typeof p.sku === "string" ? p.sku : undefined,
+        productId: typeof p.productId === "string" ? p.productId : undefined,
+        targets: Array.isArray(p.targets) ? p.targets as never : undefined,
+        style: typeof p.style === "string" ? p.style : undefined,
+        colors: Array.isArray(p.colors) ? p.colors as string[] : undefined,
+        room: typeof p.room === "string" ? p.room : undefined,
+        generatedImage: typeof p.generatedImage === "string" ? p.generatedImage : undefined,
+      });
+      finish("ok", { provider: "catalog" });
+      return json({ items: matches }, 200, requestId);
     }
 
     // ---- Resolve provider + dispatch ----

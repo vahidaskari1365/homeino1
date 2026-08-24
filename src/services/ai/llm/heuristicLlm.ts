@@ -29,6 +29,7 @@ import {
   type RoomElement,
 } from "../roomState";
 import { resolveScope, type EditScope, type ScopeSource } from "../scope";
+import { categoryToTarget } from "../productMatching";
 
 /**
  * Style cues in Persian/English → canonical Homeino style names.
@@ -90,7 +91,11 @@ const NOTES: Record<ScopeSource, string> = {
 export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
   const text = req.prompt.trim();
   const lower = text.toLowerCase();
-  const selected = req.selectedTargets ?? [];
+  const productTarget = req.selectedProduct ? categoryToTarget(req.selectedProduct) : undefined;
+  const selected = [...new Set([
+    ...(req.selectedTargets ?? []),
+    ...(productTarget ? [productTarget] : []),
+  ])];
   const resolvedStyle = detectStyleFromText(text, req.style);
   const colors = extractColors(text);
   const explicitLocked = detectExplicitLocked(lower);
@@ -121,7 +126,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): IntentAnalysis {
       colors: req.colors,
       confidence: 0.35,
       ambiguous: true,
-      note: "بنویسید چه چیزی باید تغییر کند تا دقیق اجرا کنیم.",
+      note: "یک دسته یا کد محصول انتخاب کنید تا طراحی انجام شود.",
     };
   }
 

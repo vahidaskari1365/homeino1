@@ -25,8 +25,21 @@ export interface ContextProduct {
   material?: string;
   color?: string;
   style?: string;
+  sku?: string;
+  storeId?: string;
+  image?: string;
   dimensions?: { width?: number; height?: number; depth?: number };
   price?: number;
+}
+
+/** Real selected / SKU-resolved product that must reach the image pipeline. */
+export interface SelectedProductContext {
+  id: string;
+  sku?: string;
+  name?: string;
+  category?: string;
+  storeId?: string;
+  image?: string;
 }
 
 export interface AIContext {
@@ -63,6 +76,12 @@ export interface AIContext {
     lastTargets: RoomElement[];
     lastChanges: string[];
   };
+  selectedProduct?: SelectedProductContext;
+  productCode?: string;
+  sku?: string;
+  previousSku?: string;
+  previousProductId?: string;
+  description?: string;
   /** ISO timestamp — for debugging context freshness. */
   createdAt: string;
 }
@@ -82,6 +101,11 @@ export interface BuildContextInput {
   previousTargets?: RoomElement[];
   previousChanges?: string[];
   previousLabel?: string;
+  selectedProduct?: SelectedProductContext;
+  productCode?: string;
+  sku?: string;
+  previousSku?: string;
+  previousProductId?: string;
 }
 
 /** Build the full structured context for one AI request. */
@@ -122,6 +146,12 @@ export function buildAIContext(input: BuildContextInput): AIContext {
     style: resolvedStyle,
     analysisContext,
     products: input.products?.length ? input.products.slice(0, 12) : undefined,
+    selectedProduct: input.selectedProduct,
+    productCode: input.productCode,
+    sku: input.sku ?? input.selectedProduct?.sku,
+    previousSku: input.previousSku,
+    previousProductId: input.previousProductId,
+    description: input.prompt.trim() || undefined,
     budget: input.budget,
     previousState:
       input.previousTargets?.length || input.previousChanges?.length
@@ -179,6 +209,8 @@ export function compactContextForLlm(ctx: AIContext, opts?: CompactContextOption
   }
   parts.push(`scope:${ctx.userIntent.scope}`);
   parts.push(`protected:[${ctx.userIntent.protectedElements.slice(0, 6).join(",")}]`);
+  if (ctx.sku) parts.push(`sku:${ctx.sku}`);
+  if (ctx.selectedProduct?.id) parts.push(`selectedProduct:${ctx.selectedProduct.id}`);
   if (ctx.previousState) {
     parts.push(
       `prev:{targets:[${ctx.previousState.lastTargets.join(",")}],changes:${JSON.stringify(ctx.previousState.lastChanges.slice(0, 2))}}`,
@@ -220,4 +252,46 @@ export function contextSummary(ctx: AIContext): string {
   const scope = EDIT_SCOPE_LABELS[ctx.userIntent.scope];
   const protectedCount = ctx.userIntent.protectedElements.length;
   return `scope=${scope}; protected=${protectedCount} item(s); prev=${ctx.previousState ? `yes(${ctx.previousState.lastTargets.length} target(s))` : "no"}`;
+}
+
+/**
+ * Final AI context sent into the pipeline — ONLY fields that actually exist.
+ * Shape follows spec §20 (room, selection, target, sku, previousTargets, …).
+ */
+export function buildFinalAiContext(input: {
+  room?: AIContext["room"];
+  roomAnalysis?: AIContext["analysisContext"];
+  selection?: { targets?: RoomElement[]; slugs?: string[] };
+  target?: RoomElement[];
+  scope?: EditScope;
+  style?: AIContext["style"];
+  colors?: string[];
+  description?: string;
+  selectedProduct?: SelectedProductContext;
+  productCode?: string;
+  sku?: string;
+  previousTargets?: RoomElement[];
+  previousSku?: string;
+  previousProductId?: string;
+  protectedElements?: RoomElement[];
+  designableElements?: RoomElement[];
+}): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (input.room && Object.values(input.room).some((v) => v !== undefined)) out.room = input.room;
+  if (input.roomAnalysis) out.roomAnalysis = input.roomAnalysis;
+  if (input.selection && (input.selection.targets?.length || input.selection.slugs?.length)) out.selection = input.selection;
+  if (input.target?.length) out.target = input.target;
+  if (input.scope) out.scope = input.scope;
+  if (input.style) out.style = input.style;
+  if (input.colors?.length) out.colors = input.colors;
+  if (input.description) out.description = input.description;
+  if (input.selectedProduct) out.selectedProduct = input.selectedProduct;
+  if (input.productCode) out.productCode = input.productCode;
+  if (input.sku) out.sku = input.sku;
+  if (input.previousTargets?.length) out.previousTargets = input.previousTargets;
+  if (input.previousSku) out.previousSku = input.previousSku;
+  if (input.previousProductId) out.previousProductId = input.previousProductId;
+  if (input.protectedElements?.length) out.protectedElements = input.protectedElements;
+  if (input.designableElements?.length) out.designableElements = input.designableElements;
+  return out;
 }

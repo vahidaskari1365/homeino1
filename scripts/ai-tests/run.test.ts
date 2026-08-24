@@ -40,8 +40,22 @@ import { detectScope, resolveScope, scopeToEditStrength, isFullScope, scopeToInt
 import { heuristicUnderstandIntent } from "../../src/services/ai/llm/heuristicLlm";
 import { normalizeIntentAnalysis } from "../../src/services/ai/llm/openaiCompatLlm";
 import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "../../src/services/ai/llm/systemPrompt";
-import { buildAIContext, compactContextForLlm } from "../../src/services/ai/context";
-import { planProductPlacement, productPlacementPrompt } from "../../src/services/ai/placement";
+import { buildAIContext, buildFinalAiContext, compactContextForLlm } from "../../src/services/ai/context";
+import { planProductPlacement, productPlacementPrompt, productIdentityPrompt } from "../../src/services/ai/placement";
+import {
+  resolveProductCode,
+  matchStoreProducts,
+  matchAfterGeneration,
+  mapUiSelectionToTargets,
+  categoryToTarget,
+  toMatchableProduct,
+  INVALID_SKU_MESSAGE,
+  CATEGORY_SKU_CONFLICT_MESSAGE,
+  type MatchableProduct,
+} from "../../src/services/ai/productMatching";
+import { products, PRODUCT_SKUS, getProductBySku, getProductById } from "../../src/data/products";
+import { stores } from "../../src/data/stores";
+import { offers } from "../../src/data/offers";
 import { validateIntentPayload, withBoundedRetry, extractJsonPayload } from "../../src/services/ai/validation";
 import { AiError, classifyAiError, toPublicAiError } from "../../src/services/ai/errors";
 import { mockAiProvider } from "../../src/services/ai/mockAiService";
@@ -780,4 +794,304 @@ test("Patch T15: room/whole_home redesign opens designable elements, keeps archi
       assert.ok(!intent.target.includes(el), `${prompt}: structural ${el} must stay protected`);
     }
   }
+});
+
+// ============================================================
+// PRODUCT SELECTION + SKU + REAL STORE MATCHING
+// ============================================================
+
+const CATALOG: MatchableProduct[] = products.map((p) => toMatchableProduct(p, PRODUCT_SKUS[p.id]));
+const STORE_ROWS = stores.map((s) => ({ id: s.id, name: s.name, slug: s.slug }));
+const OFFER_ROWS = offers.map((o) => ({
+  productId: o.productId,
+  storeId: o.storeId,
+  price: o.price,
+  inStock: o.inStock,
+  sellerSku: o.sellerSku,
+}));
+
+test("SKU patch: UI category only (empty prompt) is a valid generation intent", () => {
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Sofa"] }), ["sofa"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Lighting"] }), ["lighting"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Rug"] }), ["rug"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Chair"] }), ["chair"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Table"] }), ["table"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Curtain"] }), ["curtain"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Decor"] }), ["art"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Bed"] }), ["bed"]);
+  assert.deepEqual(mapUiSelectionToTargets({ names: ["Wardrobe"] }), ["shelf"]);
+
+  const intent = heuristicUnderstandIntent({ selectedTargets: ["sofa"], prompt: "" });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+  assert.equal(intent.intent, "targeted_edit");
+  assert.notEqual(intent.intent, "inquiry");
+  assert.ok(!/describe what you want|بنویسید چه چیزی/i.test(intent.note ?? ""));
+});
+
+test("SKU patch: UI category + description merges target with color/style", () => {
+  const intent = heuristicUnderstandIntent({
+    selectedTargets: ["sofa"],
+    prompt: "کرم و مدرن",
+  });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+  assert.ok(intent.colors?.includes("کرم"));
+  assert.equal(intent.style, "Modern");
+});
+
+test("SKU patch: UI category + image stays in context (room analysis not dropped)", () => {
+  const ctx = buildAIContext({
+    prompt: "",
+    style: "modern",
+    room: "پذیرایی",
+    targets: ["sofa"],
+    scope: "single_item",
+    protectedElements: resolveProtectedElements({ targets: ["sofa"], scope: "single_item" }),
+    roomUnderstanding: {
+      roomType: "پذیرایی",
+      furnitureTypes: ["sofa", "table"],
+      emptySpaces: ["دیوار اصلی خالی"],
+      objects: [],
+      confidence: 0.8,
+    },
+  });
+  assert.equal(ctx.userIntent.targets[0], "sofa");
+  assert.equal(ctx.room.type, "پذیرایی");
+  assert.equal(ctx.analysisContext?.emptySpaces?.[0], "دیوار اصلی خالی");
+});
+
+test("SKU patch: UI category + SKU resolves the real product", () => {
+  const resolution = resolveProductCode("SOF-1024", CATALOG, { selectedTargets: ["sofa"] });
+  assert.equal(resolution.status, "ok");
+  assert.equal(resolution.product?.id, "p1");
+  assert.equal(resolution.product?.sku, "SOF-1024");
+  assert.equal(resolution.productTarget, "sofa");
+
+  const intent = heuristicUnderstandIntent({
+    selectedTargets: ["sofa"],
+    prompt: "",
+    selectedProduct: resolution.product,
+    sku: "SOF-1024",
+  });
+  assert.deepEqual(intent.target, ["sofa"]);
+});
+
+test("SKU patch: UI category + SKU + description keeps product + style", () => {
+  const resolution = resolveProductCode("SOF-1024", CATALOG, { selectedTargets: ["sofa"] });
+  assert.equal(resolution.status, "ok");
+  const intent = heuristicUnderstandIntent({
+    selectedTargets: ["sofa"],
+    prompt: "Japandi",
+    selectedProduct: resolution.product,
+    sku: "SOF-1024",
+  });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.style, "Japandi");
+  assert.equal(intent.scope, "single_item");
+});
+
+test("SKU patch: exact product selection enters AI context", () => {
+  const product = getProductById("p1")!;
+  const ctx = buildAIContext({
+    prompt: "",
+    targets: ["sofa"],
+    scope: "single_item",
+    protectedElements: resolveProtectedElements({ targets: ["sofa"], scope: "single_item" }),
+    selectedProduct: {
+      id: product.id,
+      sku: PRODUCT_SKUS[product.id],
+      name: product.name,
+      category: product.categorySlug,
+      storeId: product.storeId,
+      image: product.images[0],
+    },
+    sku: PRODUCT_SKUS[product.id],
+    products: [{ id: product.id, name: product.name, category: product.categorySlug, sku: PRODUCT_SKUS[product.id] }],
+  });
+  assert.equal(ctx.selectedProduct?.id, "p1");
+  assert.equal(ctx.sku, "SOF-1024");
+  const compact = compactContextForLlm(ctx);
+  assert.ok(compact.includes("sku:SOF-1024") || compact.includes("selectedProduct:p1"));
+});
+
+test("SKU patch: invalid SKU does not invent a product", () => {
+  const resolution = resolveProductCode("NO-SUCH-SKU-999", CATALOG);
+  assert.equal(resolution.status, "not_found");
+  assert.equal(resolution.product, undefined);
+  assert.equal(resolution.message, INVALID_SKU_MESSAGE);
+});
+
+test("SKU patch: category / SKU conflict is detected and not auto-converted", () => {
+  const resolution = resolveProductCode("LAMP-552", CATALOG, { selectedTargets: ["sofa"] });
+  assert.equal(resolution.status, "conflict");
+  assert.equal(resolution.product?.id, "p9");
+  assert.equal(resolution.productTarget, "lighting");
+  assert.equal(resolution.selectedTarget, "sofa");
+  assert.equal(resolution.message, CATEGORY_SKU_CONFLICT_MESSAGE);
+  assert.notEqual(resolution.productTarget, "sofa");
+});
+
+test("SKU patch: continuation with SKU keeps the previous product target", () => {
+  const first = heuristicUnderstandIntent({
+    selectedTargets: ["sofa"],
+    prompt: "",
+    sku: "SOF-1024",
+    selectedProduct: { id: "p1", sku: "SOF-1024", category: "furniture", name: "کاناپه هلیم ۳ نفره" },
+  });
+  assert.deepEqual(first.target, ["sofa"]);
+
+  const second = heuristicUnderstandIntent({
+    prompt: "کمی کوچکترش کن",
+    previousTargets: first.target,
+    previousSku: "SOF-1024",
+    previousProductId: "p1",
+    selectedProduct: { id: "p1", sku: "SOF-1024", category: "furniture" },
+  });
+  assert.deepEqual(second.target, ["sofa"]);
+  assert.equal(second.scope, "single_item");
+
+  const ctx = buildFinalAiContext({
+    target: second.target,
+    scope: second.scope,
+    selectedProduct: { id: "p1", sku: "SOF-1024" },
+    sku: "SOF-1024",
+    previousTargets: ["sofa"],
+    previousSku: "SOF-1024",
+    previousProductId: "p1",
+  });
+  assert.equal(ctx.previousSku, "SOF-1024");
+  assert.equal(ctx.previousProductId, "p1");
+  assert.deepEqual(ctx.previousTargets, ["sofa"]);
+  assert.ok(!("description" in ctx), "empty description must be omitted");
+});
+
+test("SKU patch: generated image → product matching does not invent or rewrite the image", () => {
+  const generatedImage = "data:image/png;base64,ORIGINAL";
+  const matches = matchAfterGeneration({
+    catalog: CATALOG,
+    stores: STORE_ROWS,
+    offers: OFFER_ROWS,
+    targets: ["sofa"],
+    style: "modern",
+    generatedImage,
+  });
+  assert.ok(matches.length > 0);
+  for (const match of matches) {
+    assert.ok(CATALOG.some((p) => p.id === match.productId), `invented product ${match.productId}`);
+    assert.ok(match.score > 0);
+  }
+  assert.equal(generatedImage, "data:image/png;base64,ORIGINAL");
+});
+
+test("SKU patch: multi-store results are ranked by relevance, not random", () => {
+  const matches = matchStoreProducts({
+    catalog: CATALOG,
+    stores: STORE_ROWS,
+    offers: OFFER_ROWS,
+    sku: "SOF-1024",
+    productId: "p1",
+    targets: ["sofa"],
+    style: "modern",
+  });
+  assert.ok(matches.length >= 2, "exact product should expand to multiple real store offers");
+  const storeIds = new Set(matches.map((m) => m.storeId).filter(Boolean));
+  assert.ok(storeIds.size >= 2, "multi-store results required");
+  assert.equal(matches[0].productId, "p1");
+  assert.ok(matches[0].score >= matches[matches.length - 1].score);
+  for (const match of matches) {
+    if (match.storeName) {
+      assert.ok(STORE_ROWS.some((s) => s.name === match.storeName), `invented store ${match.storeName}`);
+    }
+  }
+});
+
+test("SKU patch: no fake products / prices / SKUs / URLs", () => {
+  const matches = matchStoreProducts({
+    catalog: CATALOG,
+    stores: STORE_ROWS,
+    targets: ["lighting"],
+    style: "modern",
+  });
+  assert.ok(matches.length > 0);
+  for (const match of matches) {
+    const real = CATALOG.find((p) => p.id === match.productId);
+    assert.ok(real, `fake product id ${match.productId}`);
+    if (match.sku) {
+      assert.ok(
+        real.sku === match.sku || OFFER_ROWS.some((o) => o.productId === real.id && o.sellerSku === match.sku),
+        `fake sku ${match.sku}`,
+      );
+    }
+    if (typeof match.price === "number") {
+      assert.ok(
+        real.price === match.price || OFFER_ROWS.some((o) => o.productId === real.id && o.price === match.price),
+        `fake price ${match.price}`,
+      );
+    }
+    if (match.productUrl) {
+      assert.equal(match.productUrl, `/products/${real.slug}`);
+    }
+    if (match.storeId) {
+      assert.ok(STORE_ROWS.some((s) => s.id === match.storeId) || match.storeId === real.storeId);
+    }
+  }
+});
+
+test("SKU patch: room analysis boosts living-room compatible products", () => {
+  const living = matchStoreProducts({
+    catalog: CATALOG,
+    stores: STORE_ROWS,
+    room: "پذیرایی",
+    roomAnalysis: { roomType: "پذیرایی", furnitureTypes: ["sofa"], emptySpaces: ["مرکز نشیمن"] },
+    targets: ["sofa"],
+  });
+  assert.ok(living.length > 0);
+  assert.ok(living.some((m) => m.productId === "p1" || categoryToTarget(CATALOG.find((p) => p.id === m.productId)!) === "sofa"));
+
+  const bedroom = matchStoreProducts({
+    catalog: CATALOG,
+    stores: STORE_ROWS,
+    room: "اتاق خواب",
+    roomAnalysis: { roomType: "اتاق خواب", furnitureTypes: ["bed"] },
+    targets: ["bed"],
+  });
+  assert.ok(bedroom.length > 0);
+  assert.ok(bedroom.every((m) => {
+    const p = CATALOG.find((x) => x.id === m.productId);
+    return p && (p.categorySlug === "bedroom" || categoryToTarget(p) === "bed");
+  }));
+});
+
+test("SKU patch: identity prompt locks the real selected product", () => {
+  const product = {
+    id: "p1",
+    name: "کاناپه هلیم ۳ نفره",
+    category: "furniture",
+    sku: "SOF-1024",
+    material: "پارچه کتان",
+    color: "کرم",
+    style: "modern",
+  };
+  const text = productIdentityPrompt(product);
+  assert.ok(text.includes("IDENTITY LOCK"));
+  assert.ok(text.includes("کاناپه هلیم ۳ نفره"));
+  assert.ok(text.includes("SOF-1024"));
+  assert.ok(/shape|proportions|material|color|design language/i.test(text));
+});
+
+test("SKU patch: final context omits empty fields", () => {
+  const ctx = buildFinalAiContext({
+    target: ["sofa"],
+    scope: "single_item",
+    sku: "SOF-1024",
+  });
+  assert.deepEqual(Object.keys(ctx).sort(), ["scope", "sku", "target"].sort());
+});
+
+test("SKU patch: getProductBySku only returns catalog rows", () => {
+  assert.equal(getProductBySku("SOF-1024")?.id, "p1");
+  assert.equal(getProductBySku("HOME-SF-8821")?.id, "p29");
+  assert.equal(getProductBySku("LAMP-552")?.id, "p9");
+  assert.equal(getProductBySku("MISSING-000"), undefined);
 });

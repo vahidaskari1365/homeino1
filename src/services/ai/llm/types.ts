@@ -49,6 +49,11 @@ export interface IntentRequest {
   /** Compact structured room context (see services/ai/context.ts). */
   roomContext?: string;
   budget?: { min?: number; max?: number; currency?: string };
+  /** Real catalog product the user picked or resolved via SKU. */
+  selectedProduct?: { id: string; sku?: string; name?: string; category?: string };
+  sku?: string;
+  previousSku?: string;
+  previousProductId?: string;
 }
 
 /**

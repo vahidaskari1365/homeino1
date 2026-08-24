@@ -205,6 +205,8 @@ export interface Product {
   discount?: number;
   tags: string[];
   salesCount?: number; // تعداد خرید این محصول (mock — جایگزین با API واقعی)
+  /** Optional catalog SKU / product code. Only present when the source has one. */
+  sku?: string;
 }
 
 export interface InspirationImage {
