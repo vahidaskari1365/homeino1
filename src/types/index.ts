@@ -179,6 +179,7 @@ export interface CommissionRecord {
 export interface Product {
   id: string;
   slug: string;
+  sku?: string;
   name: string;
   brand: string;
   storeId: string;

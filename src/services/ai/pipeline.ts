@@ -9,6 +9,7 @@
 //     → Design Instruction           (targets + hard preservation rules)
 //     → Image / Overlay Generation   (Orali first, provider fallback)
 //     → Result Validation            (never fake success)
+//     → Real Store Matching          (roomState.ts — priority-ranked store products)
 //     → Result Display               (client renders PipelineResult)
 //
 // The pipeline is provider-agnostic: swap Orali or the LLM via
@@ -20,15 +21,42 @@ import type { OverlayRegion } from "./orali";
 import { understandIntent } from "./llm";
 import type { IntentAnalysis, IntentRequest } from "./llm";
 import {
-  ALL_ELEMENTS, STRUCTURAL_ELEMENTS, DESIGNABLE_ELEMENTS, ELEMENT_LABELS, buildDesignConstraints, constraintsToPrompt,
-  validateResult, resolveProtectedElements, detectArchitecturalTargets,
-  type RoomElement, type DesignConstraints, type RoomUnderstanding,
+  ALL_ELEMENTS,
+  STRUCTURAL_ELEMENTS,
+  DESIGNABLE_ELEMENTS,
+  ELEMENT_LABELS,
+  buildDesignConstraints,
+  constraintsToPrompt,
+  validateResult,
+  resolveProtectedElements,
+  detectArchitecturalTargets,
+  categoryToRoomElement,
+  detectCategorySkuConflict,
+  matchStoreProducts,
+  type RoomElement,
+  type DesignConstraints,
+  type RoomUnderstanding,
+  type MatchedStoreProduct,
 } from "./roomState";
 import { resolveScope, isFullScope, scopeToEditStrength, type EditScope } from "./scope";
-import { buildAIContext, compactContextForLlm, contextSummary, type ContextProduct } from "./context";
-import { planProductPlacement, productPlacementPrompt, type PlacementProduct, type ProductPlacementPlan } from "./placement";
+import {
+  buildAIContext,
+  compactContextForLlm,
+  contextSummary,
+  type ContextProduct,
+  type ContextSelectedProduct,
+} from "./context";
+import {
+  planProductPlacement,
+  productPlacementPrompt,
+  parseProductDimensions,
+  type PlacementProduct,
+  type ProductPlacementPlan,
+} from "./placement";
 import { createRequestId, withAiTelemetry } from "./telemetry";
 import { reserveCreditsForAi, finalizeCreditsForAi, refundCreditsForAi } from "./serverCredits";
+import { AiError } from "./errors";
+import { getProductBySkuOrCode } from "../../data/products";
 import type { GeneratedDesign } from "./types";
 import { uid } from "../../lib/utils";
 
@@ -54,10 +82,20 @@ export interface PipelineInput {
   // ---- Phase 15 — design memory (continuation) ----
   previousTargets?: RoomElement[];
   previousChanges?: string[];
+  previousProductId?: string;
+  previousSKU?: string;
   /** Scope of the previous request (continuation fidelity). */
   previousScope?: EditScope;
-  // ---- Phase 7/8 — product-aware overlay ----
+  // ---- Phase 7/8 / SKU / Product selection ----
   productId?: string;
+  sku?: string;
+  productCode?: string;
+  selectedProduct?: ContextSelectedProduct;
+  selection?: {
+    category?: string;
+    subTypes?: string[];
+    targets?: RoomElement[];
+  };
   products?: PlacementProduct[];
   // ---- Phase 2 — budget slice of the context ----
   budget?: { min?: number; max?: number; currency?: string };
@@ -88,6 +126,8 @@ export interface DesignInstruction {
   editMode: "inpaint" | "edit" | "generate";
   /** Product placement plan when a real product was selected (Phase 8). */
   placement?: ProductPlacementPlan;
+  /** Selected product info if one was placed / resolved. */
+  selectedProduct?: ContextSelectedProduct;
 }
 
 export type PipelineOutcome = "completed" | "preview" | "failed";
@@ -105,6 +145,10 @@ export interface PipelineResult {
   protectedElements: RoomElement[];
   /** Product placement when a real product was used (Phase 8). */
   placement?: ProductPlacementPlan;
+  /** Real matched store products below the generated image (Phase 10-15). */
+  matchedProducts?: MatchedStoreProduct[];
+  selectedProduct?: ContextSelectedProduct;
+  sku?: string;
   /** Debugging: compact context + request id (no secrets). */
   requestId?: string;
   contextSummary?: string;
@@ -113,20 +157,72 @@ export interface PipelineResult {
 /* ---------------- Step 1: Intent ---------------- */
 
 export async function runIntentUnderstanding(input: PipelineInput): Promise<IntentAnalysis> {
+  const rawSku = (input.sku || input.productCode)?.trim();
+  let resolvedProduct = rawSku ? getProductBySkuOrCode(rawSku) : undefined;
+
+  // Requirement 7: Invalid SKU validation
+  if (rawSku && !resolvedProduct) {
+    throw AiError.invalidSku("این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.");
+  }
+
+  // If no SKU provided, but productId was given, try resolving product
+  if (!resolvedProduct && input.productId) {
+    resolvedProduct = getProductBySkuOrCode(input.productId);
+  }
+
+  // Requirement 18: Category + SKU conflict detection
+  if (resolvedProduct && input.targets?.length) {
+    const conflict = detectCategorySkuConflict(input.selection?.category, input.targets, resolvedProduct);
+    if (conflict.hasConflict) {
+      throw AiError.categoryConflict(conflict.message);
+    }
+  }
+
+  const productTarget = resolvedProduct
+    ? categoryToRoomElement(
+        resolvedProduct.categorySlug,
+        `${resolvedProduct.subCategorySlug ?? ""} ${resolvedProduct.name}`,
+      )
+    : undefined;
+
+  let inputTargets = input.targets ?? [];
+  if (inputTargets.length === 0 && productTarget) {
+    inputTargets = [productTarget];
+  }
+
   if (input.intent && input.intent.target.length >= 0 && input.intent.intent) {
     return input.intent; // user already confirmed the reading
   }
-  const effectiveTargets = [...new Set([...(input.targets ?? []), ...(input.intent?.target ?? [])])];
+
+  const effectiveTargets = [...new Set([...inputTargets, ...(input.intent?.target ?? [])])];
   // Canonical scope for the pre-LLM context (single source of truth — scope.ts).
   const resolution = resolveScope({
     text: input.prompt,
-    selectedTargets: input.targets,
+    selectedTargets: inputTargets,
     uiScope: input.scope,
     previousTargets: input.previousTargets,
     previousScope: input.previousScope,
   });
 
-  // Build the structured context BEFORE the model call (Phase 2).
+  const selectedProductCtx: ContextSelectedProduct | undefined = resolvedProduct
+    ? {
+        id: resolvedProduct.id,
+        sku: resolvedProduct.sku,
+        name: resolvedProduct.name,
+        category: resolvedProduct.categorySlug,
+        storeId: resolvedProduct.storeId,
+        brand: resolvedProduct.brand,
+        price: resolvedProduct.price,
+        currency: resolvedProduct.currency,
+        image: resolvedProduct.images[0],
+        material: resolvedProduct.materials?.[0],
+        color: resolvedProduct.colors?.[0]?.name,
+        style: resolvedProduct.styleSlugs?.[0],
+        dimensions: parseProductDimensions(resolvedProduct.dimensions),
+      }
+    : input.selectedProduct;
+
+  // Build the structured context BEFORE the model call (Phase 2 & 20).
   const ctx = buildAIContext({
     prompt: input.prompt,
     style: input.style,
@@ -140,9 +236,15 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
       explicitLocked: input.preservedExtra,
     }),
     roomUnderstanding: input.roomUnderstanding,
+    selection: input.selection,
+    selectedProduct: selectedProductCtx,
+    productCode: rawSku || resolvedProduct?.sku,
+    sku: rawSku || resolvedProduct?.sku,
     products: input.products as ContextProduct[] | undefined,
     budget: input.budget,
     previousTargets: input.previousTargets,
+    previousProductId: input.previousProductId,
+    previousSKU: input.previousSKU,
     previousChanges: input.previousChanges,
   });
 
@@ -152,10 +254,14 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     room: input.room,
     colors: input.colors,
     changeScope: input.scope,
-    selectedTargets: input.targets?.length ? input.targets : undefined,
+    selectedTargets: effectiveTargets.length ? effectiveTargets : undefined,
     previousTargets: input.previousTargets,
+    previousProductId: input.previousProductId,
+    previousSKU: input.previousSKU,
     previousChanges: input.previousChanges,
     previousScope: input.previousScope,
+    sku: rawSku || resolvedProduct?.sku,
+    productCode: rawSku || resolvedProduct?.sku,
     // Phase 12 — only the context slice the model needs (≤ ~700 chars).
     roomContext: compactContextForLlm(ctx),
     budget: input.budget,
@@ -167,12 +273,31 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
 /* ---------------- Step 2: Instruction ---------------- */
 
 export function buildDesignInstruction(input: PipelineInput, intent: IntentAnalysis): DesignInstruction {
+  const rawSku = (input.sku || input.productCode)?.trim();
+  const resolvedProduct = rawSku
+    ? getProductBySkuOrCode(rawSku)
+    : input.productId
+      ? getProductBySkuOrCode(input.productId)
+      : undefined;
+
+  const productTarget = resolvedProduct
+    ? categoryToRoomElement(
+        resolvedProduct.categorySlug,
+        `${resolvedProduct.subCategorySlug ?? ""} ${resolvedProduct.name}`,
+      )
+    : undefined;
+
+  let inputTargets = input.targets ?? [];
+  if (inputTargets.length === 0 && productTarget) {
+    inputTargets = [productTarget];
+  }
+
   // Phase 4 / AI ACCURACY PATCH (fix 3) — the canonical decision tree (scope.ts)
   // is the SINGLE source of truth for scope & targets. An explicit editScope
   // (set by the UI) still wins over the tree.
   const resolution = resolveScope({
     text: input.prompt,
-    selectedTargets: input.targets,
+    selectedTargets: inputTargets,
     uiScope: input.scope,
     previousTargets: input.previousTargets,
     previousScope: input.previousScope,
@@ -237,12 +362,44 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
     requiresClarification: Boolean(intent.ambiguous),
   });
 
-  // Phase 7/8 — product-aware placement plan (real product data only).
+  // Phase 7/8 / Requirement 9 — product-aware placement plan & identity preservation.
   let placement: ProductPlacementPlan | undefined;
-  const product = input.products?.find((p) => p.id === input.productId) ?? input.products?.[0];
-  if (product && !isFull) {
-    placement = planProductPlacement(product);
+  const productCandidate =
+    input.products?.find((p) => p.id === input.productId) ??
+    (resolvedProduct
+      ? {
+          id: resolvedProduct.id,
+          sku: resolvedProduct.sku,
+          name: resolvedProduct.name,
+          category: resolvedProduct.categorySlug,
+          material: resolvedProduct.materials?.[0],
+          color: resolvedProduct.colors?.[0]?.name,
+          style: resolvedProduct.styleSlugs?.[0],
+          dimensions: parseProductDimensions(resolvedProduct.dimensions),
+        }
+      : input.products?.[0]);
+
+  if (productCandidate && !isFull) {
+    placement = planProductPlacement(productCandidate);
   }
+
+  const selectedProductCtx: ContextSelectedProduct | undefined = resolvedProduct
+    ? {
+        id: resolvedProduct.id,
+        sku: resolvedProduct.sku,
+        name: resolvedProduct.name,
+        category: resolvedProduct.categorySlug,
+        storeId: resolvedProduct.storeId,
+        brand: resolvedProduct.brand,
+        price: resolvedProduct.price,
+        currency: resolvedProduct.currency,
+        image: resolvedProduct.images[0],
+        material: resolvedProduct.materials?.[0],
+        color: resolvedProduct.colors?.[0]?.name,
+        style: resolvedProduct.styleSlugs?.[0],
+        dimensions: parseProductDimensions(resolvedProduct.dimensions),
+      }
+    : input.selectedProduct;
 
   const targetLabels = targets.map((t) => ELEMENT_LABELS[t] || t).join("، ");
   const enginePrompt = [
@@ -255,7 +412,9 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
     input.room && `Room type: ${input.room}`,
     protectedElements.length > 0 &&
       `PROTECTED ARCHITECTURE & UNTOUCHED ELEMENTS — do NOT change, move, remove or restyle: ${protectedElements.slice(0, 8).map((e) => ELEMENT_LABELS[e] || e).join("، ")}. Keep exact walls, floor structure, ceiling, windows, doors, camera angle and room geometry unchanged.`,
-    placement && product && productPlacementPrompt(product, placement),
+    placement && productCandidate && productPlacementPrompt(productCandidate, placement),
+    productCandidate &&
+      `Product visual identity to preserve: ${productCandidate.name ?? "selected piece"} (SKU: ${productCandidate.sku ?? productCandidate.id}). Retain exact proportions, shape, design language, material textures (${productCandidate.material ?? "authentic"}), and color tone (${productCandidate.color ?? "specified"}).`,
     constraintsToPrompt(constraints),
     "Photorealistic interior photograph, consistent perspective and lighting, high detail.",
   ]
@@ -280,6 +439,7 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
     strength: scopeToEditStrength(scope),
     editMode,
     placement,
+    selectedProduct: selectedProductCtx,
   };
 }
 
@@ -293,7 +453,12 @@ async function generateVisual(
   if (orali && input.referenceImage) {
     try {
       const targetRegion = instruction.placement?.targetRegion
-        ? { x: instruction.placement.targetRegion.x, y: instruction.placement.targetRegion.y, w: instruction.placement.targetRegion.width, h: instruction.placement.targetRegion.height }
+        ? {
+            x: instruction.placement.targetRegion.x,
+            y: instruction.placement.targetRegion.y,
+            w: instruction.placement.targetRegion.width,
+            h: instruction.placement.targetRegion.height,
+          }
         : undefined;
       const out = await orali.generateEdit({
         image: input.referenceImage,
@@ -400,7 +565,12 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           beforeImage: input.referenceImage,
           afterImage: design.afterImage,
           intent: {
-            type: instruction.scope === "whole_home" || instruction.scope === "room" ? "full_redesign" : intent.intent === "color_change" ? "color_change" : "partial_edit",
+            type:
+              instruction.scope === "whole_home" || instruction.scope === "room"
+                ? "full_redesign"
+                : intent.intent === "color_change"
+                  ? "color_change"
+                  : "partial_edit",
             targets: instruction.targets,
             style: instruction.style,
             requestedChanges: intent.changes,
@@ -416,6 +586,26 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           await finalizeCreditsForAi(credit.generationId, { durationMs: undefined, outputAssetUrl: design.afterImage });
         }
 
+        // 6) REAL STORE PRODUCT MATCHING (Requirements 10-15)
+        const rawSku = (input.sku || input.productCode)?.trim();
+        const resolvedProduct = rawSku
+          ? getProductBySkuOrCode(rawSku)
+          : input.productId
+            ? getProductBySkuOrCode(input.productId)
+            : undefined;
+
+        const matchedProducts = matchStoreProducts({
+          sku: rawSku || resolvedProduct?.sku,
+          productId: resolvedProduct?.id || input.productId,
+          targets: instruction.targets,
+          category: input.selection?.category || resolvedProduct?.categorySlug,
+          style: instruction.style,
+          colors: instruction.colors,
+          roomType: instruction.room,
+          budget: input.budget?.min ?? input.budget?.max,
+          maxResults: 6,
+        });
+
         const ctx = buildAIContext({
           prompt: input.prompt,
           style: input.style,
@@ -426,9 +616,15 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           scope: instruction.scope,
           protectedElements: instruction.protectedElements,
           roomUnderstanding: input.roomUnderstanding,
+          selection: input.selection,
+          selectedProduct: instruction.selectedProduct,
+          productCode: rawSku || resolvedProduct?.sku,
+          sku: rawSku || resolvedProduct?.sku,
           products: input.products as ContextProduct[] | undefined,
           budget: input.budget,
           previousTargets: input.previousTargets,
+          previousProductId: input.previousProductId,
+          previousSKU: input.previousSKU,
           previousChanges: input.previousChanges,
         });
 
@@ -442,11 +638,14 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           scope: instruction.scope,
           protectedElements: instruction.protectedElements,
           placement: instruction.placement,
+          matchedProducts,
+          selectedProduct: instruction.selectedProduct,
+          sku: rawSku || resolvedProduct?.sku,
           requestId,
           contextSummary: contextSummary(ctx),
         };
       } catch (err) {
-        // 6) REFUND — server credits on failure (idempotent).
+        // 7) REFUND — server credits on failure (idempotent).
         if (credit.charged && credit.generationId) {
           await refundCreditsForAi(credit.generationId, err instanceof Error ? err.message : String(err));
         }

@@ -17,6 +17,8 @@
 import type { RoomElement } from "../roomState";
 import type { EditScope } from "../scope";
 
+export type { EditScope, RoomElement };
+
 /** What kind of design request the user made. */
 export type DesignIntentType =
   | "targeted_edit"   // «مبل را عوض کن» — only the target changes
@@ -38,14 +40,29 @@ export interface IntentRequest {
   changeScope?: "targeted" | "full";
   /** Elements the user explicitly picked as "change these". */
   selectedTargets?: RoomElement[];
+  /** Selected product ID or preset product. */
+  productId?: string;
+  /** UI Category/subtype selection. */
+  selection?: {
+    category?: string;
+    subTypes?: string[];
+    targets?: RoomElement[];
+  };
   // ---- Design memory (Phase 15) — compact continuation context ----
   /** Targets of the previous request, e.g. ["sofa"] so that
    *  «کمی روشن‌ترش کن» still points at the same sofa. */
   previousTargets?: RoomElement[];
   /** Scope of the previous request (continuation fidelity). */
   previousScope?: EditScope;
+  /** Previous product ID if one was targeted. */
+  previousProductId?: string;
+  /** Previous product SKU if one was targeted. */
+  previousSKU?: string;
   /** Short phrases of what was changed last time. */
   previousChanges?: string[];
+  /** Active product SKU or code. */
+  sku?: string;
+  productCode?: string;
   /** Compact structured room context (see services/ai/context.ts). */
   roomContext?: string;
   budget?: { min?: number; max?: number; currency?: string };
@@ -77,6 +94,8 @@ export interface IntentAnalysis {
   /** At most ONE short sentence (Persian) explaining the reading. */
   note?: string;
 }
+
+export type AiIntent = IntentAnalysis;
 
 /** The pluggable LLM contract. */
 export interface LlmProvider {

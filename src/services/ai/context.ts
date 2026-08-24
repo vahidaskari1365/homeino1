@@ -13,13 +13,14 @@
 // ============================================================
 
 import type { RoomElement, RoomArchitecture, RoomUnderstanding } from "./roomState";
-import { PROTECTED_STRUCTURAL_ELEMENTS, ELEMENT_LABELS } from "./roomState";
+import { PROTECTED_STRUCTURAL_ELEMENTS, DESIGNABLE_ELEMENTS, ELEMENT_LABELS } from "./roomState";
 import type { EditScope } from "./scope";
 import { EDIT_SCOPE_LABELS } from "./scope";
 
 /** Minimal product info used for product-aware prompting (Phase 7). */
 export interface ContextProduct {
   id: string;
+  sku?: string;
   name?: string;
   category?: string;
   material?: string;
@@ -27,6 +28,23 @@ export interface ContextProduct {
   style?: string;
   dimensions?: { width?: number; height?: number; depth?: number };
   price?: number;
+}
+
+export interface ContextSelectedProduct {
+  id: string;
+  sku?: string;
+  name?: string;
+  category?: string;
+  storeId?: string;
+  storeName?: string;
+  brand?: string;
+  price?: number;
+  currency?: string;
+  image?: string;
+  material?: string;
+  color?: string;
+  style?: string;
+  dimensions?: { width?: number; height?: number; depth?: number };
 }
 
 export interface AIContext {
@@ -38,6 +56,38 @@ export interface AIContext {
     layout?: RoomUnderstanding["layout"];
     architecture?: RoomArchitecture;
   };
+  roomAnalysis?: {
+    roomType?: string;
+    style?: string;
+    likelyStyle?: { style: string; confidence: number };
+    palette?: string[];
+    mood?: string;
+    strengths?: string[];
+    opportunities?: string[];
+    emptySpaces?: string[];
+    functionalIssues?: string[];
+    designOpportunities?: string[];
+    confidence?: number;
+  };
+  selection?: {
+    category?: string;
+    subTypes?: string[];
+    targets?: RoomElement[];
+  };
+  target: RoomElement[];
+  scope: EditScope;
+  style?: { id: string; name: string };
+  colors?: string[];
+  description?: string;
+  selectedProduct?: ContextSelectedProduct;
+  productCode?: string;
+  sku?: string;
+  previousTargets?: RoomElement[];
+  previousProductId?: string;
+  previousSKU?: string;
+  previousChanges?: string[];
+  protectedElements: RoomElement[];
+  designableElements: RoomElement[];
   existingObjects: RoomUnderstanding["objects"];
   userIntent: {
     action: string;
@@ -47,7 +97,6 @@ export interface AIContext {
     requestedChanges: string[];
     protectedElements: RoomElement[];
   };
-  style?: { id: string; name: string };
   analysisContext?: {
     likelyStyle?: string;
     confidence?: number;
@@ -62,6 +111,8 @@ export interface AIContext {
     lastAction?: string;
     lastTargets: RoomElement[];
     lastChanges: string[];
+    lastProductId?: string;
+    lastSKU?: string;
   };
   /** ISO timestamp — for debugging context freshness. */
   createdAt: string;
@@ -76,10 +127,21 @@ export interface BuildContextInput {
   targets: RoomElement[];
   scope: EditScope;
   protectedElements: RoomElement[];
+  designableElements?: RoomElement[];
   roomUnderstanding?: RoomUnderstanding;
+  selection?: {
+    category?: string;
+    subTypes?: string[];
+    targets?: RoomElement[];
+  };
+  selectedProduct?: ContextSelectedProduct;
+  productCode?: string;
+  sku?: string;
   products?: ContextProduct[];
   budget?: { min?: number; max?: number; currency?: string };
   previousTargets?: RoomElement[];
+  previousProductId?: string;
+  previousSKU?: string;
   previousChanges?: string[];
   previousLabel?: string;
 }
@@ -104,6 +166,33 @@ export function buildAIContext(input: BuildContextInput): AIContext {
       }
     : undefined;
 
+  const roomAnalysis = input.roomUnderstanding
+    ? {
+        roomType: input.roomUnderstanding.roomType,
+        style: input.roomUnderstanding.style,
+        likelyStyle: input.roomUnderstanding.likelyStyle,
+        palette: input.roomUnderstanding.palette,
+        mood: input.roomUnderstanding.mood,
+        emptySpaces: input.roomUnderstanding.emptySpaces,
+        functionalIssues: input.roomUnderstanding.functionalIssues,
+        designOpportunities: input.roomUnderstanding.designOpportunities,
+        confidence: input.roomUnderstanding.confidence,
+      }
+    : undefined;
+
+  const sku = input.sku ?? input.selectedProduct?.sku ?? input.productCode;
+  const productCode = input.productCode ?? sku;
+  const designableElements =
+    input.designableElements ??
+    DESIGNABLE_ELEMENTS.filter((e) => !input.protectedElements.includes(e));
+
+  const hasPrevious = Boolean(
+    input.previousTargets?.length ||
+      input.previousChanges?.length ||
+      input.previousProductId ||
+      input.previousSKU,
+  );
+
   return {
     room: {
       type: roomType,
@@ -111,6 +200,22 @@ export function buildAIContext(input: BuildContextInput): AIContext {
       layout: input.roomUnderstanding?.layout,
       architecture: input.roomUnderstanding?.architecture,
     },
+    roomAnalysis,
+    selection: input.selection,
+    target: input.targets,
+    scope: input.scope,
+    style: resolvedStyle,
+    colors: input.colors,
+    description: input.prompt ? input.prompt.trim().slice(0, 300) : undefined,
+    selectedProduct: input.selectedProduct,
+    productCode,
+    sku,
+    previousTargets: input.previousTargets,
+    previousProductId: input.previousProductId,
+    previousSKU: input.previousSKU,
+    previousChanges: input.previousChanges,
+    protectedElements: input.protectedElements,
+    designableElements,
     existingObjects: input.roomUnderstanding?.objects ?? [],
     userIntent: {
       action: input.prompt.trim().slice(0, 200),
@@ -119,18 +224,18 @@ export function buildAIContext(input: BuildContextInput): AIContext {
       requestedChanges: [],
       protectedElements: input.protectedElements,
     },
-    style: resolvedStyle,
     analysisContext,
     products: input.products?.length ? input.products.slice(0, 12) : undefined,
     budget: input.budget,
-    previousState:
-      input.previousTargets?.length || input.previousChanges?.length
-        ? {
-            lastAction: input.previousLabel,
-            lastTargets: input.previousTargets ?? [],
-            lastChanges: input.previousChanges ?? [],
-          }
-        : undefined,
+    previousState: hasPrevious
+      ? {
+          lastAction: input.previousLabel,
+          lastTargets: input.previousTargets ?? [],
+          lastChanges: input.previousChanges ?? [],
+          lastProductId: input.previousProductId,
+          lastSKU: input.previousSKU,
+        }
+      : undefined,
     createdAt: new Date().toISOString(),
   };
 }
@@ -174,6 +279,7 @@ export function compactContextForLlm(ctx: AIContext, opts?: CompactContextOption
     if (a.doors) parts.push(`doors:${a.doors}`);
   }
   if (ctx.style) parts.push(`style:${ctx.style.id}`);
+  if (ctx.sku || ctx.productCode) parts.push(`sku:${ctx.sku || ctx.productCode}`);
   if (ctx.existingObjects.length) {
     parts.push(`objects:[${ctx.existingObjects.slice(0, 8).map((o) => o.type).join(",")}]`);
   }

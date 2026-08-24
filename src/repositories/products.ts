@@ -1,14 +1,17 @@
-import type { Product, StyleSlug } from "@/types";
+import type { Product, StyleSlug } from "../types";
 import {
   products as mockProducts, getProduct as mockBySlug, getProductById as mockById,
+  getProductBySkuOrCode as mockBySku,
   productsByCategory as mockByCategory, productsByStyle as mockByStyle,
   similarProducts as mockSimilar, trendingProducts as mockTrending,
   getProductSalesCount as mockSales,
-} from "@/data/products";
+} from "../data/products";
 
 export interface ProductsRepository {
   list(): Promise<Product[]>; bySlug(slug: string): Promise<Product | undefined>;
-  byId(id: string): Promise<Product | undefined>; byCategory(slug: string): Promise<Product[]>;
+  byId(id: string): Promise<Product | undefined>;
+  bySku(sku: string): Promise<Product | undefined>;
+  byCategory(slug: string): Promise<Product[]>;
   byStyle(slug: string): Promise<Product[]>; similar(productId: string, take?: number): Promise<Product[]>;
   trending(take?: number): Promise<Product[]>; salesCount(product: Product): Promise<number>;
 }
@@ -16,14 +19,14 @@ export interface ProductsRepository {
 const hasDatabase = () => Boolean(process.env.DATABASE_URL);
 
 async function remoteList(params: Record<string, string | number | boolean | undefined> = {}): Promise<Product[]> {
-  const { listProducts } = await import("@/services/catalogService");
+  const { listProducts } = await import("../services/catalogService");
   const result = await listProducts({ ...params, limit: Number(params.limit ?? 50) });
   return result.items.map(toDomain);
 }
 
 function toDomain(value: Record<string, any>): Product {
   return {
-    id: value.id, slug: value.slug, name: value.title ?? value.name, brand: value.brand ?? value.vendor?.name ?? "هومینو",
+    id: value.id, sku: value.sku, slug: value.slug, name: value.title ?? value.name, brand: value.brand ?? value.vendor?.name ?? "هومینو",
     storeId: value.vendor?.id ?? value.vendorId ?? "", categorySlug: value.categorySlugs?.[0] ?? "furniture",
     styleSlugs: (value.styleSlugs ?? []) as StyleSlug[], price: value.price ?? 0,
     oldPrice: value.compareAtPrice ?? undefined, currency: "تومان", rating: Number(value.rating ?? 0) > 5 ? Number(value.rating) / 10 : Number(value.rating ?? 0),
@@ -39,10 +42,16 @@ export const productsRepository: ProductsRepository = {
   list: async () => hasDatabase() ? remoteList() : mockProducts,
   bySlug: async (slug) => {
     if (!hasDatabase()) return mockBySlug(slug);
-    const { getProductBySlug } = await import("@/services/catalogService");
+    const { getProductBySlug } = await import("../services/catalogService");
     try { return toDomain(await getProductBySlug(slug)); } catch { return undefined; }
   },
   byId: async (id) => hasDatabase() ? (await remoteList()).find(p => p.id === id) : mockById(id),
+  bySku: async (sku) => {
+    if (!hasDatabase()) return mockBySku(sku);
+    const all = await remoteList();
+    const clean = sku.trim().toLowerCase();
+    return all.find(p => (p.sku && p.sku.toLowerCase() === clean) || p.id.toLowerCase() === clean || p.slug.toLowerCase() === clean) || mockBySku(sku);
+  },
   byCategory: async (slug) => hasDatabase() ? remoteList({ categorySlug: slug }) : mockByCategory(slug),
   byStyle: async (slug) => hasDatabase() ? remoteList({ styleSlug: slug }) : mockByStyle(slug),
   similar: async (id, take = 4) => hasDatabase() ? (await remoteList()).filter(p => p.id !== id).slice(0, take) : mockSimilar(id, take),
