@@ -129,7 +129,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): AiIntent {
       req.selection.category,
       req.selection.subTypes?.join(" "),
     );
-    if (!selected.includes(catTarget)) {
+    if (catTarget && !selected.includes(catTarget)) {
       selected.push(catTarget);
     }
   }
@@ -140,7 +140,7 @@ export function heuristicUnderstandIntent(req: IntentRequest): AiIntent {
       resolvedProduct.categorySlug,
       `${resolvedProduct.subCategorySlug ?? ""} ${resolvedProduct.name}`,
     );
-    if (!selected.includes(productTarget)) {
+    if (productTarget && !selected.includes(productTarget)) {
       selected.push(productTarget);
     }
   }

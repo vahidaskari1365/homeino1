@@ -22,7 +22,6 @@ import {
   type ScopedChange,
   categoryToRoomElement,
   detectCategorySkuConflict,
-  matchStoreProducts,
   type MatchedStoreProduct,
 } from "@/services/ai/roomState";
 import { costOf } from "@/services/ai/credits";
@@ -133,7 +132,8 @@ function deriveTargetsFromProducts(productsArr: Product[]): RoomElement[] {
   for (const p of productsArr) {
     const cat = (p.categorySlug ?? "").toLowerCase();
     const name = p.name.toLowerCase();
-    out.add(categoryToRoomElement(cat, `${p.subCategorySlug ?? ""} ${name}`));
+    const el = categoryToRoomElement(cat, `${p.subCategorySlug ?? ""} ${name}`);
+    if (el) out.add(el);
   }
   return [...out];
 }
@@ -196,6 +196,8 @@ function DesignInner() {
   const [stage, setStage] = useState<Stage>("UPLOADING");
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [matchedStoreProducts, setMatchedStoreProducts] = useState<MatchedStoreProduct[]>([]);
+  const [noStoreMatches, setNoStoreMatches] = useState(false);
+  const skuCheckSeq = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set(["furniture"]));
   const [selectedSubTypes, setSelectedSubTypes] = useState<Record<string, string[]>>({});
@@ -284,17 +286,26 @@ function DesignInner() {
       return;
     }
     const found = getProductBySkuOrCode(trimmed);
-    if (!found) {
-      setSkuWarning("کد محصول نامعتبر است — محصولی با این کد در کاتالوگ فروشگاه‌ها یافت نشد.");
+    if (found) {
+      const catSlugs = designElements.map((e) => e.catSlug);
+      const conflict = detectCategorySkuConflict(catSlugs, found);
+      if (conflict.hasConflict) {
+        setSkuWarning(conflict.message || "توجه: دسته‌بندی انتخاب‌شده با کد محصول همخوانی ندارد.");
+      } else {
+        setSkuWarning(null);
+      }
       return;
     }
-    const catSlugs = designElements.map((e) => e.catSlug);
-    const conflict = detectCategorySkuConflict(catSlugs, found);
-    if (conflict.hasConflict) {
-      setSkuWarning(conflict.message || "توجه: دسته‌بندی انتخاب‌شده با کد محصول همخوانی ندارد.");
-    } else {
-      setSkuWarning(null);
-    }
+    // Not in the local dev catalog — verify against the SERVER catalog
+    // (Supabase in production = single source of truth).
+    const seq = ++skuCheckSeq.current;
+    aiService.resolveSku(trimmed)
+      .then(() => { if (skuCheckSeq.current === seq) setSkuWarning(null); })
+      .catch((e: unknown) => {
+        if (skuCheckSeq.current !== seq) return;
+        const msg = (e instanceof Error && e.message) ? e.message : "";
+        setSkuWarning(msg || "کد محصول نامعتبر است — محصولی با این کد در کاتالوگ فروشگاه‌ها یافت نشد.");
+      });
   };
 
   function makePlacements(prods: Product[]): Placement[] {
@@ -348,7 +359,9 @@ function DesignInner() {
     const budgetNum = Number(budget.replace(/[^\d]/g, "")) || undefined;
 
     const resolvedSkuProduct = skuInput.trim() ? getProductBySkuOrCode(skuInput.trim()) : undefined;
-    const categoryTargets = designElements.map((e) => categoryToRoomElement(e.catSlug, e.label));
+    const categoryTargets = designElements
+      .map((e) => categoryToRoomElement(e.catSlug, e.label))
+      .filter((t): t is RoomElement => t !== null);
     const derivedTargets: RoomElement[] = deriveTargetsFromProducts(chosen);
     const finalTargets: RoomElement[] = [...new Set([...uiScope.targets, ...derivedTargets, ...categoryTargets])];
 
@@ -424,9 +437,15 @@ function DesignInner() {
         setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
         return;
       }
-      setError("خطا در پردازش — لطفاً دوباره تلاش کن");
+      // Surface the SAFE server error message (e.g. invalid SKU / catalog
+      // unavailable) — never a raw internal error.
+      const serverMsg = result.error instanceof Error && result.error.message ? result.error.message : "";
+      const shown = serverMsg && serverMsg !== "AI service unavailable"
+        ? serverMsg
+        : "خطا در پردازش — لطفاً دوباره تلاش کن";
+      setError(shown);
       trackEvent("ai_failed", {});
-      return toast("خطا در پردازش AI — اعتبار برگردانده شد", "error");
+      return toast(shown, "error");
     }
 
     try {
@@ -450,17 +469,12 @@ function DesignInner() {
       const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
       const outputImage = isPreview ? imageBase64 : editedImage;
 
-      const realMatched = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
-        ? pipelineRes.matchedProducts
-        : matchStoreProducts({
-            sku: skuInput.trim() || undefined,
-            productId: resolvedSkuProduct?.id,
-            targets: inst.targets.length ? inst.targets : finalTargets,
-            style,
-            roomType: rs.roomType,
-            budget: budgetNum,
-          });
+      // Real store matching comes from the SERVER pipeline (Supabase catalog in
+      // production) — built only after a successful generation. Never fall back
+      // to unrelated client-side catalog products: empty means empty.
+      const realMatched = pipelineRes.matchedProducts ?? [];
       setMatchedStoreProducts(realMatched);
+      setNoStoreMatches(realMatched.length === 0);
 
       rs.commitChange({
         label: isFullRoom ? "چیدمان کامل" : (inst.targets.map((t) => t).join("، ") || uiScope.targets.join("، ")),
@@ -568,8 +582,12 @@ function DesignInner() {
         setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
         return;
       }
-      setError("خطا در پردازش");
-      return toast("خطا در جای‌گذاری — اعتبار برگردانده شد", "error");
+      const placeMsg = result.error instanceof Error && result.error.message ? result.error.message : "";
+      const placeShown = placeMsg && placeMsg !== "AI service unavailable"
+        ? placeMsg
+        : "خطا در پردازش";
+      setError(placeShown);
+      return toast(placeShown, "error");
     }
 
     try {
@@ -588,15 +606,10 @@ function DesignInner() {
       setStage("RENDERING");
       setTab("design");
 
-      const matchedStore = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
-        ? pipelineRes.matchedProducts
-        : matchStoreProducts({
-            productId: presetProduct.id,
-            targets,
-            style,
-            roomType: rs.roomType,
-          });
+      // Real store matching from the server pipeline only (single source of truth).
+      const matchedStore = pipelineRes.matchedProducts ?? [];
       setMatchedStoreProducts(matchedStore);
+      setNoStoreMatches(matchedStore.length === 0);
 
       rs.commitChange({
         label: `جای‌گذاری ${presetProduct.name}`,
@@ -755,7 +768,7 @@ function DesignInner() {
                     <Upload size={22} className="mb-1 text-ink-muted" /><p className="text-xs font-medium text-ink">عکس اتاقت را بنداز اینجا</p><p className="text-[10px] text-ink-muted">یا کلیک کن برای انتخاب</p>
                   </div>
                 ) : (
-                  <div className="relative overflow-hidden rounded-xl border border-clay/40"><img src={imageBase64} alt="" className="aspect-video w-full object-cover" /><button onClick={() => { setImageBase64(null); setPlacements([]); rs.reset(); setRoomAnalysis(null); setMatchedStoreProducts([]); }} className="absolute left-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-ink/80 text-cream hover:bg-danger" aria-label="حذف"><X size={12} /></button></div>
+                  <div className="relative overflow-hidden rounded-xl border border-clay/40"><img src={imageBase64} alt="" className="aspect-video w-full object-cover" /><button onClick={() => { setImageBase64(null); setPlacements([]); rs.reset(); setRoomAnalysis(null); setMatchedStoreProducts([]); setNoStoreMatches(false); }} className="absolute left-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-ink/80 text-cream hover:bg-danger" aria-label="حذف"><X size={12} /></button></div>
                 )}
                 <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
                 {analyzing && <p className="mt-1.5 flex items-center gap-1 text-[10px] text-ink-muted"><Loader2 size={11} className="animate-spin text-terracotta-deep" /> در حال تحلیل هوشمند فضا...</p>}
@@ -941,6 +954,14 @@ function DesignInner() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* No relevant products — honest empty state, never unrelated filler */}
+              {noStoreMatches && !loading && (
+                <div className="flex items-center justify-center gap-1 rounded-lg border border-clay/40 bg-cream px-3 py-2 text-[10px] text-ink-muted">
+                  <Store size={11} className="shrink-0" />
+                  محصول مشابهی در فروشگاه‌های فعلی پیدا نشد.
                 </div>
               )}
             </div>

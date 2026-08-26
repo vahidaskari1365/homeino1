@@ -13,6 +13,7 @@ export type AiErrorCode =
   | "INVALID_REQUEST"       // malformed request from the client
   | "INVALID_SKU"           // SKU / product code not found in catalog
   | "CATEGORY_SKU_CONFLICT" // SKU category contradicts selected UI category
+  | "CATALOG_UNAVAILABLE"   // Supabase / product catalog unreachable (production)
   | "INSUFFICIENT_CREDITS"  // server-side credit gate refused
   | "INVALID_AI_OUTPUT"     // model returned unusable output (after retries)
   | "IMAGE_PROCESSING_ERROR" // image decode / encode / storage failure
@@ -27,6 +28,7 @@ export const AI_ERROR_MESSAGE: Record<AiErrorCode, string> = {
   INVALID_REQUEST: "درخواست نامعتبر است.",
   INVALID_SKU: "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.",
   CATEGORY_SKU_CONFLICT: "کد محصول واردشده با دسته‌بندی انتخابی مغایرت دارد.",
+  CATALOG_UNAVAILABLE: "کاتالوگ محصولات موقتاً در دسترس نیست — کمی بعد دوباره تلاش کن.",
   INSUFFICIENT_CREDITS: "اعتبار کافی نیست.",
   INVALID_AI_OUTPUT: "نتیجه‌ی AI قابل قبول نبود — دوباره تلاش کن.",
   IMAGE_PROCESSING_ERROR: "پردازش تصویر ممکن نشد — تصویر دیگری امتحان کن.",
@@ -69,6 +71,9 @@ export class AiError extends Error {
   static categoryConflict(message?: string) {
     return new AiError("CATEGORY_SKU_CONFLICT", message, { status: 400, retriable: false });
   }
+  static catalogUnavailable(message?: string, details?: unknown) {
+    return new AiError("CATALOG_UNAVAILABLE", message, { status: 503, retriable: true, details });
+  }
   static insufficientCredits(details?: unknown) {
     return new AiError("INSUFFICIENT_CREDITS", undefined, { status: 422, retriable: false, details });
   }
@@ -89,6 +94,7 @@ function statusFor(code: AiErrorCode): number {
     case "INVALID_REQUEST":
     case "INVALID_SKU":
     case "CATEGORY_SKU_CONFLICT": return 400;
+    case "CATALOG_UNAVAILABLE": return 503;
     case "INSUFFICIENT_CREDITS": return 422;
     case "DUPLICATE_REQUEST": return 409;
     case "TIMEOUT": return 504;
@@ -101,7 +107,7 @@ function statusFor(code: AiErrorCode): number {
 }
 
 export function isRetriableCode(code: AiErrorCode): boolean {
-  return code === "PROVIDER_ERROR" || code === "TIMEOUT" || code === "RATE_LIMIT";
+  return code === "PROVIDER_ERROR" || code === "TIMEOUT" || code === "RATE_LIMIT" || code === "CATALOG_UNAVAILABLE";
 }
 
 /** Normalize ANY thrown value into an AiError (never throws). */

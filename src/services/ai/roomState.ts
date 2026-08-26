@@ -423,30 +423,91 @@ export const ELEMENT_TO_CATEGORIES: Record<RoomElement, string[]> = {
 /**
  * Maps Category Slug + subType/title to RoomElement vocabulary.
  * Ensures consistent target classification across UI selection, SKU resolution, and intent pipeline.
+ *
+ * PRIORITY (never blanket-assume «furniture → sofa»):
+ *   1. exact subcategory slug (sofa / armchair / coffee-table / …)
+ *   2. product subtype / name keywords
+ *   3. exact category slug
+ *   4. conservative UNKNOWN (null) — when we cannot tell a sofa from a chair
+ *      we do NOT guess; callers must handle null.
  */
-export function categoryToRoomElement(categorySlug: string, subTypeOrName?: string): RoomElement {
-  const cat = (categorySlug || "").toLowerCase();
-  const sub = (subTypeOrName || "").toLowerCase();
-  const full = `${cat} ${sub}`;
+const SUBCATEGORY_ELEMENT: Record<string, RoomElement> = {
+  // seating
+  sofa: "sofa", couch: "sofa", sectional: "sofa", "l-sofa": "sofa",
+  armchair: "chair", chair: "chair", "dining-chair": "chair", "office-chair": "chair", pouf: "chair",
+  // tables
+  table: "table", desk: "table", "coffee-table": "table", "dining-table": "table", "side-table": "table", nightstand: "table", console: "table",
+  // beds
+  bed: "bed", headboard: "bed",
+  // rugs
+  rug: "rug", carpet: "rug", runner: "rug",
+  // textiles → curtain only when it really is one (cushion/throw fall through)
+  curtain: "curtain", drape: "curtain", sheer: "curtain",
+  // lighting
+  lamp: "lighting", "table-lamp": "lighting", "floor-lamp": "lighting", "wall-lamp": "lighting",
+  ceiling: "lighting", chandelier: "lighting", sconce: "lighting",
+  // decor / art
+  "wall-art": "art", mirror: "art", painting: "art", sculpture: "art", vase: "art", candle: "art",
+  // plants
+  planter: "plant", plant: "plant",
+  // storage
+  shelf: "shelf", bookcase: "shelf", wardrobe: "shelf", organizer: "shelf",
+  // tv
+  "tv-console": "tv",
+};
 
-  if (cat === "lighting" || /light|lamp|chandelier|نور|چراغ|لوستر|آباژور|دیوارکوب/.test(full)) return "lighting";
-  if (cat === "carpet" || cat === "rugs" || /rug|carpet|فرش|قالی|گلیم/.test(full)) return "rug";
-  if (cat === "curtain" || /curtain|drape|پرده|تور|textile/.test(full)) return "curtain";
+export function categoryToRoomElement(categorySlug: string, subTypeOrName?: string): RoomElement | null {
+  const cat = (categorySlug || "").toLowerCase().trim();
+  const sub = (subTypeOrName || "").toLowerCase();
+  const full = `${cat} ${sub}`.trim();
+
+  // ---- Priority 1: exact subcategory slug ----
+  if (sub) {
+    if (SUBCATEGORY_ELEMENT[sub]) return SUBCATEGORY_ELEMENT[sub];
+    // Whitespace tokens keep compound slugs intact ("table-lamp" stays whole).
+    for (const token of sub.split(/\s+/).filter(Boolean)) {
+      if (SUBCATEGORY_ELEMENT[token]) return SUBCATEGORY_ELEMENT[token];
+    }
+  }
+
+  // ---- Priority 2: subtype / product-name keywords ----
+  if (/light|lamp|chandelier|نور|چراغ|لوستر|آباژور|دیوارکوب/.test(full)) return "lighting";
+  if (/rug|carpet|فرش|قالی|گلیم/.test(full)) return "rug";
+  if (/curtain|drape|پرده|تور/.test(full)) return "curtain";
   if (/chair|armchair|صندلی|پاف|پوف/.test(full)) return "chair";
-  if (cat === "dining" || /table|desk|dining|میز|جلومبلی|ناهارخوری|کنسول/.test(full)) return "table";
+  if (/table|desk|dining|میز|جلومبلی|ناهارخوری|کنسول/.test(full)) return "table";
   if (/sofa|couch|sectional|مبل|کاناپه/.test(full)) return "sofa";
-  if (cat === "bedding" || cat === "bedroom" || /bed|تخت|خواب/.test(full)) return "bed";
-  if (cat === "tv-console" || /tv|تلویزیون/.test(full)) return "tv";
-  if (cat === "plants" || /plant|flower|گیاه|گلدان/.test(full)) return "plant";
-  if (cat === "art" || cat === "decor" || cat === "accessories" || /art|painting|mirror|sculpture|candle|تابلو|آینه|مجسمه|شمع/.test(full)) return "art";
-  if (cat === "bookcase-shoe" || /shelf|bookcase|wardrobe|organizer|قفسه|شلف|کمد|جاکفشی|نظم‌دهنده/.test(full)) return "shelf";
+  if (/bed|تخت|خواب/.test(full)) return "bed";
+  if (/tv|تلویزیون/.test(full)) return "tv";
+  if (/plant|flower|گیاه|گلدان/.test(full)) return "plant";
+  if (/art|painting|mirror|sculpture|candle|تابلو|آینه|مجسمه|شمع/.test(full)) return "art";
+  if (/shelf|bookcase|wardrobe|organizer|قفسه|شلف|کمد|جاکفشی|نظم\u200cدهنده/.test(full)) return "shelf";
   if (/wall|دیوار/.test(full)) return "wall";
   if (/floor|کف/.test(full)) return "floor";
   if (/ceiling|سقف/.test(full)) return "ceiling";
 
-  if (cat === "office" || cat === "workspace") return /chair|صندلی/.test(sub) ? "chair" : "table";
-  if (cat === "furniture") return "sofa";
-  return "sofa";
+  // ---- Priority 3: exact category slug ----
+  if (cat === "lighting") return "lighting";
+  if (cat === "carpet" || cat === "rugs") return "rug";
+  if (cat === "curtain") return "curtain";
+  if (cat === "textiles") return "curtain"; // keeps previous behaviour (cushions/throws live with curtains)
+  if (cat === "dining") return "table";
+  if (cat === "bedding" || cat === "bedroom") return "bed";
+  if (cat === "tv-console") return "tv";
+  if (cat === "plants") return "plant";
+  if (cat === "art" || cat === "decor" || cat === "accessories") return "art";
+  if (cat === "bookcase-shoe") return "shelf";
+
+  // ---- Priority 4: conservative unknown ----
+  // «furniture» alone is NOT proof of a sofa (could be a chair, table, shelf…).
+  if (cat === "office" || cat === "workspace") return "table"; // workspace default is the desk; chairs carry their own subcategory
+  return null;
+}
+
+/** Normalize a SKU / product code for EXACT comparison:
+ *  trim → lowercase → collapse internal whitespace. The match itself stays exact. */
+export function normalizeProductCode(code: string | undefined | null): string {
+  return (code ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 /** Detects if an entered SKU belongs to a different category than the UI selection. */
@@ -454,7 +515,7 @@ export function detectCategorySkuConflict(
   selectedCategoryOrCategories?: string | string[] | RoomElement[],
   selectedTargetsOrProduct?: RoomElement[] | Product,
   maybeProduct?: Product,
-): { hasConflict: boolean; message?: string; productElement: RoomElement } {
+): { hasConflict: boolean; message?: string; productElement: RoomElement | null } {
   let product: Product | undefined;
   let selectedTargets: RoomElement[] = [];
 
@@ -472,13 +533,18 @@ export function detectCategorySkuConflict(
   }
 
   if (!product) {
-    return { hasConflict: false, productElement: "sofa" };
+    return { hasConflict: false, productElement: null };
   }
 
   const productElement = categoryToRoomElement(
     product.categorySlug,
     `${product.subCategorySlug ?? ""} ${product.name}`,
   );
+  // Conservative: when the product's element cannot be determined we cannot
+  // prove a conflict — do not guess (and do not silently force "sofa").
+  if (!productElement) {
+    return { hasConflict: false, productElement: null };
+  }
 
   // If selectedTargets wasn't explicitly given, derive from selectedCategoryOrCategories
   if (selectedTargets.length === 0 && selectedCategoryOrCategories) {
@@ -490,7 +556,8 @@ export function detectCategorySkuConflict(
         if (ALL_ELEMENTS.includes(item as RoomElement)) {
           selectedTargets.push(item as RoomElement);
         } else {
-          selectedTargets.push(categoryToRoomElement(item));
+          const el = categoryToRoomElement(item);
+          if (el) selectedTargets.push(el);
         }
       }
     }
@@ -539,47 +606,89 @@ export interface StoreMatchingOptions {
   productId?: string;
   targets?: RoomElement[];
   category?: string;
+  subCategory?: string;
   style?: string;
   colors?: string[];
   roomType?: string;
   budget?: number;
   maxResults?: number;
   limit?: number;
+  /** Explicit catalog pool (from the single product source). Defaults to the
+   *  shipped dev/test catalog — production passes the Supabase-loaded pool. */
   catalog?: Product[];
+  /** Explicit store/vendor directory (from the single product source). */
+  stores?: typeof defaultStores;
 }
+
+// Priority weights — a lower priority can NEVER outweigh a higher one:
+//   exact SKU (5000) ≫ exact ID (2500) ≫ category/target (100) ≫ subcategory (40)
+//   ≫ style (30) ≫ color (15) ≫ room (8) ≫ budget (5) ≫ availability (2)
+// The sum of every lower weight is still far below the next-higher weight,
+// so category can never override an exact SKU, and room can never override
+// category.
+const W = {
+  exactSku: 5000,
+  exactProduct: 2500,
+  category: 100,
+  subCategory: 40,
+  style: 30,
+  color: 15,
+  room: 8,
+  budget: 5,
+  inStock: 2,
+  outOfStock: -50,
+  overBudget: -20,
+} as const;
+
+/** Room-type → category-slug compatibility (room-aware matching). */
+const ROOM_CATEGORIES: { match: RegExp; categories: string[] }[] = [
+  { match: /living|نشیمن|پذیرایی|پزورایی|سالن/, categories: ["furniture", "lighting", "rugs", "decor", "textiles", "carpet", "art", "tv-console"] },
+  { match: /bedroom|خواب/, categories: ["bedroom", "lighting", "rugs", "decor", "textiles", "bedding"] },
+  { match: /office|کار|workspace|اداری/, categories: ["workspace", "office", "lighting", "decor", "furniture"] },
+  { match: /dining|ناهارخوری/, categories: ["furniture", "dining", "lighting", "decor"] },
+];
 
 /**
  * Matches REAL store products from the catalog according to priority rules:
- *   Priority 1: exact SKU
- *   Priority 2: exact product ID / slug
- *   Priority 3: category match (target room elements / category slug)
- *   Priority 4: style compatibility
- *   Priority 5: color compatibility
- *   Priority 6: category + room compatibility
+ *   Priority 1: exact SKU            (ABSOLUTE — nothing can override it)
+ *   Priority 2: exact product ID/slug
+ *   Priority 3: exact category / target room element
+ *   Priority 4: subcategory
+ *   Priority 5: style compatibility
+ *   Priority 6: color compatibility
+ *   Priority 7: room compatibility
+ *   Priority 8: budget
+ *   Priority 9: availability
  * Multi-store support: aggregates across all vendors and ranks by score.
- * Never invents fake products, fake stores, or fake prices.
+ * Never invents fake products, fake stores, or fake prices — and NEVER falls
+ * back to unrelated catalog products: when nothing is relevant it returns [].
  */
 export function matchStoreProducts(options: StoreMatchingOptions): MatchedStoreProduct[] {
   const catalog = options.catalog ?? defaultCatalog;
-  const storeMap = new Map(defaultStores.map((s) => [s.id, s]));
+  const storeSource = options.stores ?? defaultStores;
+  const storeMap = new Map(storeSource.map((s) => [s.id, s]));
 
-  const skuQuery = options.sku?.trim().toLowerCase();
-  const productIdQuery = options.productId?.trim().toLowerCase();
+  const skuQuery = normalizeProductCode(options.sku);
+  const productIdQuery = normalizeProductCode(options.productId);
+  const subCategoryQuery = normalizeProductCode(options.subCategory);
   const targetElements = options.targets ?? [];
   const styleQuery = options.style?.trim().toLowerCase();
   const roomQuery = options.roomType?.trim().toLowerCase();
   const colorsQuery = options.colors ?? [];
+  const limit = options.limit ?? options.maxResults ?? 6;
 
   const scored = catalog.map((p) => {
     let score = 0;
+    let meaningful = false; // a product qualifies ONLY with a real match reason
     const matchReasons: string[] = [];
 
-    // Priority 1: Exact SKU match
+    // Priority 1: Exact SKU match — ABSOLUTE priority
     if (skuQuery) {
-      const pSku = p.sku?.toLowerCase();
+      const pSku = normalizeProductCode(p.sku);
       const isAlias = skuQuery in SKU_ALIASES && SKU_ALIASES[skuQuery] === p.id.toLowerCase();
-      if (pSku === skuQuery || isAlias) {
-        score += 1000;
+      if ((pSku && pSku === skuQuery) || isAlias) {
+        score += W.exactSku;
+        meaningful = true;
         matchReasons.push(`تطابق دقیق با کد محصول (${p.sku || skuQuery.toUpperCase()})`);
       }
     }
@@ -587,83 +696,91 @@ export function matchStoreProducts(options: StoreMatchingOptions): MatchedStoreP
     // Priority 2: Exact Product ID or Slug match
     if (productIdQuery) {
       if (p.id.toLowerCase() === productIdQuery || p.slug.toLowerCase() === productIdQuery) {
-        score += 500;
+        score += W.exactProduct;
+        meaningful = true;
         matchReasons.push("محصول انتخابی شما");
       }
     }
 
-    // Priority 3: Category match
+    // Priority 3: Category / target match
     const productElement = categoryToRoomElement(p.categorySlug, `${p.subCategorySlug ?? ""} ${p.name}`);
-    const isTargetMatch = targetElements.includes(productElement);
-    const isCatMatch =
-      options.category &&
-      (p.categorySlug.toLowerCase() === options.category.toLowerCase() ||
-        (ELEMENT_TO_CATEGORIES[productElement] || []).includes(options.category.toLowerCase()));
-
+    const isTargetMatch = productElement ? targetElements.includes(productElement) : false;
+    const categoryQuery = options.category?.trim().toLowerCase();
+    const isCatMatch = Boolean(
+      categoryQuery &&
+      (p.categorySlug.toLowerCase() === categoryQuery ||
+        p.subCategorySlug?.toLowerCase() === categoryQuery ||
+        (productElement && (ELEMENT_TO_CATEGORIES[productElement] || []).includes(categoryQuery))),
+    );
     if (isTargetMatch || isCatMatch) {
-      score += 100;
-      matchReasons.push(`دسته‌بندی مرتبط (${ELEMENT_LABELS[productElement] || productElement})`);
+      score += W.category;
+      meaningful = true;
+      matchReasons.push(`دسته\u200cبندی مرتبط (${productElement ? ELEMENT_LABELS[productElement] : p.categorySlug})`);
     }
 
-    // Priority 4: Style compatibility
+    // Priority 4: Exact subcategory
+    if (subCategoryQuery && p.subCategorySlug && p.subCategorySlug.toLowerCase() === subCategoryQuery) {
+      score += W.subCategory;
+      meaningful = true;
+      matchReasons.push(`زیر دسته\u200cبندی مرتبط (${p.subCategorySlug})`);
+    }
+
+    // Priority 5: Style compatibility
     if (styleQuery) {
       const styleMatch = p.styleSlugs.some(
         (s) => s.toLowerCase().includes(styleQuery) || styleQuery.includes(s.toLowerCase()),
       );
       if (styleMatch) {
-        score += 30;
+        score += W.style;
+        meaningful = true;
         matchReasons.push(`سازگار با سبک ${options.style}`);
       }
     }
 
-    // Priority 5: Color compatibility
+    // Priority 6: Color compatibility
     if (colorsQuery.length > 0) {
       const colorMatch = p.colors?.some((c) =>
         colorsQuery.some((reqC) => c.name.includes(reqC) || reqC.includes(c.name)),
       );
       if (colorMatch) {
-        score += 15;
+        score += W.color;
+        meaningful = true;
         matchReasons.push("هماهنگ با پالت رنگ درخواستی");
       }
     }
 
-    // Priority 6: Room compatibility
+    // Priority 7: Room compatibility (boosts score — can NEVER override
+    // exact SKU / product / category priorities)
     if (roomQuery) {
-      const roomMatch =
-        p.tags?.some((t) => t.toLowerCase().includes(roomQuery) || roomQuery.includes(t.toLowerCase())) ||
-        (roomQuery.includes("living") || roomQuery.includes("نشیمن") || roomQuery.includes("پذیرایی")
-          ? ["furniture", "lighting", "rugs", "decor", "textiles"].includes(p.categorySlug)
-          : roomQuery.includes("bedroom") || roomQuery.includes("خواب")
-            ? ["bedroom", "lighting", "rugs", "decor", "textiles"].includes(p.categorySlug)
-            : roomQuery.includes("office") || roomQuery.includes("کار") || roomQuery.includes("workspace")
-              ? ["workspace", "lighting", "decor"].includes(p.categorySlug)
-              : true);
-      if (roomMatch) {
-        score += 5;
+      const tagMatch = p.tags?.some(
+        (t) => t.toLowerCase().includes(roomQuery) || roomQuery.includes(t.toLowerCase()),
+      );
+      const roomRule = ROOM_CATEGORIES.find((r) => r.match.test(roomQuery));
+      const categoryMatch = roomRule ? roomRule.categories.includes(p.categorySlug) : false;
+      if (tagMatch || categoryMatch) {
+        score += W.room;
+        meaningful = true;
         matchReasons.push(`متناسب با فضای ${options.roomType}`);
       }
     }
 
-    // Stock availability
+    // Priority 9: availability (score-only — never qualifies a product alone)
     if (p.inStock) {
-      score += 2;
+      score += W.inStock;
     } else {
-      score -= 50;
+      score += W.outOfStock;
     }
 
-    // Budget compliance
+    // Priority 8: budget compliance (score-only — never qualifies a product alone)
     if (options.budget && options.budget > 0) {
-      if (p.price <= options.budget) {
-        score += 5;
-      } else {
-        score -= 20;
-      }
+      score += p.price <= options.budget ? W.budget : W.overBudget;
     }
 
     const store = storeMap.get(p.storeId);
-    const storeName = store?.name || p.brand || "فروشگاه هومینو";
+    // REAL store name only — never invent a storefront name.
+    const storeName = store?.name || p.brand || "";
 
-    const matched: MatchedStoreProduct = {
+    const matched = {
       productId: p.id,
       slug: p.slug,
       name: p.name,
@@ -678,22 +795,26 @@ export function matchStoreProducts(options: StoreMatchingOptions): MatchedStoreP
       currency: p.currency || "تومان",
       sku: p.sku,
       categorySlug: p.categorySlug,
-      categoryName: ELEMENT_LABELS[productElement] || p.categorySlug,
+      categoryName: productElement ? ELEMENT_LABELS[productElement] : p.categorySlug,
       styleSlugs: p.styleSlugs,
       inStock: p.inStock,
       stockCount: p.stockCount,
+      // /products/[slug] is the REAL internal product route
       productUrl: `/products/${p.slug}`,
       score,
-      matchReasons: matchReasons.length > 0 ? matchReasons : ["پیشنهاد هوشمند بر اساس فضا"],
+      matchReasons,
+      meaningful,
     };
 
     return matched;
   });
 
-  const relevant = scored.filter((p) => p.score > 0);
-  const pool = relevant.length > 0 ? relevant : scored;
-
-  return pool.sort((a, b) => b.score - a.score).slice(0, options.limit ?? options.maxResults ?? 6);
+  // NO fallback to unrelated products: only genuinely relevant results pass.
+  const relevant = scored.filter((p) => p.meaningful && p.score > 0);
+  return relevant
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(({ meaningful: _meaningful, ...item }) => item);
 }
 
 // ============================================================

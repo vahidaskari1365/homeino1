@@ -1013,3 +1013,201 @@ test("Scenario 13: No fake products — Matched products only from real reposito
     assert.ok(m.image.length > 0, "Must have real product image");
   }
 });
+
+// ============================================================
+// FINAL AI → PRODUCT → STORE END-TO-END PATCH — TEST MATRIX (A–M)
+//
+//   UI Selection → Product/SKU → AI Context → Intent → LLM →
+//   Validated Instruction → Orali/Image → Real Product Matching →
+//   Real Catalog → Real Stores → Products under the generated image
+// ============================================================
+import { runIntentUnderstanding } from "../../src/services/ai/pipeline";
+import { normalizeProductCode, type RoomElement as _RoomElementMatrix } from "../../src/services/ai/roomState";
+import { resolveProductByCode, isDatabaseCatalog } from "../../src/services/ai/productSource";
+import { stores as realStores } from "../../src/data/stores";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+// ---- Phase 5: category resolution priority (no blanket furniture→sofa) ----
+test("Matrix P5: categoryToRoomElement resolves by subcategory first, furniture alone = conservative unknown", () => {
+  assert.equal(categoryToRoomElement("furniture"), null, "bare «furniture» must NOT be assumed sofa");
+  assert.equal(categoryToRoomElement("furniture", "sofa"), "sofa");
+  assert.equal(categoryToRoomElement("furniture", "armchair"), "chair", "armchair ≠ sofa");
+  assert.equal(categoryToRoomElement("furniture", "coffee-table"), "table");
+  assert.equal(categoryToRoomElement("furniture", "میز جلو مبلی بلوط"), "table");
+  assert.equal(categoryToRoomElement("furniture", "صندلی راحتی"), "chair");
+  assert.equal(categoryToRoomElement("lighting", "table-lamp"), "lighting", "table-LAMP is lighting, not a table");
+  assert.equal(categoryToRoomElement("bedroom", "bed"), "bed");
+});
+
+// ---- A: UI Sofa only → target = sofa ----
+test("Matrix A: UI Sofa only → target=sofa, scope=single_item", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "", selectedTargets: ["sofa"] });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.scope, "single_item");
+});
+
+// ---- B: UI Sofa + «کرمش کن» → target=sofa + color=cream ----
+test("Matrix B: UI Sofa + cream request → target=sofa, color_change with کرم", () => {
+  const intent = heuristicUnderstandIntent({ prompt: "رنگش کرم باشه", selectedTargets: ["sofa"] });
+  assert.deepEqual(intent.target, ["sofa"]);
+  assert.equal(intent.intent, "color_change");
+  assert.ok(intent.colors?.includes("کرم"));
+});
+
+// ---- C: valid SKU resolves EXACTLY (after normalization) ----
+test("Matrix C: valid SKU → exact product resolved through the single product source", async () => {
+  assert.equal(normalizeProductCode("   SOF-1024  "), "sof-1024", "trim + lowercase, match stays exact");
+  const resolved = await resolveProductByCode("  SOF-1024 ");
+  assert.ok(resolved, "SKU SOF-1024 must resolve");
+  assert.equal(resolved!.product.id, "p1");
+  assert.equal(resolved!.product.sku, "SOF-1024");
+  assert.equal(resolved!.product.categorySlug, "furniture");
+  assert.equal(resolved!.product.subCategorySlug, "sofa");
+  assert.ok(resolved!.product.price > 0, "real price from the catalog");
+  assert.ok(!isDatabaseCatalog(), "test env uses the static dev catalog (explicitly allowed)");
+  // whitespace inside the code is NOT silently forgiven — match is exact
+  assert.equal((await resolveProductByCode("SOF -1024"))?.product.id, undefined, "fuzzy match must not happen");
+});
+
+// ---- D: invalid SKU → safe Persian error, no invented product ----
+test("Matrix D: invalid SKU → AiError INVALID_SKU with the exact safe message", async () => {
+  await assert.rejects(
+    runIntentUnderstanding({ prompt: "", scope: "targeted", sku: "NOPE-0000" }),
+    (err: unknown) => {
+      assert.ok(err instanceof AiError);
+      assert.equal((err as AiError).code, "INVALID_SKU");
+      assert.equal(
+        (err as AiError).message,
+        "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.",
+      );
+      return true;
+    },
+  );
+});
+
+// ---- E: SKU + Category conflict → conflict error ----
+test("Matrix E: SKU (lighting) + UI Sofa → CATEGORY_SKU_CONFLICT error", async () => {
+  const lamp = seedCatalog.find((p) => p.categorySlug === "lighting")!;
+  await assert.rejects(
+    runIntentUnderstanding({
+      prompt: "",
+      scope: "targeted",
+      sku: lamp.sku,
+      targets: ["sofa"],
+      selection: { category: "furniture" },
+    }),
+    (err: unknown) => {
+      assert.ok(err instanceof AiError);
+      assert.equal((err as AiError).code, "CATEGORY_SKU_CONFLICT");
+      return true;
+    },
+  );
+});
+
+// ---- F: exact SKU has ABSOLUTE priority (category can never override it) ----
+test("Matrix F: exact SKU ranked first even when the category target disagrees", () => {
+  const matches = matchStoreProducts({ sku: "SOF-1024", targets: ["lighting"], style: "modern" });
+  assert.ok(matches.length > 0);
+  assert.equal(matches[0].productId, "p1", "exact SKU product must be the top result");
+  assert.ok(matches[0].score >= 5000, "exact SKU weight is absolute");
+  assert.ok(matches[0].matchReasons.some((r) => r.includes("تطابق دقیق")));
+  for (const m of matches) assert.ok(m.score <= matches[0].score);
+});
+
+// ---- G: no exact match → only RELEVANT products ----
+test("Matrix G: target=lighting without SKU → only lighting products returned", () => {
+  const matches = matchStoreProducts({ targets: ["lighting"] });
+  assert.ok(matches.length > 0);
+  for (const m of matches) {
+    const p = getProductById(m.productId);
+    assert.ok(p, "matched product must exist in the catalog");
+    assert.equal(p!.categorySlug, "lighting", "irrelevant categories must not leak in");
+  }
+});
+
+// ---- H: no relevant products → [] (never the general catalog) ----
+test("Matrix H: target with no catalog representation → empty result, not filler", () => {
+  assert.deepEqual(matchStoreProducts({ targets: ["door"] }), []);
+  assert.deepEqual(matchStoreProducts({ targets: ["window"] }), []);
+  assert.deepEqual(matchStoreProducts({ targets: ["wall"], style: "nonexistent-style-xyz" }), []);
+});
+
+// ---- I: multi-store — results from multiple REAL vendors ----
+test("Matrix I: multi-store matching — several real stores, real store names only", () => {
+  const matches = matchStoreProducts({ targets: ["sofa", "lighting"], roomType: "living", limit: 8 });
+  assert.ok(matches.length > 1);
+  const storeIds = new Set(matches.map((m) => m.storeId));
+  assert.ok(storeIds.size >= 2, "products from multiple vendors must be able to appear");
+  const realNames = new Set(realStores.map((s) => s.name));
+  for (const m of matches) {
+    assert.ok(m.storeName.length > 0);
+    assert.ok(realNames.has(m.storeName), `store name must be REAL (${m.storeName})`);
+    assert.ok(m.productUrl.startsWith("/products/"));
+  }
+});
+
+// ---- J: generated image → matchedProducts present in PipelineResult ----
+test("Matrix J: runDesignPipeline returns matchedProducts built after generation", async () => {
+  const res = await runDesignPipeline({
+    prompt: "رنگ مبل کرم باشه",
+    scope: "targeted",
+    targets: ["sofa"],
+    sku: "SOF-1024",
+    style: "modern",
+    room: "living",
+  });
+  assert.ok(Array.isArray(res.matchedProducts), "PipelineResult.matchedProducts must exist");
+  assert.ok(res.matchedProducts!.length > 0, "real matches for a real SKU");
+  assert.equal(res.matchedProducts![0].productId, "p1");
+  assert.equal(res.sku, "SOF-1024", "result carries the REAL catalog SKU");
+  assert.equal(res.selectedProduct?.id, "p1", "resolved product is the AI target");
+  assert.equal(res.selectedProduct?.category, "furniture");
+  assert.ok(res.instruction.enginePrompt.includes("SOF-1024"), "engine prompt preserves product identity");
+});
+
+// ---- K: designer page renders matchedProducts under the generated image ----
+test("Matrix K: designer page wires PipelineResult.matchedProducts (no client fallback)", () => {
+  const page = readFileSync(join(process.cwd(), "src/app/ai/design/page.tsx"), "utf8");
+  assert.ok(page.includes("pipelineRes.matchedProducts"), "page must consume the server pipeline matches");
+  assert.ok(page.includes("کالاهای هماهنگ از فروشگاه‌ها"), "matched products section below the output");
+  assert.ok(page.includes("محصول مشابهی در فروشگاه‌های فعلی پیدا نشد"), "honest empty state");
+  assert.ok(!page.includes("matchStoreProducts({"), "no client-side catalog fallback may remain");
+});
+
+// ---- L: continuation keeps previous product identity ----
+test("Matrix L: «کمی کوچک‌ترش کن» keeps previousSKU/previousProductId as the target", () => {
+  const turn2intent = heuristicUnderstandIntent({
+    prompt: "کمی کوچک‌ترش کن",
+    previousTargets: ["sofa"],
+    previousProductId: "p1",
+    previousSKU: "SOF-1024",
+  });
+  assert.deepEqual(turn2intent.target, ["sofa"]);
+  const inst = buildDesignInstruction(
+    {
+      prompt: "کمی کوچک‌ترش کن",
+      scope: "targeted",
+      previousTargets: ["sofa"],
+      previousProductId: "p1",
+      previousSKU: "SOF-1024",
+    },
+    turn2intent,
+  );
+  assert.equal(inst.selectedProduct?.sku, "SOF-1024", "same product stays the design target");
+  assert.equal(inst.selectedProduct?.id, "p1");
+  assert.ok(inst.targets.includes("sofa"));
+});
+
+// ---- M: room analysis + sofa → room-aware matching (never overriding SKU) ----
+test("Matrix M: room-aware scoring boosts living-room sofas but never overrides exact SKU", () => {
+  const living = matchStoreProducts({ targets: ["sofa"], roomType: "living" });
+  const bedroom = matchStoreProducts({ targets: ["sofa"], roomType: "bedroom" });
+  const livingSofa = living.find((m) => m.productId === "p1")!;
+  const bedroomSofa = bedroom.find((m) => m.productId === "p1")!;
+  assert.ok(livingSofa.score > bedroomSofa.score, "living-room compatibility must boost the sofa");
+  // room compatibility must NEVER override an exact SKU:
+  const skuPinned = matchStoreProducts({ sku: "SOF-1024", targets: ["sofa"], roomType: "bedroom" });
+  assert.equal(skuPinned[0].productId, "p1");
+  assert.ok(skuPinned[0].score >= 5000);
+});

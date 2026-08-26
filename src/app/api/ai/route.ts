@@ -213,17 +213,30 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
     // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----
     if (action === "resolve-sku") {
       const code = typeof p.code === "string" ? p.code : typeof p.sku === "string" ? p.sku : "";
-      const { getProductBySkuOrCode } = await import("@/data/products");
-      const product = getProductBySkuOrCode(code);
-      if (!product) {
+      // Single product source: Supabase catalog in production, static seed
+      // catalog only in dev/tests. Exact match after normalization.
+      const { resolveProductByCode } = await import("@/services/ai/productSource");
+      const resolved = await resolveProductByCode(code);
+      if (!resolved) {
         return json({ error: "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.", code: "INVALID_SKU" }, 404, requestId);
       }
-      return json({ product }, 200, requestId);
+      return json({
+        product: resolved.product,
+        store: resolved.store ? { id: resolved.store.id, name: resolved.store.name, logo: resolved.store.logo, verified: resolved.store.verified } : null,
+        source: resolved.source,
+      }, 200, requestId);
     }
     if (action === "match-products") {
-      const { matchStoreProducts } = await import("@/services/ai/roomState");
-      const matches = matchStoreProducts(p as never);
-      return json({ products: matches }, 200, requestId);
+      // Multi-store matching from the single product source (Supabase first).
+      const { matchStoreProductsFromSource } = await import("@/services/ai/productSource");
+      try {
+        const matches = await matchStoreProductsFromSource(p as never);
+        return json({ products: matches }, 200, requestId);
+      } catch (err) {
+        // Catalog unavailable → honest empty list, never fake products.
+        console.warn("[api/ai] match-products catalog unavailable:", err instanceof Error ? err.message : err);
+        return json({ products: [], _catalogUnavailable: true }, 200, requestId);
+      }
     }
     if (action === "understand") {
       const { analysis, source, degraded } = await understandIntent(p as unknown as IntentRequest);

@@ -167,14 +167,44 @@ export async function listProducts(query: CatalogQuery = {}) {
 }
 
 export async function getProductBySlug(slug: string) {
+  const row = await findProductRow(and(eq(products.slug, slug), isNull(products.deletedAt)));
+  if (!row) throw ApiError.notFound("محصول یافت نشد");
+  return serializeFullProduct(row);
+}
+
+/**
+ * EXACT SKU / product-code lookup against the live Supabase catalog.
+ * The code is normalized (trim → lowercase → collapsed whitespace) and then
+ * matched EXACTLY against sku / slug / id. Returns `undefined` when the code
+ * does not exist — it never invents or approximates a product.
+ */
+export async function findProductByCode(code: string) {
+  const clean = (code ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  if (!clean) return undefined;
+  const row = await findProductRow(
+    and(
+      or(
+        sql`lower(${products.sku}) = ${clean}`,
+        sql`lower(${products.slug}) = ${clean}`,
+        sql`lower(${products.id}::text) = ${clean}`,
+      ),
+      isNull(products.deletedAt),
+    ),
+  );
+  if (!row) return undefined;
+  return serializeFullProduct(row);
+}
+
+/** Shared row loader + serializer for single-product reads (slug or SKU paths). */
+async function findProductRow(where: ReturnType<typeof and>) {
   const db = getDb();
   const [row] = await db
     .select({ product: products, vendor: vendors })
     .from(products)
     .innerJoin(vendors, eq(vendors.id, products.vendorId))
-    .where(and(eq(products.slug, slug), isNull(products.deletedAt)))
+    .where(where)
     .limit(1);
-  if (!row) throw ApiError.notFound("محصول یافت نشد");
+  if (!row) return undefined;
 
   const [images, cats] = await Promise.all([
     db
@@ -183,7 +213,7 @@ export async function getProductBySlug(slug: string) {
       .where(eq(productImages.productId, row.product.id))
       .orderBy(asc(productImages.position)),
     db
-      .select({ slug: categories.slug })
+      .select({ slug: categories.slug, path: categories.path })
       .from(productCategories)
       .innerJoin(categories, eq(categories.id, productCategories.categoryId))
       .where(eq(productCategories.productId, row.product.id)),
@@ -196,15 +226,36 @@ export async function getProductBySlug(slug: string) {
     .where(and(eq(inventory.productId, row.product.id), isNull(inventory.variantId)))
     .limit(1);
 
+  return { product: row.product, vendor: row.vendor, images, cats, inv };
+}
+
+/** Full single-product DTO incl. sku, subcategory and real inventory. */
+function serializeFullProduct(row: NonNullable<Awaited<ReturnType<typeof findProductRow>>>) {
+  // Deepest category (longest path) = the product's subcategory.
+  const orderedSlugs = [...row.cats]
+    .sort((a, b) => (b.path ?? "").length - (a.path ?? "").length)
+    .map((c) => c.slug);
   return {
-    ...serializeProduct({ product: row.product, vendor: row.vendor, images, categories: cats }),
+    ...serializeProduct({
+      product: row.product,
+      vendor: row.vendor,
+      images: row.images,
+      categories: row.cats.map((c) => ({ slug: c.slug })),
+    }),
     description: row.product.description,
     dimensions: row.product.dimensions,
     material: row.product.material,
     color: row.product.color,
     sku: row.product.sku,
-    availableQuantity: inv ? inv.quantity - inv.reservedQuantity : 0,
+    subCategorySlug: orderedSlugs[1] ?? undefined,
+    availableQuantity: row.inv ? row.inv.quantity - row.inv.reservedQuantity : 0,
   };
+}
+
+/** Active vendors (real stores) for multi-store matching. */
+export async function listVendors() {
+  const db = getDb();
+  return db.select().from(vendors).where(eq(vendors.status, "active")).orderBy(asc(vendors.name));
 }
 
 export async function getCategoryTree() {
