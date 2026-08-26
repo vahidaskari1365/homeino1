@@ -61,7 +61,15 @@ export async function callAiServer<T>(action: string, payload: unknown): Promise
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, payload, _userHash: userHash }),
   });
-  if (!res.ok) throw new Error("AI service unavailable");
+  if (!res.ok) {
+    // Surface the SAFE server error (code + Persian message) — never a raw
+    // provider/stack message. Falls back to a generic line when the body
+    // is unreadable.
+    const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
+    const err = new Error(body?.error || "AI service unavailable") as Error & { code?: string };
+    if (body?.code) err.code = body.code;
+    throw err;
+  }
   return res.json() as Promise<T>;
 }
 
@@ -78,6 +86,8 @@ export const aiService = {
   understand: (input: IntentRequest) => callAiServer<IntentAnalysis>("understand", input),
   /** Full design pipeline: understand → instruct → generate → validate. */
   pipeline: (input: PipelineInput) => callAiServer<PipelineResult>("pipeline", input),
+  /** Resolve a SKU / product code against the server catalog (Supabase in production). */
+  resolveSku: (code: string) => callAiServer<{ product: unknown; source: string }>("resolve-sku", { code }),
 };
 
 // type re-export for convenience (unused import suppression)

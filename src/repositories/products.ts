@@ -48,9 +48,12 @@ export const productsRepository: ProductsRepository = {
   byId: async (id) => hasDatabase() ? (await remoteList()).find(p => p.id === id) : mockById(id),
   bySku: async (sku) => {
     if (!hasDatabase()) return mockBySku(sku);
-    const all = await remoteList();
-    const clean = sku.trim().toLowerCase();
-    return all.find(p => (p.sku && p.sku.toLowerCase() === clean) || p.id.toLowerCase() === clean || p.slug.toLowerCase() === clean) || mockBySku(sku);
+    // Production: EXACT lookup against the Supabase catalog — never a static
+    // fallback and never an invented product.
+    const clean = sku.trim().toLowerCase().replace(/\s+/g, " ");
+    const { findProductByCode } = await import("../services/catalogService");
+    const row = await findProductByCode(clean).catch(() => undefined);
+    return row ? toDomain(row) : undefined;
   },
   byCategory: async (slug) => hasDatabase() ? remoteList({ categorySlug: slug }) : mockByCategory(slug),
   byStyle: async (slug) => hasDatabase() ? remoteList({ styleSlug: slug }) : mockByStyle(slug),

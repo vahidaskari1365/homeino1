@@ -32,7 +32,6 @@ import {
   detectArchitecturalTargets,
   categoryToRoomElement,
   detectCategorySkuConflict,
-  matchStoreProducts,
   type RoomElement,
   type DesignConstraints,
   type RoomUnderstanding,
@@ -57,6 +56,9 @@ import { createRequestId, withAiTelemetry } from "./telemetry";
 import { reserveCreditsForAi, finalizeCreditsForAi, refundCreditsForAi } from "./serverCredits";
 import { AiError } from "./errors";
 import { getProductBySkuOrCode } from "../../data/products";
+import { resolveProductByCode, matchStoreProductsFromSource, normalizeProductCode } from "./productSource";
+import type { Product } from "../../types";
+import { stores as staticStores } from "../../data/stores";
 import type { GeneratedDesign } from "./types";
 import { uid } from "../../lib/utils";
 
@@ -91,6 +93,12 @@ export interface PipelineInput {
   sku?: string;
   productCode?: string;
   selectedProduct?: ContextSelectedProduct;
+  /** SERVER-RESOLVED product (single source of truth — Supabase first,
+   *  resolved asynchronously before the pipeline runs). When present it
+   *  overrides any static lookup. */
+  resolvedProduct?: Product;
+  /** Real store name for the resolved product (from the vendor record). */
+  resolvedStoreName?: string;
   selection?: {
     category?: string;
     subTypes?: string[];
@@ -154,20 +162,61 @@ export interface PipelineResult {
   contextSummary?: string;
 }
 
+/* ---------------- Product resolution (single source of truth) ---------------- */
+
+/**
+ * Resolves the pipeline's target product from the SINGLE product source
+ * (Supabase first; static seed catalog only in dev/tests).
+ * Order: explicit SKU → productId → previous SKU/productId (continuation:
+ * «کمی کوچک‌ترش کن» must keep targeting the SAME product).
+ * An explicit-but-unknown SKU is an error; a stale continuation reference is
+ * silently dropped (never fails the request).
+ */
+async function resolvePipelineProduct(input: PipelineInput): Promise<{ product?: Product; storeName?: string }> {
+  if (input.resolvedProduct) {
+    return { product: input.resolvedProduct, storeName: input.resolvedStoreName };
+  }
+  const explicitSku = (input.sku || input.productCode || "").trim();
+  const continuationCode = input.previousSKU || input.previousProductId || "";
+  const code = normalizeProductCode(explicitSku || input.productId || continuationCode);
+  if (!code) return {};
+
+  const resolved = await resolveProductByCode(code);
+  // Requirement 7 / Phase 4: INVALID SKU → safe AI error, never an invented product.
+  if (explicitSku && !resolved) {
+    throw AiError.invalidSku("این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.");
+  }
+  return resolved ? { product: resolved.product, storeName: resolved.store?.name } : {};
+}
+
+/** Sync static fallback — used only by the pure (test-facing) helpers below. */
+function resolveProductStatic(input: PipelineInput): Product | undefined {
+  const explicitSku = (input.sku || input.productCode || "").trim();
+  if (explicitSku) return getProductBySkuOrCode(explicitSku);
+  if (input.productId) return getProductBySkuOrCode(input.productId);
+  if (input.previousSKU || input.previousProductId) {
+    return getProductBySkuOrCode(input.previousSKU || input.previousProductId || "");
+  }
+  return undefined;
+}
+
+/** Real store name for a product (static dev map — server path passes the
+ *  vendor-resolved name in via `resolvedStoreName`). */
+function staticStoreNameFor(product: Product): string | undefined {
+  return staticStores.find((s) => s.id === product.storeId)?.name;
+}
+
 /* ---------------- Step 1: Intent ---------------- */
 
 export async function runIntentUnderstanding(input: PipelineInput): Promise<IntentAnalysis> {
   const rawSku = (input.sku || input.productCode)?.trim();
-  let resolvedProduct = rawSku ? getProductBySkuOrCode(rawSku) : undefined;
+  const resolved = await resolvePipelineProduct(input);
+  const resolvedProduct = resolved.product;
 
-  // Requirement 7: Invalid SKU validation
+  // Requirement 7: Invalid SKU validation (resolvePipelineProduct throws for
+  // an explicit unknown SKU — kept here as a guard for direct callers).
   if (rawSku && !resolvedProduct) {
     throw AiError.invalidSku("این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.");
-  }
-
-  // If no SKU provided, but productId was given, try resolving product
-  if (!resolvedProduct && input.productId) {
-    resolvedProduct = getProductBySkuOrCode(input.productId);
   }
 
   // Requirement 18: Category + SKU conflict detection
@@ -211,6 +260,7 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
         name: resolvedProduct.name,
         category: resolvedProduct.categorySlug,
         storeId: resolvedProduct.storeId,
+        storeName: resolved.storeName ?? staticStoreNameFor(resolvedProduct),
         brand: resolvedProduct.brand,
         price: resolvedProduct.price,
         currency: resolvedProduct.currency,
@@ -274,11 +324,11 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
 
 export function buildDesignInstruction(input: PipelineInput, intent: IntentAnalysis): DesignInstruction {
   const rawSku = (input.sku || input.productCode)?.trim();
-  const resolvedProduct = rawSku
-    ? getProductBySkuOrCode(rawSku)
-    : input.productId
-      ? getProductBySkuOrCode(input.productId)
-      : undefined;
+  // Server-resolved product (single source of truth) wins; the static lookup
+  // keeps this pure function usable in tests / dev without a database.
+  // Continuation: with no new SKU/product, the PREVIOUS product keeps being
+  // the target («کمی کوچک‌ترش کن» → same sofa, same identity to preserve).
+  const resolvedProduct = input.resolvedProduct ?? resolveProductStatic(input);
 
   const productTarget = resolvedProduct
     ? categoryToRoomElement(
@@ -390,6 +440,7 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
         name: resolvedProduct.name,
         category: resolvedProduct.categorySlug,
         storeId: resolvedProduct.storeId,
+        storeName: input.resolvedStoreName ?? staticStoreNameFor(resolvedProduct),
         brand: resolvedProduct.brand,
         price: resolvedProduct.price,
         currency: resolvedProduct.currency,
@@ -551,11 +602,21 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
         : { charged: false, cost: 0 };
 
       try {
+        // 0) RESOLVE PRODUCT — single source of truth (Supabase → catalog
+        //    service → static dev catalog). Invalid SKU / catalog unavailable
+        //    fail HERE, before any LLM/image work and before credits burn.
+        const resolved = await resolvePipelineProduct(input);
+        const effectiveInput: PipelineInput = {
+          ...input,
+          resolvedProduct: resolved.product,
+          resolvedStoreName: resolved.storeName,
+        };
+
         // 1) UNDERSTAND — structured, tiny, cached when pre-confirmed
-        const intent = await runIntentUnderstanding(input);
+        const intent = await runIntentUnderstanding(effectiveInput);
 
         // 2) PLAN — compile the engine-facing instruction
-        const instruction = buildDesignInstruction(input, intent);
+        const instruction = buildDesignInstruction(effectiveInput, intent);
 
         // 3) GENERATE — Orali (real overlay) or base provider
         const { design, engine } = await generateVisual(input, instruction);
@@ -586,25 +647,31 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           await finalizeCreditsForAi(credit.generationId, { durationMs: undefined, outputAssetUrl: design.afterImage });
         }
 
-        // 6) REAL STORE PRODUCT MATCHING (Requirements 10-15)
+        // 6) REAL STORE PRODUCT MATCHING (Requirements 10-15) — runs ONLY
+        //    after a successful generation, against the SAME single product
+        //    source (Supabase catalog + real vendors in production).
+        //    Priority: exact SKU ≫ exact id ≫ category ≫ subcategory ≫ style
+        //    ≫ color ≫ room ≫ budget ≫ availability. No relevant match → []
+        //    (NEVER unrelated filler). A catalog hiccup degrades to an honest
+        //    empty list — the generated design above stays valid.
         const rawSku = (input.sku || input.productCode)?.trim();
-        const resolvedProduct = rawSku
-          ? getProductBySkuOrCode(rawSku)
-          : input.productId
-            ? getProductBySkuOrCode(input.productId)
-            : undefined;
-
-        const matchedProducts = matchStoreProducts({
-          sku: rawSku || resolvedProduct?.sku,
-          productId: resolvedProduct?.id || input.productId,
-          targets: instruction.targets,
-          category: input.selection?.category || resolvedProduct?.categorySlug,
-          style: instruction.style,
-          colors: instruction.colors,
-          roomType: instruction.room,
-          budget: input.budget?.min ?? input.budget?.max,
-          maxResults: 6,
-        });
+        const resolvedProduct = resolved.product;
+        let matchedProducts: MatchedStoreProduct[] = [];
+        try {
+          matchedProducts = await matchStoreProductsFromSource({
+            sku: rawSku || resolvedProduct?.sku,
+            productId: resolvedProduct?.id || input.productId,
+            targets: instruction.targets,
+            category: input.selection?.category || resolvedProduct?.categorySlug,
+            style: instruction.style,
+            colors: instruction.colors,
+            roomType: instruction.room || input.roomUnderstanding?.roomType,
+            budget: input.budget?.max ?? input.budget?.min,
+            maxResults: 6,
+          });
+        } catch (matchErr) {
+          console.warn("[ai-pipeline] store product matching unavailable:", matchErr instanceof Error ? matchErr.message : matchErr);
+        }
 
         const ctx = buildAIContext({
           prompt: input.prompt,
@@ -640,7 +707,8 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           placement: instruction.placement,
           matchedProducts,
           selectedProduct: instruction.selectedProduct,
-          sku: rawSku || resolvedProduct?.sku,
+          // The REAL catalog SKU when a product was resolved (never a guess).
+          sku: resolvedProduct?.sku ?? (rawSku || undefined),
           requestId,
           contextSummary: contextSummary(ctx),
         };
