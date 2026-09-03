@@ -5,6 +5,7 @@ import { Container, Breadcrumb } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { productsByStyle } from "@/data/products";
 import { stylesRepository } from "@/repositories/styles";
+import { StyleProductBrowser } from "@/components/styles/StyleProductBrowser";
 import { toFa } from "@/lib/utils";
 
 export default async function StyleDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -15,7 +16,7 @@ export default async function StyleDetailPage({ params }: { params: Promise<{ sl
   ]);
   if (!style) notFound();
 
-  const productCount = productsByStyle(style.slug).length;
+  const styleProducts = productsByStyle(style.slug);
   const currentIndex = styleCatalog.findIndex((item) => item.slug === style.slug);
   const nextStyle = styleCatalog[(currentIndex + 1) % styleCatalog.length];
 
@@ -39,7 +40,7 @@ export default async function StyleDetailPage({ params }: { params: Promise<{ sl
               همه معرفی‌ها
             </Link>
           </div>
-          <p className="mt-3 text-xs text-cream/55">{toFa(productCount)} محصول با فیلتر «{style.name}» آماده‌ی مشاهده است.</p>
+          <p className="mt-3 text-xs text-cream/55">{toFa(styleProducts.length)} محصول با فیلتر «{style.name}» آماده‌ی مشاهده است.</p>
         </div>
       </header>
 
@@ -50,6 +51,7 @@ export default async function StyleDetailPage({ params }: { params: Promise<{ sl
             ["رنگ و متریال", "palette"],
             ["مبلمان و نور", "furniture"],
             ["مناسب برای", "suitable"],
+            ["محصولات", "products"],
           ].map(([label, anchor]) => <a key={anchor} href={`#${anchor}`} className="rounded-xl px-4 py-2 text-xs font-bold text-ink-muted transition hover:bg-ivory-2 hover:text-ink">{label}</a>)}
         </div>
       </nav>
@@ -145,12 +147,16 @@ export default async function StyleDetailPage({ params }: { params: Promise<{ sl
           </div>
         </section>
 
+        <section id="products" className="scroll-mt-40 border-t border-clay/40 py-12">
+          <StyleProductBrowser products={styleProducts} styleName={style.name} />
+        </section>
+
         <section className="my-12 overflow-hidden rounded-[var(--radius-xl)] border border-gold/30 bg-gradient-to-l from-gold/15 to-cream p-6 sm:p-8">
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
             <div>
               <p className="text-xs font-bold text-terracotta-deep">قدم بعدی</p>
-              <h2 className="mt-2 text-2xl font-black text-ink">محصولات هماهنگ با سبک {style.name}</h2>
-              <p className="mt-2 text-sm text-ink-muted">فهرست محصولات با فیلتر فعال «سبک: {style.name}» باز می‌شود و می‌توانی آن را با دسته، قیمت، رنگ، متریال و موجودی ترکیب کنی.</p>
+              <h2 className="mt-2 text-2xl font-black text-ink">فیلترهای کامل را در بازارگاه امتحان کن</h2>
+              <p className="mt-2 text-sm text-ink-muted">فهرست محصولات با فیلتر فعال «سبک: {style.name}» باز می‌شود و می‌توانی آن را با قیمت، رنگ، متریال و موجودی ترکیب کنی.</p>
             </div>
             <Link href={`/products?style=${style.slug}`} className="btn-primary inline-flex min-h-12 shrink-0 items-center justify-center gap-2 px-6 text-sm font-black">
               مشاهده محصولات این سبک <ArrowLeft size={17} />

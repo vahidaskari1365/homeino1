@@ -4,14 +4,14 @@ import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Search, Sparkles, ArrowLeft, Play, Wand2, ChevronDown, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, HeartHandshake, Truck } from "lucide-react";
 import { Container, SectionHeading, Badge, ButtonLink, Rating } from "@/components/ui/primitives";
-import { ProductCard, StoreCard, InspirationCard } from "@/components/cards";
+import { StoreCard, InspirationCard } from "@/components/cards";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { useUi } from "@/stores/useApp";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
 import { stores } from "@/data/stores";
 import { collections } from "@/data/stores";
-import { trendingProducts, products as allProducts } from "@/data/products";
+import { products as allProducts, productsByStyle } from "@/data/products";
 import { inspirations } from "@/data/inspirations";
 import { stores as allStores } from "@/data/stores";
 import { IMG } from "@/data/media";
@@ -192,11 +192,28 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* ===== PRODUCTS ===== */}
+      {/* ===== SHOP BY STYLE ===== */}
       <section className="section-space-sm border-y border-clay/25 bg-cream/38">
         <Container>
-          <Reveal><SectionHeading eyebrow="انتخاب سردبیر" title="محصولاتی برای زندگی واقعی" desc="منتخب‌های محبوب با قیمت شفاف، فروشنده معتبر و امکان مقایسه." action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">مشاهده همه <ArrowLeft size={16} /></Link>} /></Reveal>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">{trendingProducts.slice(0, 8).map((product) => <ProductCard key={product.id} product={product} />)}</div>
+          <Reveal><SectionHeading eyebrow="خرید بر اساس سبک" title="محصولی که دوست داری را از روی سبک مورد علاقت پیدا و انتخاب کن" desc="روی سبک مورد علاقه‌ات بزن تا محصولات هماهنگ با همان سبک برایت مرتب و نمایش داده شود؛ داخل صفحه‌ی هر سبک می‌توانی بر اساس دسته‌بندی‌های سایت هم فیلتر کنی." action={<Link href="/styles" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">راهنمای همه سبک‌ها <ArrowLeft size={16} /></Link>} /></Reveal>
+          <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+            {styles.map((style) => (
+              <RevealItem key={style.id}>
+                <Link href={`/styles/${style.slug}`} className="group card-surface card-interactive block h-full overflow-hidden">
+                  <div className="relative aspect-square overflow-hidden">
+                    <SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
+                    <span className="absolute left-2 top-2 rounded-full bg-cream/90 px-2 py-1 text-[10px] font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
+                    <div className="absolute inset-x-0 bottom-0 p-3 text-cream sm:p-4">
+                      <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold-soft">{style.nameEn}</div>
+                      <h3 className="mt-0.5 text-base font-black text-cream transition group-hover:text-gold-soft sm:text-lg">{style.name}</h3>
+                      <p className="mt-0.5 line-clamp-1 text-[10px] text-cream/70 sm:text-xs">{style.tagline}</p>
+                    </div>
+                  </div>
+                </Link>
+              </RevealItem>
+            ))}
+          </RevealGroup>
         </Container>
       </section>
 
