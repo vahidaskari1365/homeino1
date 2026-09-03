@@ -5,11 +5,20 @@
 // ============================================================
 import { absoluteUrl } from "@/config/site";
 
+/** Normalize Persian date strings like `۱۴۰۳/۰۸/۱۰` to ISO `1403-08-10`. */
+function toIsoDate(value: string): string {
+  const latin = value.replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
+  return latin.replace(/\//g, "-").trim();
+}
+
 export function productJsonLd(p: {
   name: string; slug: string; brand: string; price: number; oldPrice?: number;
   images: string[]; rating: number; reviewsCount: number; description: string; inStock: boolean;
   category: string; colors: string[];
 }) {
+  // Product prices in this storefront are stored in Toman. Schema.org's
+  // priceCurrency is IRR (Rial), so convert truthfully (1 Toman = 10 Rial).
+  const toRial = (toman: number) => Math.round(toman * 10);
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -21,7 +30,7 @@ export function productJsonLd(p: {
     offers: {
       "@type": "Offer",
       priceCurrency: "IRR",
-      price: p.price,
+      price: toRial(p.price),
       availability: p.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: absoluteUrl(`/products/${p.slug}`),
     },
@@ -58,7 +67,7 @@ export function articleJsonLd(a: {
     headline: a.title,
     description: a.excerpt,
     author: { "@type": "Person", name: a.author },
-    datePublished: a.date,
+    datePublished: toIsoDate(a.date),
     image: a.cover,
     url: absoluteUrl(`/magazine/${a.slug}`),
   };

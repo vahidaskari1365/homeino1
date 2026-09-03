@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
+import { getCategory } from "@/data/categories";
 import { getProduct } from "@/data/products";
 import { getStoreById } from "@/data/stores";
 
@@ -26,6 +29,48 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default function ProductLayout({ children }: { children: React.ReactNode }) {
-  return children;
+export default async function ProductLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const product = getProduct(slug);
+  if (!product) return children;
+
+  const category = getCategory(product.categorySlug);
+  const structuredData = [
+    breadcrumbJsonLd([
+      { name: "خانه", url: "/" },
+      { name: "محصولات", url: "/products" },
+      { name: product.name, url: `/products/${product.slug}` },
+    ]),
+    productJsonLd({
+      name: product.name,
+      slug: product.slug,
+      brand: product.brand,
+      price: product.price,
+      oldPrice: product.oldPrice,
+      images: product.images,
+      rating: product.rating,
+      reviewsCount: product.reviewsCount,
+      description: product.description,
+      inStock: product.inStock,
+      category: category?.name ?? product.categorySlug,
+      colors: product.colors.map((c) => c.name),
+    }),
+  ];
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      {children}
+    </>
+  );
 }

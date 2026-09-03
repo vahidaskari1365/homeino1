@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { getInspiration } from "@/data/inspirations";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -13,4 +15,31 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export default function InspirationLayout({ children }: { children: React.ReactNode }) { return children; }
+export default async function InspirationLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const inspiration = getInspiration(id);
+  if (!inspiration) return children;
+
+  const structuredData = breadcrumbJsonLd([
+    { name: "خانه", url: "/" },
+    { name: "الهام", url: "/inspiration" },
+    { name: inspiration.title, url: `/inspiration/${inspiration.id}` },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      {children}
+    </>
+  );
+}

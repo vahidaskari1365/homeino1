@@ -1,0 +1,38 @@
+# Homeino
+
+> خانه‌ای که شبیه توست، همین‌جا آغاز می‌شود.
+> سبک خودت را انتخاب کن و خانه‌ رویایی‌ات را بساز.
+
+Homeino یک بازارگاه چندفروشگاهی خانه و دکوراسیون در ایران است:
+کشف و مقایسه محصولات از فروشگاه‌های معتبر، الهام از فضاهای واقعی، راهنمای سبک‌های طراحی داخلی
+و طراحی هوشمند چیدمان با هوش مصنوعی (Homeino AI) — همه در یک تجربه فارسی.
+
+## دسترسی سریع
+
+- [صفحه اصلی](https://homeino.ir/)
+- [همه محصولات](https://homeino.ir/products)
+- [دسته‌بندی‌ها](https://homeino.ir/category/furniture)
+- [فروشگاه‌ها](https://homeino.ir/stores)
+- [الهام](https://homeino.ir/inspiration)
+- [سبک‌های طراحی](https://homeino.ir/styles)
+- [مجله و راهنما](https://homeino.ir/magazine)
+- [پروژه‌های واقعی](https://homeino.ir/projects)
+- [بازارگاه دست‌دوم](https://homeino.ir/second-hand)
+- [طراحی با هوش مصنوعی](https://homeino.ir/ai/design)
+- [جستجو](https://homeino.ir/search)
+- [sitemap.xml](https://homeino.ir/sitemap.xml)
+
+## داده‌های ساخت‌یافته
+
+- Organization / WebSite JSON-LD در صفحات اصلی
+- Product + Offer + AggregateRating JSON-LD در صفحات محصول
+- Store + AggregateRating JSON-LD در صفحات فروشگاه
+- Article + BreadcrumbList JSON-LD در صفحات مجله
+- BreadcrumbList JSON-LD برای مسیرهای اصلی
+
+## خط‌مشی
+
+- زبان سایت: فارسی (fa / fa_IR)
+- صفحات کاربری (حساب، سبد، مقایسه، علاقه‌مندی و پرداخت) عمومی نیستند.
+- تصاویر محصول از CDN عمومی و بهینه‌شده سرو می‌شوند.
+- فونت فارسی Vazirmatn به‌صورت self-host سرو می‌شود.
