@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { breadcrumbJsonLd, storeJsonLd } from "@/lib/seo";
 import { getStore } from "@/data/stores";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -13,4 +15,42 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default function StoreLayout({ children }: { children: React.ReactNode }) { return children; }
+export default async function StoreLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const store = getStore(slug);
+  if (!store) return children;
+
+  const structuredData = [
+    breadcrumbJsonLd([
+      { name: "خانه", url: "/" },
+      { name: "فروشگاه‌ها", url: "/stores" },
+      { name: store.name, url: `/stores/${store.slug}` },
+    ]),
+    storeJsonLd({
+      name: store.name,
+      slug: store.slug,
+      description: store.description,
+      city: store.city,
+      rating: store.rating,
+      reviewsCount: store.reviewsCount,
+      cover: store.cover,
+    }),
+  ];
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      {children}
+    </>
+  );
+}

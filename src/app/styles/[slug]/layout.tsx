@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { getStyle } from "@/data/styles";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -13,4 +15,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default function StyleLayout({ children }: { children: React.ReactNode }) { return children; }
+export default async function StyleLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const style = getStyle(slug);
+  if (!style) return children;
+
+  const structuredData = breadcrumbJsonLd([
+    { name: "خانه", url: "/" },
+    { name: "سبک‌ها", url: "/styles" },
+    { name: style.name, url: `/styles/${style.slug}` },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      {children}
+    </>
+  );
+}

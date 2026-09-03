@@ -28,14 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/magazine`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/second-hand`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
-    { url: `${base}/collections`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${base}/search`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
-    { url: `${base}/compare`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
-    { url: `${base}/wishlist`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
-    { url: `${base}/ai`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${base}/login`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${base}/register`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${base}/forgot-password`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${base}/ai/design`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
   ];
 
   const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({

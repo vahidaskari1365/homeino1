@@ -42,8 +42,8 @@
   --color-info: #3E6B7A;
 
   /* ---- Typography ---- */
-  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Vazirmatn Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Vazirmatn Variable", ui-sans-serif, system-ui, sans-serif;
 
   /* ---- Radius ---- */
   --radius-xs: 6px;

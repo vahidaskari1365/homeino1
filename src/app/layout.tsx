@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { SITE_URL, SITE } from "@/config/site";
@@ -8,11 +9,11 @@ import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Homeino | هر آنچه برای خانه‌ی رویایی‌ات لازم داری",
+    default: "Homeino | خانه‌ ایی که شبیه توست، همین‌جا آغاز می‌شود",
     template: "%s | Homeino",
   },
   description:
-    "Homeino — پلتفرم جامع خانه و بازارگاه چندفروشگاهی دکوراسیون. الهام بگیر، محصولات و فروشگاه‌ها را کشف و مقایسه کن و با اطمینان خرید کن.",
+    "سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز — Homeino: بازارگاه خانه، دکوراسیون، مقایسه فروشگاه‌ها و طراحی هوشمند با هوش مصنوعی.",
   keywords: [
     "خرید مبلمان",
     "بازارگاه دکوراسیون",
@@ -20,6 +21,9 @@ export const metadata: Metadata = {
     "طراحی داخلی",
     "فروشگاه خانه",
     "طراحی هوشمند",
+    "مقایسه فروشگاه",
+    "سبک طراحی داخلی",
+    "خانه رویایی",
     "Homeino",
   ],
   applicationName: SITE.name,
@@ -31,8 +35,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Homeino | بازارگاه خانه و دکوراسیون",
-    description: "الهام، محصول، فروشگاه، مقایسه و خرید مطمئن — همه در یک مکان.",
+    title: "Homeino | خانه‌ ایی که شبیه توست، همین‌جا آغاز می‌شود",
+    description: "سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز — خانه، دکوراسیون، مقایسه فروشگاه و طراحی هوشمند.",
     type: "website",
     locale: SITE.locale,
     siteName: SITE.name,
@@ -41,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Homeino | بازارگاه خانه و دکوراسیون",
-    description: "الهام، محصول، فروشگاه، مقایسه و خرید مطمئن — همه در یک مکان.",
+    title: "Homeino | خانه‌ ایی که شبیه توست، همین‌جا آغاز می‌شود",
+    description: "سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز — بازارگاه خانه و دکوراسیون Homeino.",
     images: [SITE.ogImage],
   },
   robots: {
@@ -71,6 +75,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
+      <head>
+        {/* SEO: fast, reliable path to the stock imagery used across the storefront. */}
+        <link rel="preconnect" href="https://images.pexels.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.pexels.com" />
+      </head>
       <body className="bg-ivory text-ink antialiased">
         <a href="#main-content" className="skip-link">رفتن به محتوای اصلی</a>
         <AppShell>{children}</AppShell>

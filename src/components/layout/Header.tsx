@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Search, Heart, GitCompare, ShoppingBag, User, Menu, Sparkles, ChevronDown, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Search, Heart, GitCompare, ShoppingBag, User, Menu, Sparkles, ChevronDown, ShieldCheck, Truck, RotateCcw, Package, LayoutGrid, Store, Lightbulb, Palette, Tag } from "lucide-react";
 import { useCart, useWishlist, useCompare } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { categories } from "@/data/categories";
@@ -11,13 +12,13 @@ import { cn, toFa } from "@/lib/utils";
 import { Container } from "../ui/primitives";
 
 const NAV = [
-  { label: "محصولات", href: "/products", mega: "products" },
-  { label: "دسته‌بندی‌ها", href: "/category/furniture", mega: "categories" },
-  { label: "فروشگاه‌ها", href: "/stores" },
-  { label: "الهام", href: "/inspiration" },
-  { label: "سبک‌ها", href: "/styles", mega: "styles" },
-  { label: "دسته دوم", href: "/second-hand" },
-  { label: "AI استودیو", href: "/ai/design", accent: true },
+  { label: "محصولات", href: "/products", mega: "products", icon: Package },
+  { label: "دسته‌بندی‌ها", href: "/category/furniture", mega: "categories", icon: LayoutGrid },
+  { label: "فروشگاه‌ها", href: "/stores", icon: Store },
+  { label: "الهام", href: "/inspiration", icon: Lightbulb },
+  { label: "سبک‌ها", href: "/styles", mega: "styles", icon: Palette },
+  { label: "دسته دوم", href: "/second-hand", icon: Tag },
+  { label: "AI استودیو", href: "/ai/design", accent: true, icon: Sparkles },
 ];
 
 function IconBadge({ count, children }: { count: number; children: React.ReactNode }) {
@@ -36,6 +37,7 @@ function IconBadge({ count, children }: { count: number; children: React.ReactNo
 export function Header() {
   const { setSearch, setMobileNav } = useUi();
   const [mega, setMega] = useState<string | null>(null);
+  const pathname = usePathname();
   const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.qty, 0));
   const wishCount = useWishlist((s) => s.total());
   const cmpCount = useCompare((s) => s.ids.length);
@@ -66,22 +68,49 @@ export function Header() {
           </Link>
 
           {/* Nav */}
-          <nav className="hidden items-center gap-1 lg:flex">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onMouseEnter={() => setMega(item.mega ?? null)}
-                className={cn(
-                  "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition",
-                  item.accent ? "text-terracotta-deep" : "text-ink hover:bg-ivory-2 hover:text-ink"
-                )}
-              >
-                {item.label}
-                {item.accent && <Sparkles size={14} />}
-                {item.mega && <ChevronDown size={14} className="opacity-50" />}
-              </Link>
-            ))}
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="منوی اصلی">
+            {NAV.map((item) => {
+              const active =
+                pathname === item.href ||
+                (item.href !== "/" && pathname.startsWith(`${item.href}/`)) ||
+                (item.href.startsWith("/category/") && pathname.startsWith("/category/"));
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onMouseEnter={() => setMega(item.mega ?? null)}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "group relative flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-all duration-300",
+                    active
+                      ? "bg-ink text-cream shadow-[var(--shadow-soft)]"
+                      : item.accent
+                        ? "border border-gold/30 bg-gold/10 text-terracotta-deep hover:border-gold/60 hover:bg-gold/20"
+                        : "text-ink/75 hover:bg-ivory-2/80 hover:text-ink hover:shadow-[var(--shadow-soft)]"
+                  )}
+                >
+                  <Icon
+                    size={14}
+                    className={cn(
+                      "transition-colors duration-300",
+                      active ? "text-gold-soft" : item.accent ? "text-terracotta" : "text-terracotta-soft group-hover:text-terracotta"
+                    )}
+                  />
+                  <span>{item.label}</span>
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-l from-gold-soft to-transparent" />
+                  )}
+                  {item.accent && !active && (
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-60" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold" />
+                    </span>
+                  )}
+                  {item.mega && <ChevronDown size={13} className="opacity-45 transition-transform duration-300 group-hover:rotate-180" />}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Actions */}

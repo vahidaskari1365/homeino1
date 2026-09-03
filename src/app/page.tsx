@@ -128,10 +128,10 @@ export default function HomePage() {
                 </Badge>
               </motion.div>
               <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
-                خانه‌ای که <span className="text-gold-gradient">شبیهِ خودت</span> می‌نَفَسَد
+                خانه ایی که <span className="text-gold-gradient">شبیه توست</span> ، همین جا آغاز می شود
               </motion.h1>
               <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.25 }} className="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-cream/80">
-                الهام بگیر، محصول پیدا کن، فروشگاه‌ها را مقایسه کن و اتاقت را با هوش مصنوعی طراحی کن — همه در یک محیط ساده و مناسب.
+                سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-cream px-6 py-3 font-bold text-ink transition hover:translate-y-[-2px] hover:shadow-gold">

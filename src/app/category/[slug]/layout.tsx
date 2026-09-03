@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { getCategory } from "@/data/categories";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -13,4 +15,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default function CategoryLayout({ children }: { children: React.ReactNode }) { return children; }
+export default async function CategoryLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const category = getCategory(slug);
+  if (!category) return children;
+
+  const structuredData = breadcrumbJsonLd([
+    { name: "خانه", url: "/" },
+    { name: "دسته‌بندی‌ها", url: "/products" },
+    { name: category.name, url: `/category/${category.slug}` },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      {children}
+    </>
+  );
+}

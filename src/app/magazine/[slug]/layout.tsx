@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { getArticle } from "@/data/content";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -14,4 +16,41 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default function MagazineLayout({ children }: { children: React.ReactNode }) { return children; }
+export default async function MagazineLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const article = getArticle(slug);
+  if (!article) return children;
+
+  const structuredData = [
+    breadcrumbJsonLd([
+      { name: "خانه", url: "/" },
+      { name: "مجله", url: "/magazine" },
+      { name: article.title, url: `/magazine/${article.slug}` },
+    ]),
+    articleJsonLd({
+      title: article.title,
+      excerpt: article.excerpt,
+      author: article.author,
+      date: article.date,
+      cover: article.cover,
+      slug: article.slug,
+    }),
+  ];
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      {children}
+    </>
+  );
+}
