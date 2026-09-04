@@ -1,5 +1,6 @@
 "use client";
-import { forwardRef, useEffect, useId, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { AlertTriangle, Star, X } from "lucide-react";
 import { cn, formatPrice, toFa, faGroup, fromFa } from "@/lib/utils";
@@ -189,6 +190,8 @@ export function ErrorState({ title = "مشکلی پیش آمد", desc, onRetry }
 
 export function Modal({ open, onClose, title, description, children, footer }: { open: boolean; onClose: () => void; title: string; description?: string; children?: ReactNode; footer?: ReactNode }) {
   const titleId = useId();
+  const panelRef = useRef<HTMLElement>(null);
+  useFocusTrap(open, panelRef);
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -198,7 +201,7 @@ export function Modal({ open, onClose, title, description, children, footer }: {
     return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", onKey); };
   }, [open, onClose]);
   if (!open) return null;
-  return <div className="modal-backdrop" onMouseDown={onClose}><section role="dialog" aria-modal="true" aria-labelledby={titleId} className="modal-panel" onMouseDown={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-4 border-b border-clay/35 px-5 py-4"><div><h2 id={titleId} className="text-lg font-black text-ink">{title}</h2>{description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}</div><button type="button" onClick={onClose} className="icon-button" aria-label="بستن"><X size={19} /></button></div>{children && <div className="px-5 py-5">{children}</div>}{footer && <div className="flex gap-2 border-t border-clay/35 px-5 py-4">{footer}</div>}</section></div>;
+  return <div className="modal-backdrop" onMouseDown={onClose}><section ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className="modal-panel" onMouseDown={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-4 border-b border-clay/35 px-5 py-4"><div><h2 id={titleId} className="text-lg font-black text-ink">{title}</h2>{description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}</div><button type="button" onClick={onClose} className="icon-button" aria-label="بستن"><X size={19} /></button></div>{children && <div className="px-5 py-5">{children}</div>}{footer && <div className="flex gap-2 border-t border-clay/35 px-5 py-4">{footer}</div>}</section></div>;
 }
 
 export function ConfirmDialog({ open, onClose, onConfirm, title, description, confirmLabel = "تأیید", destructive }: { open: boolean; onClose: () => void; onConfirm: () => void; title: string; description: string; confirmLabel?: string; destructive?: boolean }) {

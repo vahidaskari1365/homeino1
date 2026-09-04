@@ -10,7 +10,7 @@
 // the swappable runtime interfaces — nothing in the site depends on them.
 // ============================================================
 import type { AgentRunResult, WorkflowRunResult } from "./types";
-import { ensureSeeded, getStore, storeMode, storeModeReason } from "./store";
+import { ensureSeeded, storeMode, storeModeReason } from "./store";
 import { runAgentByKey, cancelAgentRun, localAgentRuntime } from "./runtime";
 import { extractShoppingIntent } from "./nlu";
 import { llmStatus } from "./llmGateway";

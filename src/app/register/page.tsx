@@ -16,7 +16,6 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
-  const [phone, setPhone] = useState("");
   const [isProducer, setIsProducer] = useState(false);
   const [brand, setBrand] = useState("");
   const [contactName, setContactName] = useState("");

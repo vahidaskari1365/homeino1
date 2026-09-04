@@ -3,11 +3,13 @@ import { stores as mockStores, getStore, getStoreById, collections as mockCollec
 import { and, asc, eq, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { collections, collectionProducts, products, vendors } from "@/db/schema";
+import { withDbFallback } from "./_fallback";
 
 export interface StoresRepository {
   list(): Promise<Store[]>; bySlug(slug: string): Promise<Store | undefined>; byId(id: string): Promise<Store | undefined>;
   verified(): Promise<Store[]>; collections(): Promise<Collection[]>;
 }
+
 async function remoteStores(): Promise<Store[]> {
   const rows = await getDb().select().from(vendors).where(eq(vendors.status, "active")).orderBy(asc(vendors.name));
   const productRows = await getDb().select({ vendorId: products.vendorId }).from(products).where(eq(products.status, "active"));
@@ -20,16 +22,24 @@ async function remoteStores(): Promise<Store[]> {
     shippingPolicy: v.shippingPolicy ?? "", returnPolicy: v.returnPolicy ?? "",
   }));
 }
+
 async function remoteCollections(): Promise<Collection[]> {
   const db = getDb();
   const rows = await db.select().from(collections).where(and(eq(collections.isPublic, true), or(isNull(collections.userId), eq(collections.isPublic, true))));
   const items = await db.select().from(collectionProducts);
   return rows.map(c => ({ id: c.id, slug: c.slug ?? c.id, title: c.title, subtitle: c.subtitle ?? "", image: c.image ?? "", count: items.filter(i => i.collectionId === c.id).length }));
 }
+
 export const storesRepository: StoresRepository = {
-  list: async () => process.env.DATABASE_URL ? remoteStores() : mockStores,
-  bySlug: async slug => process.env.DATABASE_URL ? (await remoteStores()).find(v => v.slug === slug) : getStore(slug),
-  byId: async id => process.env.DATABASE_URL ? (await remoteStores()).find(v => v.id === id) : getStoreById(id),
-  verified: async () => (process.env.DATABASE_URL ? await remoteStores() : mockStores).filter(v => v.verified),
-  collections: async () => process.env.DATABASE_URL ? remoteCollections() : mockCollections,
+  list: async () => withDbFallback(mockStores, remoteStores),
+  bySlug: async slug => {
+    const all = await withDbFallback(mockStores, remoteStores);
+    return all.find(v => v.slug === slug) ?? getStore(slug);
+  },
+  byId: async id => {
+    const all = await withDbFallback(mockStores, remoteStores);
+    return all.find(v => v.id === id) ?? getStoreById(id);
+  },
+  verified: async () => (await withDbFallback(mockStores, remoteStores)).filter(v => v.verified),
+  collections: async () => withDbFallback(mockCollections, remoteCollections),
 };

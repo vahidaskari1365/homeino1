@@ -16,7 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 //   4. pixel = norm * rendered - offset
 // ============================================================
 
-function clamp01(v: number): number {
+export function clamp01(v: number): number {
   if (typeof v !== "number" || Number.isNaN(v)) return 0;
   return Math.min(1, Math.max(0, v));
 }
@@ -34,6 +34,37 @@ export interface CoverRect {
   offsetY: number;
   /** Scale factor applied to the image */
   scale: number;
+}
+
+export function computeCoverRect(container: RenderedSize, natural: RenderedSize): CoverRect {
+  const cw = container.width;
+  const ch = container.height;
+  const iw = natural.width;
+  const ih = natural.height;
+  const scale = Math.max(cw / iw, ch / ih);
+  const rw = iw * scale;
+  const rh = ih * scale;
+  return {
+    visibleWidth: rw,
+    visibleHeight: rh,
+    offsetX: (cw - rw) / 2,
+    offsetY: (ch - rh) / 2,
+    scale,
+  };
+}
+
+export function imageToPixel(coverRect: CoverRect, xNorm: number, yNorm: number): { left: number; top: number } {
+  return {
+    left: clamp01(xNorm) * coverRect.visibleWidth + coverRect.offsetX,
+    top: clamp01(yNorm) * coverRect.visibleHeight + coverRect.offsetY,
+  };
+}
+
+export function pixelToImage(coverRect: CoverRect, left: number, top: number): { xNorm: number; yNorm: number } {
+  return {
+    xNorm: clamp01((left - coverRect.offsetX) / coverRect.visibleWidth),
+    yNorm: clamp01((top - coverRect.offsetY) / coverRect.visibleHeight),
+  };
 }
 
 export interface OverlayGeometry {
@@ -75,28 +106,14 @@ export function useOverlayGeometry(): OverlayGeometry {
   const ready = containerSize !== null && naturalSize !== null;
 
   // ---- Compute the cover rectangle (visible area of the image) ----
-  const coverRect: CoverRect | null = (() => {
-    if (!containerSize || !naturalSize) return null;
-    const cw = containerSize.width;
-    const ch = containerSize.height;
-    const iw = naturalSize.width;
-    const ih = naturalSize.height;
-    // object-fit: cover scale
-    const scale = Math.max(cw / iw, ch / ih);
-    const rw = iw * scale; // rendered width
-    const rh = ih * scale; // rendered height
-    const offsetX = (cw - rw) / 2; // negative means image extends beyond left
-    const offsetY = (ch - rh) / 2;
-    return { visibleWidth: rw, visibleHeight: rh, offsetX, offsetY, scale };
-  })();
+  const coverRect: CoverRect | null =
+    containerSize && naturalSize ? computeCoverRect(containerSize, naturalSize) : null;
 
   // ---- Forward: image-space (0-1) → container pixel ----
   const toPixel = useCallback(
     (xNorm: number, yNorm: number): { left: number; top: number } | null => {
       if (!coverRect) return null;
-      const left = clamp01(xNorm) * coverRect.visibleWidth + coverRect.offsetX;
-      const top = clamp01(yNorm) * coverRect.visibleHeight + coverRect.offsetY;
-      return { left, top };
+      return imageToPixel(coverRect, xNorm, yNorm);
     },
     [coverRect]
   );
@@ -105,9 +122,7 @@ export function useOverlayGeometry(): OverlayGeometry {
   const fromPixel = useCallback(
     (left: number, top: number): { xNorm: number; yNorm: number } | null => {
       if (!coverRect) return null;
-      const xNorm = clamp01((left - coverRect.offsetX) / coverRect.visibleWidth);
-      const yNorm = clamp01((top - coverRect.offsetY) / coverRect.visibleHeight);
-      return { xNorm, yNorm };
+      return pixelToImage(coverRect, left, top);
     },
     [coverRect]
   );

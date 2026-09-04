@@ -68,7 +68,7 @@ export default function CartPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-ink">{toFa(formatPrice(product.price * item.qty))} <span className="text-[10px] text-ink-muted">تومان</span></span>
-                          <button onClick={() => remove(product.id)} className="text-ink-muted transition hover:text-danger"><Trash2 size={17} /></button>
+                          <button onClick={() => remove(product.id)} aria-label="حذف از سبد" className="text-ink-muted transition hover:text-danger"><Trash2 size={17} /></button>
                         </div>
                       </div>
                     </div>

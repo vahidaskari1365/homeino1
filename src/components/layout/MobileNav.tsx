@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
   Home,
@@ -75,6 +76,8 @@ export function MobileNav() {
   const pathname = usePathname();
   const wish = useWishlist((s) => s.total());
   const cart = useCart((s) => s.items.reduce((n, i) => n + i.qty, 0));
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(mobileNavOpen, drawerRef);
 
   /* Lock body scroll while the drawer is open */
   useEffect(() => {
@@ -107,6 +110,7 @@ export function MobileNav() {
             role="dialog"
           >
             <motion.div
+              ref={drawerRef}
               variants={panel}
               initial="hidden"
               animate="show"

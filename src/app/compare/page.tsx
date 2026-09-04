@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import { GitCompare, X, Check, Minus } from "lucide-react";
+import { GitCompare, X, Check} from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, EmptyState, Rating, Price, LogoBlock } from "@/components/ui/primitives";
+import { Button, EmptyState, Rating, Price} from "@/components/ui/primitives";
 import { useCompare, useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { getProductById } from "@/data/products";

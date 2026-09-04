@@ -9,6 +9,9 @@ import type { IntentRequest } from "@/services/ai/llm/types";
 import type { PipelineInput } from "@/services/ai/pipeline";
 import { classifyAiError, toPublicAiError } from "@/services/ai/errors";
 import { createRequestId, logAiRequest } from "@/services/ai/telemetry";
+import { ApiError } from "@/lib/api/errors";
+import { getClientIp, rateLimit } from "@/lib/api/rateLimit";
+import { requireUser } from "@/lib/api/auth";
 
 // ============================================================
 // /api/ai — server AI gateway with security hardening.
@@ -27,27 +30,6 @@ const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
 const MAX_PAYLOAD_BYTES = 15 * 1024 * 1024; // 15 MB (image base64 can be large)
-
-// ---- Simple in-memory rate limiter (per IP, resets every minute) ----
-const RATE_WINDOW = 60_000;
-const RATE_MAX = 30; // 30 requests per minute per IP
-const ipHits = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipHits.get(ip);
-  if (!entry || now > entry.resetAt) {
-    ipHits.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_MAX;
-}
-
-function getClientIp(req: NextRequest): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd ? fwd.split(",")[0].trim() : "unknown";
-}
 
 // ---- Duplicate-request protection (Phase 19) ----
 // If the SAME generative request arrives twice (double-click / retry),
@@ -102,11 +84,15 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    // ---- Rate limiting ----
-    const ip = getClientIp(req);
-    if (rateLimited(ip)) {
-      finish("error", { errorCode: "RATE_LIMIT" });
-      return json({ error: "تعداد درخواست‌ها زیاد است — کمی صبر کن", code: "RATE_LIMIT" }, 429, requestId);
+    // ---- Rate limiting (shared in-memory limiter) ----
+    try {
+      rateLimit(`ai:${getClientIp(req)}`, { windowMs: 60_000, max: 30 });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "RATE_LIMITED") {
+        finish("error", { errorCode: "RATE_LIMIT" });
+        return json({ error: "تعداد درخواست‌ها زیاد است — کمی صبر کن", code: "RATE_LIMIT" }, 429, requestId);
+      }
+      throw err;
     }
 
     // ---- Payload size guard ----
@@ -140,10 +126,18 @@ export async function POST(req: NextRequest) {
 
     // ---- Sanitize string fields (anti-injection + XSS prevention) ----
     const p = payload as Record<string, unknown>;
-    // Server-side credits are opt-in (AI_SERVER_CREDITS=1) and must be wired
-    // to real auth before trusting a client-supplied userId.
-    if (process.env.AI_SERVER_CREDITS !== "1") {
-      delete p.userId;
+    // Never trust a client-supplied userId. When server-side credits are on,
+    // identity comes only from the authenticated session.
+    delete p.userId;
+    if (process.env.AI_SERVER_CREDITS === "1") {
+      try {
+        const ctx = await requireUser(req);
+        p.userId = ctx.user.id;
+      } catch (err) {
+        const status = err instanceof ApiError ? err.status : 401;
+        finish("error", { errorCode: "UNAUTHORIZED", action });
+        return json({ error: "برای این عملیات باید وارد شوید", code: "UNAUTHORIZED" }, status, requestId);
+      }
     }
     for (const key of ["prompt", "message"]) {
       if (key in p && typeof p[key] === "string") {

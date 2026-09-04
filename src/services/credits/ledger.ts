@@ -8,6 +8,7 @@
 // ============================================================
 
 import { uid } from "@/lib/utils";
+import { CREDIT_CONFIG, AI_OPERATION_COSTS } from "@/services/ai/credits";
 
 // ---- Ledger Entry (matches future DB schema) ----
 export type LedgerEntryType =
@@ -36,25 +37,11 @@ export interface LedgerEntry {
   createdAt: string;              // ISO timestamp
 }
 
-// ---- Display configuration (frontend reads, backend owns truth) ----
-export const CREDIT_DISPLAY = {
-  startingBalance: 120,
-  buyPackages: [
-    { id: "pk1", credits: 100, price: 99000, label: "۱۰۰ اعتبار", popular: false },
-    { id: "pk2", credits: 300, price: 249000, label: "۳۰۰ اعتبار", popular: true },
-    { id: "pk3", credits: 800, price: 599000, label: "۸۰۰ اعتبار", popular: false },
-  ],
-  subscriptions: [
-    { id: "sub-free", name: "رایگان", price: 0, credits: 120, perks: ["۱۲۰ اعتبار ماهانه", "دقت استاندارد"] },
-    { id: "sub-plus", name: "پلاس", price: 290000, credits: 600, perks: ["۶۰۰ اعتبار ماهانه", "دقت بالا", "اولویت در صف"] },
-    { id: "sub-pro", name: "حرفه‌ای", price: 690000, credits: 2000, perks: ["۲۰۰۰ اعتبار ماهانه", "دقت حداکثری", "پشتیبانی ویژه"] },
-  ],
-} as const;
+// ---- Display configuration (single source of truth: services/ai/credits.ts) ----
+export const CREDIT_DISPLAY = CREDIT_CONFIG;
 
 // ---- Operation costs (display only — backend owns authoritative costs) ----
-export const OPERATION_COSTS: Record<string, number> = {
-  generate: 5, edit: 3, inpaint: 3, placement: 4, analyze: 5, chat: 0, suggest: 1,
-};
+export const OPERATION_COSTS: Record<string, number> = { ...AI_OPERATION_COSTS };
 
 export const getDisplayCost = (operation: string): number =>
   OPERATION_COSTS[operation] ?? 5;
@@ -90,7 +77,6 @@ export function generateIdempotencyKey(): string {
 const DAILY_LIMIT = 100; // max credits consumed per day
 const HOURLY_OPS = 20;   // max AI operations per hour
 const opsWindow: number[] = []; // timestamps of recent operations
-let dailyConsumed = 0;
 let dailyResetAt = Date.now() + 86_400_000;
 
 export interface AbuseCheckResult {
@@ -103,7 +89,6 @@ export function checkAbuse(consumedToday: number, cost: number): AbuseCheckResul
 
   // Reset daily counter
   if (now > dailyResetAt) {
-    dailyConsumed = 0;
     dailyResetAt = now + 86_400_000;
   }
 
@@ -147,7 +132,7 @@ export interface PurchaseResult {
  * Purchase flow placeholder. Today: mock success.
  * Future: POST /api/credits/purchase → payment gateway → webhook → ledger insert.
  */
-export async function requestPurchase(req: PurchaseRequest): Promise<PurchaseResult> {
+export async function requestPurchase(_req: PurchaseRequest): Promise<PurchaseResult> {
   // --- MOCK: simulate payment gateway delay ---
   await new Promise((r) => setTimeout(r, 1200));
   return {

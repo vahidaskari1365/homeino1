@@ -3,14 +3,11 @@ import type { ReactNode } from "react";
 import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
 import { getCategory } from "@/data/categories";
 import { getProduct } from "@/data/products";
-import { getStoreById } from "@/data/stores";
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = getProduct(slug);
   if (!product) return { title: "محصول یافت نشد" };
 
-  const store = getStoreById(product.storeId);
   const title = `${product.name} — ${product.brand}`;
   const description = product.description.slice(0, 155);
 

@@ -214,20 +214,17 @@ export async function getCategoryTree() {
     .from(categories)
     .where(eq(categories.isActive, true))
     .orderBy(asc(categories.sortOrder));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const byId = new Map<string, any>();
+  type CatNode = (typeof rows)[number] & { children: CatNode[] };
+  const byId = new Map<string, CatNode>();
   for (const r of rows) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    byId.set((r as any).id, { ...r, children: [] });
+    byId.set(r.id, { ...r, children: [] });
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roots: any[] = [];
+  const roots: CatNode[] = [];
   for (const row of rows) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const node = byId.get((row as any).id);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((row as any).parentId && byId.has((row as any).parentId)) {
-      byId.get((row as any).parentId).children.push(node);
+    const node = byId.get(row.id);
+    if (!node) continue;
+    if (row.parentId && byId.has(row.parentId)) {
+      byId.get(row.parentId)!.children.push(node);
     } else {
       roots.push(node);
     }

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Wand2, Sparkles, MoreHorizontal, Copy, Share2 } from "lucide-react";
+import { Wand2, Sparkles, Copy, Share2 } from "lucide-react";
 import { Badge, Button, EmptyState } from "@/components/ui/primitives";
 import { aiDesigns } from "@/data/inspirations";
 import { useUi } from "@/stores/useApp";

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
-import { Button, Badge } from "@/components/ui/primitives";
+import {Badge } from "@/components/ui/primitives";
 import { getProject } from "@/data/content";
 import { getProductById } from "@/data/products";
 import { useCart } from "@/stores/useShop";

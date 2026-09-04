@@ -101,7 +101,7 @@ export const mem0Mirror = {
       return [];
     }
   },
-  async remove(userId: string, memoryId: string) {
+  async remove(_userId: string, memoryId: string) {
     if (!isMem0Configured() || !memoryId) return;
     try {
       await mem0Fetch(`/v1/memories/${memoryId}/`, { method: "DELETE" });

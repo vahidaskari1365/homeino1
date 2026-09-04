@@ -4,13 +4,25 @@ import { History, Sparkles, Wand2, ShoppingBag } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Badge, EmptyState, Button } from "@/components/ui/primitives";
-import { aiDesigns } from "@/data/inspirations";
+import { useDesignSessions } from "@/stores/useDesignSessions";
 import { useCredits } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
+import { useHasHydrated } from "@/lib/useHasHydrated";
+
+function faDate(ts: number): string {
+  try {
+    return new Date(ts).toLocaleDateString("fa-IR");
+  } catch {
+    return "";
+  }
+}
 
 export default function AIHistoryPage() {
   const balance = useCredits((s) => s.balance);
   const history = useCredits((s) => s.history);
+  const sessions = useDesignSessions((s) => s.sessions);
+  const hydrated = useHasHydrated();
+  const designs = hydrated ? sessions : [];
 
   return (
     <Container className="py-10">
@@ -19,7 +31,7 @@ export default function AIHistoryPage() {
       <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
         {/* designs */}
         <div className="space-y-3">
-          {aiDesigns.length > 0 ? aiDesigns.map((d) => (
+          {designs.length > 0 ? designs.map((d) => (
             <div key={d.id} className="group card-surface overflow-hidden transition hover:-translate-y-0.5">
               <div className="flex gap-4 p-3">
                 <Link href={`/ai/result/${d.id}`} className="relative shrink-0">
@@ -28,21 +40,21 @@ export default function AIHistoryPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap gap-1.5">
-                    <Badge tone="dark">{d.room}</Badge>
+                    <Badge tone="dark">{d.roomType}</Badge>
                     {d.style && <Badge tone="accent">{d.style}</Badge>}
                     <Badge tone="gold">{d.products.length} محصول</Badge>
                   </div>
                   <Link href={`/ai/result/${d.id}`}><h3 className="mt-1.5 truncate font-display font-bold text-ink transition hover:text-terracotta-deep">{d.title}</h3></Link>
                   <p className="truncate text-xs text-ink-muted">{d.prompt}</p>
                   <div className="mt-1 flex items-center gap-3 text-xs text-ink-muted">
-                    <span>{d.createdAt}</span>
+                    <span>{faDate(d.createdAt)}</span>
                     <span className="flex items-center gap-1"><Sparkles size={11} className="text-gold" /> {toFa(d.creditsUsed)} اعتبار</span>
                   </div>
                 </div>
               </div>
               {/* CONTINUE — not a dead-end */}
               <div className="flex border-t border-clay/30">
-                <Link href={`/ai/design?mode=${d.mode}`} className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold text-terracotta-deep transition hover:bg-ivory-2"><Wand2 size={13} /> ادامه طراحی</Link>
+                <Link href={`/ai/design?session=${d.id}`} className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold text-terracotta-deep transition hover:bg-ivory-2"><Wand2 size={13} /> ادامه طراحی</Link>
                 <Link href={`/ai/result/${d.id}`} className="flex flex-1 items-center justify-center gap-1.5 border-r border-clay/30 py-2.5 text-[11px] font-bold text-ink-muted transition hover:bg-ivory-2"><ShoppingBag size={13} /> مشاهده محصولات</Link>
               </div>
             </div>

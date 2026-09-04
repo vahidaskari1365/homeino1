@@ -10,7 +10,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { id, timestamps, createdAtColumn, updatedAtColumn } from "./_base";
+import { id, timestamps, createdAtColumn} from "./_base";
 import { products } from "./products";
 import { productVariants } from "./products";
 import { users } from "./users";

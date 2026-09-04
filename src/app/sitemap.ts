@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { products } from "@/data/products";
-import { categories } from "@/data/categories";
-import { stores } from "@/data/stores";
-import { styles } from "@/data/styles";
-import { inspirations } from "@/data/inspirations";
-import { articles, projects } from "@/data/content";
+import { productsRepository } from "@/repositories/products";
+import { categoriesRepository } from "@/repositories/categories";
+import { storesRepository } from "@/repositories/stores";
+import { stylesRepository } from "@/repositories/styles";
+import { inspirationsRepository } from "@/repositories/inspirations";
+import { contentRepository } from "@/repositories/content";
 import { SITE_URL } from "@/config/site";
 
 /**
@@ -12,12 +12,22 @@ import { SITE_URL } from "@/config/site";
  * Private surfaces (admin, vendor, account, cart, checkout, api)
  * are disallowed in robots.ts and intentionally NOT included.
  *
- * When backend data lands, replace the mock-array iterations with
- * repository calls; the URL shape stays identical.
+ * Data is read through repositories so mock and live catalogs share
+ * the same URL shape. Mock output matches the previous @/data imports.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL;
   const now = new Date();
+
+  const [products, categories, stores, styles, inspirations, articles, projects] = await Promise.all([
+    productsRepository.list(),
+    categoriesRepository.list(),
+    storesRepository.list(),
+    stylesRepository.list(),
+    inspirationsRepository.list(),
+    contentRepository.articles(),
+    contentRepository.projects(),
+  ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1 },

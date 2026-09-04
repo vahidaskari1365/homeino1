@@ -77,7 +77,7 @@ function topKeys(tally: Tally, limit: number, minWeight = 0.5): string[] {
     .map(([key]) => key);
 }
 
-function resolveProduct(events: EventRecord[], products: CatalogProduct[]) {
+function resolveProduct(_events: EventRecord[], products: CatalogProduct[]) {
   const byId = new Map(products.map((p) => [p.id.toLowerCase(), p]));
   const bySlug = new Map(products.map((p) => [p.slug.toLowerCase(), p]));
   const bySku = new Map(products.filter((p) => p.sku).map((p) => [String(p.sku).toLowerCase(), p as CatalogProduct]));

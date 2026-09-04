@@ -89,7 +89,7 @@ export class StripeProvider implements PaymentProvider {
 /** Development provider — no real money moves. Clearly labelled, never in prod. */
 export class DevPaymentProvider implements PaymentProvider {
   readonly name = "dev";
-  createIntent(input: PaymentIntentInput): Promise<PaymentResult> {
+  createIntent(_input: PaymentIntentInput): Promise<PaymentResult> {
     const paymentId = `dev_${Math.random().toString(36).slice(2, 10)}`;
     return Promise.resolve({
       provider: this.name,
@@ -106,6 +106,15 @@ let gateway: PaymentProvider | null = null;
 
 export function paymentGateway(): PaymentProvider {
   if (gateway) return gateway;
-  gateway = process.env.STRIPE_SECRET_KEY ? new StripeProvider() : new DevPaymentProvider();
+  if (process.env.STRIPE_SECRET_KEY) {
+    gateway = new StripeProvider();
+    return gateway;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "STRIPE_SECRET_KEY is required in production. Refusing to use DevPaymentProvider (fake succeeded payments).",
+    );
+  }
+  gateway = new DevPaymentProvider();
   return gateway;
 }

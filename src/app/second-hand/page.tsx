@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
-import { Recycle, Plus, MapPin, Heart, Tag, TrendingDown } from "lucide-react";
+import { Recycle, Plus, MapPin, Heart, TrendingDown } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
-import { Button, Badge, Chip } from "@/components/ui/primitives";
+import { Button, Chip } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { secondHandProducts } from "@/data/secondHand";
 import { useWishlist } from "@/stores/useShop";

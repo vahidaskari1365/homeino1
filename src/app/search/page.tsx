@@ -4,7 +4,7 @@ import { SearchX } from "lucide-react";
 import { Suspense, useMemo } from "react";
 import { Container, ProductGrid, PageHeader } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
-import { EmptyState, Button, Chip } from "@/components/ui/primitives";
+import { EmptyState, Chip } from "@/components/ui/primitives";
 import { products } from "@/data/products";
 import { stores } from "@/data/stores";
 import { styles } from "@/data/styles";

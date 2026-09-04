@@ -6,7 +6,7 @@
 // imports a provider or a key. Swap the backend without touching UI.
 // ============================================================
 import type {
-  AiProvider, GenerateDesignInput, GeneratedDesign,
+  GenerateDesignInput, GeneratedDesign,
   ChatReplyInput, ChatReply, DecorSuggestion, RoomAnalysis, RecommendedProduct,
 } from "./types";
 import type { IntentRequest, IntentAnalysis } from "./llm/types";
@@ -80,5 +80,3 @@ export const aiService = {
   pipeline: (input: PipelineInput) => callAiServer<PipelineResult>("pipeline", input),
 };
 
-// type re-export for convenience (unused import suppression)
-export type { AiProvider as _AiProvider } from "./types";

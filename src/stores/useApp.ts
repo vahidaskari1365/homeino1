@@ -2,7 +2,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CreditTransaction, ChatMessage } from "@/types";
-import { CREDIT_DISPLAY } from "@/services/credits/ledger";
 import { uid } from "@/lib/utils";
 
 /* ---------------- UI / OVERLAYS ---------------- */
@@ -80,7 +79,7 @@ export const useAuth = create<AuthState>()(
 
 /* ---------------- AI CREDITS — LEDGER-BASED ---------------- */
 import {
-  createLedgerEntry, type LedgerEntry, type LedgerEntryType, type LedgerEntryStatus,
+  createLedgerEntry, type LedgerEntry, type LedgerEntryStatus,
   generateIdempotencyKey, isProcessed, markProcessed,
   checkAbuse, recordOperation, requestPurchase, type PurchaseResult,
 } from "@/services/credits/ledger";

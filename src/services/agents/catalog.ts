@@ -197,10 +197,6 @@ function queryScore(product: CatalogProduct, q: string): number {
   return score >= 3 ? score : 0;
 }
 
-function matches(product: CatalogProduct, search: CatalogSearch): boolean {
-  return matchScore(product, search) > 0;
-}
-
 /** Same filters as `matches`, but returns the relevance score (0 = no match). */
 function matchScore(product: CatalogProduct, search: CatalogSearch): number {
   const textScore = search.q ? queryScore(product, search.q) : 1;

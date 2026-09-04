@@ -1,10 +1,8 @@
 import {
   uuid,
-  timestamp,
   boolean,
   index,
   integer,
-  jsonb,
   pgEnum,
   pgTable,
   text,

@@ -1,31 +1,26 @@
 "use client";
 import Link from "next/link";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Search, Sparkles, ArrowLeft, Play, Wand2, ChevronDown, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, HeartHandshake, Truck } from "lucide-react";
 import { Container, SectionHeading, Badge, ButtonLink, Rating } from "@/components/ui/primitives";
 import { StoreCard, InspirationCard } from "@/components/cards";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
-import { useUi } from "@/stores/useApp";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
-import { stores } from "@/data/stores";
-import { collections } from "@/data/stores";
+import { stores, collections } from "@/data/stores";
 import { products as allProducts, productsByStyle } from "@/data/products";
 import { inspirations } from "@/data/inspirations";
-import { stores as allStores } from "@/data/stores";
 import { IMG } from "@/data/media";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { toFa } from "@/lib/utils";
 
 const HERO_VIDEO = "/video/01.mp4";
-const AI_IMG = "/images/ai-feature.jpg";
+const HERO_POSTER = "/video/hero-poster.jpg";
 
 export default function HomePage() {
-  const { setSearch } = useUi();
   const heroRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoFinished, setVideoFinished] = useState(false);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
@@ -40,12 +35,12 @@ export default function HomePage() {
     try {
       v.defaultMuted = true;
       v.muted = true;
-      v.playsInline = true as any; // React attribute
+      v.playsInline = true;
       v.setAttribute("playsinline", "");
       v.setAttribute("webkit-playsinline", "");
       v.setAttribute("muted", "");
-      v.setAttribute("preload", "auto");
-    } catch (e) {
+      v.setAttribute("preload", "metadata");
+    } catch {
       // ignore
     }
 
@@ -87,12 +82,12 @@ export default function HomePage() {
       window.removeEventListener("touchstart", resumePlayback);
       window.removeEventListener("pointerdown", resumePlayback);
     };
-  }, [setVideoFinished]);
+  }, []);
 
   return (
     <>
       {/* ===== CINEMATIC HERO ===== */}
-      <section ref={heroRef} className={`relative h-auto min-h-[60vh] sm:h-[100svh] sm:min-h-[640px] w-full overflow-hidden transition-colors duration-700 ${videoFinished ? "bg-ink" : "bg-black"}`}>
+      <section ref={heroRef} className="relative h-auto min-h-[60vh] sm:h-[100svh] sm:min-h-[640px] w-full overflow-hidden bg-ink">
         {/* parallax background (video) */}
         <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
           <video
@@ -102,23 +97,21 @@ export default function HomePage() {
             muted
             playsInline
             webkit-playsinline="true"
-            preload="auto"
-            onEnded={() => setVideoFinished(true)}
-            onError={() => setVideoFinished(true)}
+            preload="metadata"
+            poster={HERO_POSTER}
             className="h-full w-full object-cover"
           />
         </motion.div>
 
         {/* layered emerald gradient overlay — only visible after the video ends */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30 transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
-        <div className={`absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40 transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30 opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40 opacity-100" />
         {/* aurora glow */}
-        <div className={`pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate] transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
-        <div className={`pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px] transition-opacity duration-700 ${videoFinished ? "opacity-100" : "opacity-0"}`} />
-        <div className={`absolute inset-0 grain transition-opacity duration-700 ${videoFinished ? "opacity-40" : "opacity-0"}`} />
+        <div className="pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate] opacity-100" />
+        <div className="pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px] opacity-100" />
+        <div className="absolute inset-0 grain opacity-40" />
 
-        {/* content — revealed only after the hero video ends */}
-        {videoFinished && (
+        {/* content — shown immediately; video plays behind it */}
         <motion.div style={{ opacity }} className="relative z-10 flex h-full flex-col justify-center">
           <Container className="py-10 px-4 sm:px-0">
             <div className="max-w-2xl">
@@ -144,24 +137,21 @@ export default function HomePage() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }} className="mt-8 flex flex-wrap items-center gap-4 text-sm text-cream/70">
                 <span className="flex items-center gap-1.5"><Search size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(allProducts.length)}</b> محصول منتخب</span>
                 <span className="hidden text-cream/30 sm:inline">|</span>
-                <span className="flex items-center gap-1.5"><Users size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(allStores.length)}</b> فروشگاه معتبر</span>
+                <span className="flex items-center gap-1.5"><Users size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(stores.length)}</b> فروشگاه معتبر</span>
                 <span className="hidden text-cream/30 sm:inline">|</span>
                 <span className="flex items-center gap-1.5"><ShieldCheck size={15} className="text-sage-soft" /> خرید امن با ضمانت بازگشت</span>
               </motion.div>
             </div>
           </Container>
         </motion.div>
-        )}
 
-        {/* scroll indicator — shown after the video ends */}
-        {videoFinished && (
+        {/* scroll indicator */}
         <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center">
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity }} className="flex flex-col items-center gap-1 text-cream/50">
             <span className="text-[11px] tracking-widest">اسکرول کن</span>
             <ChevronDown size={18} />
           </motion.div>
         </div>
-        )}
       </section>
 
       {/* ===== VALUE STRIP ===== */}

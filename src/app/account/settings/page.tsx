@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Bell, Globe, Moon, Shield, Trash2 } from "lucide-react";
+import { Bell, Globe, Shield, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/primitives";
 import { useUi, useAuth } from "@/stores/useApp";
 import { useRouter } from "next/navigation";

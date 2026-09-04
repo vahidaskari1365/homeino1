@@ -1,4 +1,4 @@
-import { getBalance, getTransactions } from "@/services/creditService";
+import { getBalance} from "@/services/creditService";
 import { requireUser } from "@/lib/api/auth";
 import { ok } from "@/lib/api/response";
 import { guard } from "@/lib/api/http";

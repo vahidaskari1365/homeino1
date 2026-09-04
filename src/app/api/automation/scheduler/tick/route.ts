@@ -6,6 +6,7 @@
 //
 // GET returns the schedule status (admin only) — what is due, what is next.
 // ============================================================
+import { timingSafeEqual } from "crypto";
 import { guard } from "@/lib/api/http";
 import { ok } from "@/lib/api/response";
 import { requireAdminUser } from "@/lib/api/auth";
@@ -19,7 +20,15 @@ function isAuthorizedCron(req: Request): boolean {
   const secret = process.env.CRON_SECRET ?? "";
   if (!secret) return false;
   const header = req.headers.get("authorization") ?? "";
-  return header === `Bearer ${secret}`;
+  const expected = `Bearer ${secret}`;
+  const a = Buffer.from(header);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) {
+    // Compare against a same-length buffer so the timing still does not leak length.
+    timingSafeEqual(a, a);
+    return false;
+  }
+  return timingSafeEqual(a, b);
 }
 
 export const POST = guard(async (req) => {

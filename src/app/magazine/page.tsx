@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Clock, ArrowLeft } from "lucide-react";
+import { Clock} from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Chip } from "@/components/ui/primitives";

@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <TrackingProvider>
       <Header />
-      <main className="min-h-[60vh] pb-20 lg:pb-0">{children}</main>
+      <main id="main-content" tabIndex={-1} className="min-h-[60vh] pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">{children}</main>
       <Footer />
       <MobileNav />
       <SearchOverlay />

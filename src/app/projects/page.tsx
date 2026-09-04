@@ -5,7 +5,6 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { Badge } from "@/components/ui/primitives";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { projects } from "@/data/content";
-import { toFa } from "@/lib/utils";
 
 export default function ProjectsPage() {
   return (
@@ -29,5 +28,3 @@ export default function ProjectsPage() {
     </Container>
   );
 }
-
-void toFa;

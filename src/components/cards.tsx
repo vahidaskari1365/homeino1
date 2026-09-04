@@ -6,7 +6,7 @@ import { useWishlist, useCompare, useCart } from "@/stores/useShop";
 import { useUi as useUiStore } from "@/stores/useApp";
 import { cn, toFa, formatPrice } from "@/lib/utils";
 import { SmartImage } from "./ui/SmartImage";
-import { Badge, Price, Rating, LogoBlock } from "./ui/primitives";
+import { Badge, Rating, LogoBlock } from "./ui/primitives";
 
 export function ProductCard({ product }: { product: Product }) {
   const wl = useWishlist();

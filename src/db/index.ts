@@ -16,7 +16,14 @@ export function getPool(): Pool {
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is required");
   }
-  globalForDb.__homeinoPool ??= new Pool({ connectionString: databaseUrl });
+  globalForDb.__homeinoPool ??= new Pool({
+    connectionString: databaseUrl,
+    // Fail fast during build/prerender when DATABASE_URL is set but unreachable.
+    connectionTimeoutMillis: 2_500,
+    query_timeout: 2_500,
+    idleTimeoutMillis: 10_000,
+    max: 5,
+  });
   return globalForDb.__homeinoPool;
 }
 

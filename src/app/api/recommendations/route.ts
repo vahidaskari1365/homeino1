@@ -11,7 +11,7 @@
 import { guard, readBody } from "@/lib/api/http";
 import { ok } from "@/lib/api/response";
 import { ApiError } from "@/lib/api/errors";
-import { rateLimit } from "@/lib/api/rateLimit";
+import { getClientIp, rateLimit } from "@/lib/api/rateLimit";
 import { optionalUser } from "@/lib/api/auth";
 import { getStoredRecommendations, recordRecommendationFeedback } from "@/services/recommendations/recommendationEngine";
 import { publicProduct } from "@/services/agents/tools";
@@ -79,7 +79,7 @@ async function agentRecommendations(options: {
 
 export const GET = guard(async (req) => {
   const identity = await optionalUser(req);
-  rateLimit(`recommendations:${identity.userId ?? clientIp(req)}`, { windowMs: 60_000, max: 60 });
+  rateLimit(`recommendations:${identity.userId ?? getClientIp(req)}`, { windowMs: 60_000, max: 60 });
 
   const url = new URL(req.url);
   const scenario = readScenario(url.searchParams.get("scenario"));
@@ -112,7 +112,7 @@ export const GET = guard(async (req) => {
 
 export const POST = guard(async (req) => {
   const identity = await optionalUser(req);
-  rateLimit(`recommendations:write:${identity.userId ?? clientIp(req)}`, { windowMs: 60_000, max: 20 });
+  rateLimit(`recommendations:write:${identity.userId ?? getClientIp(req)}`, { windowMs: 60_000, max: 20 });
   const body = (await readBody(req, 50_000)) as Record<string, unknown>;
 
   const scenario = readScenario(body.scenario);
@@ -146,7 +146,4 @@ export const DELETE = guard(async (req) => {
   return ok({ ...result, action });
 });
 
-function clientIp(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd ? fwd.split(",")[0].trim() : "unknown";
-}
+

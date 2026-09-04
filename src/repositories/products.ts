@@ -6,6 +6,8 @@ import {
   similarProducts as mockSimilar, trendingProducts as mockTrending,
   getProductSalesCount as mockSales,
 } from "../data/products";
+import { normalizeCatalogRating } from "@/lib/rating";
+import { withDbFallback } from "./_fallback";
 
 export interface ProductsRepository {
   list(): Promise<Product[]>; bySlug(slug: string): Promise<Product | undefined>;
@@ -16,45 +18,75 @@ export interface ProductsRepository {
   trending(take?: number): Promise<Product[]>; salesCount(product: Product): Promise<number>;
 }
 
-const hasDatabase = () => Boolean(process.env.DATABASE_URL);
-
 async function remoteList(params: Record<string, string | number | boolean | undefined> = {}): Promise<Product[]> {
   const { listProducts } = await import("../services/catalogService");
   const result = await listProducts({ ...params, limit: Number(params.limit ?? 50) });
   return result.items.map(toDomain);
 }
 
-function toDomain(value: Record<string, any>): Product {
+function toDomain(value: Record<string, unknown>): Product {
+  const vendor = value.vendor as { id?: string; name?: string } | undefined;
+  const styleSlugs = (Array.isArray(value.styleSlugs) ? value.styleSlugs : []) as StyleSlug[];
+  const categorySlugs = Array.isArray(value.categorySlugs) ? value.categorySlugs as string[] : [];
+  const images = Array.isArray(value.images) ? value.images as string[] : [];
+  const tags = Array.isArray(value.tags) ? value.tags as string[] : [];
+  const color = typeof value.color === "string" ? value.color : undefined;
+  const material = typeof value.material === "string" ? value.material : undefined;
   return {
-    id: value.id, sku: value.sku, slug: value.slug, name: value.title ?? value.name, brand: value.brand ?? value.vendor?.name ?? "هومینو",
-    storeId: value.vendor?.id ?? value.vendorId ?? "", categorySlug: value.categorySlugs?.[0] ?? "furniture",
-    styleSlugs: (value.styleSlugs ?? []) as StyleSlug[], price: value.price ?? 0,
-    oldPrice: value.compareAtPrice ?? undefined, currency: "تومان", rating: Number(value.rating ?? 0) > 5 ? Number(value.rating) / 10 : Number(value.rating ?? 0),
-    reviewsCount: value.reviewsCount ?? 0, purchaseCount: value.salesCount ?? 0, images: value.images ?? [],
-    colors: value.color ? [{ name: value.color, hex: "#cdbfa6" }] : [], materials: value.material ? [value.material] : [],
-    dimensions: typeof value.dimensions === "string" ? value.dimensions : undefined, description: value.description ?? value.shortDescription ?? "",
-    specs: [], inStock: value.inStock ?? true, stockCount: value.availableQuantity ?? 0,
-    trending: (value.salesCount ?? 0) > 100, tags: value.tags ?? [], salesCount: value.salesCount ?? 0,
+    id: String(value.id ?? ""),
+    sku: typeof value.sku === "string" ? value.sku : undefined,
+    slug: String(value.slug ?? ""),
+    name: String(value.title ?? value.name ?? ""),
+    brand: String(value.brand ?? vendor?.name ?? "هومینو"),
+    storeId: String(vendor?.id ?? value.vendorId ?? ""),
+    categorySlug: categorySlugs[0] ?? "furniture",
+    styleSlugs,
+    price: Number(value.price ?? 0),
+    oldPrice: value.compareAtPrice != null ? Number(value.compareAtPrice) : undefined,
+    currency: "تومان",
+    rating: normalizeCatalogRating(value.rating),
+    reviewsCount: Number(value.reviewsCount ?? 0),
+    purchaseCount: Number(value.salesCount ?? 0),
+    images,
+    colors: color ? [{ name: color, hex: "#cdbfa6" }] : [],
+    materials: material ? [material] : [],
+    dimensions: typeof value.dimensions === "string" ? value.dimensions : undefined,
+    description: String(value.description ?? value.shortDescription ?? ""),
+    specs: [],
+    inStock: value.inStock !== false,
+    stockCount: Number(value.availableQuantity ?? 0),
+    trending: Number(value.salesCount ?? 0) > 100,
+    tags,
+    salesCount: Number(value.salesCount ?? 0),
   };
 }
 
 export const productsRepository: ProductsRepository = {
-  list: async () => hasDatabase() ? remoteList() : mockProducts,
+  list: async () => withDbFallback(mockProducts, () => remoteList()),
   bySlug: async (slug) => {
-    if (!hasDatabase()) return mockBySlug(slug);
-    const { getProductBySlug } = await import("../services/catalogService");
-    try { return toDomain(await getProductBySlug(slug)); } catch { return undefined; }
+    if (!process.env.DATABASE_URL) return mockBySlug(slug);
+    try {
+      const { getProductBySlug } = await import("../services/catalogService");
+      return toDomain(await getProductBySlug(slug) as unknown as Record<string, unknown>);
+    } catch {
+      return mockBySlug(slug);
+    }
   },
-  byId: async (id) => hasDatabase() ? (await remoteList()).find(p => p.id === id) : mockById(id),
+  byId: async (id) => {
+    const all = await withDbFallback(mockProducts, () => remoteList());
+    return all.find(p => p.id === id) ?? mockById(id);
+  },
   bySku: async (sku) => {
-    if (!hasDatabase()) return mockBySku(sku);
-    const all = await remoteList();
+    const all = await withDbFallback(mockProducts, () => remoteList());
     const clean = sku.trim().toLowerCase();
     return all.find(p => (p.sku && p.sku.toLowerCase() === clean) || p.id.toLowerCase() === clean || p.slug.toLowerCase() === clean) || mockBySku(sku);
   },
-  byCategory: async (slug) => hasDatabase() ? remoteList({ categorySlug: slug }) : mockByCategory(slug),
-  byStyle: async (slug) => hasDatabase() ? remoteList({ styleSlug: slug }) : mockByStyle(slug),
-  similar: async (id, take = 4) => hasDatabase() ? (await remoteList()).filter(p => p.id !== id).slice(0, take) : mockSimilar(id, take),
-  trending: async (take = 12) => hasDatabase() ? remoteList({ sort: "popular", limit: take }) : mockTrending.slice(0, take),
-  salesCount: async (product) => hasDatabase() ? (product.salesCount ?? product.purchaseCount) : mockSales(product),
+  byCategory: async (slug) => withDbFallback(mockByCategory(slug), () => remoteList({ categorySlug: slug })),
+  byStyle: async (slug) => withDbFallback(mockByStyle(slug), () => remoteList({ styleSlug: slug })),
+  similar: async (id, take = 4) => withDbFallback(mockSimilar(id, take), async () => (await remoteList()).filter(p => p.id !== id).slice(0, take)),
+  trending: async (take = 12) => withDbFallback(mockTrending.slice(0, take), () => remoteList({ sort: "popular", limit: take })),
+  salesCount: async (product) => {
+    if (!process.env.DATABASE_URL) return mockSales(product);
+    return product.salesCount ?? product.purchaseCount;
+  },
 };
