@@ -1,6 +1,7 @@
 import type { Product, Category, ProductSpec } from "@/types";
 import { products as mockProducts } from "@/data/products";
 import { listProducts, getCategoryTree } from "@/services/catalogService";
+import { normalizeCatalogRating } from "@/lib/rating";
 
 /**
  * Server-side catalog integration.
@@ -49,7 +50,7 @@ function mapSerialized(p: SerializedProduct): Product {
     price: Number(p.price),
     oldPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : undefined,
     currency: (p.currency as Product["currency"]) ?? "تومان",
-    rating: Number(p.rating) / 10,
+    rating: normalizeCatalogRating(p.rating),
     reviewsCount: Number(p.reviewsCount ?? 0),
     purchaseCount: Number(p.salesCount ?? 0),
     images: p.images,

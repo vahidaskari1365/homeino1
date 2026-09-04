@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useRouter, usePathname } from "next/navigation";
 import { X, Sparkles, Send, ImagePlus, Wand2, Heart } from "lucide-react";
 import { useUi, useChat } from "@/stores/useApp";
@@ -29,6 +30,8 @@ export function AIPanel() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  useFocusTrap(aiPanelOpen, panelRef);
 
   useEffect(() => {
     document.body.style.overflow = aiPanelOpen ? "hidden" : "";

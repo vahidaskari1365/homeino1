@@ -21,12 +21,9 @@ export function fail(error: unknown) {
       { status: error.status },
     );
   }
-  const message =
-    error instanceof Error ? error.message : "خطای ناشناخته‌ای رخ داد";
-  // eslint-disable-next-line no-console
   console.error("[api] unhandled error:", error);
   return NextResponse.json(
-    { ok: false as const, error: { code: "INTERNAL", message } },
+    { ok: false as const, error: { code: "INTERNAL", message: "خطای داخلی سرور" } },
     { status: 500 },
   );
 }

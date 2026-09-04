@@ -9,7 +9,6 @@ import {
   orderStatusHistory,
   orderStatusEnum,
   products,
-  users,
   vendors,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";

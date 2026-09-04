@@ -41,11 +41,6 @@ export function createRequestId(): string {
   return `req_${rand}`;
 }
 
-function truncate(s: string, max = 120): string {
-  const clean = s.replace(/\s+/g, " ").trim();
-  return clean.length > max ? `${clean.slice(0, max)}…` : clean;
-}
-
 /** Record one completed AI request (structured, secret-safe). */
 export function logAiRequest(entry: Omit<AiTelemetryEntry, "createdAt">): void {
   const full: AiTelemetryEntry = { ...entry, createdAt: new Date().toISOString() };

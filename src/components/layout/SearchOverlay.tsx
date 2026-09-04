@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useRouter } from "next/navigation";
 import { Search, X, TrendingUp, Clock, ArrowLeft } from "lucide-react";
 import { useUi } from "@/stores/useApp";
@@ -7,7 +8,7 @@ import { products } from "@/data/products";
 import { stores } from "@/data/stores";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
-import { cn, toFa } from "@/lib/utils";
+import {toFa } from "@/lib/utils";
 import { SmartImage } from "../ui/SmartImage";
 import { Rating } from "../ui/primitives";
 import { formatPrice } from "@/lib/utils";
@@ -19,6 +20,8 @@ export function SearchOverlay() {
   const { searchOpen, setSearch } = useUi();
   const router = useRouter();
   const [q, setQ] = useState("");
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(searchOpen, panelRef);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSearch(false);
@@ -48,7 +51,7 @@ export function SearchOverlay() {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-ink/40 backdrop-blur-sm" onClick={() => setSearch(false)}>
-      <div className="mx-auto mt-0 w-full max-w-3xl animate-[fadeUp_0.3s_ease]" onClick={(e) => e.stopPropagation()}>
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="جستجو" className="mx-auto mt-0 w-full max-w-3xl animate-[fadeUp_0.3s_ease]" onClick={(e) => e.stopPropagation()}>
         <div className="bg-cream shadow-[var(--shadow-lift)]">
           {/* input */}
           <div className="flex items-center gap-3 border-b border-clay/40 px-5 py-4">

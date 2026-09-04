@@ -41,7 +41,7 @@ export class LocalStorageProvider implements StorageProvider {
     return `${this.publicBaseUrl}/${key}`;
   }
 
-  async put(key: string, data: Buffer | Uint8Array | string, opts?: StoragePutOptions) {
+  async put(key: string, data: Buffer | Uint8Array | string, _opts?: StoragePutOptions) {
     const fs = await import("fs");
     const path = await import("path");
     const full = path.join(this.baseDir, key);

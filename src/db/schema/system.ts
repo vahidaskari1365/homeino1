@@ -1,5 +1,5 @@
 import { index, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { id, timestamps, createdAtColumn, updatedAtColumn } from "./_base";
+import { id, createdAtColumn, updatedAtColumn } from "./_base";
 import { users } from "./users";
 
 // ---------------------------------------------------------------

@@ -7,7 +7,7 @@
 // ============================================================
 import type { AgentDefinition, AgentSchedule, AgentStatus, AgentType } from "./types";
 import type { AgentPatch, NewAgentInput, ToolRecord } from "./store/types";
-import { ensureSeeded, getStore, storeMode, storeModeReason } from "./store";
+import { ensureSeeded, storeMode, storeModeReason } from "./store";
 import { AGENT_PERMISSIONS, PERMISSION_LABELS, PERMISSION_RISK, normalizePermissions, type AgentPermissionKey } from "./permissions";
 import { BUILTIN_TOOLS } from "./defaults";
 import { HANDLER_KEYS } from "./handlers";

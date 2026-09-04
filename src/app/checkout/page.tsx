@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MapPin, Truck, CreditCard, Check, ShieldCheck } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, LogoBlock } from "@/components/ui/primitives";
+import { Button} from "@/components/ui/primitives";
 import { useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { getProductById } from "@/data/products";
@@ -62,10 +62,10 @@ export default function CheckoutPage() {
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><MapPin size={18} /> نشانی تحویل</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[["fullName", "نام و نام خانوادگی", "نام کامل"], ["phone", "شماره موبایل", "09xxxxxxxxx"], ["postalCode", "کد پستی", "کد پستی"]].map(([id, label, ph]) => (
-                  <div key={id}><label className="mb-1 block text-sm text-ink-muted">{label}</label><input id={id} required placeholder={ph} className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+                  <div key={id}><label htmlFor={id} className="mb-1 block text-sm text-ink-muted">{label}</label><input id={id} name={id} required placeholder={ph} className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
                 ))}
               </div>
-              <div><label className="mb-1 block text-sm text-ink-muted">نشانی کامل</label><textarea required rows={2} placeholder="استان، شهر، خیابان، پلاک…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+              <div><label htmlFor="address" className="mb-1 block text-sm text-ink-muted">نشانی کامل</label><textarea id="address" name="address" required rows={2} placeholder="استان، شهر، خیابان، پلاک…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
             </div>
           )}
           {step === 1 && (

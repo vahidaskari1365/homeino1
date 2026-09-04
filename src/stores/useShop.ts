@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem, UserCollection } from "@/types";
 import { trackEvent } from "@/lib/tracking";
+import { addCartItem, cartCount, removeCartItem, setCartQty } from "@/lib/cartMath";
 
 /* ---------------- CART (multi-vendor aware) ---------------- */
 interface CartState {
@@ -21,31 +22,18 @@ export const useCart = create<CartState>()(
       add: (productId, qty = 1, offerId) => {
         // Real behavior event → analytics_events → agentic workflows.
         void trackEvent("cart_add", { entityType: "product", entityId: productId, metadata: { qty, offerId: offerId ?? null } });
-        set((s) => {
-          const existing = s.items.find((item) => item.productId === productId && item.offerId === offerId);
-          if (existing)
-            return {
-              items: s.items.map((item) =>
-                item.productId === productId && item.offerId === offerId ? { ...item, qty: item.qty + qty } : item
-              ),
-            };
-          return { items: [...s.items, { productId, offerId, qty }] };
-        });
+        set((s) => ({ items: addCartItem(s.items, productId, qty, offerId) }));
       },
       remove: (productId, offerId) => {
         void trackEvent("cart_remove", { entityType: "product", entityId: productId, metadata: { offerId: offerId ?? null } });
-        set((s) => ({ items: s.items.filter((item) => !(item.productId === productId && (offerId === undefined || item.offerId === offerId))) }));
+        set((s) => ({ items: removeCartItem(s.items, productId, offerId) }));
       },
       setQty: (productId, qty, offerId) => {
         if (qty <= 0) void trackEvent("cart_remove", { entityType: "product", entityId: productId, metadata: { offerId: offerId ?? null } });
-        set((s) => ({
-          items: s.items
-            .map((item) => item.productId === productId && (offerId === undefined || item.offerId === offerId) ? { ...item, qty } : item)
-            .filter((item) => item.qty > 0),
-        }));
+        set((s) => ({ items: setCartQty(s.items, productId, qty, offerId) }));
       },
       clear: () => set({ items: [] }),
-      count: () => get().items.reduce((n, i) => n + i.qty, 0),
+      count: () => cartCount(get().items),
     }),
     { name: "homeino-cart" }
   )

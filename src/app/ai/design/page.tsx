@@ -2,9 +2,9 @@
 import { useState, useRef, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
-  Upload, Wand2, Search, Sparkles, RefreshCw, X, ShoppingBag, Lightbulb,
+  Upload, Wand2, Search, Sparkles, X, ShoppingBag, Lightbulb,
   Download, Share2, Sofa, Blinds, Grid3x3, Lamp, BedDouble, Flower2,
-  Image as ImageIcon, Gem, ChevronDown, Tv, BookOpen, Heart, CreditCard, Store, Loader2, Check,
+  Image as ImageIcon, Gem, Tv, BookOpen, Heart, CreditCard, Store, Loader2, Check,
   Briefcase, Lock as LockIcon, Undo2, Redo2, AlertCircle, Recycle, type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -31,6 +31,8 @@ import { products, getProductById, getProductBySkuOrCode } from "@/data/products
 import { secondHandProducts } from "@/data/secondHand";
 import { IMG } from "@/data/media";
 import { useCredits, useUi } from "@/stores/useApp";
+import { useDesignSessions } from "@/stores/useDesignSessions";
+import { SuggestAssistant } from "@/components/ai/SuggestAssistant";
 import { useCart, useWishlist } from "@/stores/useShop";
 import { useRoomState } from "@/stores/useRoomState";
 import { trackEvent } from "@/lib/tracking";
@@ -206,11 +208,12 @@ function DesignInner() {
   const addToCart = useCart((s) => s.add);
   const wl = useWishlist();
   const { toast } = useUi();
+  const saveSession = useDesignSessions((s) => s.saveSession);
   const cost = costForMode("room-redesign");
   const styleLabel = STYLES.find((s) => s.id === style)?.label ?? style;
 
   const rs = useRoomState();
-  const [lastIntent, setLastIntent] = useState<AiIntent | null>(null);
+  const [, setLastIntent] = useState<AiIntent | null>(null);
   const [lastScope, setLastScope] = useState<ScopedChange | null>(null);
   const [roomAnalysis, setRoomAnalysis] = useState<RoomAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -490,6 +493,24 @@ function DesignInner() {
         },
       });
 
+      saveSession({
+        title: isFullRoom ? `طراحی ${styleLabel}` : (prompt || "چیدمان هوشمند"),
+        prompt: pipelineInput.prompt,
+        roomType: pipelineInput.room ?? "نشیمن",
+        style,
+        colors: pipelineInput.colors ?? [],
+        scope: isFullRoom ? "full" : "targeted",
+        targets: finalTargets,
+        status: isPreview ? "partial-success" : "success",
+        beforeImage: imageBase64,
+        afterImage: outputImage,
+        regions: [],
+        products: chosen.map((p) => ({ label: p.name, productId: p.id })),
+        creditsUsed: opCost,
+        preview: isPreview,
+        imageEngine: pipelineRes.imageEngine,
+      });
+
       if (isPreview) {
         toast("نتیجه به‌صورت پیش‌نمایش آماده شد (موتور تصویر در دسترس نیست)");
       } else {
@@ -609,6 +630,24 @@ function DesignInner() {
         })),
         change: prompt || `قرار دادن ${presetProduct.name} در اتاق`,
         scope: pipelineRes.scope,
+      });
+
+      saveSession({
+        title: `جای‌گذاری ${presetProduct.name}`,
+        prompt: pipelineInput.prompt,
+        roomType: pipelineInput.room ?? "نشیمن",
+        style,
+        colors: [],
+        scope: "targeted",
+        targets,
+        status: isPreview ? "partial-success" : "success",
+        beforeImage: imageBase64,
+        afterImage: outputImage,
+        regions: [],
+        products: [{ label: presetProduct.name, productId: presetProduct.id }],
+        creditsUsed: opCost,
+        preview: isPreview,
+        imageEngine: pipelineRes.imageEngine,
       });
 
       toast(isPreview ? "محصول به‌صورت پیش‌نمایش قرار گرفت (موتور تصویر در دسترس نیست)" : "محصول در عکس قرار گرفت");
@@ -832,7 +871,7 @@ function DesignInner() {
               {loading && (
                 <div className="rounded-xl border border-clay/50 bg-cream p-3">
                   <div className="mb-2 flex items-center gap-1.5 text-xs"><Loader2 size={14} className="animate-spin text-terracotta-deep" /><span className="font-medium text-ink">{STAGE_LABEL[stage]}</span></div>
-                  <div className="space-y-1">{progressSteps.map((s, i) => (<div key={s.key} className="flex items-center gap-2"><div className="shrink-0">{s.done ? <Check size={12} className="text-success" /> : s.active ? <Loader2 size={12} className="animate-spin text-terracotta-deep" /> : <span className="block h-3 w-3 rounded-full border border-clay" />}</div><span className={cn("text-[10px]", s.done ? "text-success" : s.active ? "font-medium text-ink" : "text-ink-muted")}>{s.label}</span></div>))}</div>
+                  <div className="space-y-1">{progressSteps.map((s, _i) => (<div key={s.key} className="flex items-center gap-2"><div className="shrink-0">{s.done ? <Check size={12} className="text-success" /> : s.active ? <Loader2 size={12} className="animate-spin text-terracotta-deep" /> : <span className="block h-3 w-3 rounded-full border border-clay" />}</div><span className={cn("text-[10px]", s.done ? "text-success" : s.active ? "font-medium text-ink" : "text-ink-muted")}>{s.label}</span></div>))}</div>
                 </div>
               )}
               {error && !loading && <div className="rounded-xl border border-danger/30 bg-danger/5 p-2.5 text-[11px] text-danger"><p className="font-bold">{error}</p><button onClick={generate} className="mt-0.5 font-bold text-terracotta-deep hover:underline">تلاش مجدد</button></div>}
@@ -955,23 +994,4 @@ function DesignInner() {
 
 export default function AIDesignPage() {
   return (<Suspense fallback={<div className="grid min-h-[70vh] place-items-center bg-ivory"><Loader2 className="animate-spin text-ink-muted" /></div>}><DesignInner /></Suspense>);
-}
-
-const ROOM_TYPES = [["living", "نشیمن"], ["bedroom", "خواب"], ["kitchen", "آشپزخانه"], ["bathroom", "حمام"], ["office", "کار"], ["dining", "ناهارخوری"], ["outdoor", "باز"]] as const;
-const BUDGETS = [["low", "اقتصادی (تا ۱۰م)"], ["mid", "متوسط (۱۰-۵۰م)"], ["high", "بالا (۵۰-۱۰۰م)"], ["premium", "لوکس (۱۰۰م+)"]] as const;
-
-function SuggestAssistant({ onApply, onBack }: { onApply: (p: { style: string; budget: string; roomType: string; colors: string[] }) => void; onBack: () => void }) {
-  const [step, setStep] = useState(0);
-  const [roomType, setRoomType] = useState(""); const [style, setStyle] = useState(""); const [budget, setBudget] = useState("");
-  const [colorInput, setColorInput] = useState(""); const [colors, setColors] = useState<string[]>([]);
-  const addColor = () => { const c = colorInput.trim(); if (c && !colors.includes(c)) { setColors([...colors, c]); setColorInput(""); } };
-  const panelCls = "rounded-2xl border border-clay/50 bg-cream p-5 shadow-[var(--shadow-soft)]";
-  return (
-    <div className={cn("mx-auto max-w-md space-y-4", panelCls)}>
-      <div className="flex items-center justify-center gap-2">{[0, 1, 2].map((s) => <div key={s} className={cn("h-2 w-2 rounded-full transition-all", s === step ? "scale-125 bg-terracotta" : s < step ? "bg-terracotta" : "bg-clay")} />)}</div>
-      {step === 0 && (<div className="space-y-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><div><h3 className="text-sm font-bold text-ink">نوع فضا</h3></div></div><div className="grid grid-cols-3 gap-2">{ROOM_TYPES.map(([v, l]) => <button key={v} onClick={() => setRoomType(v)} className={cn("rounded-lg border p-2.5 text-xs font-medium transition", roomType === v ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/50 text-ink-muted hover:border-terracotta/40")}>{l}</button>)}</div><div className="flex gap-2 pt-1"><button onClick={onBack} className="px-3 py-1.5 text-[11px] text-ink-muted">بازگشت</button><button onClick={() => setStep(1)} disabled={!roomType} className="flex-1 rounded-lg bg-ink py-2 text-xs font-bold text-cream disabled:opacity-40">بعدی</button></div></div>)}
-      {step === 1 && (<div className="space-y-4"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><h3 className="text-sm font-bold text-ink">سبک و بودجه</h3></div><div><p className="mb-1.5 text-[11px] font-medium text-ink-muted">سبک</p><div className="flex flex-wrap gap-1.5">{STYLES.map((s) => <button key={s.id} onClick={() => setStyle(s.id)} className={cn("rounded-lg border px-3 py-1.5 text-[11px] font-medium transition", style === s.id ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/50 text-ink-muted hover:border-terracotta/40")}>{s.label}</button>)}</div></div><div><p className="mb-1.5 text-[11px] font-medium text-ink-muted">بودجه</p><div className="space-y-1.5">{BUDGETS.map(([v, l]) => <button key={v} onClick={() => setBudget(v)} className={cn("w-full rounded-lg border p-2.5 text-left text-xs transition", budget === v ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/50 text-ink-muted hover:border-terracotta/40")}>{l}</button>)}</div></div><div className="flex gap-2 pt-1"><button onClick={() => setStep(0)} className="px-3 py-1.5 text-[11px] text-ink-muted">قبلی</button><button onClick={() => setStep(2)} disabled={!style || !budget} className="flex-1 rounded-lg bg-ink py-2 text-xs font-bold text-cream disabled:opacity-40">بعدی</button></div></div>)}
-      {step === 2 && (<div className="space-y-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10"><Sparkles size={16} className="text-terracotta-deep" /></span><h3 className="text-sm font-bold text-ink">رنگ‌ها (اختیاری)</h3></div><div className="flex gap-2"><input value={colorInput} onChange={(e) => setColorInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }} placeholder="مثلاً طلایی..." className="flex-1 rounded-lg border border-clay/50 bg-ivory-2 px-3 py-2 text-xs text-ink outline-none focus:border-terracotta" /><button onClick={addColor} className="rounded-lg bg-terracotta/10 px-3 py-2 text-xs font-medium text-terracotta-deep">+</button></div>{colors.length > 0 && <div className="flex flex-wrap gap-1">{colors.map((c) => <span key={c} className="flex items-center gap-0.5 rounded-full bg-ivory-2 px-2 py-0.5 text-[10px] text-ink">{c}<button onClick={() => setColors(colors.filter((x) => x !== c))} className="hover:text-danger"><X size={9} /></button></span>)}</div>}<div className="rounded-lg bg-ivory-2 p-3"><p className="text-[10px] font-bold text-terracotta-deep">خلاصه</p><div className="mt-0.5 space-y-0.5 text-[10px] text-ink-muted"><p>فضا: {ROOM_TYPES.find((r) => r[0] === roomType)?.[1]}</p><p>سبک: {STYLES.find((s) => s.id === style)?.label}</p><p>بودجه: {BUDGETS.find((b) => b[0] === budget)?.[1]}</p>{colors.length > 0 && <p>رنگ‌ها: {colors.join("، ")}</p>}</div></div><div className="flex gap-2 pt-1"><button onClick={() => setStep(1)} className="px-3 py-1.5 text-[11px] text-ink-muted">قبلی</button><button onClick={() => onApply({ style, budget, roomType, colors })} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-ink py-2 text-xs font-bold text-cream transition hover:opacity-90"><Sparkles size={14} /> دریافت پیشنهاد</button></div></div>)}
-    </div>
-  );
 }

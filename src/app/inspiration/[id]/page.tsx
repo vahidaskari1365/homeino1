@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Heart, ShoppingBag, Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { Container, Breadcrumb } from "@/components/shared";
-import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
+import { Button, Badge} from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { getInspiration, inspirations } from "@/data/inspirations";
 import { getProductById } from "@/data/products";

@@ -6,7 +6,7 @@ import { id, timestamps, createdAtColumn } from "./_base";
 import { users } from "./users";
 import { vendors } from "./vendors";
 import { products, productVariants } from "./products";
-import { inspirations, collections } from "./content";
+import { inspirations} from "./content";
 import { aiDesigns, aiGenerations, creditAccounts, creditTransactions } from "./ai";
 
 // Supabase-specific normalized entities used by the current storefront,

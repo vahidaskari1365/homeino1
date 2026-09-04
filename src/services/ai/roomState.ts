@@ -307,8 +307,6 @@ export function validateResult(params: {
   intent: AiIntent;
   providerMarkedPreview?: boolean;
 }): ValidationResult {
-  const reasons: string[] = [];
-
   if (!params.afterImage) {
     return { status: "failed", reasons: ["No output image"] };
   }

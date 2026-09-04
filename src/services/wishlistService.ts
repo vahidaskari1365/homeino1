@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { wishlistItems, wishlists } from "@/db/schema";
-import { ApiError } from "@/lib/api/errors";
 
 export async function getOrCreateWishlist(userId: string) {
   const db = getDb();

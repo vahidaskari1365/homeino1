@@ -3,9 +3,9 @@ import { styles as mockStyles, getStyle } from "@/data/styles";
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { styleColors, styleFeatures, styleMaterials, styles } from "@/db/schema";
+import { withDbFallback } from "./_fallback";
 
 export interface StylesRepository { list(): Promise<Style[]>; bySlug(slug: string): Promise<Style | undefined>; }
-const hasDatabase = () => Boolean(process.env.DATABASE_URL);
 
 async function listRemote(): Promise<Style[]> {
   const db = getDb();
@@ -30,6 +30,9 @@ async function listRemote(): Promise<Style[]> {
 }
 
 export const stylesRepository: StylesRepository = {
-  list: async () => hasDatabase() ? listRemote() : mockStyles,
-  bySlug: async slug => hasDatabase() ? (await listRemote()).find(s => s.slug === slug) : getStyle(slug),
+  list: async () => withDbFallback(mockStyles, listRemote),
+  bySlug: async slug => {
+    const all = await withDbFallback(mockStyles, listRemote);
+    return all.find(s => s.slug === slug) ?? getStyle(slug);
+  },
 };

@@ -1,10 +1,8 @@
 import type { AiProvider, GenerateDesignInput, GeneratedDesign } from "./types";
-import { roomShots, decorShots } from "../../data/media";
+import { roomShots} from "../../data/media";
 import { uid } from "../../lib/utils";
 import { validateResult, type ProductCatalogEntry } from "./roomState";
 import { products } from "../../data/products";
-
-const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
 // Interior-design-aware mock chat engine — gives genuinely useful advice
 // even without a real LLM. Understands Persian design questions.

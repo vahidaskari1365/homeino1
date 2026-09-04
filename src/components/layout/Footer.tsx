@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, AtSign, Send, Globe, Gift, Check } from "lucide-react";
+import {AtSign, Send, Globe, Gift, Check } from "lucide-react";
 import { Container } from "../ui/primitives";
 import { categories } from "@/data/categories";
 

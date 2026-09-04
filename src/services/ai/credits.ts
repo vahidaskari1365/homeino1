@@ -15,7 +15,7 @@ export const CREDIT_CONFIG = {
     { id: "sub-plus", name: "پلاس", price: 290000, credits: 600, perks: ["۶۰۰ اعتبار ماهانه", "دقت بالا", "اولویت در صف"] },
     { id: "sub-pro", name: "حرفه‌ای", price: 690000, credits: 2000, perks: ["۲۰۰۰ اعتبار ماهانه", "دقت حداکثری", "پشتیبانی ویژه"] },
   ],
-};
+} as const;
 
 import { AI_MODES } from "./types";
 

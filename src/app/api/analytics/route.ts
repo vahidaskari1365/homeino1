@@ -10,7 +10,7 @@
 import { guard, readBody } from "@/lib/api/http";
 import { ok } from "@/lib/api/response";
 import { ApiError } from "@/lib/api/errors";
-import { rateLimit } from "@/lib/api/rateLimit";
+import { getClientIp, rateLimit } from "@/lib/api/rateLimit";
 import { optionalUser, requireAdminUser } from "@/lib/api/auth";
 import { recordEvent, eventStats, KNOWN_EVENT_TYPES } from "@/services/workflows/triggers";
 
@@ -19,11 +19,6 @@ export const dynamic = "force-dynamic";
 
 const MAX_BATCH = 20;
 const MAX_METADATA_BYTES = 8_000;
-
-function clientIp(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd ? fwd.split(",")[0].trim() : "unknown";
-}
 
 function sanitizeMetadata(metadata: unknown): Record<string, unknown> {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return {};
@@ -69,7 +64,7 @@ function readEvent(raw: unknown, identity: { userId: string | null }, req: Reque
 }
 
 export const POST = guard(async (req) => {
-  rateLimit(`analytics:${clientIp(req)}`, { windowMs: 60_000, max: 240 });
+  rateLimit(`analytics:${getClientIp(req)}`, { windowMs: 60_000, max: 240 });
   const identity = await optionalUser(req);
   const body = await readBody(req, 200_000);
   const payload = body as Record<string, unknown>;

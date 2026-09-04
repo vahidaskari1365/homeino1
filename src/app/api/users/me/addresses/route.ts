@@ -1,10 +1,10 @@
-import { and, desc, eq } from "drizzle-orm";
+import {desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { userAddresses } from "@/db/schema";
 import { requireUser } from "@/lib/api/auth";
 import { ok } from "@/lib/api/response";
 import { guard, readBody } from "@/lib/api/http";
-import { validate, isBoolean, isOptionalBoolean, isOptionalString, isString } from "@/lib/api/validate";
+import { validate, isOptionalBoolean, isOptionalString, isString } from "@/lib/api/validate";
 
 export const runtime = "nodejs";
 

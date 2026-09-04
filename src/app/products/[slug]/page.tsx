@@ -2,7 +2,7 @@
 import { useState, use, useEffect } from "react";
 import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, MessageCircle, Ruler } from "lucide-react";
+import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, Ruler } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
 import { Button, Badge, Rating, Price, EmptyState, LogoBlock } from "@/components/ui/primitives";
@@ -10,12 +10,12 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
 import { getStyle } from "@/data/styles";
-import { getStoreById, stores as allStores } from "@/data/stores";
+import { getStoreById } from "@/data/stores";
 import { offersForProduct, getBestOffer } from "@/data/offers";
 import { sampleReviews } from "@/data/inspirations";
 import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/useShop";
 import { useUi, useChat } from "@/stores/useApp";
-import { uid, toFa, formatPrice, cn } from "@/lib/utils";
+import {toFa, formatPrice, cn } from "@/lib/utils";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
