@@ -22,7 +22,7 @@ import { createRequestId, logAiRequest } from "@/services/ai/telemetry";
 //   • No keys, providers, or model names reach the client
 // ============================================================
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         p[key] = sanitizeUserPrompt(p[key] as string);
       }
     }
-    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU"]) {
+    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU", "sessionId", "agentKey", "scenario"]) {
       if (key in p && typeof p[key] === "string") {
         p[key] = (p[key] as string).replace(/<[^>]+>/g, "").slice(0, 200);
       }
@@ -210,6 +210,45 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
   };
 
   try {
+    // ---- Agentic actions: routed through Homeino's own orchestrator ----
+    if (action === "agent-status") {
+      const { orchestratorStatus } = await import("@/services/agents/orchestrator");
+      const status = await orchestratorStatus();
+      finish("ok", { provider: "orchestrator" });
+      return json({ status }, 200, requestId);
+    }
+    if (action === "agent") {
+      const { routeIntent } = await import("@/services/agents/orchestrator");
+      const message = typeof p.message === "string" ? p.message : typeof p.prompt === "string" ? p.prompt : "";
+      if (!message.trim()) {
+        finish("error", { errorCode: "INVALID_REQUEST" });
+        return json({ error: "پیامی ارسال نشد", code: "INVALID_REQUEST" }, 400, requestId);
+      }
+      const routed = await routeIntent({
+        message: message.slice(0, 1000),
+        userId: typeof p.userId === "string" ? p.userId : null,
+        sessionId: typeof p.sessionId === "string" ? p.sessionId : null,
+        agentKey: typeof p.agentKey === "string" && p.agentKey ? p.agentKey : undefined,
+      });
+      finish(routed.ok ? "ok" : "degraded", { provider: "orchestrator" });
+      // `content` keeps the existing ChatReply contract — real products are
+      // attached separately and are always catalog-verified.
+      return json(
+        {
+          content: routed.message,
+          products: routed.products,
+          understanding: routed.understanding,
+          routedTo: routed.routedTo,
+          intent: routed.intent,
+          dataState: routed.dataState,
+          agentOk: routed.ok,
+          agentError: routed.error ?? null,
+        },
+        200,
+        requestId,
+      );
+    }
+
     // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----
     if (action === "resolve-sku") {
       const code = typeof p.code === "string" ? p.code : typeof p.sku === "string" ? p.sku : "";

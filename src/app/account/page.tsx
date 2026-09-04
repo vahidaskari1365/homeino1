@@ -1,18 +1,42 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Sparkles, Package, Heart, Wand2, TrendingUp, ArrowLeft } from "lucide-react";
 import { Button, LogoBlock, Badge } from "@/components/ui/primitives";
 import { useAuth, useCredits } from "@/stores/useApp";
 import { useWishlist, useCart } from "@/stores/useShop";
 import { aiDesigns } from "@/data/inspirations";
-import { products } from "@/data/products";
 import { toFa } from "@/lib/utils";
+import { trackEvent } from "@/lib/tracking";
+import { curatedRecommendations, recommendationsRepository, type RecommendationEntry } from "@/repositories/recommendations";
+
 
 export default function AccountOverview() {
   const user = useAuth((s) => s.user);
   const balance = useCredits((s) => s.balance);
   const wish = useWishlist((s) => s.total());
   const cart = useCart((s) => s.items.length);
+  // Real, agent-ranked recommendations (persisted per customer/session).
+  // The curated catalog list is only the initial paint + honest fallback.
+  const [recommended, setRecommended] = useState<RecommendationEntry[]>(() => curatedRecommendations(3));
+
+  useEffect(() => {
+    let alive = true;
+    recommendationsRepository
+      .forScenario("account", 3)
+      .then((feed) => {
+        if (!alive || !feed.items.length) return;
+        setRecommended(feed.items);
+        void trackEvent("recommendation_view", {
+          entityType: "recommendation",
+          metadata: { scenario: feed.scenario, source: feed.source, count: feed.items.length, dataState: feed.dataState },
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const stats = [
     { label: "اعتبار AI", value: toFa(balance), icon: Sparkles, color: "text-gold" },
@@ -66,7 +90,7 @@ export default function AccountOverview() {
             <Link href="/products" className="text-sm text-terracotta-deep">بیشتر ←</Link>
           </div>
           <div className="space-y-3">
-            {products.filter((p) => p.aiRecommended).slice(0, 3).map((p) => (
+            {recommended.map((p) => (
               <Link key={p.id} href={`/products/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
                 <img src={p.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{p.name}</div><div className="text-xs text-ink-muted">{p.brand}</div></div>
