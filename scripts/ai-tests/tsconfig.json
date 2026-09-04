@@ -16,5 +16,5 @@
     },
     "types": ["node"]
   },
-  "files": ["./run.test.ts"]
+  "files": ["./run.test.ts", "./agentic.test.ts"]
 }

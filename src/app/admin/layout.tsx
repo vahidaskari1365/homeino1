@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
-import { LayoutDashboard, Users, Package, ShoppingCart, Sparkles, Store } from "lucide-react";
+import { LayoutDashboard, Users, Package, ShoppingCart, Sparkles, Store, Workflow } from "lucide-react";
 import { DashboardLayout, type NavItem } from "@/components/layout/DashboardLayout";
 
 const NAV: NavItem[] = [
@@ -10,6 +10,7 @@ const NAV: NavItem[] = [
   { label: "محصولات", href: "/admin/products", icon: Package },
   { label: "سفارش‌ها", href: "/admin/orders", icon: ShoppingCart },
   { label: "مصرف AI", href: "/admin/ai", icon: Sparkles },
+  { label: "اتوماسیون", href: "/admin/automation", icon: Workflow },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

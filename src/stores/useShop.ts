@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem, UserCollection } from "@/types";
+import { trackEvent } from "@/lib/tracking";
 
 /* ---------------- CART (multi-vendor aware) ---------------- */
 interface CartState {
@@ -17,7 +18,9 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      add: (productId, qty = 1, offerId) =>
+      add: (productId, qty = 1, offerId) => {
+        // Real behavior event → analytics_events → agentic workflows.
+        void trackEvent("cart_add", { entityType: "product", entityId: productId, metadata: { qty, offerId: offerId ?? null } });
         set((s) => {
           const existing = s.items.find((item) => item.productId === productId && item.offerId === offerId);
           if (existing)
@@ -27,15 +30,20 @@ export const useCart = create<CartState>()(
               ),
             };
           return { items: [...s.items, { productId, offerId, qty }] };
-        }),
-      remove: (productId, offerId) =>
-        set((s) => ({ items: s.items.filter((item) => !(item.productId === productId && (offerId === undefined || item.offerId === offerId))) })),
-      setQty: (productId, qty, offerId) =>
+        });
+      },
+      remove: (productId, offerId) => {
+        void trackEvent("cart_remove", { entityType: "product", entityId: productId, metadata: { offerId: offerId ?? null } });
+        set((s) => ({ items: s.items.filter((item) => !(item.productId === productId && (offerId === undefined || item.offerId === offerId))) }));
+      },
+      setQty: (productId, qty, offerId) => {
+        if (qty <= 0) void trackEvent("cart_remove", { entityType: "product", entityId: productId, metadata: { offerId: offerId ?? null } });
         set((s) => ({
           items: s.items
             .map((item) => item.productId === productId && (offerId === undefined || item.offerId === offerId) ? { ...item, qty } : item)
             .filter((item) => item.qty > 0),
-        })),
+        }));
+      },
       clear: () => set({ items: [] }),
       count: () => get().items.reduce((n, i) => n + i.qty, 0),
     }),
@@ -64,12 +72,15 @@ export const useWishlist = create<WishlistState>()(
       inspirations: [],
       designs: [],
       stores: [],
-      toggleProduct: (id) =>
+      toggleProduct: (id) => {
+        // wishlist_add drives the "similar products" workflow.
+        void trackEvent(get().products.includes(id) ? "wishlist_remove" : "wishlist_add", { entityType: "product", entityId: id });
         set((s) => ({
           products: s.products.includes(id)
             ? s.products.filter((x) => x !== id)
             : [...s.products, id],
-        })),
+        }));
+      },
       toggleInspiration: (id) =>
         set((s) => ({
           inspirations: s.inspirations.includes(id)
@@ -82,12 +93,14 @@ export const useWishlist = create<WishlistState>()(
             ? s.designs.filter((x) => x !== id)
             : [...s.designs, id],
         })),
-      toggleStore: (id) =>
+      toggleStore: (id) => {
+        if (!get().stores.includes(id)) void trackEvent("store_followed", { entityType: "store", entityId: id });
         set((s) => ({
           stores: s.stores.includes(id)
             ? s.stores.filter((x) => x !== id)
             : [...s.stores, id],
-        })),
+        }));
+      },
       hasProduct: (id) => get().products.includes(id),
       total: () =>
         get().products.length +
@@ -139,6 +152,8 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
       productIds: [],
       track: (id) => {
         const cur = get().productIds.filter((x) => x !== id);
+        // product_view is the primary signal for the Customer Intelligence agent.
+        void trackEvent("product_view", { entityType: "product", entityId: id });
         set({ productIds: [id, ...cur].slice(0, 12) });
       },
       clear: () => set({ productIds: [] }),

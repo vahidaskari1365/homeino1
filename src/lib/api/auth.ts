@@ -70,3 +70,27 @@ export async function ensureProfile(userId: string) {
   await db.insert(profiles).values({ userId }).onConflictDoNothing();
   return (await db.select().from(profiles).where(eq(profiles.userId, userId)))[0];
 }
+
+/**
+ * Best-effort identity resolution: returns nulls instead of throwing.
+ * Used by endpoints that must keep working for guests and for deployments
+ * without DATABASE_URL (analytics, recommendations, agentic reads).
+ */
+export async function optionalUser(req: NextRequest): Promise<{ userId: string | null; role: string | null }> {
+  const token = readSessionToken(req);
+  if (!token) return { userId: null, role: null };
+  try {
+    const ctx = await getSessionUser(token);
+    if (!ctx) return { userId: null, role: null };
+    return { userId: ctx.user.id, role: ctx.user.role };
+  } catch {
+    return { userId: null, role: null };
+  }
+}
+
+/** Admin-or-nothing, with an explicit message (automation endpoints). */
+export async function requireAdminUser(req: NextRequest) {
+  const ctx = await requireUser(req);
+  if (ctx.user.role !== "admin") throw ApiError.forbidden("فقط مدیر دسترسی دارد");
+  return ctx;
+}

@@ -7,7 +7,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:ai": "tsc -p scripts/ai-tests/tsconfig.json && node node_modules/.cache/ai-tests/scripts/ai-tests/run.test.js",
+    "test:ai": "tsc -p scripts/ai-tests/tsconfig.json && node scripts/ai-tests/index.js",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:migrate": "node scripts/apply-supabase-migrations.mjs",
