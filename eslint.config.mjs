@@ -25,5 +25,8 @@ export default defineConfig([
     "tool-results/**",
     "upload/**",
     "download/**",
+    // generated db-seed / verification bundles (npm run db:seed, agents:verify)
+    ".seed-bundle.mjs",
+    ".verify-bundle.mjs",
   ]),
 ]);

@@ -37,7 +37,6 @@ export const inspirations = pgTable(
     content: jsonb("content").$type<Record<string, unknown>>().default({}),
     status: contentStatusEnum("status").notNull().default("draft"),
     authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
-    publishedAt: createdAtColumn,
     ...timestamps,
   },
   (t) => [
@@ -57,7 +56,6 @@ export const projects = pgTable(
     content: jsonb("content").$type<Record<string, unknown>>().default({}),
     status: contentStatusEnum("status").notNull().default("draft"),
     authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
-    publishedAt: createdAtColumn,
     ...timestamps,
   },
   (t) => [
@@ -79,7 +77,6 @@ export const magazineArticles = pgTable(
     tags: jsonb("tags").$type<string[]>().default([]),
     status: contentStatusEnum("status").notNull().default("draft"),
     authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
-    publishedAt: createdAtColumn,
     ...timestamps,
   },
   (t) => [

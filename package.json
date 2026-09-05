@@ -13,6 +13,8 @@
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:migrate": "node scripts/apply-supabase-migrations.mjs",
+    "db:seed": "esbuild scripts/seed-catalog.ts --bundle --platform=node --format=esm --alias:@=./src --external:pg --external:dotenv --outfile=.seed-bundle.mjs && node .seed-bundle.mjs",
+    "agents:verify": "esbuild scripts/verify-agents-db.ts --bundle --platform=node --format=esm --alias:@=./src --external:pg --external:dotenv --outfile=.verify-bundle.mjs && node .verify-bundle.mjs",
     "supabase:push": "supabase db push --linked --include-all"
   },
   "dependencies": {

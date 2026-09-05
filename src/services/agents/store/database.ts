@@ -4,7 +4,15 @@
 // Production persistence for the whole agentic core. Every read/write goes
 // through the existing Drizzle pool (`@/db`) — no raw SQL, no second client.
 // ============================================================
-import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, or, sql, type AnyColumn } from "drizzle-orm";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Match a row by natural key OR uuid id — the id comparison only when the
+ *  input actually is a uuid, otherwise Postgres raises invalid uuid input. */
+function keyOrIdWhere(keyCol: AnyColumn, idCol: AnyColumn, keyOrId: string) {
+  return UUID_RE.test(keyOrId) ? or(eq(keyCol, keyOrId), eq(idCol, keyOrId)) : eq(keyCol, keyOrId);
+}
 import { getDb } from "@/db";
 import {
   agentApprovals,
@@ -316,7 +324,7 @@ export const databaseAgentStore: AgentStore = {
     const [row] = await db
       .select()
       .from(agents)
-      .where(or(eq(agents.key, keyOrId), eq(agents.id, keyOrId)))
+      .where(keyOrIdWhere(agents.key, agents.id, keyOrId))
       .limit(1);
     if (!row) return null;
     const [grants, perms] = await Promise.all([
@@ -358,7 +366,7 @@ export const databaseAgentStore: AgentStore = {
     const [row] = await db
       .select()
       .from(agents)
-      .where(or(eq(agents.key, keyOrId), eq(agents.id, keyOrId)))
+      .where(keyOrIdWhere(agents.key, agents.id, keyOrId))
       .limit(1);
     if (!row) return null;
     const values: Partial<typeof agents.$inferInsert> = { updatedAt: new Date() };
@@ -387,7 +395,7 @@ export const databaseAgentStore: AgentStore = {
     const [row] = await db
       .select({ id: agents.id })
       .from(agents)
-      .where(or(eq(agents.key, keyOrId), eq(agents.id, keyOrId)))
+      .where(keyOrIdWhere(agents.key, agents.id, keyOrId))
       .limit(1);
     if (!row) return false;
     // Built-in agents are archived, never deleted — history stays intact.
@@ -435,7 +443,7 @@ export const databaseAgentStore: AgentStore = {
     const [row] = await db
       .select()
       .from(workflows)
-      .where(or(eq(workflows.key, keyOrId), eq(workflows.id, keyOrId)))
+      .where(keyOrIdWhere(workflows.key, workflows.id, keyOrId))
       .limit(1);
     if (!row) return null;
     const [nodeRows, edgeRows] = await Promise.all([
@@ -473,7 +481,7 @@ export const databaseAgentStore: AgentStore = {
     const [row] = await db
       .select()
       .from(workflows)
-      .where(or(eq(workflows.key, keyOrId), eq(workflows.id, keyOrId)))
+      .where(keyOrIdWhere(workflows.key, workflows.id, keyOrId))
       .limit(1);
     if (!row) return null;
     const values: Partial<typeof workflows.$inferInsert> = { updatedAt: new Date() };
@@ -498,7 +506,7 @@ export const databaseAgentStore: AgentStore = {
     const [row] = await db
       .select()
       .from(workflows)
-      .where(or(eq(workflows.key, keyOrId), eq(workflows.id, keyOrId)))
+      .where(keyOrIdWhere(workflows.key, workflows.id, keyOrId))
       .limit(1);
     if (!row) return false;
     if (row.isBuiltin) {
@@ -1139,8 +1147,6 @@ export const databaseAgentStore: AgentStore = {
 // ------------------------------------------------------------
 // helpers
 // ------------------------------------------------------------
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** Only real uuids may reach a uuid column — anything else becomes NULL. */
 function uuidOrNull(value: string | null | undefined): string | null {
   return value && UUID_RE.test(value) ? value : null;

@@ -1,0 +1,62 @@
+# ============================================================
+# HOMEINO — automatic Supabase migrations
+#
+# Applies supabase/migrations/*.sql to the project database on
+# every push that touches them (idempotent, tracked in
+# public.schema_migrations). Optionally seeds the full catalog
+# via a manual dispatch.
+#
+# One-time setup (repo admin):
+#   Settings → Secrets and variables → Actions → New repository secret
+#     Name: SUPABASE_DATABASE_URL
+#     Value: postgresql://postgres.<ref>:<password>@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
+# ============================================================
+name: migrate-supabase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/migrate-supabase.yml"
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Seed / refresh the full catalog after migrations"
+        type: boolean
+        default: false
+
+concurrency:
+  group: migrate-supabase
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+
+      - name: Seed catalog (manual dispatch only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.seed }}
+        run: npm run db:seed
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+
+      - name: Verify agents run in database mode
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: npm run agents:verify
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
