@@ -211,9 +211,14 @@ export const useCredits = create<CreditState>()(
 interface ChatState {
   messages: ChatMessage[];
   sessionId: string;
+  /** Transient one-shot ask from PDP quick-question chips (NOT persisted).
+   *  AIPanel consumes + clears it, then answers via the grounded advice path. */
+  request: { content: string; topic?: string; productSlug?: string; nonce: number } | null;
   push: (m: Omit<ChatMessage, "id" | "createdAt">) => string;
   update: (id: string, patch: Partial<ChatMessage>) => void;
   clear: () => void;
+  askAssistant: (r: { content: string; topic?: string; productSlug?: string }) => void;
+  clearRequest: () => void;
   /** Returns the stable localStorage session id, generating it on first use. */
   ensureSessionId: () => string;
 }
@@ -225,6 +230,9 @@ export const useChat = create<ChatState>()(
         { id: "m0", role: "assistant", content: "سلام! من دستیار Homeino هستم. می‌تونم کمک کنم اتاقت رو طراحی کنم، فرش مناسب پیدا کنم یا محصولی رو با دکوراسیونت هماهنگ کنم.", createdAt: Date.now() },
       ],
       sessionId: "",
+      request: null,
+      askAssistant: (r) => set({ request: { ...r, nonce: Date.now() } }),
+      clearRequest: () => set({ request: null }),
       // id + timestamp generated here (store, not render) → keeps components pure
       push: (m) => { const id = uid(); set((s) => ({ messages: [...s.messages, { id, createdAt: Date.now(), ...m }] })); return id; },
       update: (id, patch) =>

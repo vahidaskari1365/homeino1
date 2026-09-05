@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { X, Sparkles, Send, ImagePlus, Wand2, Heart } from "lucide-react";
 import { useUi, useChat } from "@/stores/useApp";
 import { aiService, type AgentChatResult } from "@/services/ai";
+import { detectAdviceTopic, buildProductAdvice, type AdviceTopic } from "@/services/ai/productAdvice";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { getProduct } from "@/data/products";
 import { SmartImage } from "@/components/ui/SmartImage";
@@ -52,7 +53,7 @@ function toProductCards(value: unknown): ProductCard[] {
 
 export function AIPanel() {
   const { aiPanelOpen, setAiPanel } = useUi();
-  const { messages, push, update } = useChat();
+  const { messages, push, update, request } = useChat();
   const router = useRouter();
   const pathname = usePathname();
   const hydrated = useHasHydrated();
@@ -85,13 +86,32 @@ export function AIPanel() {
     scrollRef.current?.scrollTo({ top: 9e9, behavior: "smooth" });
   }, [messages]);
 
-  if (!aiPanelOpen || !hydrated) return null;
-
-  /** Grounded first: the agents return REAL catalog products. When the turn is
-   *  pure advice (palette/style/refusal) the agent declines → fall back to the
-   *  chat provider (mock advice, or LLM when keys are configured). */
-  const send = async (text: string) => {
-    if (!text.trim() || busy) return;
+  /** Grounded first: product-aware topics (pair/color/style) short-circuit
+   *  BEFORE the network — answered instantly from the real catalog (colors,
+   *  styleSlugs, style palettes, style-overlap scoring), so PDP quick
+   *  questions get a correct, SHORT answer every time. Everything else runs
+   *  the agent chain (real catalog products) and falls back to the chat
+   *  provider (mock advice, or LLM when keys are configured). */
+  const send = async (text: string, ask?: { topic?: AdviceTopic; productSlug?: string }) => {
+    if (!text.trim()) return;
+    const topic = ask?.topic ?? detectAdviceTopic(text);
+    const slug =
+      ask?.productSlug ??
+      (pathname.startsWith("/products/")
+        ? decodeURIComponent(pathname.split("/products/")[1] ?? "").split(/[?#]/)[0]
+        : "");
+    const advice = topic && slug ? buildProductAdvice(topic, slug) : null;
+    if (advice) {
+      setInput("");
+      push({ role: "user", content: text });
+      push({
+        role: "assistant",
+        content: advice.text,
+        ...(advice.products?.length ? { products: toProductCards(advice.products) } : {}),
+      });
+      return;
+    }
+    if (busy) return;
     setInput("");
     const history = useChat
       .getState()
@@ -126,6 +146,23 @@ export function AIPanel() {
       setBusy(false);
     }
   };
+
+  // PDP quick-question chips land here: auto-send exactly once, then clear.
+  // Runs even while the drawer is still opening — the answer is ready when
+  // the panel appears. The send is deferred to a timer callback (React's
+  // documented pattern for external-store updates from effects).
+  useEffect(() => {
+    if (!request) return;
+    const { content, topic, productSlug } = request;
+    const t = window.setTimeout(() => {
+      useChat.getState().clearRequest();
+      void send(content, { topic: topic as AdviceTopic | undefined, productSlug });
+    }, 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request]);
+
+  if (!aiPanelOpen || !hydrated) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex justify-end bg-ink/40 backdrop-blur-sm" onClick={() => setAiPanel(false)}>

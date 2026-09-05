@@ -3,6 +3,7 @@ import { roomShots} from "../../data/media";
 import { uid, formatPrice } from "../../lib/utils";
 import { validateResult, type ProductCatalogEntry } from "./roomState";
 import { products } from "../../data/products";
+import { detectAdviceTopic, buildProductAdvice } from "./productAdvice";
 
 type RealProduct = (typeof products)[number];
 
@@ -45,6 +46,17 @@ function mockChatReply(message: string, context?: string): string {
 
   // Context: product page — name is the REAL product name (never an English slug)
   if (context && context.startsWith("محصول:")) {
+    // Product-aware first: resolve the REAL product from the context id and
+    // answer pairing/color/style questions from the actual catalog (colors,
+    // styleSlugs, style palettes, style-overlap scoring) — not a generic
+    // template. Falls through to the canned branches only if unresolved.
+    const idMatch = context.match(/\(id:\s*([^،)]+)/);
+    const product = idMatch ? products.find((p) => p.id === idMatch[1].trim()) : undefined;
+    const topic = detectAdviceTopic(msg);
+    if (product && topic) {
+      const advice = buildProductAdvice(topic, product.id);
+      if (advice) return advice.text;
+    }
     const prodName = context.slice("محصول:".length).split("(id:")[0].trim() || "این محصول";
     const hasItems = ["کوسن", "میز", "فرش", "چراغ", "تابلو", "گلدان"].some((k) => msg.includes(k));
     if (/ست|هماهنگ|مناسب|ترکیب|ست میکنه/.test(msg) && !hasItems) {

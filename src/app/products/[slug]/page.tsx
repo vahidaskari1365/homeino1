@@ -48,7 +48,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const wl = useWishlist(); const cmp = useCompare(); const addToCart = useCart((s) => s.add);
   const { toast, setAiPanel } = useUi();
-  const { push } = useChat();
+  const { askAssistant } = useChat();
   const trackRecent = useRecentlyViewed((s) => s.track);
   useEffect(() => { if (product) trackRecent(product.id); }, [product, trackRecent]);
   const router = useRouter();
@@ -99,7 +99,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       router.push(`/ai/design?tab=inspiration&product=${product.slug}`);
       return;
     }
-    push({ role: "user", content: `${label} — ${product.name}` });
+    // Hand the question to the assistant with the REAL product identity + a
+    // detected topic → AIPanel auto-answers from the catalog (pairing, color
+    // harmony, style fit) — no typing, no generic placeholder reply.
+    const topic = label.includes("رنگ") ? "color" : label.includes("سبک") ? "style" : "pair";
+    askAssistant({ content: `${label} — ${product.name}`, topic, productSlug: product.slug });
     setAiPanel(true);
   };
 
