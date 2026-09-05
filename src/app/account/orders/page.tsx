@@ -5,6 +5,7 @@ import { Package, Truck, CheckCircle2, Clock, Ban, X, ChevronLeft } from "lucide
 import { Badge, EmptyState, Button, Modal } from "@/components/ui/primitives";
 import { useUi } from "@/stores/useApp";
 import { toFa, formatPrice } from "@/lib/utils";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 import { listLocalOrders, cancelLocalOrder, trackLocalOrder, STATUS_LABEL, type LocalOrder } from "@/data/localOrders";
 
 const STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = {
@@ -17,8 +18,13 @@ const STATUS_ICON = { delivered: CheckCircle2, shipping: Truck, processing: Cloc
 
 export default function OrdersPage() {
   const { toast } = useUi();
-  const [orders, setOrders] = useState<LocalOrder[]>(listLocalOrders());
+  const hydrated = useHasHydrated();
+  const [version, setVersion] = useState(0);
   const [tracking, setTracking] = useState<LocalOrder | null>(null);
+  // Read localStorage only after client hydration so the first paint matches
+  // SSR (empty first, then the persisted list appears) — zero console mismatch.
+  // `version` lets cancel re-read after a mutation.
+  const orders = hydrated ? listLocalOrders() : [];
 
   function cancel(order: LocalOrder) {
     const updated = cancelLocalOrder(order.id);
@@ -26,12 +32,12 @@ export default function OrdersPage() {
       toast("این سفارش قابل لغو نیست", "error");
       return;
     }
-    setOrders(listLocalOrders());
+    setVersion((v) => v + 1);
     toast(`سفارش #${toFa(order.id)} لغو شد`);
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-orders-version={version}>
       <h1 className="font-display text-xl font-black text-ink">سفارش‌های من</h1>
       <p className="text-xs text-ink-muted">سفارش‌ها در همین مرورگر (دمو بدون دیتابیس) نگهداری می‌شوند؛ هر تغییری — از جمله لغو — همین‌جا ذخیره می‌شود.</p>
       {orders.length ? orders.map((order) => {

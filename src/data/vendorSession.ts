@@ -50,7 +50,17 @@ const FALLBACK_IMG = IMG.living2;
 // In-memory mutable session (reset on server restart — that is the demo)
 // ------------------------------------------------------------
 let vendorProducts: ReturnType<typeof productsByStore> = productsByStore(VENDOR_ID);
-let profilePatch: { name?: string; description?: string; city?: string; phone?: string; cover?: string } = {};
+let profilePatch: {
+  name?: string;
+  description?: string;
+  city?: string;
+  phone?: string;
+  cover?: string;
+  logoChar?: string;
+  logoColor?: string;
+  shippingPolicy?: string;
+  returnPolicy?: string;
+} = {};
 
 function seedOrders(): VendorOrder[] {
   const price = (productId: string, fallback: number) => getProductById(productId)?.price ?? fallback;
@@ -189,20 +199,36 @@ export function vendorStoreProfile() {
     city: profilePatch.city ?? base?.city ?? "",
     phone: profilePatch.phone ?? "۰۲۱-۹۱۰۰۸۸۲۲",
     cover: profilePatch.cover ?? base?.cover ?? FALLBACK_IMG,
-    logoChar: base?.logo ?? "ن",
-    logoColor: base?.logoColor ?? "#c2703f",
+    logoChar: profilePatch.logoChar ?? base?.logo ?? "ن",
+    logoColor: profilePatch.logoColor ?? base?.logoColor ?? "#c2703f",
     badges: base?.badges ?? [],
     responseTime: base?.responseTime ?? "",
+    shippingPolicy: profilePatch.shippingPolicy ?? base?.shippingPolicy ?? "",
+    returnPolicy: profilePatch.returnPolicy ?? base?.returnPolicy ?? "",
   };
 }
 
-export function updateVendorStoreProfile(patch: { name?: string; description?: string; city?: string; phone?: string; cover?: string }) {
+export function updateVendorStoreProfile(patch: {
+  name?: string;
+  description?: string;
+  city?: string;
+  phone?: string;
+  cover?: string;
+  logoChar?: string;
+  logoColor?: string;
+  shippingPolicy?: string;
+  returnPolicy?: string;
+}) {
   const next = { ...profilePatch };
   if (patch.name !== undefined && patch.name.trim()) next.name = patch.name.trim();
   if (patch.description !== undefined) next.description = patch.description;
   if (patch.city !== undefined && patch.city.trim()) next.city = patch.city.trim();
   if (patch.phone !== undefined && patch.phone.trim()) next.phone = patch.phone.trim();
   if (patch.cover !== undefined) next.cover = patch.cover;
+  if (patch.logoChar !== undefined && patch.logoChar.trim()) next.logoChar = patch.logoChar.trim();
+  if (patch.logoColor !== undefined && patch.logoColor.trim()) next.logoColor = patch.logoColor.trim();
+  if (patch.shippingPolicy !== undefined) next.shippingPolicy = patch.shippingPolicy;
+  if (patch.returnPolicy !== undefined) next.returnPolicy = patch.returnPolicy;
   profilePatch = next;
   return vendorStoreProfile();
 }

@@ -15,12 +15,24 @@ export function addCartItem(items: CartItem[], productId: string, qty = 1, offer
 }
 
 export function removeCartItem(items: CartItem[], productId: string, offerId?: string): CartItem[] {
-  return items.filter((item) => !(item.productId === productId && (offerId === undefined || item.offerId === offerId)));
+  return items.filter((item) => {
+    if (item.productId !== productId) return true;
+    // When no offer is given, only touch rows that have no offer — never a
+    // wildcard over every row of the product (which could wipe offer rows).
+    if (offerId === undefined) return item.offerId !== undefined;
+    return item.offerId !== offerId;
+  });
 }
 
 export function setCartQty(items: CartItem[], productId: string, qty: number, offerId?: string): CartItem[] {
   return items
-    .map((item) => (item.productId === productId && (offerId === undefined || item.offerId === offerId) ? { ...item, qty } : item))
+    .map((item) => {
+      if (item.productId !== productId) return item;
+      // Same rule as removeCartItem: without an offer, only rows that have no
+      // offer are updated, leaving offer-specific rows untouched.
+      if (offerId === undefined) return item.offerId === undefined ? { ...item, qty } : item;
+      return item.offerId === offerId ? { ...item, qty } : item;
+    })
     .filter((item) => item.qty > 0);
 }
 

@@ -18,13 +18,31 @@ describe("cartMath", () => {
   it("removes by product and optional offer", () => {
     const items = addCartItem(addCartItem([], "p1", 1, "o1"), "p1", 2, "o2");
     expect(removeCartItem(items, "p1", "o1")).toHaveLength(1);
-    expect(removeCartItem(items, "p1")).toHaveLength(0);
+    expect(removeCartItem(items, "p1")).toHaveLength(2); // keeps offer rows
   });
 
   it("setQty updates or drops zero", () => {
     const items = addCartItem([], "p1", 2);
     expect(setCartQty(items, "p1", 5)[0].qty).toBe(5);
     expect(setCartQty(items, "p1", 0)).toEqual([]);
+  });
+
+  it("removing without offer only touches no-offer rows, not offer rows", () => {
+    const items = addCartItem(addCartItem(addCartItem([], "p1", 1, "o1"), "p1", 1, "o2"), "p1", 3);
+    // p1 with offers o1/o2 survive; the plain no-offer row is removed.
+    expect(removeCartItem(items, "p1")).toEqual([
+      { productId: "p1", offerId: "o1", qty: 1 },
+      { productId: "p1", offerId: "o2", qty: 1 },
+    ]);
+  });
+
+  it("setQty without offer only updates no-offer rows, never offer rows", () => {
+    const items = addCartItem(addCartItem(addCartItem([], "p1", 1, "o1"), "p1", 1, "o2"), "p1", 2);
+    expect(setCartQty(items, "p1", 7)).toEqual([
+      { productId: "p1", offerId: "o1", qty: 1 },
+      { productId: "p1", offerId: "o2", qty: 1 },
+      { productId: "p1", offerId: undefined, qty: 7 },
+    ]);
   });
 
   it("computes line and cart totals", () => {

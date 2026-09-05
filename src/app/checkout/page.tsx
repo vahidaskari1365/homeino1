@@ -29,7 +29,7 @@ export default function CheckoutPage() {
 
   const next = () => {
     if (step < 2) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-    const order = placeLocalOrder(items);
+    const order = placeLocalOrder(items, shipping === "express");
     clear();
     toast(`سفارش #${toFa(order.id)} ثبت شد و در «سفارش‌های من» ذخیره شد`);
     router.push(`/checkout/success?order=${order.id}`);
