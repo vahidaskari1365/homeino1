@@ -71,8 +71,10 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
 };
 
 export const SUBCATEGORY_KEYWORDS: Record<string, string[]> = {
-  sofa: ["کاناپه", "مبل راحتی", "مبل ال", "مبل", "sofa", "couch", "راحتی"],
-  armchair: ["مبل تکی", "صندلی راحتی", "armchair", "برجیر"],
+  // «مبل راحتی» is a lounge/recliner chair in the catalog (SOF-1025) — it
+  // belongs to armchair, not to the sofa (کاناپه) family.
+  sofa: ["کاناپه", "مبل ال", "مبل", "sofa", "couch"],
+  armchair: ["مبل راحتی", "مبل تکی", "صندلی راحتی", "armchair", "برجیر", "راحتی"],
   chair: ["صندلی", "chair"],
   "coffee-table": ["میز جلو مبلی", "جلومبلی", "coffee table", "عسلی"],
   "dining-table": ["میز ناهارخوری", "ناهارخوری", "dining"],
@@ -95,7 +97,7 @@ export const SUBCATEGORY_KEYWORDS: Record<string, string[]> = {
   cushion: ["کوسن", "cushion"],
   throw: ["پتو", "throw", "شال مبل"],
   "table-runner": ["رومیزی", "runner"],
-  dinnerware: ["ظروف", "دinnerware", "بشقاب"],
+  dinnerware: ["ظروف", "بشقاب"],
   cookware: ["لوازم آشپزخانه", "cookware", "قابلمه"],
   organizer: ["نظم‌دهنده", "organizer", "جاکفشی"],
   bed: ["تخت", "تختخواب", "bed"],
@@ -158,10 +160,29 @@ export function matchMaterials(text: string): string[] {
   return matchKeys(text, MATERIAL_KEYWORDS);
 }
 
+/**
+ * Best single hit per vocabulary: the key whose matched keyword is the
+ * LONGEST (ties go to the first key in declaration order). This makes
+ * «میز جلو مبلی» win over «مبل», «مبل راحتی» win over «مبل», etc.
+ */
+function bestMatch(text: string, vocabulary: Record<string, string[]>): string | undefined {
+  let bestKey: string | undefined;
+  let bestLen = -1;
+  for (const [key, keywords] of Object.entries(vocabulary)) {
+    const hit = keywords.find((k) => text.includes(normalize(k)));
+    if (hit) {
+      const len = normalize(hit).length;
+      if (len > bestLen) {
+        bestKey = key;
+        bestLen = len;
+      }
+    }
+  }
+  return bestKey;
+}
+
 export function matchCategories(text: string): { categorySlug?: string; subCategorySlug?: string } {
-  const sub = matchKeys(text, SUBCATEGORY_KEYWORDS)[0];
-  const cat = matchKeys(text, CATEGORY_KEYWORDS)[0];
-  return { categorySlug: cat, subCategorySlug: sub };
+  return { categorySlug: bestMatch(text, CATEGORY_KEYWORDS), subCategorySlug: bestMatch(text, SUBCATEGORY_KEYWORDS) };
 }
 
 // ------------------------------------------------------------
@@ -282,11 +303,16 @@ export function extractShoppingIntent(input: string): ShoppingIntent {
   const signals = [hasProductNoun, styleSlugs.length > 0, colors.length > 0, budget !== null, rooms.length > 0, hasVerb].filter(Boolean).length;
   const confidence = Math.min(1, 0.25 + signals * 0.15);
 
+  // Display names are Persian words, never English slugs — the summary is
+  // shown to customers and reused as continuation context.
+  const styleName = (s: string): string => STYLE_KEYWORDS[s]?.[0] ?? s;
+  const roomName = (r: string): string => ROOM_KEYWORDS[r]?.[0] ?? r;
+
   const parts: string[] = [];
   if (subCategorySlug || categorySlug) parts.push(SUBCATEGORY_KEYWORDS[subCategorySlug ?? ""]?.[0] ?? CATEGORY_KEYWORDS[categorySlug ?? ""]?.[0] ?? "محصول");
-  if (styleSlugs.length) parts.push(`سبک ${styleSlugs.join(" و ")}`);
+  if (styleSlugs.length) parts.push(`سبک ${styleSlugs.map(styleName).join(" و ")}`);
   if (colors.length) parts.push(`رنگ ${colors.join(" و ")}`);
-  if (rooms.length) parts.push(`برای ${rooms.join(" و ")}`);
+  if (rooms.length) parts.push(`برای ${rooms.map(roomName).join(" و ")}`);
   if (budget?.max) parts.push(`تا ${budget.max.toLocaleString("fa-IR")} تومان`);
   else if (budget?.min) parts.push(`از ${budget.min.toLocaleString("fa-IR")} تومان`);
 

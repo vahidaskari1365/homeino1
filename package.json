@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:ai": "tsc -p scripts/ai-tests/tsconfig.json && node scripts/ai-tests/index.js",
+    "test:agents": "tsc -p scripts/ai-tests/tsconfig.json && node -r ./scripts/ai-tests/alias.js node_modules/.cache/ai-tests/scripts/ai-tests/smoke.test.js",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:migrate": "node scripts/apply-supabase-migrations.mjs",

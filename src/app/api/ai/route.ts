@@ -218,11 +218,22 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
         finish("error", { errorCode: "INVALID_REQUEST" });
         return json({ error: "پیامی ارسال نشد", code: "INVALID_REQUEST" }, 400, requestId);
       }
+      const history = Array.isArray(p.history)
+        ? (p.history as unknown[])
+            .filter((h): h is { role?: unknown; content?: unknown } => Boolean(h) && typeof h === "object")
+            .map((h): { role: "user" | "assistant"; content: string } => ({
+              role: h.role === "user" || h.role === "assistant" ? h.role : "user",
+              content: String(h.content ?? "").replace(/<[^>]+>/g, "").slice(0, 400),
+            }))
+            .slice(-8)
+        : [];
       const routed = await routeIntent({
         message: message.slice(0, 1000),
         userId: typeof p.userId === "string" ? p.userId : null,
         sessionId: typeof p.sessionId === "string" ? p.sessionId : null,
         agentKey: typeof p.agentKey === "string" && p.agentKey ? p.agentKey : undefined,
+        history,
+        context: typeof p.context === "string" ? p.context.slice(0, 300) : undefined,
       });
       finish(routed.ok ? "ok" : "degraded", { provider: "orchestrator" });
       // `content` keeps the existing ChatReply contract — real products are

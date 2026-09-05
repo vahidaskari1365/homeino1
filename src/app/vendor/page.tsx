@@ -1,42 +1,39 @@
 "use client";
 import Link from "next/link";
-import { TrendingUp, TrendingDown, Package, ShoppingCart, DollarSign, Eye, Plus } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck } from "lucide-react";
 import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
-import { toFa } from "@/lib/utils";
+import { toFa, formatCompactFa, formatPrice } from "@/lib/utils";
+import { vendorStats, listVendorOrders, vendorStoreProfile, vendorProductCount } from "@/data/vendorSession";
 
-const stats = [
-  { label: "فروش این ماه", value: "۲۴۸ میلیون", change: "+۱۸٪", up: true, icon: DollarSign },
-  { label: "سفارش‌ها", value: "۸۶", change: "+۱۲٪", up: true, icon: ShoppingCart },
-  { label: "محصولات فعال", value: "۲۳", change: "+۲", up: true, icon: Package },
-  { label: "بازدید فروشگاه", value: "۱۲٫۴ هزار", change: "-۴٪", up: false, icon: Eye },
-];
-
-const recentOrders = [
-  { id: "102456", customer: "نگار م.", total: "۵۳٫۲ میلیون", status: "delivered", tone: "success" as const },
-  { id: "102455", customer: "آرش ر.", total: "۱۸٫۹ میلیون", status: "shipping", tone: "accent" as const },
-  { id: "102454", customer: "سارا ک.", total: "۹٫۸ میلیون", status: "processing", tone: "gold" as const },
-  { id: "102453", customer: "محمد ت.", total: "۳٫۹ میلیون", status: "processing", tone: "gold" as const },
-];
-
-const STATUS_LABEL: Record<string, string> = { delivered: "تحویل شده", shipping: "در حال ارسال", processing: "در حال پردازش" };
+const ORDER_STATUS_LABEL: Record<string, string> = { delivered: "تحویل شده", shipping: "در حال ارسال", processing: "در حال پردازش", cancelled: "لغو شده" };
+const ORDER_STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = { delivered: "success", shipping: "accent", processing: "gold", cancelled: "dark" };
 
 export default function VendorDashboard() {
+  const stats = vendorStats();
+  const profile = vendorStoreProfile();
+  const recent = listVendorOrders().slice(0, 4);
+  const tiles = [
+    { label: "فروش این ماه", value: `${toFa(formatCompactFa(stats.monthSales))} ت`, icon: DollarSign },
+    { label: "سفارش‌ها", value: toFa(stats.ordersCount), icon: ShoppingCart },
+    { label: "محصولات فعال", value: toFa(stats.activeProductCount), icon: Package },
+    { label: "در انتظار پردازش", value: toFa(stats.processingCount), icon: Clock },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="card-surface flex flex-wrap items-center justify-between gap-3 p-6">
         <div className="flex items-center gap-3">
-          <LogoBlock char="ن" color="var(--color-terracotta)" size={52} />
-          <div><h1 className="font-display text-xl font-black text-ink">خوش آمدی، نور مبلمان</h1><p className="text-sm text-ink-muted">نمای کلی فروش این ماه</p></div>
+          <LogoBlock char={profile.logoChar} color={profile.logoColor} size={52} />
+          <div><h1 className="font-display text-xl font-black text-ink">خوش آمدی، {profile.name}</h1><p className="text-sm text-ink-muted">نمای کلی فروش این ماه</p></div>
         </div>
         <Link href="/vendor/products/new"><Button><Plus size={16} /> افزودن محصول</Button></Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((s) => (
+        {tiles.map((s) => (
           <div key={s.label} className="card-surface p-5">
             <div className="flex items-center justify-between">
               <s.icon size={20} className="text-ink-muted" />
-              <span className={`flex items-center gap-0.5 text-xs font-bold ${s.up ? "text-success" : "text-danger"}`}>{s.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}{s.change}</span>
             </div>
             <div className="mt-2 font-display text-2xl font-black text-ink">{s.value}</div>
             <div className="text-xs text-ink-muted">{s.label}</div>
@@ -48,12 +45,12 @@ export default function VendorDashboard() {
         <div className="card-surface p-6">
           <div className="mb-4 flex items-center justify-between"><h3 className="font-display font-bold text-ink">سفارش‌های اخیر</h3><Link href="/vendor/orders" className="text-sm text-terracotta-deep">همه ←</Link></div>
           <div className="space-y-2">
-            {recentOrders.map((o) => (
-              <div key={o.id} className="flex items-center justify-between rounded-xl border border-clay/40 p-3">
-                <div><div className="text-sm font-medium text-ink">#{toFa(o.id)}</div><div className="text-xs text-ink-muted">{o.customer}</div></div>
-                <div className="flex items-center gap-3"><span className="text-sm font-bold text-ink">{o.total} ت</span><Badge tone={o.tone}>{STATUS_LABEL[o.status]}</Badge></div>
+            {recent.length ? recent.map(({ order, total }) => (
+              <div key={order.id} className="flex items-center justify-between rounded-xl border border-clay/40 p-3">
+                <div><div className="text-sm font-medium text-ink">#{toFa(order.id)}</div><div className="text-xs text-ink-muted">{order.customer} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</div></div>
+                <div className="flex items-center gap-3"><span className="text-sm font-bold text-ink">{toFa(formatPrice(total))} ت</span><Badge tone={ORDER_STATUS_TONE[order.status] ?? "neutral"}>{ORDER_STATUS_LABEL[order.status] ?? order.status}</Badge></div>
               </div>
-            ))}
+            )) : <p className="text-sm text-ink-muted">هنوز سفارشی ثبت نشده است.</p>}
           </div>
         </div>
         <div className="card-surface p-6">
@@ -64,8 +61,13 @@ export default function VendorDashboard() {
             ))}
           </div>
           <div className="mt-3 text-center text-xs text-ink-muted">آمار ۱۲ ماه اخیر (نمونه)</div>
+          <div className="mt-4 space-y-2 border-t border-clay/40 pt-3 text-xs text-ink-muted">
+            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><CheckCircle2 size={13} className="text-sage" /> تحویل‌شده</span><b className="text-ink">{toFa(stats.deliveredCount)}</b></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Truck size={13} className="text-terracotta-deep" /> در حال ارسال</span><b className="text-ink">{toFa(stats.shippingCount)}</b></div>
+          </div>
         </div>
       </div>
+      <p className="text-[11px] text-ink-muted">محصولات ثبت‌شده: {toFa(vendorProductCount())} — این پنل از منبع دادهٔ یکسان پنل فروشنده (vendorSession) تغذیه می‌شود.</p>
     </div>
   );
 }

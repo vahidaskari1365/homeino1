@@ -8,10 +8,9 @@ import { products } from "@/data/products";
 import { stores } from "@/data/stores";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
-import {toFa } from "@/lib/utils";
+import { toFa, faIncludes, formatPrice } from "@/lib/utils";
 import { SmartImage } from "../ui/SmartImage";
 import { Rating } from "../ui/primitives";
-import { formatPrice } from "@/lib/utils";
 
 const RECENT = ["مبل کرم پذیرایی", "چراغ رومیزی چوبی", "فرش دستبافت"];
 const TRENDING = ["کاناپه مدرن", "ژاپندی", "آینه طاقی", "ست کوسن خاکی", "لوکس"];
@@ -36,12 +35,12 @@ export function SearchOverlay() {
   const results = useMemo(() => {
     if (!q.trim()) return null;
     const term = q.trim();
-    const match = (t: string) => t.includes(term);
+    const match = (t: string) => faIncludes(t, term);
     return {
-      products: products.filter((p) => p.name.includes(term) || p.brand.includes(term) || p.tags.some(match)).slice(0, 4),
-      stores: stores.filter((s) => s.name.includes(term)).slice(0, 3),
-      categories: categories.filter((c) => c.name.includes(term)).slice(0, 3),
-      styles: styles.filter((s) => s.name.includes(term)).slice(0, 3),
+      products: products.filter((p) => faIncludes(p.name, term) || faIncludes(p.brand, term) || p.tags.some(match)).slice(0, 4),
+      stores: stores.filter((s) => faIncludes(s.name, term)).slice(0, 3),
+      categories: categories.filter((c) => faIncludes(c.name, term)).slice(0, 3),
+      styles: styles.filter((s) => faIncludes(s.name, term)).slice(0, 3),
     };
   }, [q]);
 

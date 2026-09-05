@@ -1,7 +1,7 @@
 "use client";
 import { use, useState } from "react";
 import { notFound } from "next/navigation";
-import { BadgeCheck, MapPin, Package, Star } from "lucide-react";
+import { BadgeCheck, MapPin, Package, Star, Timer, Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
 import { Button, LogoBlock, Chip } from "@/components/ui/primitives";
@@ -9,6 +9,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getStore} from "@/data/stores";
 import { productsByStore } from "@/data/products";
+import { getStorefrontProfile } from "@/data/storefronts";
 import { useWishlist } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
@@ -20,6 +21,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
   const products = productsByStore(store!.id);
   const [sort, setSort] = useState<"all" | "trending" | "discount">("all");
   const wl = useWishlist(); const { toast } = useUi();
+  const profile = getStorefrontProfile(store!.id);
   const wished = wl.stores.includes(store!.id);
   const list = products.filter((p) => sort === "all" ? true : sort === "trending" ? p.trending : p.oldPrice);
 
@@ -42,7 +44,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-ink-muted">
                 <span className="flex items-center gap-1"><MapPin size={14} /> {store!.city}</span>
-                <span className="flex items-center gap-1"><Package size={14} /> {toFa(store!.productCount)} محصول</span>
+                <span className="flex items-center gap-1"><Package size={14} /> {toFa(products.length)} محصول</span>
                 <span className="flex items-center gap-1"><Star size={14} className="fill-gold text-gold" /> {toFa(store!.rating.toFixed(1))} ({toFa(store!.reviewsCount)})</span>
               </div>
             </div>
@@ -54,6 +56,15 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
       </Reveal>
 
       <p className="mt-6 max-w-2xl leading-8 text-ink-muted">{store!.description}</p>
+
+      {profile && (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {store!.verified && <span className="flex items-center gap-1.5 rounded-full border border-clay/50 bg-ivory-2 px-3 py-1.5 text-xs text-ink"><ShieldCheck size={13} className="text-sage" /> تأییدشده توسط Homeino</span>}
+          <span className="flex items-center gap-1.5 rounded-full border border-clay/50 bg-ivory-2 px-3 py-1.5 text-xs text-ink"><Timer size={13} className="text-terracotta-deep" /> پاسخ‌گویی {profile.responseTime}</span>
+          <span className="flex items-center gap-1.5 rounded-full border border-clay/50 bg-ivory-2 px-3 py-1.5 text-xs text-ink"><Truck size={13} className="text-terracotta-deep" /> {profile.shippingCoverage}</span>
+          <span className="flex items-center gap-1.5 rounded-full border border-clay/50 bg-ivory-2 px-3 py-1.5 text-xs text-ink"><RotateCcw size={13} className="text-terracotta-deep" /> {toFa(profile.returnDays)} روز بازگشت</span>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-2">
         {[["all", "همه"], ["trending", "محبوب‌ها"], ["discount", "تخفیف‌دار"]].map(([k, l]) => (

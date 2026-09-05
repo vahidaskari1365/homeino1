@@ -35,3 +35,21 @@ export function page<T>(
 ) {
   return ok({ items, meta });
 }
+
+/**
+ * Honest DB-less response (503): called by routes whose service layer needs a
+ * real database. Returns the agreed envelope instead of ever throwing a 500:
+ *   { ok: false, code: "DEMO_MODE", message }
+ */
+export function demoUnavailable(feature: string, message?: string) {
+  return NextResponse.json(
+    {
+      ok: false as const,
+      code: "DEMO_MODE" as const,
+      message:
+        message ??
+        `${feature} در حالت دمو (بدون DATABASE_URL) در دسترس نیست. داده‌های این بخش به‌صورت محلی/نمونه نمایش داده می‌شوند و با راه‌اندازی سرور واقعی فعال می‌گردد.`,
+    },
+    { status: 503 },
+  );
+}

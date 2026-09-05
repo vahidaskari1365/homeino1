@@ -84,7 +84,7 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
       "getWishlist",
       "getCart",
       "listProducts",
-      "getProduct",
+      "getProduct", // aligned with SQL seed (idempotent migration 202609050001)
       "updateCustomerProfile",
       "remember",
     ],
@@ -108,7 +108,6 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
       "READ_ANALYTICS",
       "READ_INVENTORY",
       "WRITE_RECOMMENDATIONS",
-      "WRITE_CUSTOMER_MEMORY",
       "CALL_LLM",
     ] as AgentPermissionKey[],
     tools: [
@@ -118,7 +117,6 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
       "getCustomerPreferences",
       "getInventory",
       "recall",
-      "remember",
       "createRecommendation",
       "llmComplete",
     ],
@@ -159,7 +157,9 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
     schedule: { kind: "daily", at: "09:00" },
     config: { threshold: 5, notifyVendor: true, notifyAdmin: true },
     permissions: ["READ_PRODUCTS", "READ_INVENTORY", "READ_VENDORS", "WRITE_TASKS", "SEND_NOTIFICATION"] as AgentPermissionKey[],
-    tools: ["getLowStockProducts", "getInventory", "listProducts", "createTask", "sendNotification"],
+    // listProducts removed: the handler only queries low stock + tasks/notices
+    // (matches the SQL seed exactly).
+    tools: ["getLowStockProducts", "getInventory", "createTask", "sendNotification"],
   },
   {
     isBuiltin: true,
@@ -174,8 +174,10 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
     maxRetries: 2,
     timeoutMs: 45000,
     config: { preserveSkuProduct: true },
-    permissions: ["READ_PRODUCTS", "READ_CUSTOMERS", "CALL_LLM", "WRITE_RECOMMENDATIONS", "WRITE_CUSTOMER_MEMORY"] as AgentPermissionKey[],
-    tools: ["getProduct", "matchProductsBySku", "searchProducts", "getCustomerPreferences", "createRecommendation", "remember", "llmComplete"],
+    permissions: ["READ_PRODUCTS", "READ_CUSTOMERS", "WRITE_RECOMMENDATIONS", "WRITE_CUSTOMER_MEMORY"] as AgentPermissionKey[],
+    tools: ["getProduct", "matchProductsBySku", "searchProducts", "getCustomerPreferences", "createRecommendation", "remember"],
+    // CALL_LLM / llmComplete were removed: the designer never calls the LLM
+    // (dead grant) — remember + WRITE_CUSTOMER_MEMORY are what it really uses.
   },
   {
     isBuiltin: true,

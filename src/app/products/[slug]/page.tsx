@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, Ruler } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
-import { Button, Badge, Rating, Price, EmptyState, LogoBlock } from "@/components/ui/primitives";
+import { Button, Badge, Rating, Price, EmptyState, LogoBlock, Modal } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
@@ -15,7 +15,8 @@ import { offersForProduct, getBestOffer } from "@/data/offers";
 import { sampleReviews } from "@/data/inspirations";
 import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/useShop";
 import { useUi, useChat } from "@/stores/useApp";
-import {toFa, formatPrice, cn } from "@/lib/utils";
+import { toFa, formatPrice, cn } from "@/lib/utils";
+import type { Review } from "@/types";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -25,6 +26,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "specs" | "reviews">("desc");
+  const [seller, setSeller] = useState<string | undefined>(() => getBestOffer(product!.id)?.id);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [myReviews, setMyReviews] = useState<Review[]>(() => localReviews(product!.id));
 
   const store = getStoreById(product!.storeId);
   const productOffers = offersForProduct(product!.id);
@@ -38,6 +42,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const compared = cmp.has(product!.id);
   const related = productsByCategory(product!.categorySlug).filter((p) => p.id !== product!.id).slice(0, 4);
   const trackRecent = useRecentlyViewed((s) => s.track);
+  const reviews = [...myReviews, ...sampleReviews];
+  const buyFromSeller = (offer: (typeof productOffers)[number], sellerName: string) => {
+    addToCart(product!.id, qty, offer.id);
+    setSeller(offer.id);
+    toast(`«${product!.name}» از فروشندهٔ ${sellerName} به سبد اضافه شد`);
+  };
   useEffect(() => { if (product) trackRecent(product.id); }, [product, trackRecent]);
 
   const aiActions = [
@@ -103,14 +113,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   {productOffers.filter((o) => o.inStock).sort((a, b) => (a.price + a.shippingCost) - (b.price + b.shippingCost)).map((offer, idx) => {
                     const sellerStore = getStoreById(offer.storeId);
                     const isBest = idx === 0;
+                    const selected = seller === offer.id;
                     return (
-                      <div key={offer.id} className={cn("flex items-center justify-between rounded-lg border p-2 transition", isBest ? "border-success/40 bg-success/5" : "border-clay/30 bg-cream")}>
-                        <div className="flex items-center gap-2">
+                      <div key={offer.id} className={cn("flex items-center justify-between gap-2 rounded-lg border p-2 transition", selected ? "border-ink bg-ivory-2" : isBest ? "border-success/40 bg-success/5" : "border-clay/30 bg-cream")}>
+                        <div className="flex min-w-0 items-center gap-2">
                           {isBest && <span className="rounded bg-success/15 px-1.5 py-0.5 text-[9px] font-bold text-success">بهترین</span>}
-                          <Link href={`/stores/${sellerStore?.slug}`} className="text-xs font-medium text-ink hover:text-terracotta-deep">{sellerStore?.name}</Link>
-                          <span className="text-[10px] text-ink-muted">{offer.shippingDays} · {offer.shippingCost === 0 ? "ارسال رایگان" : `${toFa(formatPrice(offer.shippingCost))} ت`}</span>
+                          {selected && <span className="rounded bg-ink px-1.5 py-0.5 text-[9px] font-bold text-cream">انتخاب تو</span>}
+                          <Link href={`/stores/${sellerStore?.slug}`} className="truncate text-xs font-medium text-ink hover:text-terracotta-deep">{sellerStore?.name}</Link>
+                          <span className="hidden text-[10px] text-ink-muted sm:inline">{offer.shippingDays} · {offer.shippingCost === 0 ? "ارسال رایگان" : `${toFa(formatPrice(offer.shippingCost))} ت`}</span>
                         </div>
-                        <span className={cn("text-xs font-black", isBest ? "text-success" : "text-ink")}>{toFa(formatPrice(offer.price))} ت</span>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className={cn("text-xs font-black", isBest ? "text-success" : "text-ink")}>{toFa(formatPrice(offer.price))} ت</span>
+                          <button onClick={() => buyFromSeller(offer, sellerStore?.name ?? "فروشگاه")} className="rounded-lg bg-ink px-2 py-1 text-[10px] font-bold text-cream transition hover:bg-terracotta-deep" aria-label={`خرید از ${sellerStore?.name}`}>
+                            خرید از این فروشنده
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -221,10 +238,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 <div className="font-display text-5xl font-black text-ink">{toFa(product!.rating.toFixed(1))}</div>
                 <div className="mt-1 flex justify-center"><Rating value={product!.rating} /></div>
                 <div className="mt-1 text-sm text-ink-muted">از {toFa(product!.reviewsCount)} نظر</div>
-                <Button variant="ghost" className="mt-4 w-full" onClick={() => toast("ثبت نظر به‌زودی فعال می‌شود", "info")}>ثبت نظر</Button>
+                <Button variant="ghost" className="mt-4 w-full" onClick={() => setReviewOpen(true)}>ثبت نظر</Button>
               </div>
               <div className="space-y-3">
-                {sampleReviews.map((r) => (
+                {reviews.map((r) => (
                   <div key={r.id} className="card-surface p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2"><LogoBlock char={r.author[0]} color="#6b6358" size={36} /><div><div className="text-sm font-medium text-ink">{r.author}</div><div className="text-xs text-ink-muted">{r.date}</div></div></div>
@@ -233,6 +250,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     <p className="mt-3 text-sm leading-7 text-ink-muted">{r.comment}</p>
                   </div>
                 ))}
+                {myReviews.length > 0 && <p className="text-center text-[11px] text-ink-muted">نظرهای خودت ({toFa(myReviews.length)}) — در همین مرورگر ذخیره شده‌اند</p>}
               </div>
             </div>
           )}
@@ -295,8 +313,82 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
       {/* RECENTLY VIEWED — retention loop */}
       <RecentlyViewedSection currentId={product!.id} />
+
+      {/* add review — persisted to localStorage per product */}
+      <ReviewModal
+        open={reviewOpen}
+        productName={product!.name}
+        onClose={() => setReviewOpen(false)}
+        onSave={(rating, comment) => {
+          const review = saveLocalReview(product!.id, rating, comment);
+          setMyReviews((list) => [review, ...list]);
+          setReviewOpen(false);
+          toast("نظرت ثبت شد (در همین مرورگر)");
+        }}
+      />
     </Container>
   );
+}
+
+function ReviewModal({ open, productName, onClose, onSave }: { open: boolean; productName: string; onClose: () => void; onSave: (rating: number, comment: string) => void }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  return (
+    <Modal open={open} onClose={onClose} title="ثبت نظر" description={productName}>
+      <div className="space-y-4">
+        <div>
+          <div className="mb-1.5 text-sm text-ink-muted">امتیاز تو</div>
+          <div className="flex gap-1.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} type="button" onClick={() => setRating(n)} className={cn("grid h-9 w-9 place-items-center rounded-lg border text-lg transition", n <= rating ? "border-gold bg-gold/15 text-gold" : "border-clay/60 text-ink-muted hover:border-gold")} aria-label={`${toFa(n)} ستاره`}>★</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm text-ink-muted">نظر تو دربارهٔ این محصول</label>
+          <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="تجربه‌ات از کیفیت، ارسال و … را بنویس." className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>انصراف</Button>
+          <Button onClick={() => onSave(rating, comment.trim())} disabled={comment.trim().length < 4}>ثبت نظر</Button>
+        </div>
+        <p className="text-[11px] leading-5 text-ink-muted">در حالت دمو بدون حساب کاربری، نظر با نام «شما» و در همین مرورگر ذخیره می‌شود و فقط برای همین محصول دیده می‌شود.</p>
+      </div>
+    </Modal>
+  );
+}
+
+const REVIEW_KEY = "homeino-product-reviews";
+
+function localReviews(productId: string): Review[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(REVIEW_KEY);
+    const all = raw ? (JSON.parse(raw) as Record<string, Review[]>) : {};
+    return all[productId] ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalReview(productId: string, rating: number, comment: string): Review {
+  const review: Review = {
+    id: `local-${Date.now()}`,
+    author: "شما (دمو)",
+    rating,
+    date: new Date().toLocaleDateString("fa-IR"),
+    comment,
+    helpful: 0,
+  };
+  try {
+    const raw = window.localStorage.getItem(REVIEW_KEY);
+    const all = raw ? (JSON.parse(raw) as Record<string, Review[]>) : {};
+    all[productId] = [review, ...(all[productId] ?? [])];
+    window.localStorage.setItem(REVIEW_KEY, JSON.stringify(all));
+  } catch {
+    // demo keeps working in memory only
+  }
+  return review;
 }
 
 function RecentlyViewedSection({ currentId }: { currentId: string }) {

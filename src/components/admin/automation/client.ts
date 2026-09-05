@@ -70,7 +70,9 @@ export interface AgentRow {
   isBuiltin?: boolean;
   config?: Record<string, unknown>;
   systemPrompt?: string | null;
+  schedule?: Record<string, unknown> | null;
   lastRunAt?: string | null;
+  nextRunAt?: string | null;
 }
 
 export interface ToolRow {

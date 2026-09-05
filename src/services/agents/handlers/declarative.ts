@@ -74,7 +74,7 @@ export const runDeclarativeAgent: AgentHandler = async (input, ctx) => {
   let dataState: "ok" | "no_data" | "not_enough_data" | "degraded" = "not_enough_data";
 
   for (let iteration = 0; iteration < MAX_LOOP; iteration++) {
-    const decision = await askLlm(ctx, task, toolDocs, history, resultsSummary(toolsUsed, history));
+    const decision = await askLlm(ctx, task, toolDocs, compactHistory(history), resultsSummary(toolsUsed, history));
     if (!decision) break;
 
     if (decision.answer && Object.keys(decision.answer).length) {
@@ -107,7 +107,7 @@ export const runDeclarativeAgent: AgentHandler = async (input, ctx) => {
 
   if (!answer) {
     // One last attempt to summarise what the tools actually returned.
-    const finalDecision = await askLlm(ctx, task, toolDocs, history, resultsSummary(toolsUsed, history), true);
+    const finalDecision = await askLlm(ctx, task, toolDocs, compactHistory(history), resultsSummary(toolsUsed, history), true);
     answer = finalDecision?.answer ?? null;
     dataState = answer ? "ok" : toolsUsed.length ? "degraded" : "not_enough_data";
   }
@@ -132,11 +132,22 @@ async function hasUsableLlm(ctx: HandlerContext): Promise<boolean> {
   return llmStatus().some((entry) => entry.configured && entry.provider !== "heuristic");
 }
 
+/** Compact the running conversation for the model — keeps every tool turn the
+ *  model produced visible (role + trimmed content) while bounding the size. */
+function compactHistory(history: { role: string; content: string }[]): string {
+  return JSON.stringify(
+    history.slice(-8).map((h) => ({
+      role: h.role === "tool" ? "tool" : h.role,
+      content: String(h.content ?? "").slice(0, 320),
+    })),
+  ).slice(0, 2600);
+}
+
 async function askLlm(
   ctx: HandlerContext,
   task: string,
   toolDocs: { tool: string; description: string; input: Record<string, string>; requiresApproval: boolean }[],
-  history: { role: string; content: string }[],
+  history: string,
   results: string,
   final = false,
 ): Promise<LlmDecision | null> {
@@ -152,6 +163,7 @@ async function askLlm(
     task: task.slice(0, 1500),
     availableTools: toolDocs,
     context: { userId: ctx.userId, sessionId: ctx.sessionId, agent: ctx.agent.key },
+    conversation: history, // genuinely compacted history — never `void`-ed
     toolResults: results,
     expectedOutput: final ? { answer: { dataState: "ok|no_data|not_enough_data", summary: "string", items: "array?" } } : { thought: "string?", toolCalls: [{ tool: "string", input: {} }], answer: "object?", done: "boolean?" },
   }).slice(0, 6000);
@@ -160,7 +172,6 @@ async function askLlm(
   if (!result.ok) return null;
   const payload = ((result.data as { data?: unknown })?.data ?? result.data) as LlmDecision | null;
   if (!payload || typeof payload !== "object") return null;
-  void history;
   return payload;
 }
 

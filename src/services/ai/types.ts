@@ -30,14 +30,29 @@ export interface GeneratedDesign {
   regions?: OverlayRegion[];
 }
 
+export interface ChatProductCard {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  image?: string;
+  url: string;
+  storeName?: string;
+  sku?: string;
+}
+
 export interface ChatReplyInput {
   message: string;
   /** Page context: current URL, product name, etc. — lets the AI give relevant answers. */
   context?: string;
+  /** Recent conversation turns (role + text) for multi-turn continuity. */
+  history?: { role: "user" | "assistant"; content: string }[];
 }
 
 export interface ChatReply {
   content: string;
+  /** Real catalog products attached to the reply (always catalog-verified). */
+  products?: ChatProductCard[];
 }
 
 export interface DecorSuggestion {

@@ -302,19 +302,17 @@ const CALLERS: Record<LlmProviderName, (req: LlmCompletionRequest) => Promise<Ll
 /** Never throws — degrades to the deterministic engine. */
 export async function complete(req: LlmCompletionRequest): Promise<LlmCompletionResult> {
   const order = resolutionOrder(req.provider);
-  let lastError: Error | null = null;
   for (const provider of order) {
     try {
-      const result = await CALLERS[provider](req);
-      if (provider !== "heuristic") return result;
-      return result;
+      // Heuristic is always the last entry of `order` — every earlier provider
+      // is either configured-and-returned here or failed and caught below.
+      return await CALLERS[provider](req);
     } catch (error) {
-      lastError = error as Error;
       console.warn(`[llm] provider ${provider} failed:`, (error as Error).message);
     }
   }
   const fallback = callHeuristic(req);
-  return { ...fallback, degraded: true, text: fallback.text || (lastError ? "" : "") };
+  return { ...fallback, degraded: true };
 }
 
 export interface JsonCompletionResult<T> extends LlmCompletionResult {

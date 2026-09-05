@@ -5,7 +5,7 @@ import { guard, readBody } from "@/lib/api/http";
 import { ok } from "@/lib/api/response";
 import { ApiError } from "@/lib/api/errors";
 import { requireAdminUser } from "@/lib/api/auth";
-import { getAgent, updateAgent, deleteAgent, AGENT_STATUSES, AGENT_TYPES, AGENT_RUNTIMES } from "@/services/agents/registry";
+import { getAgent, updateAgent, deleteAgent, agentRunMeta, AGENT_STATUSES, AGENT_TYPES, AGENT_RUNTIMES } from "@/services/agents/registry";
 import { listExecutionLogs } from "@/services/automation/executionLog";
 import { HANDLER_KEYS } from "@/services/agents/handlers";
 import type { AgentPatch } from "@/services/agents/store/types";
@@ -28,7 +28,8 @@ export const GET = guard(async (req, { params }: { params: Promise<{ key: string
   const agent = await getAgent(key);
   if (!agent) throw ApiError.notFound(`ایجنت «${key}» پیدا نشد`);
   const runs = await listExecutionLogs({ agentKey: agent.key, limit: 25 });
-  return ok({ agent, runs });
+  const meta = await agentRunMeta(agent);
+  return ok({ agent: { ...agent, ...meta }, runs, lastRunAt: meta.lastRunAt, nextRunAt: meta.nextRunAt });
 });
 
 export const PATCH = guard(async (req, { params }: { params: Promise<{ key: string }> }) => {

@@ -1,9 +1,37 @@
 "use client";
-import { useState, type ImgHTMLAttributes } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** Image with graceful skeleton + fallback. Lazy by default. */
-export function SmartImage({ src, alt, className, priority, ...props }: ImgHTMLAttributes<HTMLImageElement> & { priority?: boolean }) {
+/** True for inline images (data:/blob:) — the optimizer cannot (and must not) touch them. */
+function isInlineSource(src?: string): boolean {
+  return Boolean(src && (src.startsWith("data:") || src.startsWith("blob:")));
+}
+
+/**
+ * Image with graceful skeleton + fallback. Lazy by default.
+ *
+ * Migrated to next/image (Phase: SmartImage → next/image):
+ *  • remote sources (Pexels / Unsplash / cdn.homeino.ir) go through the
+ *    optimizer — see images.remotePatterns in next.config.ts.
+ *  • data:/blob: sources keep `unoptimized` — layout/behaviour unchanged.
+ *  • The wrapper keeps the exact box (className carries aspect/h/w) and the
+ *    image `fill`s it with the same object-fit as the previous <img>, so no
+ *    rendered pixel moves.
+ */
+export function SmartImage({
+  src,
+  alt,
+  className,
+  priority,
+  sizes,
+}: {
+  src?: string;
+  alt?: string;
+  className?: string;
+  priority?: boolean;
+  sizes?: string;
+}) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
   return (
@@ -17,18 +45,19 @@ export function SmartImage({ src, alt, className, priority, ...props }: ImgHTMLA
             <path d="m21 15-5-5L5 21" />
           </svg>
         </span>
-      ) : (
-        <img
-          src={src}
-          alt={alt}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
+      ) : src ? (
+        <Image
+          src={src as string}
+          alt={alt ?? ""}
+          fill
+          sizes={sizes ?? "100vw"}
+          unoptimized={isInlineSource(src)}
+          priority={priority}
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
           className={cn("h-full w-full transition-all duration-700", loaded ? "opacity-100 scale-100" : "opacity-0 scale-105")}
-          {...props}
         />
-      )}
+      ) : null}
     </span>
   );
 }

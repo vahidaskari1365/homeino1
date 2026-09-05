@@ -99,6 +99,41 @@ export async function listAgents(): Promise<AgentDefinition[]> {
   return store.listAgents();
 }
 
+export type AgentWithRunMeta = AgentDefinition & { lastRunAt: string | null; nextRunAt: string | null };
+
+/** Next automatic occurrence of an agent schedule (interval/daily/weekly).
+ *  cron/manual have no computed next run. Mirrors the workflow scheduler's
+ *  nextScheduleRun semantics without importing the workflow engine. */
+export function nextAgentRunAt(agent: Pick<AgentDefinition, "schedule">, after = new Date()): Date | null {
+  const schedule = agent.schedule;
+  if (!schedule || schedule.kind === "manual" || schedule.kind === "cron") return null;
+  const from = new Date(after.getTime());
+  if (schedule.kind === "interval") {
+    const minutes = Math.max(1, Math.round(schedule.everyMinutes ?? 60));
+    return new Date(from.getTime() + minutes * 60_000);
+  }
+  const [hour = 9, minute = 0] = String(schedule.at ?? "09:00").split(":").map((v) => Number(v));
+  const next = new Date(from);
+  next.setUTCHours(Number.isFinite(hour) ? hour : 9, Number.isFinite(minute) ? minute : 0, 0, 0);
+  if (next.getTime() <= from.getTime()) next.setUTCDate(next.getUTCDate() + 1);
+  if (schedule.kind === "weekly") {
+    const weekday = typeof schedule.weekday === "number" ? schedule.weekday : ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].indexOf(String(schedule.weekday ?? "saturday").toLowerCase());
+    const target = Number.isFinite(weekday) ? weekday : 0;
+    while (next.getUTCDay() !== target) next.setUTCDate(next.getUTCDate() + 1);
+  }
+  return next;
+}
+
+/** Last actual run (execution log) + computed next run for the admin UI. */
+export async function agentRunMeta(agent: Pick<AgentDefinition, "key" | "schedule">): Promise<{ lastRunAt: string | null; nextRunAt: string | null }> {
+  const store = await ensureSeeded();
+  const last = (await store.listAgentRuns({ agentKey: agent.key, limit: 1 }))[0];
+  const lastRunAt = last?.startedAt ?? null;
+  const base = lastRunAt ? new Date(Math.max(Date.parse(lastRunAt), Date.now())) : new Date();
+  const next = nextAgentRunAt(agent, base);
+  return { lastRunAt, nextRunAt: next ? next.toISOString() : null };
+}
+
 export async function getAgent(keyOrId: string): Promise<AgentDefinition | null> {
   const store = await ensureSeeded();
   return store.getAgent(keyOrId);

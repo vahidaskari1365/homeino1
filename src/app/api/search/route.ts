@@ -1,11 +1,12 @@
 import { listProducts } from "@/services/catalogService";
-import { ok } from "@/lib/api/response";
+import { demoUnavailable, ok } from "@/lib/api/response";
 import { guard, parsePagination } from "@/lib/api/http";
 
 export const runtime = "nodejs";
 
 /** Search = the catalog query engine, exposed as its own route. */
 export const GET = guard(async (req) => {
+  if (!process.env.DATABASE_URL) return demoUnavailable("جستجوی API", "در حالت دمو، جستجو روی کاتالوگ نمونهٔ محلی انجام می‌شود و این API پس از راه‌اندازی دیتابیس فعال می‌شود.");
   const sp = req.nextUrl.searchParams;
   const { page, limit } = parsePagination(sp);
   const data = await listProducts({
