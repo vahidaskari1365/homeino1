@@ -34,3 +34,11 @@ next-env.d.ts
 .verify-bundle.mjs
 .smoke-bundle.mjs
 .start-log.txt
+
+# agent session artifacts (never ship)
+worklog.md
+tool-results/
+.seed-bundle.mjs
+.verify-bundle.mjs
+.smoke-bundle.mjs
+*.tsbuildinfo

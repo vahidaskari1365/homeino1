@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { breadcrumbJsonLd, storeJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, storeJsonLd, jsonLdScript } from "@/lib/seo";
 import { getStore } from "@/data/stores";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -48,7 +48,7 @@ export default async function StoreLayout({
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(structuredData) }}
       />
       {children}
     </>

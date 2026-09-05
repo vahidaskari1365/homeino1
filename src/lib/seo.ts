@@ -129,3 +129,17 @@ export function organizationJsonLd() {
     logo: absoluteUrl("/favicon.ico"),
   };
 }
+
+/**
+ * XSS-safe JSON-LD serializer. `</script>` inside any string (e.g. a
+ * vendor-authored product title) would otherwise break out of the script
+ * tag. Also escapes U+2028/U+2029 which are valid JSON but invalid JS.
+ */
+export function jsonLdScript(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}

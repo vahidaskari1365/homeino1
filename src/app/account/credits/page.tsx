@@ -4,11 +4,19 @@ import { Button, Badge } from "@/components/ui/primitives";
 import { useCredits, useUi } from "@/stores/useApp";
 import { CREDIT_DISPLAY } from "@/services/credits/ledger";
 import { AI_MODES } from "@/services/ai";
+import { purchaseCredits, confirmCreditsPurchase, fetchCreditsBalance } from "@/lib/commerceClient";
 import { toFa, cn } from "@/lib/utils";
 
 export default function CreditsPage() {
-  const { balance, history, purchase } = useCredits();
+  const { balance, history, purchase, setBalance } = useCredits();
   const { toast } = useUi();
+
+  /** Local demo purchase — used only when the server is unavailable. */
+  function applyLocalPurchase(credits: number, price: number) {
+    void purchase({ packageId: "local", credits, price }).then((res) => {
+      toast(res.success ? `${toFa(credits)} اعتبار اضافه شد` : "خطا در پرداخت", res.success ? "success" : "error");
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -57,7 +65,28 @@ export default function CreditsPage() {
               <div className="mt-2 font-display text-2xl font-black text-ink">{toFa(pk.credits)}</div>
               <div className="text-xs text-ink-muted">اعتبار</div>
               <div className="mt-3 font-bold text-ink">{toFa(pk.price.toLocaleString("fa-IR"))} <span className="text-xs text-ink-muted">تومان</span></div>
-              <Button className="mt-3 w-full" variant={pk.popular ? "accent" : "ghost"} onClick={async () => { const res = await purchase({ packageId: pk.id, credits: pk.credits, price: pk.price }); toast(res.success ? `${toFa(pk.credits)} اعتبار اضافه شد` : "خطا در پرداخت", res.success ? "success" : "error"); }}>خرید</Button>
+              <Button className="mt-3 w-full" variant={pk.popular ? "accent" : "ghost"} onClick={async () => {
+                // Real backend first: intent → dev confirm → authoritative balance.
+                const intent = await purchaseCredits(pk.id);
+                if (intent.ok && intent.data.confirmable) {
+                  const confirmed = await confirmCreditsPurchase(intent.data.paymentId, pk.id);
+                  if (confirmed.ok) {
+                    const bal = await fetchCreditsBalance();
+                    if (bal.ok) setBalance(bal.data.balance);
+                    else applyLocalPurchase(pk.credits, pk.price);
+                    toast(`${toFa(pk.credits)} اعتبار به حساب‌ات اضافه شد`, "success");
+                    return;
+                  }
+                  toast(confirmed.message ?? "تأیید پرداخت ناموفق بود", "error");
+                  return;
+                }
+                if (intent.ok && !intent.data.confirmable) {
+                  toast("پرداخت واقعی فعال است — از درگاه بانکی ادامه بده", "info");
+                  return;
+                }
+                // Demo fallback (no DB): local ledger purchase.
+                applyLocalPurchase(pk.credits, pk.price);
+              }}>خرید</Button>
             </div>
           ))}
         </div>

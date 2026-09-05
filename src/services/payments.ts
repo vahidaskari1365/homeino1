@@ -28,6 +28,7 @@ export interface PaymentWebhookEvent {
   eventType: "payment.succeeded" | "payment.failed" | "refund.succeeded";
   amount: number;
   currency: string;
+  metadata?: Record<string, unknown>;
   raw: unknown;
 }
 
@@ -86,19 +87,76 @@ export class StripeProvider implements PaymentProvider {
   }
 }
 
-/** Development provider — no real money moves. Clearly labelled, never in prod. */
+/** Development provider — no real money moves. Clearly labelled, never in prod.
+ *  Intents are tracked so the confirm route can prove a paymentId was really
+ *  issued by the server (clients can never mint credits with fake ids). */
 export class DevPaymentProvider implements PaymentProvider {
   readonly name = "dev";
-  createIntent(_input: PaymentIntentInput): Promise<PaymentResult> {
-    const paymentId = `dev_${Math.random().toString(36).slice(2, 10)}`;
+  /** paymentId → { userId, credits, orderId, metadata, issuedAt } (TTL pruned) */
+  private static intents = new Map<
+    string,
+    { metadata: Record<string, unknown>; issuedAt: number }
+  >();
+  private static TTL_MS = 30 * 60 * 1000;
+
+  createIntent(input: PaymentIntentInput): Promise<PaymentResult> {
+    const paymentId = `dev_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+    // prune stale intents (cheap, on every intent)
+    for (const [k, v] of DevPaymentProvider.intents) {
+      if (Date.now() - v.issuedAt > DevPaymentProvider.TTL_MS) DevPaymentProvider.intents.delete(k);
+    }
+    DevPaymentProvider.intents.set(paymentId, {
+      metadata: input.metadata ?? {},
+      issuedAt: Date.now(),
+    });
     return Promise.resolve({
       provider: this.name,
       paymentId,
       status: "succeeded",
     });
   }
-  async parseWebhook(): Promise<PaymentWebhookEvent> {
-    throw new Error("dev provider has no webhooks");
+
+  /** Proves a paymentId exists AND carries the expected metadata (per user). */
+  wasIssued(paymentId: string, expectedMetadata: Record<string, unknown>): boolean {
+    const entry = DevPaymentProvider.intents.get(paymentId);
+    if (!entry) return false;
+    DevPaymentProvider.intents.delete(paymentId); // single-use
+    for (const [k, v] of Object.entries(expectedMetadata)) {
+      if (entry.metadata[k] !== v) return false;
+    }
+    return true;
+  }
+
+  /** Dev webhooks are HMAC-signed with PAYMENTS_WEBHOOK_SECRET. */
+  async parseWebhook(body: unknown, signature?: string): Promise<PaymentWebhookEvent> {
+    const secret = process.env.PAYMENTS_WEBHOOK_SECRET ?? "homeino-dev-webhook-secret";
+    if (!signature) throw new Error("missing webhook signature");
+    const { createHmac, timingSafeEqual } = await import("node:crypto");
+    const expected = createHmac("sha256", secret).update(JSON.stringify(body)).digest("hex");
+    const a = Buffer.from(expected);
+    const b = Buffer.from(signature);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+      throw new Error("invalid webhook signature");
+    }
+    const payload = body as {
+      providerPaymentId?: string;
+      eventType?: PaymentWebhookEvent["eventType"];
+      amount?: number;
+      currency?: string;
+      metadata?: Record<string, unknown>;
+    };
+    if (!payload.providerPaymentId || !payload.eventType) {
+      throw new Error("invalid dev webhook payload");
+    }
+    return {
+      provider: this.name,
+      providerPaymentId: payload.providerPaymentId,
+      eventType: payload.eventType,
+      amount: payload.amount ?? 0,
+      currency: payload.currency ?? "IRR",
+      metadata: payload.metadata,
+      raw: body,
+    };
   }
 }
 
@@ -117,4 +175,9 @@ export function paymentGateway(): PaymentProvider {
   }
   gateway = new DevPaymentProvider();
   return gateway;
+}
+
+/** Test hook for isolated unit tests. */
+export function resetPaymentGateway(): void {
+  gateway = null;
 }

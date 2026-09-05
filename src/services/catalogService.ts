@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, isNull, like, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   categories,
@@ -101,9 +101,9 @@ export async function listProducts(query: CatalogQuery = {}) {
   if (query.q) {
     conds.push(
       or(
-        like(products.title, `%${query.q}%`),
-        like(products.description ?? products.title, `%${query.q}%`),
-        like(products.brand ?? products.title, `%${query.q}%`),
+        ilike(products.title, `%${query.q}%`),
+        ilike(products.description ?? products.title, `%${query.q}%`),
+        ilike(products.brand ?? products.title, `%${query.q}%`),
       )!,
     );
   }

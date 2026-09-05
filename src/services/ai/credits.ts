@@ -5,10 +5,12 @@
 
 export const CREDIT_CONFIG = {
   startingBalance: 120,
+  // Single price list — mirrors PACKS in /api/credits/purchase and the
+  // `credit_packages` DB seed (amounts in Toman; DB stores IRR ×10).
   buyPackages: [
-    { id: "pk1", credits: 100, price: 99000, label: "۱۰۰ اعتبار", popular: false },
-    { id: "pk2", credits: 300, price: 249000, label: "۳۰۰ اعتبار", popular: true },
-    { id: "pk3", credits: 800, price: 599000, label: "۸۰۰ اعتبار", popular: false },
+    { id: "starter", credits: 50, price: 100000, label: "۵۰ اعتبار", popular: false },
+    { id: "popular", credits: 120, price: 220000, label: "۱۲۰ اعتبار", popular: true },
+    { id: "pro", credits: 300, price: 500000, label: "۳۰۰ اعتبار", popular: false },
   ],
   subscriptions: [
     { id: "sub-free", name: "رایگان", price: 0, credits: 120, perks: ["۱۲۰ اعتبار ماهانه", "دقت استاندارد"] },

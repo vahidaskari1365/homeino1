@@ -119,7 +119,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                           {(real?.images[0] ?? c.image) && <img src={real?.images[0] ?? c.image} alt="" className="h-9 w-9 rounded-md object-cover" />}
                           <span className="min-w-0 flex-1">
                             <span className="line-clamp-1 block text-[11px] font-bold text-ink">{real?.name ?? c.name ?? "محصول"}</span>
-                            {typeof (real?.price ?? c.price) === "number" && <span className="block text-[10px] font-black text-gold">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}
+                            {typeof (real?.price ?? c.price) === "number" && <span className="block text-[11px] font-black text-terracotta-deep">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}
                           </span>
                         </Link>
                       );
@@ -198,7 +198,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                       <span>{item.storeName}</span>
                       {item.storeVerified && <Check size={11} className="text-success" />}
                     </p>
-                    {item.sku && <p className="font-mono text-[10px] text-ink-muted">SKU: {item.sku}</p>}
+                    {item.sku && <p className="font-mono text-[11px] text-ink-muted">SKU: {item.sku}</p>}
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between border-t border-clay/20 pt-2">

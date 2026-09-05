@@ -58,6 +58,7 @@ export const useDesignSessions = create<DesignSessionState>()(
     }),
     {
       name: "homeino-ai-designs",
+      skipHydration: true,
       // Guard against quota errors — drop oldest half and retry once.
       storage: {
         getItem: (name) => {

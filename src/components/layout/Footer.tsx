@@ -1,30 +1,50 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import {AtSign, Send, Globe, Gift, Check } from "lucide-react";
+import { AtSign, Send, Globe, Gift, Check, Phone, Mail } from "lucide-react";
 import { Container } from "../ui/primitives";
 import { categories } from "@/data/categories";
+import { subscribeNewsletter } from "@/lib/commerceClient";
+import { useUi } from "@/stores/useApp";
 
 const COLS = [
   { title: "کاوش", links: [["همه محصولات", "/products"], ["دسته دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["مجله", "/magazine"]] },
   { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دسته دوم", "/second-hand"]] },
-  { title: "حساب کاربری", links: [["پروفایل", "/account/profile"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["آگهی‌های من", "/account/ads"], ["طراحی‌های من", "/account/designs"]] },
+  { title: "حساب کاربری", links: [["پروفایل", "/account/profile"], ["اعتبار هومینو استودیو", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["آگهی‌های من", "/account/ads"], ["طراحی‌های من", "/account/designs"]] },
   { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/register/vendor"]] },
+  { title: "پشتیبانی", links: [["درباره هومینو", "/about"], ["تماس با ما", "/contact"], ["قوانین و مقررات", "/terms"], ["حریم خصوصی", "/privacy"], ["رویه بازگشت کالا", "/refund"]] },
 ];
 
 function NewsletterForm() {
   const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-  const submit = (e: React.FormEvent) => {
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [doneMsg, setDoneMsg] = useState("");
+  const [err, setErr] = useState("");
+  const { toast } = useUi();
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) return;
-    setDone(true);
+    setErr("");
+    if (!email && !phone) { setErr("ایمیل یا شماره موبایل را وارد کن"); return; }
+    setBusy(true);
+    const res = await subscribeNewsletter({ email: email || undefined, phone: phone || undefined, source: "footer" });
+    setBusy(false);
+    if (res.ok) {
+      setDoneMsg(res.data.message ?? "عضویت ثبت شد");
+    } else {
+      setErr(res.message ?? "ثبت ناموفق بود — دوباره تلاش کن");
+      toast(res.message ?? "ثبت ناموفق بود", "error");
+    }
   };
-  if (done) return <div className="flex items-center gap-1.5 rounded-lg bg-sage/20 px-3 py-2 text-xs font-bold text-sage-soft"><Check size={14} /> ثبت شد! کد تخفیف برات ارسال شد.</div>;
+  if (doneMsg) return <div className="flex items-center gap-1.5 rounded-lg bg-sage/20 px-3 py-2 text-xs font-bold text-sage-soft"><Check size={14} /> {doneMsg}</div>;
   return (
-    <form onSubmit={submit} className="flex gap-2">
-      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت..." className="flex-1 rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
-      <button type="submit" className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90">دریافت هدیه</button>
+    <form onSubmit={submit} className="space-y-2">
+      <div className="flex gap-2">
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت..." className="w-full rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
+        <button type="submit" disabled={busy} className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90 disabled:opacity-50">{busy ? "..." : "دریافت هدیه"}</button>
+      </div>
+      <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" dir="ltr" placeholder="یا شماره موبایل 09xxxxxxxxx" className="w-full rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
+      {err && <p className="text-[11px] text-red-300">{err}</p>}
     </form>
   );
 }
@@ -55,10 +75,25 @@ export function Footer() {
               هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان. الهام، محصول، فروشگاه و طراحی با هومینو استودیو.
             </p>
             {socialNote && <p className="mt-2 text-xs text-gold-soft">شبکه‌های اجتماعی Homeino به‌زودی راه می‌افتند.</p>}
-            <div className="mt-4 flex gap-2">
-              {[AtSign, Send, Globe].map((Icon, i) => (
-                <button key={i} type="button" aria-label="شبکه‌های اجتماعی" onClick={() => setSocialNote(true)} className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg bg-white/10 transition hover:bg-white/20"><Icon size={17} /></button>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {([
+                ["Instagram", process.env.NEXT_PUBLIC_INSTAGRAM_URL],
+                ["Telegram", process.env.NEXT_PUBLIC_TELEGRAM_URL],
+                ["WhatsApp", process.env.NEXT_PUBLIC_WHATSAPP_URL],
+              ] as const).map(([label, url]) => (
+                <a key={label} href={url || "#"} target={url ? "_blank" : undefined} rel="noopener noreferrer"
+                  aria-label={label}
+                  onClick={url ? undefined : (e) => { e.preventDefault(); setSocialNote(true); }}
+                  className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 transition hover:bg-white/20">
+                  {label === "Instagram" ? <AtSign size={17} /> : label === "Telegram" ? <Send size={17} /> : <Globe size={17} />}
+                </a>
               ))}
+              {(process.env.NEXT_PUBLIC_SUPPORT_PHONE || process.env.NEXT_PUBLIC_SUPPORT_EMAIL) && (
+                <div className="ms-2 flex flex-col justify-center text-[11px] leading-4 text-cream/60">
+                  {process.env.NEXT_PUBLIC_SUPPORT_PHONE && <span className="flex items-center gap-1" dir="ltr"><Phone size={11} /> {process.env.NEXT_PUBLIC_SUPPORT_PHONE}</span>}
+                  {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && <span className="flex items-center gap-1" dir="ltr"><Mail size={11} /> {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</span>}
+                </div>
+              )}
             </div>
             {/* Newsletter capture with incentive */}
             <div className="mt-5 rounded-xl border border-gold/25 bg-gold/5 p-4">
@@ -80,11 +115,18 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-cream/50 md:flex-row">
-          <p>© ۱۴۰۳ Homeino — تمام حقوق محفوظ است.</p>
-          <div className="flex flex-wrap gap-4">
+          <p>© {new Intl.DateTimeFormat("fa-IR", { year: "numeric" }).format(new Date())} Homeino — تمام حقوق محفوظ است.</p>
+          <div className="flex flex-wrap items-center gap-4">
             {categories.slice(0, 4).map((c) => (
               <Link key={c.id} href={`/category/${c.slug}`} className="hover:text-cream">{c.name}</Link>
             ))}
+            {/* e-Namad / ساماندهی slots — appear when the env vars are set */}
+            {process.env.NEXT_PUBLIC_ENAMAD_URL && (
+              <a href={process.env.NEXT_PUBLIC_ENAMAD_URL} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/20 px-2 py-1 hover:text-cream">نماد اعتماد الکترونیکی</a>
+            )}
+            {process.env.NEXT_PUBLIC_SAMANDEHI_URL && (
+              <a href={process.env.NEXT_PUBLIC_SAMANDEHI_URL} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/20 px-2 py-1 hover:text-cream">نشان ملی ثبت</a>
+            )}
           </div>
         </div>
       </Container>

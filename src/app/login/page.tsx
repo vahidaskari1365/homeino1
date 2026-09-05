@@ -6,6 +6,7 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button, Spinner } from "@/components/ui/primitives";
 import { useAuth, useUi } from "@/stores/useApp";
+import { loginRequest } from "@/lib/commerceClient";
 import { cn } from "@/lib/utils";
 
 function readRememberFlag(): boolean {
@@ -16,8 +17,8 @@ function readRememberFlag(): boolean {
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth(); const { toast } = useUi();
-  const [email, setEmail] = useState("demo@homeino.ir");
-  const [pwd, setPwd] = useState("12345678");
+  const [email, setEmail] = useState("");
+  const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -26,25 +27,49 @@ export default function LoginPage() {
   const [rememberOverride, setRememberOverride] = useState<boolean | null>(null);
   const remember = rememberOverride ?? Boolean(readRememberFlag());
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) return setErr("ایمیل معتبر نیست");
     if (pwd.length < 6) return setErr("رمز حداقل ۶ کاراکتر است");
     setLoading(true);
-    setTimeout(() => { login(email); toast("خوش آمدی!"); router.push("/account"); }, 900);
+    // ---- Real backend first (Supabase session + httpOnly cookies).
+    const res = await loginRequest(email, pwd);
+    if (res.ok) {
+      login(email, { name: res.data.user?.name || email.split("@")[0] });
+      toast("خوش آمدی!");
+      router.push(nextPath());
+      return;
+    }
+    // Real server rejection (wrong credentials on a live backend) — honest error.
+    if (res.status === 400 || res.status === 403) {
+      setLoading(false);
+      setErr(res.message ?? "ایمیل یا رمز عبور درست نیست");
+      return;
+    }
+    // Server unavailable (demo mode / network) → honest local demo session.
+    login(email);
+    toast("حالت دمو: ورود محلی انجام شد", "info");
+    router.push(nextPath());
   };
+
+  function nextPath(): string {
+    try {
+      const p = new URLSearchParams(window.location.search).get("next");
+      return p && p.startsWith("/") ? p : "/account";
+    } catch { return "/account"; }
+  }
 
   return (
     <AuthShell title="ورود به Homeino" subtitle="وارد شو تا طراحی‌ها، علاقه‌مندی‌ها و سفارش‌هایت را ببینی." footer={<>حساب نداری؟ <Link href="/register" className="font-medium text-terracotta-deep">ثبت‌نام کن</Link></>}>
       <form onSubmit={submit} className="space-y-4">
         <Field icon={Mail} label="ایمیل" type="email" value={email} onChange={setEmail} />
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink">رمز عبور</label>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-ink">رمز عبور</label>
           <div className="flex items-center rounded-xl border border-clay/60 bg-cream px-3 focus-within:border-ink">
             <Lock size={17} className="text-ink-muted" />
-            <input type={show ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)} className="flex-1 bg-transparent px-2.5 py-2.5 text-sm outline-none" />
-            <button type="button" onClick={() => setShow(!show)} className="text-ink-muted">{show ? <EyeOff size={17} /> : <Eye size={17} />}</button>
+            <input id="password" type={show ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)} className="flex-1 bg-transparent px-2.5 py-2.5 text-sm outline-none" />
+            <button type="button" onClick={() => setShow(!show)} aria-label={show ? "پنهان کردن رمز" : "نمایش رمز"} className="text-ink-muted">{show ? <EyeOff size={17} /> : <Eye size={17} />}</button>
           </div>
         </div>
         <div className="flex justify-between text-sm">
@@ -64,12 +89,13 @@ export default function LoginPage() {
 }
 
 function Field({ icon: Icon, label, type, value, onChange }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; type: string; value: string; onChange: (v: string) => void }) {
+  const id = label === "ایمیل" ? "email" : `field-${label}`;
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-ink">{label}</label>
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink">{label}</label>
       <div className={cn("flex items-center rounded-xl border border-clay/60 bg-cream px-3 focus-within:border-ink")}>
         <Icon size={17} className="text-ink-muted" />
-        <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 bg-transparent px-2.5 py-2.5 text-sm outline-none" />
+        <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 bg-transparent px-2.5 py-2.5 text-sm outline-none" />
       </div>
     </div>
   );

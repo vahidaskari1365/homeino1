@@ -5,6 +5,7 @@
 
 export type ErrorCode =
   | "INVALID_INPUT"
+  | "INVALID_TRANSITION"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"

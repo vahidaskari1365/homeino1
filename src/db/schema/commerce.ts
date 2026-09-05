@@ -10,6 +10,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { id, timestamps, createdAtColumn} from "./_base";
 import { products } from "./products";
 import { productVariants } from "./products";
@@ -36,7 +37,12 @@ export const carts = pgTable(
     ...timestamps,
   },
   (t) => [
-    uniqueIndex("carts_active_user_unique").on(t.userId, t.status),
+    // One ACTIVE cart per user. A partial index (not (user_id,status)) —
+    // otherwise the 2nd successful order (2nd "converted" cart) would
+    // violate the unique constraint and crash checkout.
+    uniqueIndex("carts_active_user_unique")
+      .on(t.userId)
+      .where(sql`status = 'active'`),
     index("carts_user_idx").on(t.userId),
   ],
 );

@@ -59,7 +59,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
 
       {/* ===== DESKTOP HOVER OVERLAY: full info + actions (lg and up only) ===== */}
-      <div className="absolute inset-0 z-30 hidden flex-col bg-ink/94 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:flex">
+      <div className="absolute inset-0 z-30 hidden flex-col bg-ink/94 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 lg:flex">
         {/* info at top */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">

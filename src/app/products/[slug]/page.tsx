@@ -14,6 +14,7 @@ import { getStyle } from "@/data/styles";
 import { getStoreById } from "@/data/stores";
 import { offersForProduct, getBestOffer } from "@/data/offers";
 import { sampleReviews } from "@/data/inspirations";
+import { fetchProductReviews, createProductReview } from "@/lib/commerceClient";
 import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/useShop";
 import { useUi, useChat } from "@/stores/useApp";
 import { toFa, formatPrice, cn } from "@/lib/utils";
@@ -45,6 +46,26 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   // Read the persisted reviews only after hydration so the first paint
   // (server + pre-hydration) stays identical to SSR — zero console mismatch.
   const myReviews = hydrated && productId ? localReviews(productId) : [];
+  // Server reviews (verified purchases, DB-backed) merge above the samples.
+  const [serverReviews, setServerReviews] = useState<Review[]>([]);
+  useEffect(() => {
+    if (!hydrated || !productId) return;
+    let alive = true;
+    void fetchProductReviews(product?.slug ?? "").then((res) => {
+      if (!alive || !res.ok) return;
+      const items = res.data.items ?? [];
+      setServerReviews(items.map((r, i) => ({
+        id: r.id,
+        author: r.userName || "خریدار تأییدشده",
+        rating: r.rating,
+        date: new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(r.createdAt)),
+        comment: r.content ?? r.title ?? "",
+        helpful: 0,
+        key: `srv-${i}`,
+      })));
+    });
+    return () => { alive = false; };
+  }, [hydrated, productId, product?.slug, reviewVersion]);
 
   const wl = useWishlist(); const cmp = useCompare(); const addToCart = useCart((s) => s.add);
   const { toast, setAiPanel } = useUi();
@@ -80,7 +101,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const wished = wl.products.includes(product.id);
   const compared = cmp.has(product.id);
   const related = productsByCategory(product.categorySlug).filter((p) => p.id !== product.id).slice(0, 4);
-  const reviews = [...myReviews, ...sampleReviews];
+  const reviews = [...serverReviews, ...myReviews, ...sampleReviews];
   const buyFromSeller = (offer: (typeof productOffers)[number], sellerName: string) => {
     addToCart(product.id, qty, offer.id);
     setSeller(offer.id);
@@ -360,10 +381,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         productName={product!.name}
         onClose={() => setReviewOpen(false)}
         onSave={(rating, comment) => {
-          saveLocalReview(product!.id, rating, comment);
-          setReviewVersion((v) => v + 1);
+          // Real backend first: a verified-purchase review lands in the DB
+          // (pending approval). Otherwise the honest local fallback.
+          void createProductReview({ productId: product!.slug, rating, content: comment }).then((res) => {
+            if (res.ok) {
+              toast("نظرت ثبت شد و پس از تأیید نمایش داده می‌شود");
+            } else {
+              saveLocalReview(product!.id, rating, comment);
+              toast(res.status === 403 ? "برای ثبت نظر، این محصول را باید خریداری و تحویل گرفته باشی" : "نظرت در همین مرورگر ذخیره شد (حالت دمو)", res.status === 403 ? "error" : "info");
+            }
+            setReviewVersion((v) => v + 1);
+          });
           setReviewOpen(false);
-          toast("نظرت ثبت شد (در همین مرورگر)");
         }}
       />
     </Container>

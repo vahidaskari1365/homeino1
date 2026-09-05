@@ -192,6 +192,20 @@ export async function listVendorOrders(vendorId: string, page = 1, limit = 20) {
   return { items: rows, meta: { page, limit, total: rows.length, hasMore: false } };
 }
 
+/**
+ * Legal order status transitions. Anything else is a bug or an attack —
+ * e.g. "delivered" must never jump back to "pending".
+ */
+export const ORDER_TRANSITIONS: Record<string, readonly string[]> = {
+  pending: ["confirmed", "cancelled", "refunded"],
+  confirmed: ["processing", "cancelled", "refunded"],
+  processing: ["shipped", "cancelled", "refunded"],
+  shipped: ["delivered", "refunded"],
+  delivered: ["refunded"],
+  cancelled: [],
+  refunded: [],
+};
+
 export async function updateOrderStatus(
   orderId: string,
   toStatus: (typeof orderStatusEnum.enumValues)[number],
@@ -199,33 +213,48 @@ export async function updateOrderStatus(
   note?: string,
 ) {
   const db = getDb();
-  const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-  if (!order) throw ApiError.notFound("سفارش یافت نشد");
-
-  // cancelled orders release reserved inventory
-  if (toStatus === "cancelled" && order.status !== "cancelled") {
-    await releaseReservedStock(orderId);
-  }
-
-  await db
-    .update(orders)
-    .set({ status: toStatus })
-    .where(eq(orders.id, orderId));
-  await db.insert(orderStatusHistory).values({
-    orderId,
-    fromStatus: order.status,
-    toStatus,
-    actorId,
-    note,
+  // Status update + (optional) inventory release + history row all commit
+  // together — a half-applied transition would desync stock vs. status.
+  const updated = await db.transaction(async (tx) => {
+    const [order] = await tx.select().from(orders).where(eq(orders.id, orderId)).limit(1).for("update");
+    if (!order) throw ApiError.notFound("سفارش یافت نشد");
+    if (order.status === toStatus) return order;
+    const allowed = ORDER_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(toStatus)) {
+      throw new ApiError(
+        "INVALID_TRANSITION",
+        `تغییر وضعیت از «${order.status}» به «${toStatus}» مجاز نیست`,
+        422,
+      );
+    }
+    if (toStatus === "cancelled" || toStatus === "refunded") {
+      await releaseReservedStockTx(tx, orderId);
+    }
+    const [row] = await tx
+      .update(orders)
+      .set({ status: toStatus })
+      .where(eq(orders.id, orderId))
+      .returning();
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      fromStatus: order.status,
+      toStatus,
+      actorId,
+      note,
+    });
+    return row;
   });
-  return getOrderForUser(order.userId, orderId);
+  return getOrderForUser(updated.userId, orderId);
 }
 
-async function releaseReservedStock(orderId: string) {
-  const db = getDb();
-  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+/** Transaction handle type, derived from the actual db instance. */
+type DB = ReturnType<typeof getDb>;
+type Tx = Parameters<Parameters<DB["transaction"]>[0]>[0];
+
+async function releaseReservedStockTx(tx: Tx, orderId: string) {
+  const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
   for (const item of items) {
-    const [inv] = await db
+    const [inv] = await tx
       .select()
       .from(inventory)
       .where(
@@ -234,9 +263,10 @@ async function releaseReservedStock(orderId: string) {
           item.variantId ? eq(inventory.variantId!, item.variantId) : isNull(inventory.variantId),
         ),
       )
-      .limit(1);
+      .limit(1)
+      .for("update");
     if (inv) {
-      await db
+      await tx
         .update(inventory)
         .set({ reservedQuantity: Math.max(0, inv.reservedQuantity - item.quantity) })
         .where(eq(inventory.id, inv.id));

@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { creditAccounts, creditTransactions } from "@/db/schema";
+import { creditAccounts, creditTransactions, aiPricing } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 
 /**
@@ -154,6 +154,7 @@ export async function grantCredits(
 }
 
 export function priceOf(mode: string): number {
+  // Offline/demo fallback — the `ai_pricing` table (when seeded) is the truth.
   const base: Record<string, number> = {
     "room-redesign": 5,
     "prompt-to-design": 5,
@@ -162,6 +163,22 @@ export function priceOf(mode: string): number {
     "decor-suggest": 6,
     "full-concept": 8,
   };
-  // always read from DB when set; fallback is a sane default only
   return base[mode] ?? 5;
+}
+
+/** DB-backed price resolution with an honest in-code fallback. Never throws. */
+export async function resolvePrice(mode: string): Promise<number> {
+  if (!process.env.DATABASE_URL) return priceOf(mode);
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({ price: aiPricing.price })
+      .from(aiPricing)
+      .where(eq(aiPricing.action, mode))
+      .limit(1);
+    if (rows[0]?.price != null && rows[0].price > 0) return rows[0].price;
+  } catch {
+    // ai_pricing missing/unreachable → sane fallback
+  }
+  return priceOf(mode);
 }

@@ -6,7 +6,8 @@ describe("credit costs — single source of truth", () => {
   it("exposes the same packages on CREDIT_CONFIG and CREDIT_DISPLAY", () => {
     expect(CREDIT_DISPLAY).toBe(CREDIT_CONFIG);
     expect(CREDIT_CONFIG.startingBalance).toBe(120);
-    expect(CREDIT_CONFIG.buyPackages.map((p) => p.credits)).toEqual([100, 300, 800]);
+    // aligned with the server PACKS + credit_packages seed (single price list)
+    expect(CREDIT_CONFIG.buyPackages.map((p) => p.credits)).toEqual([50, 120, 300]);
   });
 
   it("keeps operation costs aligned between AI and ledger", () => {

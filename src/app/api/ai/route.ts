@@ -129,10 +129,23 @@ export async function POST(req: NextRequest) {
     // Never trust a client-supplied userId. When server-side credits are on,
     // identity comes only from the authenticated session.
     delete p.userId;
-    if (process.env.AI_SERVER_CREDITS === "1") {
+    // Real (paid) providers configured → generative actions MUST be
+    // authenticated. Sample/demo mode (no keys) stays open and free.
+    const hasRealProvider = Boolean(
+      process.env.GEMINI_API_KEY ||
+        process.env.OPENAI_API_KEY ||
+        process.env.LLM_BASE_URL ||
+        process.env.FREELLM_API_URL ||
+        process.env.ORALI_API_URL,
+    );
+    const AUTH_REQUIRED_ACTIONS = new Set(["generate", "edit", "inpaint", "pipeline"]);
+    if (process.env.AI_SERVER_CREDITS === "1" || (hasRealProvider && AUTH_REQUIRED_ACTIONS.has(action))) {
       try {
         const ctx = await requireUser(req);
         p.userId = ctx.user.id;
+        // Authenticated identity is a far better limiter key than a
+        // spoofable X-Forwarded-For header.
+        rateLimit(`ai:user:${ctx.user.id}`, { windowMs: 60_000, max: 20 });
       } catch (err) {
         const status = err instanceof ApiError ? err.status : 401;
         finish("error", { errorCode: "UNAUTHORIZED", action });

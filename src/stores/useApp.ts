@@ -89,7 +89,7 @@ export const useAuth = create<AuthState>()(
         }),
       logout: () => set({ user: isDev ? DEV_USER : null }),
     }),
-    { name: "homeino-auth" }
+    { name: "homeino-auth", skipHydration: true }
   )
 );
 
@@ -115,6 +115,8 @@ interface CreditState {
   consumedToday: number;
   /** Simple spend (legacy — no idempotency) */
   spend: (amount: number, reason: string) => boolean;
+  /** Adopt the SERVER balance after a real purchase (backend is authoritative). */
+  setBalance: (n: number) => void;
   /** Mock purchase — will be replaced by POST /api/credits/purchase */
   buy: (credits: number) => void;
   /** Real purchase flow with payment provider placeholder */
@@ -135,6 +137,7 @@ export const useCredits = create<CreditState>()(
         set((s) => ({ balance: s.balance - amount, history: [{ id: uid(), amount: -amount, reason, date: "اکنون" }, ...s.history] }));
         return true;
       },
+      setBalance: (n) => set({ balance: Math.max(0, Math.round(n)) }),
       buy: (credits) =>
         set((s) => ({ balance: s.balance + credits, history: [{ id: uid(), amount: credits, reason: "خرید اعتبار", date: "اکنون" }, ...s.history] })),
       purchase: async (pkg) => {
@@ -199,7 +202,7 @@ export const useCredits = create<CreditState>()(
         }
       },
     }),
-    { name: "homeino-credits" }
+    { name: "homeino-credits", skipHydration: true }
   )
 );
 
@@ -248,6 +251,7 @@ export const useChat = create<ChatState>()(
     }),
     {
       name: "homeino-chat",
+      skipHydration: true,
       // Only finished turns are persisted (never the live "…" bubble) and the
       // conversation is capped so localStorage stays small.
       partialize: (s) => ({

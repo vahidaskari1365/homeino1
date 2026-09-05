@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { aiAssets, aiDesigns, aiGenerations, aiUsage } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import { priceOf, spendCredits } from "./creditService";
+import { resolvePrice, spendCredits } from "./creditService";
 
 /**
  * Server-side AI persistence + credit charging.
@@ -59,7 +59,8 @@ export interface AiIntent {
  */
 export async function startGeneration(userId: string, input: CreateGenerationInput) {
   const db = getDb();
-  const cost = priceOf(input.mode);
+  // Price comes from ai_pricing (DB) when seeded; fallback map otherwise.
+  const cost = await resolvePrice(input.mode);
 
   // charge credits transactionally before doing any work
   await spendCredits(userId, cost, {

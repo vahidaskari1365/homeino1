@@ -10,6 +10,7 @@ import { useUi } from "@/stores/useApp";
 import { resolveCartLines, groupCartParcels } from "@/lib/marketplace";
 import { placeLocalOrder } from "@/data/localOrders";
 import { listSavedAddresses, addSavedAddress } from "@/data/localAddresses";
+import { syncCart, createServerOrder } from "@/lib/commerceClient";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useDataVersion } from "@/lib/useDataVersion";
 import { toFa, formatPrice, cn, fromFa } from "@/lib/utils";
@@ -33,6 +34,7 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState<{
     fullName: string; phone: string; city: string; line: string; postalCode: string;
   } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const lines = resolveCartLines(items);
   const parcels = groupCartParcels(lines, shipping === "express");
@@ -40,8 +42,34 @@ export default function CheckoutPage() {
   const shippingTotal = parcels.reduce((s, p) => s + p.shippingCost, 0);
   const total = subtotal + shippingTotal;
 
-  const next = () => {
+  const next = async () => {
     if (step < 2) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    setSubmitting(true);
+    // ---- Real backend first: sync the local cart (by slug) and create the
+    // order server-side (DB prices, inventory reservation, snapshots). Falls
+    // back to the honest local demo order when the server is unavailable.
+    const syncItems = lines.map((l) => ({ slug: l.product.slug, quantity: l.item.qty }));
+    try {
+      const sync = await syncCart(syncItems, shipping === "express" ? "express" : "post");
+      if (sync.ok) {
+        const order = await createServerOrder({
+          shippingAddress: { ...address, method: shipping, payMethod: pay },
+        });
+        if (order.ok) {
+          clear();
+          toast(`سفارش #${toFa(order.data.orderNumber)} در سرور ثبت شد`);
+          router.push(`/checkout/success?order=${order.data.orderNumber}`);
+          return;
+        }
+        if (order.status !== 0 && order.status !== 401 && order.status !== 403 && order.status !== 503) {
+          // Real server rejection (e.g. out of stock) — surface it honestly.
+          toast(order.message ?? "ثبت سفارش ناموفق بود", "error");
+          setSubmitting(false);
+          return;
+        }
+      }
+    } catch { /* network → demo fallback */ }
+    // ---- Demo fallback (sample mode, no DB / guest)
     const order = placeLocalOrder(items, shipping === "express", {
       address: address ?? undefined,
       payMethod: pay,
@@ -172,16 +200,17 @@ export default function CheckoutPage() {
             {step > 0 && <Button variant="ghost" onClick={() => setStep(step - 1)}>مرحله قبل</Button>}
             <Button
               className="flex-1"
+              disabled={submitting}
               onClick={() => {
                 if (step === 0) {
                   // Trigger the address form's submit so native `required` validation runs.
                   const submit = document.getElementById("address-submit") as HTMLButtonElement | null;
                   if (submit) { submit.click(); return; }
                 }
-                next();
+                void next();
               }}
             >
-              {step < 2 ? "مرحله بعد" : "ثبت نهایی سفارش"}
+              {submitting ? "در حال ثبت…" : step < 2 ? "مرحله بعد" : "ثبت نهایی سفارش"}
             </Button>
           </div>
         </div>

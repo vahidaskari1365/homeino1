@@ -8,6 +8,7 @@ import { Button, Spinner } from "@/components/ui/primitives";
 import { useAuth, useUi } from "@/stores/useApp";
 import { updateVendorStoreProfile } from "@/data/vendorSession";
 import { categories } from "@/data/categories";
+import { registerRequest } from "@/lib/commerceClient";
 import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
@@ -29,7 +30,7 @@ export default function RegisterPage() {
 
   const toggleCat = (slug: string) => setCatSlugs((p) => (p.includes(slug) ? p.filter((s) => s !== slug) : [...p, slug]));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
     if (name.trim().length < 3) return setErr("نام و نام خانوادگی را کامل وارد کن");
@@ -41,16 +42,34 @@ export default function RegisterPage() {
       if (catSlugs.length === 0) return setErr("حداقل یک دسته‌ی فعالیت انتخاب کن");
     }
     setLoading(true);
-    setTimeout(() => {
-      login(email, isProducer ? { name: brand, role: "vendor", brand } : { name });
-      if (isProducer) {
-        // The panel greets the vendor with the brand they registered — keeps
-        // the registration promise «پنل فروشنده فعال می‌شود» true in the demo.
-        updateVendorStoreProfile({ name: brand.trim(), city: city.trim() || undefined });
-      }
-      toast(isProducer ? "ثبت‌نام تولیدکننده انجام شد — پنل فروشنده‌ات فعال است" : "ثبت‌نام با موفقیت انجام شد");
-      router.push(isProducer ? "/vendor" : "/account");
-    }, 900);
+    // ---- Real backend first (Supabase auth + DB user row); the demo local
+    // session is the honest fallback when the server is unavailable.
+    const res = await registerRequest({
+      email,
+      password: pwd,
+      name: name.trim(),
+      isVendor: isProducer,
+      brandName: isProducer ? brand.trim() : undefined,
+    });
+    if (res.ok) {
+      login(email, isProducer ? { name: brand, role: "vendor", brand } : { name: name.trim() });
+    } else if (res.status !== 0 && res.status !== 503 && res.status !== 401 && res.status !== 404) {
+      setLoading(false);
+      setErr(res.message ?? "ثبت‌نام ناموفق بود");
+      return;
+    } // else: demo/local session below
+    if (isProducer) {
+      // The panel greets the vendor with the brand they registered — keeps
+      // the registration promise «پنل فروشنده فعال می‌شود» true in the demo.
+      updateVendorStoreProfile({ name: brand.trim(), city: city.trim() || undefined });
+    }
+    toast(
+      res.ok
+        ? (isProducer ? "ثبت‌نام تولیدکننده انجام شد — پنل فروشنده‌ات فعال است" : "ثبت‌نام با موفقیت انجام شد")
+        : "حالت دمو: حساب به‌صورت محلی ساخته شد",
+      res.ok ? "success" : "info",
+    );
+    router.push(isProducer ? "/vendor" : "/account");
   };
 
   return (
@@ -101,7 +120,7 @@ export default function RegisterPage() {
 
         <label className="flex items-start gap-2 text-xs text-ink-muted">
           <button type="button" onClick={() => setAgree(!agree)} className={cn("mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border", agree ? "border-terracotta bg-terracotta text-white" : "border-clay")}>{agree && <Check size={11} />}</button>
-          <span>قوانین و مقررات Homeino را می‌پذیرم.</span>
+          <span>قوانین و مقررات Homeino را می‌پذیرم. (<Link href="/terms" className="text-terracotta-deep underline" target="_blank">مشاهده</Link>)</span>
         </label>
 
         {err && <p className="text-sm text-danger">{err}</p>}

@@ -174,7 +174,7 @@ export async function matchingWorkflows(eventType: string) {
 export async function eventStats(windowHours = 24) {
   const store = await getStore();
   const since = new Date(Date.now() - windowHours * 3600_000);
-  const events = await store.listEvents({ since, limit: 5000 });
+  const events = await store.listEvents({ since, limit: 1000 });
   const byType = new Map<string, number>();
   for (const event of events) byType.set(event.eventType, (byType.get(event.eventType) ?? 0) + 1);
   return {

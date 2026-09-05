@@ -346,3 +346,66 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   Shared primitives that were referenced but never defined
+   (Modal/ConfirmDialog backdrops, icon buttons, form fields).
+   ============================================================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(16, 32, 26, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 34rem;
+  max-height: min(86vh, 46rem);
+  overflow-y: auto;
+  border-radius: 1.25rem;
+  background: var(--color-cream);
+  box-shadow: var(--shadow-lift);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 0.5rem;
+  color: var(--color-ink-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.icon-button:hover {
+  background: var(--color-ivory-2);
+  color: var(--color-ink);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.field-control {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-clay) 60%, transparent);
+  background: var(--color-cream);
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.field-control:focus {
+  border-color: var(--color-ink);
+}

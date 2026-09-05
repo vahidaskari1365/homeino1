@@ -154,3 +154,16 @@ export const creditUsage = pgTable("credit_usage", {
   credits: integer("credits").notNull(), operation: varchar("operation", { length: 120 }).notNull(), metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
   createdAt: createdAtColumn,
 }, t => [uniqueIndex("credit_usage_transaction_unique").on(t.transactionId), index("credit_usage_generation_idx").on(t.generationId)]);
+
+/** Newsletter leads (migration 202609060001). Write-only for clients via RLS;
+ *  readable by the service role (admin) only. Email OR Iranian mobile. */
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: id(),
+  email: varchar("email", { length: 254 }),
+  phone: varchar("phone", { length: 15 }),
+  source: varchar("source", { length: 40 }).notNull().default("footer"),
+  createdAt: createdAtColumn,
+}, t => [
+  uniqueIndex("newsletter_email_unique").on(t.email),
+  uniqueIndex("newsletter_phone_unique").on(t.phone),
+]);

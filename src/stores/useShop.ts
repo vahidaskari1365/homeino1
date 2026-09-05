@@ -35,7 +35,7 @@ export const useCart = create<CartState>()(
       clear: () => set({ items: [] }),
       count: () => cartCount(get().items),
     }),
-    { name: "homeino-cart" }
+    { name: "homeino-cart", skipHydration: true }
   )
 );
 
@@ -96,7 +96,7 @@ export const useWishlist = create<WishlistState>()(
         get().designs.length +
         get().stores.length,
     }),
-    { name: "homeino-wishlist" }
+    { name: "homeino-wishlist", skipHydration: true }
   )
 );
 
@@ -123,7 +123,7 @@ export const useCompare = create<CompareState>()(
       clear: () => set({ ids: [] }),
       has: (id) => get().ids.includes(id),
     }),
-    { name: "homeino-compare" }
+    { name: "homeino-compare", skipHydration: true }
   )
 );
 
@@ -146,7 +146,7 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
       },
       clear: () => set({ productIds: [] }),
     }),
-    { name: "homeino-recent" }
+    { name: "homeino-recent", skipHydration: true }
   )
 );
 
@@ -189,6 +189,6 @@ export const useCollections = create<CollectionsState>()(
       })),
       hasProduct: (collectionId, productId) => Boolean(get().collections.find((collection) => collection.id === collectionId)?.productIds.includes(productId)),
     }),
-    { name: "homeino-collections" },
+    { name: "homeino-collections", skipHydration: true },
   ),
 );

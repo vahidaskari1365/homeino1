@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Package, Truck, CheckCircle2, Clock, Ban, X, ChevronLeft, MapPin, CreditCard } from "lucide-react";
 import { Badge, EmptyState, Button, Modal } from "@/components/ui/primitives";
@@ -8,6 +8,7 @@ import { toFa, formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useDataVersion } from "@/lib/useDataVersion";
 import { listLocalOrders, cancelLocalOrder, orderDisplayStatus, STATUS_LABEL, PAY_LABEL, SHIPPING_LABEL, type LocalOrder, type OrderParcel } from "@/data/localOrders";
+import { fetchServerOrders, type ServerOrder } from "@/lib/commerceClient";
 import { parcelTimeline, destinationLine } from "@/lib/orderTracking";
 
 const STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = {
@@ -29,6 +30,18 @@ export default function OrdersPage() {
   // SSR (empty first, then the persisted list appears) — zero console mismatch.
   // `version` lets cancel re-read after a mutation.
   const orders = hydrated ? listLocalOrders() : [];
+  // Server orders (when the real backend is up) — shown above local demo ones.
+  const [serverOrders, setServerOrders] = useState<ServerOrder[]>([]);
+  useEffect(() => {
+    if (!hydrated) return;
+    let alive = true;
+    void fetchServerOrders().then((res) => {
+      if (alive && res.ok && Array.isArray(res.data.items) && res.data.items.length > 0) {
+        setServerOrders(res.data.items);
+      }
+    });
+    return () => { alive = false; };
+  }, [hydrated, version]);
 
   function cancel(order: LocalOrder) {
     const updated = cancelLocalOrder(order.id);
@@ -46,6 +59,20 @@ export default function OrdersPage() {
     <div className="space-y-4" data-orders-version={version}>
       <h1 className="font-display text-xl font-black text-ink">سفارش‌های من</h1>
       <p className="text-xs text-ink-muted">سفارش‌ها در همین مرورگر (دمو بدون دیتابیس) نگهداری می‌شوند؛ هر تغییری — از جمله لغو — همین‌جا ذخیره می‌شود.</p>
+      {serverOrders.length > 0 && (
+        <div className="card-surface p-5">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink"><CheckCircle2 size={15} className="text-success" /> سفارش‌های ثبت‌شده در سرور</h2>
+          <div className="space-y-2">
+            {serverOrders.map((o) => (
+              <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-clay/30 px-3 py-2 text-sm">
+                <span className="font-bold text-ink">#{toFa(o.orderNumber)}</span>
+                <span className="text-xs text-ink-muted">{o.status === "pending" ? "در انتظار پرداخت" : o.status === "confirmed" ? "تأیید شده" : o.status}</span>
+                <span className="font-bold text-ink">{toFa(formatPrice(o.total))} تومان</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {orders.length ? orders.map((order) => {
         const status = orderDisplayStatus(order);
         const St = STATUS_ICON[status];

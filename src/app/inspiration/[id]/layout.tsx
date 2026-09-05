@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo";
 import { getInspiration } from "@/data/inspirations";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -37,7 +37,7 @@ export default async function InspirationLayout({
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(structuredData) }}
       />
       {children}
     </>

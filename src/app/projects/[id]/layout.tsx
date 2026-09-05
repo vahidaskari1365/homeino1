@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { breadcrumbJsonLd, projectJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, projectJsonLd, jsonLdScript } from "@/lib/seo";
 import { getProject, projects } from "@/data/content";
 
 /** The [id] route accepts both the slug and the raw id (id-or-slug fix). */
@@ -65,7 +65,7 @@ export default async function ProjectLayout({
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(structuredData) }}
       />
       {children}
     </>
