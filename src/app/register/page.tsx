@@ -6,6 +6,7 @@ import { User, Mail, Lock, Phone, MapPin, Store, Factory, Check, Sparkles } from
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button, Spinner } from "@/components/ui/primitives";
 import { useAuth, useUi } from "@/stores/useApp";
+import { updateVendorStoreProfile } from "@/data/vendorSession";
 import { categories } from "@/data/categories";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +43,12 @@ export default function RegisterPage() {
     setLoading(true);
     setTimeout(() => {
       login(email, isProducer ? { name: brand, role: "vendor", brand } : { name });
-      toast(isProducer ? "ثبت‌نام تولیدکننده با موفقیت انجام شد" : "ثبت‌نام با موفقیت انجام شد");
+      if (isProducer) {
+        // The panel greets the vendor with the brand they registered — keeps
+        // the registration promise «پنل فروشنده فعال می‌شود» true in the demo.
+        updateVendorStoreProfile({ name: brand.trim(), city: city.trim() || undefined });
+      }
+      toast(isProducer ? "ثبت‌نام تولیدکننده انجام شد — پنل فروشنده‌ات فعال است" : "ثبت‌نام با موفقیت انجام شد");
       router.push(isProducer ? "/vendor" : "/account");
     }, 900);
   };

@@ -118,6 +118,20 @@ export function useDesignStudio() {
     if (presetSlug) { const p = products.find((x) => x.slug === presetSlug); if (p) { setPresetProduct(p); setSelected((s) => ({ ...s, [p.id]: p })); setTab("inspiration"); } } // eslint-disable-line react-hooks/set-state-in-effect
   }, [presetSlug]);
 
+  // CONTINUE DESIGN: ?session=<id> restores a saved design session (uploaded
+  // room photo + prompt + style) instead of silently opening an empty studio.
+  // Continuation restore — same single-line disable pattern as presetSlug above.
+  useEffect(() => {
+    const sid = sp.get("session");
+    if (!sid || imageBase64) return;
+    const session = useDesignSessions.getState().sessions.find((s) => s.id === sid);
+    if (!session) return;
+    if (session.beforeImage) { setImageBase64(session.beforeImage); rs.loadRoom(session.beforeImage, style === "office" ? "فضای اداری" : "پذیرایی"); } // eslint-disable-line react-hooks/set-state-in-effect
+    if (session.prompt) setPrompt(session.prompt);
+    if (session.style) setStyle(session.style);
+    toast("طراحی ذخیره‌شده بازیابی شد — از همین‌جا ادامه بده");
+  }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFile = useCallback((file: File, set: (v: string) => void = setImageBase64) => {
     if (!ALLOWED_TYPES.includes(file.type)) return toast("فقط JPG، PNG یا WEBP", "error");
     if (file.size > MAX_FILE_SIZE) return toast("حداکثر حجم تصویر ۱۰ مگابایت", "error");
@@ -512,7 +526,14 @@ export function useDesignStudio() {
   }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession]);
 
   const buyTheLook = useCallback(() => { if (!placedProducts.length) return; placedProducts.forEach((p) => addToCart(p.id)); toast("چیدمان به سبد اضافه شد"); }, [placedProducts, addToCart, toast]);
-  const handleSaveToWishlist = useCallback(() => { placedProducts.forEach((p) => wl.toggleProduct(p.id)); toast("طراحی ذخیره شد"); }, [placedProducts, wl, toast]);
+  const handleSaveToWishlist = useCallback(() => {
+    if (!placedProducts.length) return toast("اول محصولاتی در طرح قرار بده", "info");
+    // Idempotent add — the old toggle could silently REMOVE everything on a
+    // second click while the toast kept claiming it was saved.
+    let added = 0;
+    placedProducts.forEach((p) => { if (!wl.products.includes(p.id)) { wl.toggleProduct(p.id); added += 1; } });
+    toast(added > 0 ? `${added} محصول طرح به علاقه‌مندی‌ها اضافه شد` : "همه محصولات این طرح قبلاً ذخیره شده‌اند");
+  }, [placedProducts, wl, toast]);
 
   /** Clear the uploaded photo + every derived result (verbatim remove handler). */
   const removeImage = useCallback(() => {

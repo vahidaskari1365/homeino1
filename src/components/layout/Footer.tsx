@@ -8,8 +8,8 @@ import { categories } from "@/data/categories";
 const COLS = [
   { title: "کاوش", links: [["همه محصولات", "/products"], ["دسته دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["مجله", "/magazine"]] },
   { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دسته دوم", "/second-hand"]] },
-  { title: "حساب کاربری", links: [["پروفایل", "/account"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["طراحی‌های من", "/account/designs"]] },
-  { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/vendor"]] },
+  { title: "حساب کاربری", links: [["پروفایل", "/account/profile"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["آگهی‌های من", "/account/ads"], ["طراحی‌های من", "/account/designs"]] },
+  { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/register/vendor"]] },
 ];
 
 function NewsletterForm() {
@@ -30,6 +30,7 @@ function NewsletterForm() {
 }
 
 export function Footer() {
+  const [socialNote, setSocialNote] = useState(false);
   return (
     <footer className="mt-24 border-t border-clay/40 bg-ink text-cream/80">
       <Container className="py-14">
@@ -53,9 +54,10 @@ export function Footer() {
             <p className="mt-3 max-w-xs text-sm leading-6 text-cream/60">
               هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان. الهام، محصول، فروشگاه و طراحی با هوش مصنوعی.
             </p>
+            {socialNote && <p className="mt-2 text-xs text-gold-soft">شبکه‌های اجتماعی Homeino به‌زودی راه می‌افتند.</p>}
             <div className="mt-4 flex gap-2">
               {[AtSign, Send, Globe].map((Icon, i) => (
-                <span key={i} className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg bg-white/10 transition hover:bg-white/20"><Icon size={17} /></span>
+                <button key={i} type="button" aria-label="شبکه‌های اجتماعی" onClick={() => setSocialNote(true)} className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg bg-white/10 transition hover:bg-white/20"><Icon size={17} /></button>
               ))}
             </div>
             {/* Newsletter capture with incentive */}

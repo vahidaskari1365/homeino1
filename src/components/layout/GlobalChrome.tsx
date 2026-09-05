@@ -10,7 +10,7 @@ const ICONS = { success: CheckCircle2, error: XCircle, info: Info };
 
 /** Floating AI button + scroll-to-top + toast stack + compare bar. */
 export function GlobalChrome() {
-  const { aiPanelOpen, setAiPanel, toasts, dismissToast } = useUi();
+  const { setAiPanel, toasts, dismissToast } = useUi();
   const balance = useCredits((s) => s.balance);
   const cmpCount = useCompare((s) => s.ids.length);
   const [showTop, setShowTop] = useState(false);
@@ -71,7 +71,6 @@ export function GlobalChrome() {
         <Sparkles size={13} className="text-terracotta-deep" /> {toFa(balance)} اعتبار
       </Link>
 
-      {aiPanelOpen && null}
     </>
   );
 }

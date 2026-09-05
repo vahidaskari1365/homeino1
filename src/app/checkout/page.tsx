@@ -20,6 +20,9 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(0);
   const [shipping, setShipping] = useState("post");
   const [pay, setPay] = useState("online");
+  const [address, setAddress] = useState<{
+    fullName: string; phone: string; city: string; line: string; postalCode: string;
+  } | null>(null);
 
   const lines = resolveCartLines(items);
   const parcels = groupCartParcels(lines, shipping === "express");
@@ -29,7 +32,11 @@ export default function CheckoutPage() {
 
   const next = () => {
     if (step < 2) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-    const order = placeLocalOrder(items, shipping === "express");
+    const order = placeLocalOrder(items, shipping === "express", {
+      address: address ?? undefined,
+      payMethod: pay,
+      shippingMethod: shipping,
+    });
     clear();
     toast(`سفارش #${toFa(order.id)} ثبت شد و در «سفارش‌های من» ذخیره شد`);
     router.push(`/checkout/success?order=${order.id}`);
@@ -58,15 +65,32 @@ export default function CheckoutPage() {
         {/* form */}
         <div className="card-surface p-6">
           {step === 0 && (
-            <div className="space-y-4">
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                setAddress({
+                  fullName: String(fd.get("fullName") ?? ""),
+                  phone: String(fd.get("phone") ?? ""),
+                  city: String(fd.get("city") ?? ""),
+                  line: String(fd.get("address") ?? ""),
+                  postalCode: String(fd.get("postalCode") ?? ""),
+                });
+                next();
+              }}
+            >
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><MapPin size={18} /> نشانی تحویل</h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                {[["fullName", "نام و نام خانوادگی", "نام کامل"], ["phone", "شماره موبایل", "09xxxxxxxxx"], ["postalCode", "کد پستی", "کد پستی"]].map(([id, label, ph]) => (
-                  <div key={id}><label htmlFor={id} className="mb-1 block text-sm text-ink-muted">{label}</label><input id={id} name={id} required placeholder={ph} className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
-                ))}
+                <div><label htmlFor="fullName" className="mb-1 block text-sm text-ink-muted">نام و نام خانوادگی</label><input id="fullName" name="fullName" required placeholder="نام کامل" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+                <div><label htmlFor="phone" className="mb-1 block text-sm text-ink-muted">شماره موبایل</label><input id="phone" name="phone" required inputMode="tel" dir="ltr" placeholder="09xxxxxxxxx" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+                <div><label htmlFor="city" className="mb-1 block text-sm text-ink-muted">شهر</label><input id="city" name="city" required placeholder="شهر" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+                <div><label htmlFor="postalCode" className="mb-1 block text-sm text-ink-muted">کد پستی</label><input id="postalCode" name="postalCode" required inputMode="numeric" dir="ltr" placeholder="کد پستی" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
               </div>
               <div><label htmlFor="address" className="mb-1 block text-sm text-ink-muted">نشانی کامل</label><textarea id="address" name="address" required rows={2} placeholder="استان، شهر، خیابان، پلاک…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
-            </div>
+              {/* hidden submit — the footer button clicks it so native required validation runs */}
+              <button type="submit" id="address-submit" className="hidden" aria-hidden tabIndex={-1} />
+            </form>
           )}
           {step === 1 && (
             <div className="space-y-4">
@@ -94,7 +118,19 @@ export default function CheckoutPage() {
           )}
           <div className="mt-6 flex gap-3">
             {step > 0 && <Button variant="ghost" onClick={() => setStep(step - 1)}>مرحله قبل</Button>}
-            <Button className="flex-1" onClick={next}>{step < 2 ? "مرحله بعد" : "ثبت نهایی سفارش"}</Button>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                if (step === 0) {
+                  // Trigger the address form's submit so native `required` validation runs.
+                  const submit = document.getElementById("address-submit") as HTMLButtonElement | null;
+                  if (submit) { submit.click(); return; }
+                }
+                next();
+              }}
+            >
+              {step < 2 ? "مرحله بعد" : "ثبت نهایی سفارش"}
+            </Button>
           </div>
         </div>
 

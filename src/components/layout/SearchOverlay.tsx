@@ -6,6 +6,7 @@ import { Search, X, TrendingUp, Clock, ArrowLeft } from "lucide-react";
 import { useUi } from "@/stores/useApp";
 import { products } from "@/data/products";
 import { stores } from "@/data/stores";
+import { productsByCategory } from "@/data/products";
 import { categories } from "@/data/categories";
 import { styles } from "@/data/styles";
 import { toFa, faIncludes, formatPrice } from "@/lib/utils";
@@ -93,7 +94,7 @@ export function SearchOverlay() {
                   {categories.slice(0, 4).map((c) => (
                     <button key={c.id} onClick={() => go(`/category/${c.slug}`)} className="rounded-xl border border-clay/40 bg-ivory-2 p-3 text-right transition hover:border-ink">
                       <div className="text-sm font-medium text-ink">{c.name}</div>
-                      <div className="text-xs text-ink-muted">{toFa(c.productCount)} محصول</div>
+                      <div className="text-xs text-ink-muted">{toFa(productsByCategory(c.slug).length)} محصول</div>
                     </button>
                   ))}
                 </div>

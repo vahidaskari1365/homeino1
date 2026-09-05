@@ -8,7 +8,7 @@ import { Button, LogoBlock, Chip, Badge, Rating } from "@/components/ui/primitiv
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getStore } from "@/data/stores";
-import { productsByStore } from "@/data/products";
+import { resolvePublicStore, allStoreProductsPublic } from "@/data/vendorSession";
 import { getStorefrontProfile, reviewsForStore } from "@/data/storefronts";
 import { useWishlist } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
@@ -16,9 +16,12 @@ import { toFa } from "@/lib/utils";
 
 export default function StoreDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const store = getStore(slug);
-  if (!store) notFound();
-  const products = productsByStore(store!.id);
+  // The demo vendor's session edits (name/cover/logo/policies) and added
+  // products are merged here — what the vendor saves is what visitors see.
+  const base = getStore(slug);
+  if (!base) notFound();
+  const store = resolvePublicStore(base);
+  const products = allStoreProductsPublic(base.id);
   const [sort, setSort] = useState<"all" | "trending" | "discount">("all");
   const wl = useWishlist(); const { toast } = useUi();
   const profile = getStorefrontProfile(store!.id);

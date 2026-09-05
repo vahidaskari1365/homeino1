@@ -72,7 +72,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         <div className="absolute inset-0 flex flex-col justify-center p-8 text-cream">
           <h1 className="font-display text-3xl font-black sm:text-4xl">{category.name}</h1>
           <p className="mt-2 max-w-md text-cream/75">{category.description}</p>
-          <div className="mt-3 text-sm text-cream/60">{toFa(category.productCount)} محصول · {toFa(category.subcategories.length)} زیردسته</div>
+          <div className="mt-3 text-sm text-cream/60">{toFa(productsByCategory(category.slug).length)} محصول · {toFa(category.subcategories.length)} زیردسته</div>
         </div>
       </div>
 

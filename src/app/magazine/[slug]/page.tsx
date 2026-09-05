@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/primitives";
 import { getArticle, articles } from "@/data/content";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
+import { shareContent, buildShareUrl } from "@/lib/share";
 
 export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -32,7 +33,11 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
           {article!.content.map((p, i) => <p key={i}>{p}</p>)}
         </div>
         <div className="mt-8 flex items-center justify-between border-y border-clay/40 py-4">
-          <Button variant="outline" onClick={() => toast("لینک مقاله کپی شد", "info")}><Share2 size={16} /> اشتراک‌گذاری</Button>
+          <Button variant="outline" onClick={async () => {
+            const result = await shareContent({ title: article!.title, text: article!.excerpt, url: buildShareUrl(`/magazine/${article!.slug}`) });
+            if (result.method === "failed") toast("اشتراک‌گذاری انجام نشد", "error");
+            else toast(result.method === "native" ? "پنجره اشتراک‌گذاری باز شد" : "لینک مقاله کپی شد", "info");
+          }}><Share2 size={16} /> اشتراک‌گذاری</Button>
           <Link href="/magazine" className="inline-flex items-center gap-1 text-sm text-terracotta-deep"><ArrowRight size={15} /> بازگشت به مجله</Link>
         </div>
       </article>

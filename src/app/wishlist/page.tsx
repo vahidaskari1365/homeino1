@@ -7,6 +7,8 @@ import { FilterableProductGrid } from "@/components/products/FilterableProductGr
 import { Button, EmptyState } from "@/components/ui/primitives";
 import { StoreCard, InspirationCard } from "@/components/cards";
 import { useWishlist } from "@/stores/useShop";
+import { useDesignSessions } from "@/stores/useDesignSessions";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 import { getProductById } from "@/data/products";
 import { getStyle } from "@/data/styles";
 import { getInspiration } from "@/data/inspirations";
@@ -24,10 +26,20 @@ const TABS = [
 export default function WishlistPage() {
   const wl = useWishlist();
   const [tab, setTab] = useState<typeof TABS[number]["id"]>("products");
+  const hydrated = useHasHydrated();
+  const sessions = useDesignSessions((s) => s.sessions);
 
   const products = wl.products.map((id) => getProductById(id)).filter(Boolean);
   const insp = wl.inspirations.map((id) => getInspiration(id)).filter(Boolean);
-  const designs = wl.designs.map((id) => getAiDesign(id)).filter(Boolean);
+  // Saved AI designs: real persisted sessions first, then the fixture seeds —
+  // a saved ds_* id used to land in a black hole and never render.
+  const designs = [
+    ...(hydrated ? sessions.filter((s) => wl.designs.includes(s.id)).map((s) => ({ id: s.id, title: s.title, afterImage: s.afterImage, room: s.roomType })) : []),
+    ...wl.designs.flatMap((id) => {
+      const d = getAiDesign(id);
+      return d ? [{ id: d.id, title: d.title, afterImage: d.afterImage, room: d.room }] : [];
+    }),
+  ];
   const stores = wl.stores.map((id) => getStoreById(id)).filter(Boolean);
   const count = { products: products.length, inspirations: insp.length, designs: designs.length, stores: stores.length };
 
@@ -74,7 +86,7 @@ export default function WishlistPage() {
       {tab === "inspirations" && (insp.length ? <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">{insp.map((i, idx) => i && <InspirationCard key={i.id} insp={i} index={idx} />)}</div> : <EmptyState icon={<ImageIcon size={28} />} title="ایده‌ای ذخیره نکرده‌ای" action={<Link href="/inspiration"><Button>گالری الهام</Button></Link>} />)}
       {tab === "designs" && (designs.length ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {designs.map((d) => d && (
+          {designs.map((d) => (
             <Link key={d.id} href={`/ai/result/${d.id}`} className="card-surface overflow-hidden">
               <img src={d.afterImage} alt={d.title} className="aspect-video w-full object-cover" />
               <div className="p-4"><div className="text-xs text-ink-muted">{d.room}</div><div className="font-display font-bold text-ink">{d.title}</div></div>

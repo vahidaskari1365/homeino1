@@ -14,6 +14,8 @@ import { productsByStore, getProductById } from "./products";
 import { getStoreById } from "./stores";
 import { IMG } from "./media";
 import { PLATFORM } from "@/config/platform";
+import { readStoredOrders, advanceStoredParcel, parcelStatus, type LocalOrder } from "./localOrders";
+import type { Store } from "@/types";
 
 export type VendorOrderStatus = "processing" | "shipping" | "delivered" | "cancelled";
 
@@ -63,12 +65,15 @@ let profilePatch: {
 } = {};
 
 function seedOrders(): VendorOrder[] {
+  // All line items are st1 products — the st1 vendor must never see (or
+  // fulfil) another store's items. Ids stay clear of the buyer-side seed
+  // range (102456/102401/102389) so the two worlds never double-count.
   const price = (productId: string, fallback: number) => getProductById(productId)?.price ?? fallback;
   return [
-    { id: "102456", customer: "نگار م.", date: "۱۴۰۳/۰۸/۱۵", status: "delivered", lines: [{ productId: "p1", qty: 1, price: price("p1", 48500000) }, { productId: "p15", qty: 1, price: price("p15", 1750000) }] },
+    { id: "102457", customer: "نگار م.", date: "۱۴۰۳/۰۸/۱۵", status: "delivered", lines: [{ productId: "p1", qty: 1, price: price("p1", 48500000) }, { productId: "p4", qty: 1, price: price("p4", 63000000) }] },
     { id: "102455", customer: "آرش ر.", date: "۱۴۰۳/۰۸/۱۴", status: "shipping", lines: [{ productId: "p2", qty: 1, price: price("p2", 18900000) }] },
     { id: "102454", customer: "سارا ک.", date: "۱۴۰۳/۰۸/۱۳", status: "processing", lines: [{ productId: "p33", qty: 1, price: price("p33", 62000000) }] },
-    { id: "102453", customer: "محمد ت.", date: "۱۴۰۳/۰۸/۱۲", status: "processing", lines: [{ productId: "p3", qty: 1, price: price("p3", 7800000) }] },
+    { id: "102453", customer: "محمد ت.", date: "۱۴۰۳/۰۸/۱۲", status: "processing", lines: [{ productId: "p2", qty: 1, price: price("p2", 18900000) }] },
     { id: "102451", customer: "نگین ش.", date: "۱۴۰۳/۰۸/۱۰", status: "delivered", lines: [{ productId: "p4", qty: 1, price: price("p4", 63000000) }] },
     { id: "102448", customer: "حسین ق.", date: "۱۴۰۳/۰۸/۰۶", status: "delivered", lines: [{ productId: "p1", qty: 1, price: price("p1", 48500000) }, { productId: "p2", qty: 1, price: price("p2", 18900000) }] },
   ];
@@ -91,10 +96,13 @@ export function vendorProductCount(): number {
   return vendorProducts.length;
 }
 
+let skuSeq = 0;
+
 export function addVendorProduct(draft: VendorDraftProduct) {
   const store = getStoreById(VENDOR_ID);
   const id = `vp-${Date.now().toString(36)}`;
-  const sku = `NM-${String(vendorProducts.length + 1).padStart(3, "0")}`;
+  skuSeq += 1;
+  const sku = `NM-${String(skuSeq + vendorProducts.length).padStart(3, "0")}`;
   const product: (typeof vendorProducts)[number] = {
     id,
     sku,
@@ -144,10 +152,51 @@ export function removeVendorProduct(id: string) {
 }
 
 // ------------------------------------------------------------
-// Orders — derived state + lifecycle
+// Orders — derived state + lifecycle + buyer bridge
 // ------------------------------------------------------------
 export function listVendorOrders(): { order: VendorOrder; total: number; storeName: string }[] {
   return orders.map((order) => ({ order, total: orderTotal(order), storeName: getStoreById(VENDOR_ID)?.name ?? "فروشگاه من" }));
+}
+
+export interface VendorOrderRow {
+  order: VendorOrder;
+  total: number;
+  storeName: string;
+  /** true = placed by a real buyer in this browser (localStorage), so the
+   *  vendor's status changes write straight back into the buyer's tracking. */
+  fromBuyer?: boolean;
+}
+
+/** Session seeds + buyer-placed orders whose st1 parcel arrives here.
+ *  Client-side only — server render simply gets the seeds. */
+export function listVendorOrdersWithBuyers(): VendorOrderRow[] {
+  const rows: VendorOrderRow[] = listVendorOrders().map((row) => ({ ...row }));
+  if (typeof window === "undefined") return rows;
+  let buyerOrders: LocalOrder[] = [];
+  try {
+    buyerOrders = readStoredOrders();
+  } catch {
+    buyerOrders = [];
+  }
+  for (const buyerOrder of buyerOrders) {
+    for (const parcel of buyerOrder.parcels) {
+      if (parcel.storeId !== VENDOR_ID) continue;
+      const status = parcelStatus(buyerOrder, parcel);
+      rows.push({
+        order: {
+          id: buyerOrder.id,
+          customer: buyerOrder.address?.fullName || "خریدار Homeino",
+          date: buyerOrder.faDate,
+          status,
+          lines: parcel.lines.map((line) => ({ productId: line.productId, qty: line.qty, price: line.price })),
+        },
+        total: parcel.lines.reduce((sum, line) => sum + line.price * line.qty, 0),
+        storeName: getStoreById(VENDOR_ID)?.name ?? "فروشگاه من",
+        fromBuyer: true,
+      });
+    }
+  }
+  return rows;
 }
 
 export function nextOrderStatus(status: VendorOrderStatus): VendorOrderStatus {
@@ -158,17 +207,31 @@ export function nextOrderStatus(status: VendorOrderStatus): VendorOrderStatus {
 
 export function advanceVendorOrder(id: string): VendorOrderStatus | null {
   const target = orders.find((order) => order.id === id);
-  if (!target) return null;
-  const next = nextOrderStatus(target.status);
-  if (next !== target.status) {
-    orders = orders.map((order) => (order.id === id ? { ...order, status: next } : order));
+  if (target) {
+    const next = nextOrderStatus(target.status);
+    if (next !== target.status) {
+      orders = orders.map((order) => (order.id === id ? { ...order, status: next } : order));
+    }
+    return next;
   }
-  return next;
+  // Not a seed row → it is a buyer-placed order in this browser. Advance the
+  // st1 parcel in localStorage so the buyer's tracking updates instantly.
+  return advanceStoredParcel(id, VENDOR_ID);
 }
 
-export function vendorStats() {
-  const active = orders.filter((order) => order.status !== "cancelled");
-  const delivered = orders.filter((order) => order.status === "delivered");
+export function vendorStats(includeBuyers = false) {
+  // includeBuyers=true merges buyer-placed orders (localStorage) into the
+  // sales math — call it only after hydration (client) to avoid SSR drift.
+  const allOrders: VendorOrder[] = includeBuyers
+    ? [
+        ...orders,
+        ...listVendorOrdersWithBuyers()
+          .filter((row) => row.fromBuyer && !orders.some((seed) => seed.id === row.order.id))
+          .map((row) => row.order),
+      ]
+    : orders;
+  const active = allOrders.filter((order) => order.status !== "cancelled");
+  const delivered = allOrders.filter((order) => order.status === "delivered");
   const monthSales = active.reduce((sum, order) => sum + orderTotal(order), 0);
   const pendingOrders = active.filter((order) => order.status === "processing").length;
   return {
@@ -224,11 +287,46 @@ export function updateVendorStoreProfile(patch: {
   if (patch.description !== undefined) next.description = patch.description;
   if (patch.city !== undefined && patch.city.trim()) next.city = patch.city.trim();
   if (patch.phone !== undefined && patch.phone.trim()) next.phone = patch.phone.trim();
-  if (patch.cover !== undefined) next.cover = patch.cover;
+  // An empty cover would break the public page image — fall back to the
+  // fixture cover instead of storing "".
+  if (patch.cover !== undefined && patch.cover.trim()) next.cover = patch.cover.trim();
   if (patch.logoChar !== undefined && patch.logoChar.trim()) next.logoChar = patch.logoChar.trim();
   if (patch.logoColor !== undefined && patch.logoColor.trim()) next.logoColor = patch.logoColor.trim();
   if (patch.shippingPolicy !== undefined) next.shippingPolicy = patch.shippingPolicy;
   if (patch.returnPolicy !== undefined) next.returnPolicy = patch.returnPolicy;
   profilePatch = next;
   return vendorStoreProfile();
+}
+
+// ------------------------------------------------------------
+// PUBLIC MIRROR — vendor edits/products surface on the public site
+// ------------------------------------------------------------
+
+/** The public store record with the vendor's session edits applied. */
+export function resolvePublicStore(store: Store): Store {
+  if (store.id !== VENDOR_ID) return store;
+  return {
+    ...store,
+    name: profilePatch.name ?? store.name,
+    description: profilePatch.description ?? store.description,
+    city: profilePatch.city ?? store.city,
+    cover: profilePatch.cover ?? store.cover,
+    logo: profilePatch.logoChar ?? store.logo,
+    logoColor: profilePatch.logoColor ?? store.logoColor,
+    shippingPolicy: profilePatch.shippingPolicy ?? store.shippingPolicy,
+    returnPolicy: profilePatch.returnPolicy ?? store.returnPolicy,
+  };
+}
+
+/** Store products including the vendor's session-added products (st1). */
+export function allStoreProductsPublic(storeId: string): ReturnType<typeof productsByStore> {
+  const base = productsByStore(storeId);
+  if (storeId !== VENDOR_ID) return base;
+  const baseIds = new Set(base.map((product) => product.id));
+  return [...vendorProducts.filter((product) => !baseIds.has(product.id)), ...base];
+}
+
+/** Resolve a vendor-added product by id or slug (for /products/[slug]). */
+export function findVendorProductPublic(idOrSlug: string): ReturnType<typeof productsByStore>[number] | undefined {
+  return vendorProducts.find((product) => product.id === idOrSlug || product.slug === idOrSlug);
 }

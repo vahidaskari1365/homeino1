@@ -92,7 +92,7 @@ export default function CollectionsPage() {
                     </div>
                   </div>
                 </>
-              ) : <EmptyState icon={<FolderHeart size={28} />} title="این کالکشن هنوز خالی است" desc="از پیشنهادهای پایین شروع کن یا در صفحه محصول «ذخیره در کالکشن» را بزن." />}
+              ) : <EmptyState icon={<FolderHeart size={28} />} title="این کالکشن هنوز خالی است" desc="از پیشنهادهای پایین شروع کن یا محصولات را از همین صفحه به کالکشن اضافه کن." />}
 
               {addCandidates.length > 0 && (
                 <div className="mt-10 border-t border-clay/35 pt-7">

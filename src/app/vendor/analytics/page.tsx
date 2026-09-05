@@ -2,11 +2,22 @@
 import { Percent, Wallet, Info } from "lucide-react";
 import { Badge } from "@/components/ui/primitives";
 import { toFa, formatPrice } from "@/lib/utils";
-import { vendorStats } from "@/data/vendorSession";
+import { useHasHydrated } from "@/lib/useHasHydrated";
+import { vendorStats, listVendorOrdersWithBuyers } from "@/data/vendorSession";
 import { PLATFORM } from "@/config/platform";
 
 export default function VendorAnalyticsPage() {
-  const stats = vendorStats();
+  const hydrated = useHasHydrated();
+  // Money cards = real orders (session seeds + buyer-placed ones after hydration).
+  const stats = vendorStats(hydrated);
+  const rows = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);
+  // Bars derive from the 12 most recent order totals — not a hardcoded array.
+  const bars = (() => {
+    const totals = rows.map(({ total }) => total).slice(0, 12);
+    if (!totals.length) return [];
+    const max = Math.max(...totals);
+    return totals.map((total) => Math.max(10, Math.round((total / max) * 100)));
+  })();
   return (
     <div className="space-y-5">
       <h1 className="font-display text-xl font-black text-ink">تحلیل و گزارش</h1>
@@ -34,11 +45,11 @@ export default function VendorAnalyticsPage() {
       <div className="card-surface p-6">
         <h3 className="mb-4 font-display font-bold text-ink">روند فروش</h3>
         <div className="flex h-48 items-end justify-between gap-1.5">
-          {[35, 60, 45, 75, 50, 85, 65, 95, 70, 80, 55, 90].map((h, i) => (
+          {bars.map((h, i) => (
             <div key={i} className="group relative flex-1 rounded-t bg-gradient-to-t from-ink to-ink-soft transition-all hover:from-terracotta hover:to-terracotta-deep" style={{ height: `${h}%` }}><span className="absolute -top-5 right-1/2 translate-x-1/2 text-[10px] text-ink-muted opacity-0 group-hover:opacity-100">{toFa(h)}</span></div>
           ))}
         </div>
-        <p className="mt-3 text-center text-xs text-ink-muted">آمار فروش ۱۲ ماه اخیر (داده نمونه)</p>
+        <p className="mt-3 text-center text-xs text-ink-muted">ارتفاع میله‌ها از مبلغ ۱۲ سفارش آخر همین فروشگاه محاسبه می‌شود</p>
       </div>
 
       <div className="flex items-start gap-2 rounded-xl border border-clay/40 bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">

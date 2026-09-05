@@ -3,15 +3,28 @@ import Link from "next/link";
 import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck } from "lucide-react";
 import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
 import { toFa, formatCompactFa, formatPrice } from "@/lib/utils";
-import { vendorStats, listVendorOrders, vendorStoreProfile, vendorProductCount } from "@/data/vendorSession";
+import { useHasHydrated } from "@/lib/useHasHydrated";
+import { vendorStats, listVendorOrdersWithBuyers, vendorStoreProfile, vendorProductCount, type VendorOrderRow } from "@/data/vendorSession";
 
 const ORDER_STATUS_LABEL: Record<string, string> = { delivered: "تحویل شده", shipping: "در حال ارسال", processing: "در حال پردازش", cancelled: "لغو شده" };
 const ORDER_STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = { delivered: "success", shipping: "accent", processing: "gold", cancelled: "dark" };
 
 export default function VendorDashboard() {
-  const stats = vendorStats();
+  const hydrated = useHasHydrated();
+  // Session seeds render first; buyer-placed orders merge in after hydration
+  // so SSR and the first client paint stay identical (zero console mismatch).
+  const stats = vendorStats(hydrated);
   const profile = vendorStoreProfile();
-  const recent = listVendorOrders().slice(0, 4);
+  const rows: VendorOrderRow[] = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);
+  const recent = rows.slice(0, 4);
+  // Bars derive from the 12 most recent order totals — not a hardcoded array.
+  const bars = (() => {
+    const totals = rows.map(({ total }) => total);
+    const last12 = totals.slice(0, 12);
+    if (!last12.length) return [];
+    const max = Math.max(...last12);
+    return last12.map((total) => Math.max(12, Math.round((total / max) * 100)));
+  })();
   const tiles = [
     { label: "فروش این ماه", value: `${toFa(formatCompactFa(stats.monthSales))} ت`, icon: DollarSign },
     { label: "سفارش‌ها", value: toFa(stats.ordersCount), icon: ShoppingCart },
@@ -56,11 +69,11 @@ export default function VendorDashboard() {
         <div className="card-surface p-6">
           <h3 className="mb-4 font-display font-bold text-ink">عملکرد فروش</h3>
           <div className="flex h-40 items-end justify-between gap-1.5">
-            {[40, 65, 50, 80, 55, 90, 70, 100, 75, 85, 60, 95].map((h, i) => (
-              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-terracotta to-terracotta-soft transition-all hover:opacity-80" style={{ height: `${h}%` }} title={`ماه ${toFa(i + 1)}`} />
+            {bars.map((h, i) => (
+              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-terracotta to-terracotta-soft transition-all hover:opacity-80" style={{ height: `${h}%` }} title={`سفارش ${toFa(i + 1)}`} />
             ))}
           </div>
-          <div className="mt-3 text-center text-xs text-ink-muted">آمار ۱۲ ماه اخیر (نمونه)</div>
+          <div className="mt-3 text-center text-xs text-ink-muted">ارتفاع میله‌ها از مبلغ ۱۲ سفارش آخر محاسبه می‌شود</div>
           <div className="mt-4 space-y-2 border-t border-clay/40 pt-3 text-xs text-ink-muted">
             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><CheckCircle2 size={13} className="text-sage" /> تحویل‌شده</span><b className="text-ink">{toFa(stats.deliveredCount)}</b></div>
             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Truck size={13} className="text-terracotta-deep" /> در حال ارسال</span><b className="text-ink">{toFa(stats.shippingCount)}</b></div>

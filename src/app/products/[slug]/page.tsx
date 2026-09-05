@@ -9,6 +9,7 @@ import { Button, Badge, Rating, Price, EmptyState, LogoBlock, Modal } from "@/co
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
+import { findVendorProductPublic } from "@/data/vendorSession";
 import { getStyle } from "@/data/styles";
 import { getStoreById } from "@/data/stores";
 import { offersForProduct, getBestOffer } from "@/data/offers";
@@ -21,13 +22,15 @@ import type { Review } from "@/types";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const product = getProduct(slug);
+  // Catalog first, then the vendor panel's session-added products (vp-*).
+  const product = getProduct(slug) ?? findVendorProductPublic(slug);
   if (!product) notFound();
 
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "specs" | "reviews">("desc");
   const [seller, setSeller] = useState<string | undefined>(() => getBestOffer(product!.id)?.id);
+  const [selectedColor, setSelectedColor] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
   const hydrated = useHasHydrated();
   const productId = product!.id;
@@ -113,7 +116,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               <div className="mt-4 rounded-xl border border-clay/40 bg-ivory-2 p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-bold text-ink">{toFa(offerCount)} فروشنده برای این محصول</span>
-                  <span className="flex items-center gap-1 text-[10px] text-success"><Check size={11} /> بهترین قیمت selected</span>
+                  <span className="flex items-center gap-1 text-[10px] text-success"><Check size={11} /> بهترین قیمت انتخاب شد</span>
                 </div>
                 <div className="space-y-1.5">
                   {productOffers.filter((o) => o.inStock).sort((a, b) => (a.price + a.shippingCost) - (b.price + b.shippingCost)).map((offer, idx) => {
@@ -141,12 +144,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               </div>
             )}
 
-            {/* colors */}
+            {/* colors — actually selectable */}
             <div className="mt-5">
-              <div className="mb-2 text-sm font-medium text-ink">رنگ: <span className="text-ink-muted">{product!.colors[0]?.name}</span></div>
+              <div className="mb-2 text-sm font-medium text-ink">رنگ: <span className="text-ink-muted">{product!.colors[selectedColor]?.name ?? "—"}</span></div>
               <div className="flex gap-2">
-                {product!.colors.map((c) => (
-                  <span key={c.name} title={c.name} className="h-8 w-8 cursor-pointer rounded-full border-2 border-clay/50 transition hover:border-ink" style={{ background: c.hex }} />
+                {product!.colors.map((c, i) => (
+                  <button key={c.name} type="button" title={c.name} aria-label={`رنگ ${c.name}`} aria-pressed={selectedColor === i} onClick={() => setSelectedColor(i)} className={cn("h-8 w-8 rounded-full border-2 transition", selectedColor === i ? "border-ink" : "border-clay/50 hover:border-ink")} style={{ background: c.hex }} />
                 ))}
               </div>
             </div>
@@ -170,7 +173,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
             {/* actions */}
             <div className="mt-5 flex gap-2">
-              <Button size="lg" className="flex-1" disabled={!product!.inStock} onClick={() => { addToCart(product!.id, qty); toast("به سبد خرید اضافه شد"); }}>
+              <Button size="lg" className="flex-1" disabled={!product!.inStock} onClick={() => { addToCart(product!.id, qty, bestOffer?.id); toast("به سبد خرید اضافه شد"); }}>
                 <ShoppingBag size={18} /> افزودن به سبد
               </Button>
               <Button size="lg" variant="outline" onClick={() => { wl.toggleProduct(product!.id); toast(wished ? "حذف شد" : "به علاقه‌مندی اضافه شد"); }} className={cn(wished && "border-terracotta text-terracotta-deep")}>
@@ -312,7 +315,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <p className="text-[10px] text-ink-muted">{product!.brand}</p>
             <p className="font-display text-sm font-black text-ink">{toFa(formatPrice(displayPrice))} <span className="text-[10px] font-normal text-ink-muted">ت</span></p>
           </div>
-          <button onClick={() => { addToCart(product!.id, qty); toast("به سبد خرید اضافه شد"); }} className="btn-accent flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold"><ShoppingBag size={15} /> افزودن به سبد</button>
+          <button onClick={() => { addToCart(product!.id, qty, bestOffer?.id); toast("به سبد خرید اضافه شد"); }} className="btn-accent flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold"><ShoppingBag size={15} /> افزودن به سبد</button>
           <button onClick={() => { wl.toggleProduct(product!.id); toast(wished ? "حذف شد" : "به علاقه‌مندی اضافه شد"); }} className={cn("grid h-10 w-10 place-items-center rounded-xl border border-clay/50", wished && "border-terracotta text-terracotta-deep")} aria-label="علاقه‌مندی"><Heart size={17} className={cn(wished && "fill-terracotta")} /></button>
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 import { use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Download, Share2, Heart, RotateCcw, Edit3, Sparkles, ShoppingBag, Wand2, History } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { Button, Badge, LogoBlock, EmptyState } from "@/components/ui/primitives";
@@ -8,7 +9,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { BeforeAfterSlider } from "@/components/ui/BeforeAfterSlider";
 import { getProductById } from "@/data/products";
 import { getStoreById } from "@/data/stores";
-import { useUi, useChat, useCredits } from "@/stores/useApp";
+import { useUi, useCredits } from "@/stores/useApp";
 import { useCart, useWishlist } from "@/stores/useShop";
 import { useDesignSessions } from "@/stores/useDesignSessions";
 import { aiService } from "@/services/ai";
@@ -37,13 +38,16 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
   const saveSession = useDesignSessions((s) => s.saveSession);
   const hydrated = useHasHydrated();
   const design = hydrated ? sessions.find((s) => s.id === id) : undefined;
-  const { toast } = useUi(); const { push } = useChat();
+  const { toast } = useUi();
+  const router = useRouter();
   const addToCart = useCart((s) => s.add); const wl = useWishlist();
   const [busy, setBusy] = useState(false);
 
   const onEdit = () => {
-    push({ role: "user", content: "این طراحی رو کمی گرم‌تر کن" });
-    toast("پنجره‌ی ویرایش AI باز شد");
+    // REAL continue-editing: reopens the studio with this session restored
+    // (was: a fake toast that claimed an editor opened).
+    if (design) router.push(`/ai/design?session=${design.id}`);
+    else toast("اول صبر کن طراحی بارگذاری شود", "info");
   };
 
   const onDownload = () => {

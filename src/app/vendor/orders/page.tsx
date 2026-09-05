@@ -1,35 +1,40 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Inbox } from "lucide-react";
 import { Badge, Button } from "@/components/ui/primitives";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useUi } from "@/stores/useApp";
-import { listVendorOrders, advanceVendorOrder } from "@/data/vendorSession";
+import { useHasHydrated } from "@/lib/useHasHydrated";
+import { listVendorOrdersWithBuyers, advanceVendorOrder, type VendorOrderRow } from "@/data/vendorSession";
 import { getProductById } from "@/data/products";
 
 const LABEL: Record<string, string> = { processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده", cancelled: "لغو شده" };
 const TONE: Record<string, "gold" | "accent" | "success" | "dark"> = { processing: "gold", shipping: "accent", delivered: "success", cancelled: "dark" };
-const FILTERS = ["all", "processing", "shipping", "delivered"] as const;
-const FILTER_FA: Record<string, string> = { all: "همه", processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده" };
+const FILTERS = ["all", "processing", "shipping", "delivered", "cancelled"] as const;
+const FILTER_FA: Record<string, string> = { all: "همه", processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده", cancelled: "لغو شده" };
 
 export default function VendorOrdersPage() {
   const { toast } = useUi();
+  const hydrated = useHasHydrated();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [items, setItems] = useState(listVendorOrders());
+  const [version, setVersion] = useState(0);
+  // Seeds render on the first paint; buyer-placed orders (localStorage) merge
+  // in after hydration — the established hydration-safe pattern.
+  const items: VendorOrderRow[] = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);
 
   const list = items.filter(({ order }) => filter === "all" || order.status === filter);
 
   function advance(orderId: string) {
     const next = advanceVendorOrder(orderId);
-    setItems(listVendorOrders());
+    setVersion((v) => v + 1);
     const label = next ? LABEL[next] : null;
-    toast(label ? `وضعیت سفارش #${toFa(orderId)} به «${label}» تغییر کرد` : "وضعیت تغییر نکرد", label ? "success" : "info");
+    toast(label ? `وضعیت سفارش #${toFa(orderId)} به «${label}» تغییر کرد — خریدار همان لحظه در «سفارش‌های من» می‌بیند` : "وضعیت تغییر نکرد", label ? "success" : "info");
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-orders-version={version}>
       <h1 className="font-display text-xl font-black text-ink">سفارش‌ها</h1>
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((key) => (
@@ -40,7 +45,7 @@ export default function VendorOrdersPage() {
       {list.length === 0 && <div className="card-surface p-10 text-center text-sm text-ink-muted">سفارشی با این وضعیت نیست.</div>}
 
       <div className="space-y-3">
-        {list.map(({ order, total }) => {
+        {list.map(({ order, total, fromBuyer }) => {
           const open = expanded === order.id;
           return (
             <div key={order.id} className="card-surface p-4">
@@ -51,7 +56,7 @@ export default function VendorOrdersPage() {
                   <Badge tone={TONE[order.status]}>{LABEL[order.status]}</Badge>
                 </button>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-ink-muted">{order.customer} · {order.date} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</span>
+                  <span className="text-xs text-ink-muted">{fromBuyer && <span className="ml-1 rounded bg-terracotta/10 px-1.5 py-0.5 text-[10px] font-bold text-terracotta-deep">سفارش خریدار</span>}{order.customer} · {order.date} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</span>
                   <span className="font-bold text-ink">{toFa(formatPrice(total))} ت</span>
                 </div>
               </div>
@@ -86,8 +91,11 @@ export default function VendorOrdersPage() {
           );
         })}
       </div>
-      <p className="text-[11px] text-ink-muted">
-        این سفارش‌ها مربوط به فروشگاه نمونهٔ {listVendorOrders()[0]?.storeName ?? "شما"} هستند و تغییر وضعیت فقط در حافظهٔ همین دمو ذخیره می‌شود. — <Link href="/account/orders" className="underline">سفارش‌های من (خریدار) ←</Link>
+      <p className="flex items-start gap-2 text-[11px] leading-6 text-ink-muted">
+        <Inbox size={13} className="mt-0.5 shrink-0" />
+        <span>
+          سفارش‌هایی که خریداران در همین مرورگر ثبت می‌کنند بلافاصله همین‌جا می‌آیند؛ با دکمهٔ «ارسال شد / تحویل شد»، وضعیت دقیقاً در «سفارش‌های من» همان خریدار به‌روز می‌شود. — <Link href="/account/orders" className="underline">سفارش‌های من (خریدار) ←</Link>
+        </span>
       </p>
     </div>
   );

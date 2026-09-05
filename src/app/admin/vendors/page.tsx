@@ -38,7 +38,7 @@ export default function AdminVendorsPage() {
                   <td className="p-3"><div className="flex items-center gap-2"><LogoBlock char={s.logo} color={s.logoColor} size={32} /><span className="font-medium text-ink">{s.name}</span></div></td>
                   <td className="p-3 text-ink">{toFa(productsByStore(s.id).length)}</td>
                   <td className="p-3 text-ink">{toFa(s.rating.toFixed(1))}</td>
-                  <td className="p-3">{s.verified ? <Badge tone="success">تأیید شده</Badge> : <Badge tone="gold">در انتظار</Badge>}</td>
+                  <td className="p-3">{s.verified ? <Badge tone="success">تأیید شده</Badge> : <Badge tone="gold">مدارک در حال بررسی</Badge>}</td>
                 </tr>
               ))}
             </tbody>

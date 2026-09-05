@@ -8,6 +8,11 @@ import { Button, Spinner } from "@/components/ui/primitives";
 import { useAuth, useUi } from "@/stores/useApp";
 import { cn } from "@/lib/utils";
 
+function readRememberFlag(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return window.localStorage.getItem("homeino-remember") === "1"; } catch { return false; }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth(); const { toast } = useUi();
@@ -16,6 +21,10 @@ export default function LoginPage() {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  // Remember-me is a real persisted flag, derived (not effect-set) to keep
+  // the first paint identical to SSR.
+  const [rememberOverride, setRememberOverride] = useState<boolean | null>(null);
+  const remember = rememberOverride ?? Boolean(readRememberFlag());
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +48,7 @@ export default function LoginPage() {
           </div>
         </div>
         <div className="flex justify-between text-sm">
-          <label className="flex items-center gap-2 text-ink-muted"><input type="checkbox" className="accent-terracotta" /> مرا به خاطر بسپار</label>
+          <label className="flex items-center gap-2 text-ink-muted"><input type="checkbox" checked={remember} onChange={(e) => { setRememberOverride(e.target.checked); try { window.localStorage.setItem("homeino-remember", e.target.checked ? "1" : "0"); } catch { /* private mode */ } }} className="accent-terracotta" /> مرا به خاطر بسپار</label>
           <Link href="/forgot-password" className="text-terracotta-deep hover:underline">رمز را فراموش کرده‌ای؟</Link>
         </div>
         {err && <p className="text-sm text-danger">{err}</p>}

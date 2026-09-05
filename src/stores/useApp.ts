@@ -49,6 +49,9 @@ interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   login: (email: string, opts?: { name?: string; role?: Role; brand?: string }) => void;
+  /** Patch the logged-in user's own profile (name/city/phone) — persisted.
+   *  Avatar re-derives from the name like login does. */
+  updateProfile: (patch: { name?: string; email?: string; city?: string; phone?: string }) => void;
   logout: () => void;
 }
 
@@ -70,6 +73,19 @@ export const useAuth = create<AuthState>()(
             role: opts.role || "customer",
             brand: opts.brand,
           },
+        }),
+      updateProfile: (patch) =>
+        set((state) => {
+          if (!state.user) return state;
+          const name = patch.name?.trim() || state.user.name;
+          return {
+            user: {
+              ...state.user,
+              name,
+              email: patch.email?.trim() || state.user.email,
+              avatar: name[0],
+            },
+          };
         }),
       logout: () => set({ user: isDev ? DEV_USER : null }),
     }),

@@ -2,12 +2,16 @@
 import Link from "next/link";
 import { Users, Store, Package, DollarSign, Sparkles, TrendingUp } from "lucide-react";
 import { toFa } from "@/lib/utils";
+import { products } from "@/data/products";
+import { stores } from "@/data/stores";
 
+// Catalog numbers derive from the same fixtures the storefront shows —
+// fantasy counts (۵٬۱۲۰ محصول!) next to a 39-product catalog killed trust.
 const stats = [
-  { label: "کاربران", value: "۱۸٫۴ هزار", icon: Users, change: "+۳۲۰" },
-  { label: "فروشندگان", value: "۱۲۴", icon: Store, change: "+۸" },
-  { label: "محصولات", value: "۵٬۱۲۰", icon: Package, change: "+۹۰" },
-  { label: "درآمد پلتفرم", value: "۲٫۴ میلیارد", icon: DollarSign, change: "+۱۵٪" },
+  { label: "فروشندگان (تأییدشده)", value: toFa(stores.filter((s) => s.verified).length), icon: Store, change: "" },
+  { label: "محصولات", value: toFa(products.length), icon: Package, change: "" },
+  { label: "کاربران (نمونه)", value: "۱۸٫۴ هزار", icon: Users, change: "+۳۲۰" },
+  { label: "درآمد پلتفرم (نمونه)", value: "۲٫۴ میلیارد", icon: DollarSign, change: "+۱۵٪" },
 ];
 
 const activity = [
@@ -24,7 +28,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="card-surface p-5">
-            <div className="flex items-center justify-between"><s.icon size={20} className="text-terracotta-deep" /><span className="flex items-center gap-0.5 text-xs font-bold text-success"><TrendingUp size={12} />{s.change}</span></div>
+            <div className="flex items-center justify-between"><s.icon size={20} className="text-terracotta-deep" />{s.change && <span className="flex items-center gap-0.5 text-xs font-bold text-success"><TrendingUp size={12} />{s.change}</span>}</div>
             <div className="mt-2 font-display text-2xl font-black text-ink">{s.value}</div>
             <div className="text-xs text-ink-muted">{s.label}</div>
           </div>

@@ -32,8 +32,10 @@ import {
   Wand2,
 } from "lucide-react";
 import { useCart, useWishlist, useCompare } from "@/stores/useShop";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useUi } from "@/stores/useApp";
 import { categories } from "@/data/categories";
+import { productsByCategory } from "@/data/products";
 import { styles } from "@/data/styles";
 import { PLATFORM, formatThreshold } from "@/config/platform";
 import { cn, toFa } from "@/lib/utils";
@@ -184,7 +186,7 @@ function MegaPanel({ mega }: { mega: MegaKey }) {
                       className="-translate-x-1 text-terracotta opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
                     />
                   </div>
-                  <div className="text-xs text-ink-muted">{toFa(c.productCount)} محصول</div>
+                  <div className="text-xs text-ink-muted">{toFa(productsByCategory(c.slug).length)} محصول</div>
                 </div>
               </Link>
             </motion.div>
@@ -294,9 +296,12 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
-  const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.qty, 0));
-  const wishCount = useWishlist((s) => s.total());
-  const cmpCount = useCompare((s) => s.ids.length);
+  // Persisted counters read only after hydration — first paint matches SSR,
+  // then the real localStorage numbers appear (zero console mismatch).
+  const hydrated = useHasHydrated();
+  const cartCount = useCart((s) => (hydrated ? s.items.reduce((n, i) => n + i.qty, 0) : 0));
+  const wishCount = useWishlist((s) => (hydrated ? s.total() : 0));
+  const cmpCount = useCompare((s) => (hydrated ? s.ids.length : 0));
 
   /* Page scroll progress (RTL: bar grows from the right edge) */
   const { scrollYProgress } = useScroll();

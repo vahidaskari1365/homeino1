@@ -1,6 +1,7 @@
 "use client";
 import { Badge, LogoBlock } from "@/components/ui/primitives";
 import { toFa } from "@/lib/utils";
+import { useUi } from "@/stores/useApp";
 
 const USERS = [
   { name: "نگار مرادی", email: "negar@mail.com", role: "customer", status: "active", tone: "success" as const },
@@ -13,6 +14,7 @@ const ROLE_LABEL: Record<string, string> = { customer: "مشتری", vendor: "ف
 const STATUS_LABEL: Record<string, string> = { active: "فعال", pending: "در انتظار", blocked: "مسدود" };
 
 export default function AdminUsersPage() {
+  const { toast } = useUi();
   return (
     <div className="space-y-5">
       <h1 className="font-display text-xl font-black text-ink">مدیریت کاربران</h1>
@@ -27,7 +29,7 @@ export default function AdminUsersPage() {
                 <td className="p-3"><div className="flex items-center gap-2"><LogoBlock char={u.name[0]} color="#6b6358" size={36} /><div><div className="font-medium text-ink">{u.name}</div><div className="text-xs text-ink-muted">{u.email}</div></div></div></td>
                 <td className="p-3 text-ink">{ROLE_LABEL[u.role]}</td>
                 <td className="p-3"><Badge tone={u.tone}>{STATUS_LABEL[u.status]}</Badge></td>
-                <td className="p-3 text-left"><button className="rounded-lg border border-clay/60 px-3 py-1 text-xs text-ink hover:bg-ivory-2">مدیریت</button></td>
+                <td className="p-3 text-left"><button onClick={() => toast("مدیریت کامل کاربران با اتصال backend فعال می‌شود", "info")} className="rounded-lg border border-clay/60 px-3 py-1 text-xs text-ink hover:bg-ivory-2">مدیریت</button></td>
               </tr>
             ))}
           </tbody>

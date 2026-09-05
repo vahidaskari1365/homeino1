@@ -6,11 +6,22 @@ import { CheckCircle2, Package, Home, Sparkles, Info } from "lucide-react";
 import { Container } from "@/components/shared";
 import { Button } from "@/components/ui/primitives";
 import { toFa, formatPrice } from "@/lib/utils";
-import { listLocalOrders, STATUS_LABEL } from "@/data/localOrders";
+import { listLocalOrders, orderDisplayStatus, STATUS_LABEL, PAY_LABEL, SHIPPING_LABEL } from "@/data/localOrders";
+import { destinationLine } from "@/lib/orderTracking";
+
+// Status → honest text tone (cancelled was green before — a lie).
+const STATUS_TONE: Record<string, string> = {
+  delivered: "text-success",
+  shipping: "text-ink",
+  processing: "text-ink",
+  cancelled: "text-ink-muted",
+};
 
 function SuccessInner() {
   const sp = useSearchParams();
   const order = listLocalOrders().find((o) => o.id === sp.get("order")) ?? null;
+  const status = order ? orderDisplayStatus(order) : null;
+  const destination = order ? destinationLine(order) : null;
 
   return (
     <Container className="py-20">
@@ -23,7 +34,10 @@ function SuccessInner() {
           <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">شماره سفارش</span><span className="font-bold text-ink">#{toFa(order?.id ?? "")}</span></div>
           {order && (
             <>
-              <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">وضعیت</span><span className="font-bold text-success">{STATUS_LABEL[order.status]}</span></div>
+              <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">وضعیت</span><span className={`font-bold ${STATUS_TONE[status ?? ""] ?? "text-ink"}`}>{STATUS_LABEL[status ?? order.status]}</span></div>
+              {destination && <div className="flex justify-between gap-4 border-b border-clay/40 py-2 text-sm"><span className="shrink-0 text-ink-muted">تحویل به</span><span className="text-left font-medium text-ink">{destination}</span></div>}
+              {order.shippingMethod && <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">ارسال</span><span className="font-bold text-ink">{SHIPPING_LABEL[order.shippingMethod] ?? order.shippingMethod}</span></div>}
+              {order.payMethod && <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">پرداخت</span><span className="font-bold text-ink">{PAY_LABEL[order.payMethod] ?? order.payMethod}</span></div>}
               <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">تعداد مرسوله</span><span className="font-bold text-ink">{toFa(order.parcels.length)}</span></div>
               <div className="flex justify-between py-2 text-sm"><span className="text-ink-muted">مبلغ</span><span className="font-bold text-ink">{toFa(formatPrice(order.total))} تومان</span></div>
             </>

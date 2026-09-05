@@ -6,14 +6,16 @@ import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
 import {Badge } from "@/components/ui/primitives";
-import { getProject } from "@/data/content";
+import { getProject, projects } from "@/data/content";
 import { getProductById } from "@/data/products";
 import { useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const project = getProject(id);
+  // Cards link with the project id (pr1…) while URLs accept the slug too —
+  // resolve both so no project page is ever a dead end.
+  const project = getProject(id) ?? projects.find((p) => p.id === id);
   if (!project) notFound();
   const addToCart = useCart((s) => s.add); const { toast } = useUi();
 
