@@ -1,0 +1,5 @@
+▲ Next.js 16.2.6
+- Local:         http://localhost:3123
+- Network:       http://21.0.8.238:3123
+✓ Ready in 116ms
+[homeino] automation scheduler started — due workflows tick every 5 min

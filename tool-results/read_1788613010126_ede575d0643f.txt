@@ -1,0 +1,621 @@
+     1→     1→"use client";
+     2→     2→// ============================================================
+     3→     3→// AI DESIGN STUDIO — orchestrator hook.
+     4→     4→// Formerly the body of src/app/ai/design/page.tsx; the UI JSX now
+     5→     5→// lives in the leaf components under components/ai/design/ and this
+     6→     6→// hook only owns the state + side effects of the studio. JSX and
+     7→     7→// classes were moved verbatim — no visual change.
+     8→     8→// ============================================================
+     9→     9→import { useMemo, useState, useEffect, useCallback } from "react";
+    10→    10→import { useSearchParams, useRouter } from "next/navigation";
+    11→    11→import type { Product } from "@/types";
+    12→    12→import { costForMode, aiService } from "@/services/ai";
+    13→    13→import type { PipelineInput, PipelineResult } from "@/services/ai/pipeline";
+    14→    14→import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/placement";
+    15→    15→import { parseProductDimensions } from "@/services/ai/placement";
+    16→    16→import type { RoomElement } from "@/services/ai/roomState";
+    17→    17→import {
+    18→    18→  detectIntent,
+    19→    19→  computeChangeScope,
+    20→    20→  categoryToRoomElement,
+    21→    21→  type AiIntent,
+    22→    22→  type ScopedChange,
+    23→    23→  detectCategorySkuConflict,
+    24→    24→  matchStoreProducts,
+    25→    25→  type MatchedStoreProduct,
+    26→    26→} from "@/services/ai/roomState";
+    27→    27→import { costOf } from "@/services/ai/credits";
+    28→    28→import type { RoomAnalysis, GuidedSuggestion } from "@/services/ai/types";
+    29→    29→import { products, getProductById, getProductBySkuOrCode } from "@/data/products";
+    30→    30→import { useCredits, useUi } from "@/stores/useApp";
+    31→    31→import { useDesignSessions } from "@/stores/useDesignSessions";
+    32→    32→import { useCart, useWishlist } from "@/stores/useShop";
+    33→    33→import { useRoomState } from "@/stores/useRoomState";
+    34→    34→import { trackEvent } from "@/lib/tracking";
+    35→    35→import type { Placement } from "@/components/ProductOverlay";
+    36→    36→import { STYLES, CATEGORIES, CAT_PRODUCTS, SECOND_HAND_AS_PRODUCTS, DEFAULT_ROOM_IDS, STAGE_ORDER, type Stage } from "./constants";
+    37→    37→import {
+    38→    38→  deriveTargetsFromProducts,
+    39→    39→  buildPlacementsFromPlan,
+    40→    40→  buildScopeSummary,
+    41→    41→  makePlacements,
+    42→    42→} from "./helpers";
+    43→    43→
+    44→    44→export type { Stage };
+    45→    45→
+    46→    46→const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    47→    47→const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    48→    48→
+    49→    49→export function useDesignStudio() {
+    50→    50→  const sp = useSearchParams();
+    51→    51→  const presetSlug = sp.get("product");
+    52→    52→  const router = useRouter();
+    53→    53→  const [tab, setTab] = useState<"design" | "inspiration" | "suggest">(sp.get("tab") === "inspiration" ? "inspiration" : "design");
+    54→    54→  const [imageBase64, setImageBase64] = useState<string | null>(null);
+    55→    55→  const [presetProduct, setPresetProduct] = useState<Product | null>(null);
+    56→    56→  const [style, setStyle] = useState("modern");
+    57→    57→  const [prompt, setPrompt] = useState("");
+    58→    58→  const [budget, setBudget] = useState("");
+    59→    59→  const [skuInput, setSkuInput] = useState("");
+    60→    60→  const [skuWarning, setSkuWarning] = useState<string | null>(null);
+    61→    61→  const [loading, setLoading] = useState(false);
+    62→    62→  const [stage, setStage] = useState<Stage>("UPLOADING");
+    63→    63→  const [placements, setPlacements] = useState<Placement[]>([]);
+    64→    64→  const [matchedStoreProducts, setMatchedStoreProducts] = useState<MatchedStoreProduct[]>([]);
+    65→    65→  const [error, setError] = useState<string | null>(null);
+    66→    66→  const [openCats, setOpenCats] = useState<Set<string>>(new Set(["furniture"]));
+    67→    67→  const [selectedSubTypes, setSelectedSubTypes] = useState<Record<string, string[]>>({});
+    68→    68→  const [selected, setSelected] = useState<Record<string, Product>>({});
+    69→    69→  const [inspirationMatches, setInspirationMatches] = useState<Product[]>([]);
+    70→    70→
+    71→    71→  const addToCart = useCart((s) => s.add);
+    72→    72→  const wl = useWishlist();
+    73→    73→  const { toast } = useUi();
+    74→    74→  const saveSession = useDesignSessions((s) => s.saveSession);
+    75→    75→  const cost = costForMode("room-redesign");
+    76→    76→  const styleLabel = STYLES.find((s) => s.id === style)?.label ?? style;
+    77→    77→
+    78→    78→  const rs = useRoomState();
+    79→    79→  const [, setLastIntent] = useState<AiIntent | null>(null);
+    80→    80→  const [lastScope, setLastScope] = useState<ScopedChange | null>(null);
+    81→    81→  const [roomAnalysis, setRoomAnalysis] = useState<RoomAnalysis | null>(null);
+    82→    82→  const [analyzing, setAnalyzing] = useState(false);
+    83→    83→
+    84→    84→  const analyzeRoom = useCallback(async (image: string) => {
+    85→    85→    setAnalyzing(true); setRoomAnalysis(null);
+    86→    86→    try {
+    87→    87→      const analysis = await aiService.analyze({ mode: "room-redesign", prompt: "تحلیل", referenceImage: image, room: style === "office" ? "فضای اداری" : "پذیرایی", style });
+    88→    88→      setRoomAnalysis(analysis);
+    89→    89→      rs.setRoomMeta({ detectedStyle: analysis.style, detectedColors: analysis.palette, roomType: analysis.roomType });
+    90→    90→    } catch {}
+    91→    91→    finally { setAnalyzing(false); }
+    92→    92→  }, [style, rs]);
+    93→    93→
+    94→    94→  const toggleCat = useCallback((slug: string) => setOpenCats((s) => { const n = new Set(s); n.has(slug) ? n.delete(slug) : n.add(slug); return n; }), []);
+    95→    95→  const toggleSubType = useCallback((slug: string, label: string) => setSelectedSubTypes((s) => { const cur = s[slug] || []; return { ...s, [slug]: cur.includes(label) ? cur.filter((x) => x !== label) : [...cur, label] }; }), []);
+    96→    96→  const toggleProduct = useCallback((p: Product) => setSelected((s) => { const n = { ...s }; if (n[p.id]) delete n[p.id]; else n[p.id] = p; return n; }), []);
+    97→    97→  const selectStyle = useCallback((id: string) => { setStyle(id); if (id === "office") setOpenCats((s) => new Set(s).add("office")); }, []);
+    98→    98→
+    99→    99→  // ---- GUIDED DESIGN: apply or customize AI suggestions ----
+   100→   100→  const applySuggestion = useCallback((sg: GuidedSuggestion) => {
+   101→   101→    const catMap: Record<string, string> = { rug: "carpet", lighting: "lighting", plant: "plants", sofa: "furniture" };
+   102→   102→    const catSlug = catMap[sg.category] || "furniture";
+   103→   103→    setOpenCats((s) => new Set(s).add(catSlug));
+   104→   104→    const cat = CATEGORIES.find((c) => c.slug === catSlug);
+   105→   105→    if (cat && cat.subTypes[0]) {
+   106→   106→      setSelectedSubTypes((s) => ({ ...s, [catSlug]: [cat.subTypes[0].label] }));
+   107→   107→    }
+   108→   108→    setPrompt((p) => p ? `${p}\n${sg.title}` : sg.title);
+   109→   109→    toast(`پیشنهاد «${sg.title}» اعمال شد — برای ادامه طراحی بزن`);
+   110→   110→  }, [toast]);
+   111→   111→
+   112→   112→  const customizeSuggestion = useCallback((sg: GuidedSuggestion) => {
+   113→   113→    setPrompt(sg.desc);
+   114→   114→    toast("توضیحات پیشنهاد در فیلد دستور قرار گرفت — می‌تونی ویرایش کنی");
+   115→   115→  }, [toast]);
+   116→   116→
+   117→   117→  useEffect(() => {
+   118→   118→    if (presetSlug) { const p = products.find((x) => x.slug === presetSlug); if (p) { setPresetProduct(p); setSelected((s) => ({ ...s, [p.id]: p })); setTab("inspiration"); } } // eslint-disable-line react-hooks/set-state-in-effect
+   119→   119→  }, [presetSlug]);
+   120→   120→
+   121→   121→  // CONTINUE DESIGN: ?session=<id> restores a saved design session (uploaded
+   122→   122→  // room photo + prompt + style) instead of silently opening an empty studio.
+   123→   123→  // Continuation restore — same single-line disable pattern as presetSlug above.
+   124→   124→  useEffect(() => {
+   125→   125→    const sid = sp.get("session");
+   126→   126→    if (!sid || imageBase64) return;
+   127→   127→    const session = useDesignSessions.getState().sessions.find((s) => s.id === sid);
+   128→   128→    if (!session) return;
+   129→   129→    if (session.beforeImage) { setImageBase64(session.beforeImage); rs.loadRoom(session.beforeImage, style === "office" ? "فضای اداری" : "پذیرایی"); } // eslint-disable-line react-hooks/set-state-in-effect
+   130→   130→    if (session.prompt) setPrompt(session.prompt);
+   131→   131→    if (session.style) setStyle(session.style);
+   132→   132→    toast("طراحی ذخیره‌شده بازیابی شد — از همین‌جا ادامه بده");
+   133→   133→  }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
+   134→   134→
+   135→   135→  const handleFile = useCallback((file: File, set: (v: string) => void = setImageBase64) => {
+   136→   136→    if (!ALLOWED_TYPES.includes(file.type)) return toast("فقط JPG، PNG یا WEBP", "error");
+   137→   137→    if (file.size > MAX_FILE_SIZE) return toast("حداکثر حجم تصویر ۱۰ مگابایت", "error");
+   138→   138→    const r = new FileReader();
+   139→   139→    r.onerror = () => toast("خطا در خواندن فایل", "error");
+   140→   140→    r.onload = () => { const d = r.result as string; if (typeof d !== "string" || d.length < 100) return toast("فایل نامعتبر", "error"); set(d); if (set === setImageBase64) { rs.loadRoom(d, style === "office" ? "فضای اداری" : "پذیرایی"); analyzeRoom(d); } };
+   141→   141→    r.readAsDataURL(file); trackEvent("room_uploaded", { metadata: { name: file.name, size: file.size } });
+   142→   142→  }, [toast, rs, style, analyzeRoom]);
+   143→   143→
+   144→   144→  const designElements = useMemo(() => CATEGORIES.flatMap((c) => (selectedSubTypes[c.slug] || []).map((label) => { const st = c.subTypes.find((x) => x.label === label); return { catSlug: c.slug, cat: c.label, label, desc: st?.desc || "" }; })), [selectedSubTypes]);
+   145→   145→  const placedProducts = useMemo(() => {
+   146→   146→    const cursor: Record<string, number> = {}; const out: Product[] = [];
+   147→   147→    designElements.forEach((e) => {
+   148→   148→      if (e.catSlug === "second-hand") { const sh = SECOND_HAND_AS_PRODUCTS[e.label] || []; if (!sh.length) return; const idx = cursor[e.label] = (cursor[e.label] ?? 0); cursor[e.label]++; const prod = sh[idx % sh.length]; if (prod && !out.find((x) => x.id === prod.id)) out.push(prod); return; }
+   149→   149→      const pool = CAT_PRODUCTS[e.catSlug] || []; if (!pool.length) return; const i = cursor[e.catSlug] = (cursor[e.catSlug] ?? 0); cursor[e.catSlug]++; const prod = getProductById(pool[i % pool.length]); if (prod && !out.find((x) => x.id === prod.id)) out.push(prod);
+   150→   150→    });
+   151→   151→    return out;
+   152→   152→  }, [designElements]);
+   153→   153→  const total = placedProducts.reduce((s, p) => s + p.price, 0);
+   154→   154→
+   155→   155→  const handleSkuChange = useCallback((val: string) => {
+   156→   156→    setSkuInput(val);
+   157→   157→    const trimmed = val.trim();
+   158→   158→    if (!trimmed) {
+   159→   159→      setSkuWarning(null);
+   160→   160→      return;
+   161→   161→    }
+   162→   162→    const found = getProductBySkuOrCode(trimmed);
+   163→   163→    if (!found) {
+   164→   164→      setSkuWarning("کد محصول نامعتبر است — محصولی با این کد در کاتالوگ فروشگاه‌ها یافت نشد.");
+   165→   165→      return;
+   166→   166→    }
+   167→   167→    const catSlugs = designElements.map((e) => e.catSlug);
+   168→   168→    const conflict = detectCategorySkuConflict(catSlugs, found);
+   169→   169→    if (conflict.hasConflict) {
+   170→   170→      setSkuWarning(conflict.message || "توجه: دسته‌بندی انتخاب‌شده با کد محصول همخوانی ندارد.");
+   171→   171→    } else {
+   172→   172→      setSkuWarning(null);
+   173→   173→    }
+   174→   174→  }, [designElements]);
+   175→   175→
+   176→   176→  const generate = useCallback(async () => {
+   177→   177→    if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
+   178→   178→
+   179→   179→    const chosen: Product[] = placedProducts.length
+   180→   180→      ? placedProducts
+   181→   181→      : DEFAULT_ROOM_IDS.map(getProductById).filter(Boolean) as Product[];
+   182→   182→
+   183→   183→    const isFullSet = designElements.length === 0;
+   184→   184→    const uiIntent = detectIntent(prompt, style);
+   185→   185→    const uiScope = computeChangeScope(uiIntent);
+   186→   186→    const isFullRoom = isFullSet || uiIntent.type === "full_redesign";
+   187→   187→    const opCost = costOf(isFullRoom ? "generate" : (presetProduct ? "placement" : "edit"));
+   188→   188→
+   189→   189→    const lastTargets: RoomElement[] = (rs.placements ?? [])
+   190→   190→      .slice(-1)
+   191→   191→      .flatMap((p): RoomElement[] => {
+   192→   192→        const cat = (getProductById(p.productId)?.categorySlug ?? "").toLowerCase();
+   193→   193→        if (/furniture|sofa/.test(cat)) return ["sofa"];
+   194→   194→        if (/rug|carpet/.test(cat)) return ["rug"];
+   195→   195→        if (/curtain|textile/.test(cat)) return ["curtain"];
+   196→   196→        if (/light|lamp/.test(cat)) return ["lighting"];
+   197→   197→        if (/bed/.test(cat)) return ["bed"];
+   198→   198→        if (/tv/.test(cat)) return ["tv"];
+   199→   199→        if (/plant/.test(cat)) return ["plant"];
+   200→   200→        if (/art|decor/.test(cat)) return ["art"];
+   201→   201→        if (/shelf|bookcase/.test(cat)) return ["shelf"];
+   202→   202→        if (/table|chair|dining|office/.test(cat)) return ["table"];
+   203→   203→        return [];
+   204→   204→      });
+   205→   205→
+   206→   206→    const previousTargets: RoomElement[] = lastTargets.length ? lastTargets : uiScope.targets;
+   207→   207→    const previousChanges: string[] = rs.appliedChanges.slice(-3);
+   208→   208→
+   209→   209→    const pipelineProducts: PlacementProduct[] = chosen.map((p) => ({
+   210→   210→      id: p.id,
+   211→   211→      name: p.name,
+   212→   212→      category: p.categorySlug,
+   213→   213→      material: p.materials?.[0],
+   214→   214→      color: p.colors?.[0]?.name,
+   215→   215→      style: p.styleSlugs?.[0],
+   216→   216→      dimensions: parseProductDimensions(p.dimensions),
+   217→   217→    }));
+   218→   218→
+   219→   219→    const budgetNum = Number(budget.replace(/[^\d]/g, "")) || undefined;
+   220→   220→
+   221→   221→    const resolvedSkuProduct = skuInput.trim() ? getProductBySkuOrCode(skuInput.trim()) : undefined;
+   222→   222→    const categoryTargets = designElements.map((e) => categoryToRoomElement(e.catSlug, e.label));
+   223→   223→    const derivedTargets: RoomElement[] = deriveTargetsFromProducts(chosen);
+   224→   224→    const finalTargets: RoomElement[] = [...new Set([...uiScope.targets, ...derivedTargets, ...categoryTargets])];
+   225→   225→
+   226→   226→    const pipelineInput: PipelineInput = {
+   227→   227→      prompt: prompt || (isFullRoom ? "بازطراحی کامل فضا" : chosen.map((p) => p.name).join("، ")),
+   228→   228→      style,
+   229→   229→      room: style === "office" ? "فضای اداری" : (rs.roomType || "نشیمن"),
+   230→   230→      colors: roomAnalysis?.palette ?? rs.detectedColors ?? undefined,
+   231→   231→      scope: isFullRoom ? "full" : "targeted",
+   232→   232→      targets: finalTargets.length ? finalTargets : undefined,
+   233→   233→      preservedExtra: undefined,
+   234→   234→      referenceImage: imageBase64,
+   235→   235→      mask: undefined,
+   236→   236→      previousTargets: previousTargets.length ? previousTargets : undefined,
+   237→   237→      previousChanges: previousChanges.length ? previousChanges : undefined,
+   238→   238→      previousProductId: rs.placements?.[rs.placements.length - 1]?.productId,
+   239→   239→      previousSKU: getProductById(rs.placements?.[rs.placements.length - 1]?.productId ?? "")?.sku,
+   240→   240→      sku: skuInput.trim() || undefined,
+   241→   241→      productCode: skuInput.trim() || undefined,
+   242→   242→      productId: resolvedSkuProduct?.id ?? presetProduct?.id ?? (chosen.length === 1 ? chosen[0].id : undefined),
+   243→   243→      selection: designElements.length > 0
+   244→   244→        ? {
+   245→   245→            category: designElements[0].catSlug,
+   246→   246→            subTypes: designElements.map((e) => e.label),
+   247→   247→            targets: finalTargets,
+   248→   248→          }
+   249→   249→        : undefined,
+   250→   250→      products: pipelineProducts.length ? pipelineProducts : undefined,
+   251→   251→      budget: budgetNum ? { min: budgetNum, currency: "تومان" } : undefined,
+   252→   252→      roomUnderstanding: roomAnalysis
+   253→   253→        ? {
+   254→   254→            roomType: roomAnalysis.roomType,
+   255→   255→            layout: "unknown",
+   256→   256→            lighting: "unknown",
+   257→   257→            objects: [],
+   258→   258→            confidence: 0.6,
+   259→   259→          }
+   260→   260→        : undefined,
+   261→   261→    };
+   262→   262→
+   263→   263→    trackEvent("ai_started", {
+   264→   264→      metadata: { style: styleLabel, items: chosen.length, fullSet: isFullRoom, scope: uiScope.targets.join("، ") },
+   265→   265→    });
+   266→   266→
+   267→   267→    setLoading(true);
+   268→   268→    setError(null);
+   269→   269→    setPlacements([]);
+   270→   270→    setStage("ANALYZING_SPACE");
+   271→   271→
+   272→   272→    const stageTimer = setInterval(() => {
+   273→   273→      setStage((cur) => {
+   274→   274→        const i = STAGE_ORDER.indexOf(cur);
+   275→   275→        if (i < STAGE_ORDER.length - 1) return STAGE_ORDER[i + 1];
+   276→   276→        return cur;
+   277→   277→      });
+   278→   278→    }, 900);
+   279→   279→
+   280→   280→    const opLabel = isFullRoom ? "طراحی کامل" : (presetProduct ? "جای‌گذاری محصول" : "چیدمان وسایل");
+   281→   281→
+   282→   282→    const result = await useCredits.getState().runAiOperation(opLabel, opCost, async () => {
+   283→   283→      return aiService.pipeline(pipelineInput);
+   284→   284→    });
+   285→   285→
+   286→   286→    clearInterval(stageTimer);
+   287→   287→
+   288→   288→    if (!result.ok) {
+   289→   289→      setLoading(false);
+   290→   290→      if (result.reason === "insufficient") {
+   291→   291→        setError("اعتبار کافی نیست");
+   292→   292→        return toast("اعتبار کافی نیست", "error");
+   293→   293→      }
+   294→   294→      if (result.reason === "duplicate") {
+   295→   295→        setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
+   296→   296→        return;
+   297→   297→      }
+   298→   298→      setError("خطا در پردازش — لطفاً دوباره تلاش کن");
+   299→   299→      trackEvent("ai_failed", {});
+   300→   300→      return toast("خطا در پردازش AI — اعتبار برگردانده شد", "error");
+   301→   301→    }
+   302→   302→
+   303→   303→    try {
+   304→   304→      const pipelineRes: PipelineResult = result.result;
+   305→   305→      const inst = pipelineRes.instruction;
+   306→   306→      const plan: ProductPlacementPlan | undefined = pipelineRes.placement ?? inst.placement;
+   307→   307→
+   308→   308→      setLastIntent(uiIntent);
+   309→   309→      setLastScope({
+   310→   310→        targets: inst.targets.length ? inst.targets : uiScope.targets,
+   311→   311→        lockedElements: inst.preserved.length ? inst.preserved : uiScope.lockedElements,
+   312→   312→        summary: buildScopeSummary(pipelineRes, uiScope),
+   313→   313→      });
+   314→   314→
+   315→   315→      const renderedPlacements = plan && chosen.length >= 1
+   316→   316→        ? buildPlacementsFromPlan(chosen, plan)
+   317→   317→        : makePlacements(chosen);
+   318→   318→      setPlacements(renderedPlacements);
+   319→   319→
+   320→   320→      const editedImage = pipelineRes.result.afterImage;
+   321→   321→      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
+   322→   322→      const outputImage = isPreview ? imageBase64 : editedImage;
+   323→   323→
+   324→   324→      const realMatched = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
+   325→   325→        ? pipelineRes.matchedProducts
+   326→   326→        : matchStoreProducts({
+   327→   327→            sku: skuInput.trim() || undefined,
+   328→   328→            productId: resolvedSkuProduct?.id,
+   329→   329→            targets: inst.targets.length ? inst.targets : finalTargets,
+   330→   330→            style,
+   331→   331→            roomType: rs.roomType,
+   332→   332→            budget: budgetNum,
+   333→   333→          });
+   334→   334→      setMatchedStoreProducts(realMatched);
+   335→   335→
+   336→   336→      rs.commitChange({
+   337→   337→        label: isFullRoom ? "چیدمان کامل" : (inst.targets.map((t) => t).join("، ") || uiScope.targets.join("، ")),
+   338→   338→        image: outputImage,
+   339→   339→        placements: renderedPlacements.map((pl) => ({
+   340→   340→          productId: pl.product.id,
+   341→   341→          category: pl.product.categorySlug,
+   342→   342→          reason: plan?.rationale ?? uiScope.summary,
+   343→   343→          placement: {
+   344→   344→            x: pl.xNorm,
+   345→   345→            y: pl.yNorm,
+   346→   346→            scale: pl.scale,
+   347→   347→            rotation: pl.rotation ?? 0,
+   348→   348→          },
+   349→   349→        })),
+   350→   350→        change: pipelineRes.intent.changes?.[0] ?? (prompt || uiScope.summary),
+   351→   351→        scope: pipelineRes.scope,
+   352→   352→      });
+   353→   353→
+   354→   354→      setStage("RENDERING");
+   355→   355→      trackEvent("ai_finished", {
+   356→   356→        metadata: {
+   357→   357→          count: chosen.length,
+   358→   358→          preview: isPreview,
+   359→   359→          engine: pipelineRes.imageEngine,
+   360→   360→          requestId: pipelineRes.requestId,
+   361→   361→        },
+   362→   362→      });
+   363→   363→
+   364→   364→      saveSession({
+   365→   365→        title: isFullRoom ? `طراحی ${styleLabel}` : (prompt || "چیدمان هوشمند"),
+   366→   366→        prompt: pipelineInput.prompt,
+   367→   367→        roomType: pipelineInput.room ?? "نشیمن",
+   368→   368→        style,
+   369→   369→        colors: pipelineInput.colors ?? [],
+   370→   370→        scope: isFullRoom ? "full" : "targeted",
+   371→   371→        targets: finalTargets,
+   372→   372→        status: isPreview ? "partial-success" : "success",
+   373→   373→        beforeImage: imageBase64,
+   374→   374→        afterImage: outputImage,
+   375→   375→        regions: [],
+   376→   376→        products: chosen.map((p) => ({ label: p.name, productId: p.id })),
+   377→   377→        creditsUsed: opCost,
+   378→   378→        preview: isPreview,
+   379→   379→        imageEngine: pipelineRes.imageEngine,
+   380→   380→      });
+   381→   381→
+   382→   382→      if (isPreview) {
+   383→   383→        toast("نتیجه به‌صورت پیش‌نمایش آماده شد (موتور تصویر در دسترس نیست)");
+   384→   384→      } else {
+   385→   385→        toast("چیدمان آماده شد");
+   386→   386→      }
+   387→   387→    } catch {
+   388→   388→      setError("خطا در نمایش نتیجه");
+   389→   389→    } finally {
+   390→   390→      setLoading(false);
+   391→   391→    }
+   392→   392→  }, [imageBase64, placedProducts, designElements, presetProduct, prompt, style, budget, skuInput, rs, roomAnalysis, styleLabel, toast, saveSession]);
+   393→   393→
+   394→   394→  const updatePlacement = useCallback((id: string, patch: Partial<Placement>) => setPlacements((ps) => ps.map((pl) => (pl.product.id === id ? { ...pl, ...patch } : pl))), []);
+   395→   395→  const removePlacement = useCallback((id: string) => setPlacements((ps) => ps.filter((pl) => pl.product.id !== id)), []);
+   396→   396→  const overlayCart = useCallback((p: Product) => { addToCart(p.id); toast("به سبد اضافه شد"); }, [addToCart, toast]);
+   397→   397→  const overlayWishlist = useCallback((p: Product) => { wl.toggleProduct(p.id); toast("به علاقه‌مندی اضافه شد"); }, [wl, toast]);
+   398→   398→  const overlayView = useCallback((p: Product) => router.push(`/products/${p.slug}`), [router]);
+   399→   399→
+   400→   400→  const placePresetInRoom = useCallback(async () => {
+   401→   401→    if (!imageBase64) return toast("عکس خانه را آپلود کن", "error");
+   402→   402→    if (!presetProduct) return;
+   403→   403→
+   404→   404→    const opCost = costOf("placement");
+   405→   405→    const pipelineProduct: PlacementProduct = {
+   406→   406→      id: presetProduct.id,
+   407→   407→      name: presetProduct.name,
+   408→   408→      category: presetProduct.categorySlug,
+   409→   409→      material: presetProduct.materials?.[0],
+   410→   410→      color: presetProduct.colors?.[0]?.name,
+   411→   411→      style: presetProduct.styleSlugs?.[0],
+   412→   412→      dimensions: parseProductDimensions(presetProduct.dimensions),
+   413→   413→    };
+   414→   414→
+   415→   415→    const targets: RoomElement[] = deriveTargetsFromProducts([presetProduct]);
+   416→   416→
+   417→   417→    const pipelineInput: PipelineInput = {
+   418→   418→      prompt: prompt || `محصول «${presetProduct.name}» را در اتاق قرار بده`,
+   419→   419→      style,
+   420→   420→      room: style === "office" ? "فضای اداری" : (rs.roomType || "نشیمن"),
+   421→   421→      scope: "targeted",
+   422→   422→      targets,
+   423→   423→      referenceImage: imageBase64,
+   424→   424→      productId: presetProduct.id,
+   425→   425→      products: [pipelineProduct],
+   426→   426→      previousTargets: deriveTargetsFromProducts(placedProducts),
+   427→   427→      previousChanges: rs.appliedChanges.slice(-3),
+   428→   428→    };
+   429→   429→
+   430→   430→    setLoading(true);
+   431→   431→    setError(null);
+   432→   432→    setPlacements([]);
+   433→   433→    setStage("ANALYZING_SPACE");
+   434→   434→
+   435→   435→    const timer = setInterval(() => {
+   436→   436→      setStage((cur) => {
+   437→   437→        const i = STAGE_ORDER.indexOf(cur);
+   438→   438→        if (i < STAGE_ORDER.length - 1) return STAGE_ORDER[i + 1];
+   439→   439→        return cur;
+   440→   440→      });
+   441→   441→    }, 900);
+   442→   442→
+   443→   443→    const result = await useCredits.getState().runAiOperation("جای‌گذاری محصول", opCost, async () => {
+   444→   444→      return aiService.pipeline(pipelineInput);
+   445→   445→    });
+   446→   446→
+   447→   447→    clearInterval(timer);
+   448→   448→
+   449→   449→    if (!result.ok) {
+   450→   450→      setLoading(false);
+   451→   451→      if (result.reason === "insufficient") {
+   452→   452→        setError("اعتبار کافی نیست");
+   453→   453→        return toast("اعتبار کافی نیست", "error");
+   454→   454→      }
+   455→   455→      if (result.reason === "duplicate") {
+   456→   456→        setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
+   457→   457→        return;
+   458→   458→      }
+   459→   459→      setError("خطا در پردازش");
+   460→   460→      return toast("خطا در جای‌گذاری — اعتبار برگردانده شد", "error");
+   461→   461→    }
+   462→   462→
+   463→   463→    try {
+   464→   464→      const pipelineRes: PipelineResult = result.result;
+   465→   465→      const plan = pipelineRes.placement ?? pipelineRes.instruction.placement;
+   466→   466→      const fallbackPlacement: Placement = { product: presetProduct, xNorm: 0.5, yNorm: 0.6, scale: 1 };
+   467→   467→      const newPlacements = plan
+   468→   468→        ? buildPlacementsFromPlan([presetProduct], plan)
+   469→   469→        : [fallbackPlacement];
+   470→   470→
+   471→   471→      const editedImage = pipelineRes.result.afterImage;
+   472→   472→      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
+   473→   473→      const outputImage = isPreview ? imageBase64 : editedImage;
+   474→   474→
+   475→   475→      setPlacements(newPlacements);
+   476→   476→      setStage("RENDERING");
+   477→   477→      setTab("design");
+   478→   478→
+   479→   479→      const matchedStore = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
+   480→   480→        ? pipelineRes.matchedProducts
+   481→   481→        : matchStoreProducts({
+   482→   482→            productId: presetProduct.id,
+   483→   483→            targets,
+   484→   484→            style,
+   485→   485→            roomType: rs.roomType,
+   486→   486→          });
+   487→   487→      setMatchedStoreProducts(matchedStore);
+   488→   488→
+   489→   489→      rs.commitChange({
+   490→   490→        label: `جای‌گذاری ${presetProduct.name}`,
+   491→   491→        image: outputImage,
+   492→   492→        placements: newPlacements.map((pl) => ({
+   493→   493→          productId: pl.product.id,
+   494→   494→          category: pl.product.categorySlug,
+   495→   495→          reason: plan?.rationale ?? "جای‌گذاری محصول",
+   496→   496→          placement: { x: pl.xNorm, y: pl.yNorm, scale: pl.scale, rotation: pl.rotation ?? 0 },
+   497→   497→        })),
+   498→   498→        change: prompt || `قرار دادن ${presetProduct.name} در اتاق`,
+   499→   499→        scope: pipelineRes.scope,
+   500→   500→      });
+   501→   501→
+   502→   502→      saveSession({
+   503→   503→        title: `جای‌گذاری ${presetProduct.name}`,
+   504→   504→        prompt: pipelineInput.prompt,
+   505→   505→        roomType: pipelineInput.room ?? "نشیمن",
+   506→   506→        style,
+   507→   507→        colors: [],
+   508→   508→        scope: "targeted",
+   509→   509→        targets,
+   510→   510→        status: isPreview ? "partial-success" : "success",
+   511→   511→        beforeImage: imageBase64,
+   512→   512→        afterImage: outputImage,
+   513→   513→        regions: [],
+   514→   514→        products: [{ label: presetProduct.name, productId: presetProduct.id }],
+   515→   515→        creditsUsed: opCost,
+   516→   516→        preview: isPreview,
+   517→   517→        imageEngine: pipelineRes.imageEngine,
+   518→   518→      });
+   519→   519→
+   520→   520→      toast(isPreview ? "محصول به‌صورت پیش‌نمایش قرار گرفت (موتور تصویر در دسترس نیست)" : "محصول در عکس قرار گرفت");
+   521→   521→    } catch {
+   522→   522→      setError("خطا در نمایش نتیجه");
+   523→   523→    } finally {
+   524→   524→      setLoading(false);
+   525→   525→    }
+   526→   526→  }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession]);
+   527→   527→
+   528→   528→  const buyTheLook = useCallback(() => { if (!placedProducts.length) return; placedProducts.forEach((p) => addToCart(p.id)); toast("چیدمان به سبد اضافه شد"); }, [placedProducts, addToCart, toast]);
+   529→   529→  const handleSaveToWishlist = useCallback(() => {
+   530→   530→    if (!placedProducts.length) return toast("اول محصولاتی در طرح قرار بده", "info");
+   531→   531→    // Idempotent add — the old toggle could silently REMOVE everything on a
+   532→   532→    // second click while the toast kept claiming it was saved.
+   533→   533→    let added = 0;
+   534→   534→    placedProducts.forEach((p) => { if (!wl.products.includes(p.id)) { wl.toggleProduct(p.id); added += 1; } });
+   535→   535→    toast(added > 0 ? `${added} محصول طرح به علاقه‌مندی‌ها اضافه شد` : "همه محصولات این طرح قبلاً ذخیره شده‌اند");
+   536→   536→  }, [placedProducts, wl, toast]);
+   537→   537→
+   538→   538→  /** Clear the uploaded photo + every derived result (verbatim remove handler). */
+   539→   539→  const removeImage = useCallback(() => {
+   540→   540→    setImageBase64(null);
+   541→   541→    setPlacements([]);
+   542→   542→    rs.reset();
+   543→   543→    setRoomAnalysis(null);
+   544→   544→    setMatchedStoreProducts([]);
+   545→   545→  }, [rs]);
+   546→   546→
+   547→   547→  return {
+   548→   548→    // routing / tabs
+   549→   549→    router,
+   550→   550→    tab,
+   551→   551→    setTab,
+   552→   552→    // upload
+   553→   553→    imageBase64,
+   554→   554→    setImageBase64,
+   555→   555→    analyzing,
+   556→   556→    presetProduct,
+   557→   557→    setPresetProduct,
+   558→   558→    inspirationMatches,
+   559→   559→    setInspirationMatches,
+   560→   560→    handleFile,
+   561→   561→    // style / prompt / budget
+   562→   562→    style,
+   563→   563→    styleLabel,
+   564→   564→    selectStyle,
+   565→   565→    prompt,
+   566→   566→    setPrompt,
+   567→   567→    budget,
+   568→   568→    setBudget,
+   569→   569→    // items / sku
+   570→   570→    openCats,
+   571→   571→    toggleCat,
+   572→   572→    selectedSubTypes,
+   573→   573→    setSelectedSubTypes,
+   574→   574→    toggleSubType,
+   575→   575→    selected,
+   576→   576→    toggleProduct,
+   577→   577→    skuInput,
+   578→   578→    skuWarning,
+   579→   579→    handleSkuChange,
+   580→   580→    // analysis
+   581→   581→    roomAnalysis,
+   582→   582→    analyzeRoom,
+   583→   583→    applySuggestion,
+   584→   584→    customizeSuggestion,
+   585→   585→    // derived cart of chosen items
+   586→   586→    designElements,
+   587→   587→    placedProducts,
+   588→   588→    total,
+   589→   589→    // generation
+   590→   590→    cost,
+   591→   591→    loading,
+   592→   592→    stage,
+   593→   593→    error,
+   594→   594→    generate,
+   595→   595→    // result canvas
+   596→   596→    placements,
+   597→   597→    setPlacements,
+   598→   598→    removeImage,
+   599→   599→    updatePlacement,
+   600→   600→    removePlacement,
+   601→   601→    overlayCart,
+   602→   602→    overlayWishlist,
+   603→   603→    overlayView,
+   604→   604→    lastScope,
+   605→   605→    matchedStoreProducts,
+   606→   606→    addToCart,
+   607→   607→    // actions
+   608→   608→    buyTheLook,
+   609→   609→    handleSaveToWishlist,
+   610→   610→    placePresetInRoom,
+   611→   611→    // room-state (undo/redo + overlay mode)
+   612→   612→    rs,
+   613→   613→    wl,
+   614→   614→    toast,
+   615→   615→    saveSession,
+   616→   616→  };
+   617→   617→}
+   618→   618→
+   619→   619→export type DesignStudio = ReturnType<typeof useDesignStudio>;
+   620→   620→
+   621→   621→
