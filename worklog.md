@@ -218,3 +218,22 @@ Stage Summary:
 - Deliverable: site-wide Homeino Studio brand, readable studio, analysis under photo, real product replacement with size analysis + luminaire light projection, all 6 agents in the flow.
 - Honest scope: composite is a browser-rendered preview (labeled as such); when a real image engine (Orali) is configured its render wins automatically.
 - Remote main updated after this commit (push verified via ls-remote).
+
+---
+Task ID: 12 (free-agents-github)
+Agent: main
+Task: Owner request — survey GitHub for free agents fit for the project, integrate them into the site, report
+
+Work Log:
+- GitHub API survey (real data: stars/license/activity, 2026-09-05): ollama 180K/MIT · langflow 154K/MIT · dify 154K (custom license) · browser-use 112K/MIT · autogen 60K/CC-BY · crewAI 58K/MIT · LibreChat 42K/MIT · Skyvern 22K/AGPL-3.0 · gpt-researcher 29K/Apache-2.0 · roomGPT 10.6K/MIT · stagehand 24K/MIT. EXCLUDED honestly: n8n (fair-code, not OSI), Flowise (ARCHIVED), Skyvern (AGPL copyleft).
+- Key finding: the site ALREADY ships adapters for the 3 biggest free platforms — Dify + Langflow (full HTTP runtimes in externalRuntimes.ts) and Ollama (llmGateway provider, zero-cost local models). Gap filled this round: a curated blueprint pack so free agents run INSIDE Homeino's own permission-gated system.
+- NEW src/services/agents/blueprints.ts — 6 GitHub-sourced agents adapted to the declarative handler + real tools: room-style-analyzer (roomGPT/MIT), support-agent (LibreChat/MIT), voice-of-customer (crewAI/MIT, weekly schedule), persian-copywriter (gpt-researcher/Apache-2.0), abandon-cart-recovery (Activepieces/MIT, daily), vendor-price-watcher (browser-use/MIT, draft + approval). Provenance (repo+license+URL) stored in config. 4/6 have defaultToolPlan → fully functional with ZERO API keys; the other 2 are honest by design (need LLM / need approved URL).
+- NEW migration 202609050002_free_agent_blueprints.sql — idempotent agents+permissions+tool_grants seed (ON CONFLICT DO NOTHING, admin edits never overwritten). Applied to live Supabase: store now 12 agents (6 builtin + 6 blueprints), 26 tools, 3 workflows — verified via npm run agents:verify.
+- NEW scripts/smoke-blueprint.ts + npm run agents:smoke — ran support-agent through the REAL runtime against live DB: ok=true, mode=tool_plan, tools executed (getCustomerPreferences, getOrders), honest no_data for the smoke session.
+- Hygiene: untracked generated bundles (.seed-bundle.mjs/.verify-bundle.mjs) that slipped into round-9 commit; gitignored all *.bundle.mjs + .start-log.txt.
+- Tests: NEW blueprints.test.ts (9) — key uniqueness vs built-ins, real tools/permissions only, valid enums/handler, provenance present, tool-plan steps inside grants, no destructive tools. Suite: 104 passed / 3 skipped (DB-gated).
+- Checks: eslint src+scripts 0; tsc 0; vitest 104; build exit 0 with live DATABASE_URL.
+
+Stage Summary:
+- Site now runs 12 agents: 6 built-in + 6 free GitHub-sourced blueprints, all DB-backed, permission-gated, zero-cost without any API key (Ollama-ready for full LLM reasoning).
+- Free activation path for the owner: Ollama (docker) + OLLAMA_BASE_URL env → all declarative agents + blueprints gain full Persian LLM reasoning at no API cost; Dify/Langflow adapters remain plug-and-play per agent.
