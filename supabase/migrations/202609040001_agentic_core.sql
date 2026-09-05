@@ -729,12 +729,12 @@ ON CONFLICT (workflow_id, from_node, to_node, condition_label) DO NOTHING;
 -- ------------------------------------------------------------
 INSERT INTO integration_connections (provider, label, base_url, secret_env_var, auth_scheme, capabilities, is_active, config)
 VALUES
-  ('dify','Dify — Workflow + Agent Platform','https://api.dify.ai/v1','DIFY_API_KEY','bearer',ARRAY['workflow','agent','tools'],false,'{"docs":"https://docs.dify.ai"}'::jsonb),
-  ('langflow','Langflow — Agent/Workflow Builder',NULL,'LANGFLOW_API_KEY','x-api-key',ARRAY['workflow','agent'],false,'{"docs":"https://docs.langflow.org"}'::jsonb),
-  ('ollama','Ollama — مدل‌های Open Source محلی','http://127.0.0.1:11434',NULL,'none',ARRAY['llm','embeddings'],false,'{"chatPath":"/api/chat","embedPath":"/api/embed","tagsPath":"/api/tags"}'::jsonb),
-  ('mem0','Mem0 — حافظه بلندمدت ایجنت','https://api.mem0.ai','MEM0_API_KEY','token',ARRAY['memory'],false,'{"addPath":"/v2/memories/","searchPath":"/v2/memories/search/"}'::jsonb),
-  ('browser_use','Browser Use — ایجنت مرورگر','https://api.browser-use.com','BROWSER_USE_API_KEY','x-api-key',ARRAY['browser'],false,'{"maxSteps":8,"allowedDomains":[]}'::jsonb),
-  ('stagehand','Stagehand — اتوماسیون مرورگر (Playwright)',NULL,'BROWSERBASE_API_KEY','bearer',ARRAY['browser'],false,'{"primitives":["act","extract","observe"]}'::jsonb)
+  ('dify','Dify — Workflow + Agent Platform','https://api.dify.ai/v1','DIFY_API_KEY','bearer',to_jsonb(ARRAY['workflow','agent','tools']),false,'{"docs":"https://docs.dify.ai"}'::jsonb),
+  ('langflow','Langflow — Agent/Workflow Builder',NULL,'LANGFLOW_API_KEY','x-api-key',to_jsonb(ARRAY['workflow','agent']),false,'{"docs":"https://docs.langflow.org"}'::jsonb),
+  ('ollama','Ollama — مدل‌های Open Source محلی','http://127.0.0.1:11434',NULL,'none',to_jsonb(ARRAY['llm','embeddings']),false,'{"chatPath":"/api/chat","embedPath":"/api/embed","tagsPath":"/api/tags"}'::jsonb),
+  ('mem0','Mem0 — حافظه بلندمدت ایجنت','https://api.mem0.ai','MEM0_API_KEY','token',to_jsonb(ARRAY['memory']),false,'{"addPath":"/v2/memories/","searchPath":"/v2/memories/search/"}'::jsonb),
+  ('browser_use','Browser Use — ایجنت مرورگر','https://api.browser-use.com','BROWSER_USE_API_KEY','x-api-key',to_jsonb(ARRAY['browser']),false,'{"maxSteps":8,"allowedDomains":[]}'::jsonb),
+  ('stagehand','Stagehand — اتوماسیون مرورگر (Playwright)',NULL,'BROWSERBASE_API_KEY','bearer',to_jsonb(ARRAY['browser']),false,'{"primitives":["act","extract","observe"]}'::jsonb)
 ON CONFLICT (provider) DO NOTHING;
 
 -- ------------------------------------------------------------

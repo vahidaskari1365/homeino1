@@ -13,5 +13,17 @@ export default defineConfig([
       "no-unused-vars": "off",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    // local workspace scratch (code reviews, tool output, uploads) — never linted
+    ".zz-hr/**",
+    ".zz-tr/**",
+    "homeino_review/**",
+    "tool-results/**",
+    "upload/**",
+    "download/**",
+  ]),
 ]);

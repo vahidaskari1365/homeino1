@@ -13,7 +13,10 @@ const globalForDb = globalThis as typeof globalThis & {
 
 export function getPool(): Pool {
   const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
+  if (!databaseUrl || !/^postgres(ql)?:\/\//i.test(databaseUrl)) {
+    // Missing or non-Postgres (e.g. sandbox `file:` URLs) → treat as
+    // "not configured" so the repository layer falls back to mocks
+    // instantly instead of building a pool that can never connect.
     throw new Error("DATABASE_URL is required");
   }
   globalForDb.__homeinoPool ??= new Pool({
