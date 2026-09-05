@@ -217,7 +217,7 @@ export const runShoppingAssistant: AgentHandler = async (input, ctx) => {
     if (reranked.length) {
       finalRanked = reranked;
       widened = true;
-      ctx.log(`جستجو یک پلهกว้าง‌تر شد — ${reranked.length} محصول واقعی`);
+      ctx.log(`جستجو یک پله وسیع‌تر شد — ${reranked.length} محصول واقعی`);
     }
   }
 

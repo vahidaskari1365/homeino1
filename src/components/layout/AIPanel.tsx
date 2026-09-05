@@ -50,7 +50,9 @@ export function AIPanel() {
     setBusy(true);
     try {
       const reply = await aiService.chat({ message: text, context: buildContext() });
-      update(pendingId, { content: reply.content, pending: false });
+      // Validate before render — never show an empty assistant bubble.
+      const content = typeof reply?.content === "string" && reply.content.trim() ? reply.content : "پاسخی دریافت نشد — لطفاً دوباره بپرس.";
+      update(pendingId, { content, pending: false });
     } catch {
       update(pendingId, { content: "خطایی پیش اومد، دوباره تلاش کن.", pending: false });
     } finally {
