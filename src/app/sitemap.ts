@@ -38,7 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/magazine`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/second-hand`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
-    { url: `${base}/search`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
+    // /search is intentionally excluded: the route is noindex (internal
+    // search results per Google guideline) — keeping it here would send
+    // conflicting signals to crawlers.
     { url: `${base}/ai/design`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
   ];
 

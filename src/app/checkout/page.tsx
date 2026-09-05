@@ -11,6 +11,7 @@ import { resolveCartLines, groupCartParcels } from "@/lib/marketplace";
 import { placeLocalOrder } from "@/data/localOrders";
 import { listSavedAddresses, addSavedAddress } from "@/data/localAddresses";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useDataVersion } from "@/lib/useDataVersion";
 import { toFa, formatPrice, cn, fromFa } from "@/lib/utils";
 
 const STEPS = ["نشانی", "ارسال", "پرداخت"] as const;
@@ -20,6 +21,7 @@ export default function CheckoutPage() {
   const { items, clear } = useCart();
   const { toast } = useUi();
   const hydrated = useHasHydrated();
+  useDataVersion(); // live refresh when another tab mutates the local data layer
   // Address book: empty during SSR/first paint (identical HTML), the picker
   // and the save checkbox appear once localStorage is readable.
   const saved = hydrated ? listSavedAddresses() : [];

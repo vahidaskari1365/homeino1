@@ -5,6 +5,7 @@ import {
   listMySecondHandAds,
   listAllSecondHandAds,
   markSecondHandAdSold,
+  setSecondHandAdStatus,
   removeSecondHandAd,
   mergedSecondHandFeed,
   toggleSavedAd,
@@ -85,5 +86,18 @@ describe("second-hand ads", () => {
 
   it("keeps uploaded images inside the storage quota", () => {
     expect(MAX_IMAGE_BYTES).toBeLessThan(1024 * 1024);
+  });
+
+  it("admin moderation can flip status both ways (sold ↔ active)", () => {
+    const created = createSecondHandAd(draft);
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const id = created.ad.id;
+
+    expect(setSecondHandAdStatus(id, "sold")?.status).toBe("sold");
+    expect(setSecondHandAdStatus(id, "active")?.status).toBe("active");
+    expect(setSecondHandAdStatus("my-nope", "sold")).toBeNull();
+
+    removeSecondHandAd(id);
   });
 });

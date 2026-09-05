@@ -6,6 +6,7 @@ import { Badge, EmptyState, Button, Modal } from "@/components/ui/primitives";
 import { useUi } from "@/stores/useApp";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useDataVersion } from "@/lib/useDataVersion";
 import { listLocalOrders, cancelLocalOrder, orderDisplayStatus, STATUS_LABEL, PAY_LABEL, SHIPPING_LABEL, type LocalOrder, type OrderParcel } from "@/data/localOrders";
 import { parcelTimeline, destinationLine } from "@/lib/orderTracking";
 
@@ -20,6 +21,7 @@ const STATUS_ICON = { delivered: CheckCircle2, shipping: Truck, processing: Cloc
 export default function OrdersPage() {
   const { toast } = useUi();
   const hydrated = useHasHydrated();
+  useDataVersion(); // live refresh when another tab mutates the local data layer
   const [version, setVersion] = useState(0);
   const [tracking, setTracking] = useState<LocalOrder | null>(null);
   const [trackingParcel, setTrackingParcel] = useState(0);

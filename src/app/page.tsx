@@ -39,7 +39,6 @@ export default function HomePage() {
       v.setAttribute("playsinline", "");
       v.setAttribute("webkit-playsinline", "");
       v.setAttribute("muted", "");
-      v.setAttribute("preload", "metadata");
     } catch {
       // ignore
     }
@@ -75,10 +74,33 @@ export default function HomePage() {
     window.addEventListener("touchstart", resumePlayback, { once: true });
     window.addEventListener("pointerdown", resumePlayback, { once: true });
 
+    // Silent retry loop: on mobile networks the first play() call can land
+    // before any data is buffered, some browsers reject it and never re-fire
+    // canplay. Retry quietly every 400ms (max ~8s) until playback starts.
+    let tries = 0;
+    const retry = window.setInterval(() => {
+      if (cancelled || !v.paused || tries++ > 20) {
+        window.clearInterval(retry);
+        return;
+      }
+      v.play().catch(() => {});
+    }, 400);
+    const onPlaying = () => window.clearInterval(retry);
+    v.addEventListener("playing", onPlaying);
+
+    // Coming back to the tab is another autoplay window on some browsers.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tryPlay();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
+      window.clearInterval(retry);
       v.removeEventListener("loadeddata", tryPlay);
       v.removeEventListener("canplay", tryPlay);
+      v.removeEventListener("playing", onPlaying);
+      document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("touchstart", resumePlayback);
       window.removeEventListener("pointerdown", resumePlayback);
     };
@@ -91,13 +113,27 @@ export default function HomePage() {
         {/* parallax background (video) */}
         <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
           <video
-            ref={videoRef}
+            ref={(el) => {
+              videoRef.current = el;
+              // React serialises `muted` as a property-only prop — it never
+              // lands in the SSR HTML, so mobile Safari sees an UNMUTED video
+              // and blocks autoplay (play button instead of playback). Setting
+              // it in the ref callback runs at commit time, before the browser
+              // makes its autoplay decision, so muted inline playback is
+              // granted on iOS Safari and Android Chrome alike.
+              if (el) {
+                el.defaultMuted = true;
+                el.muted = true;
+              }
+            }}
             src={HERO_VIDEO}
             autoPlay
             muted
             playsInline
             webkit-playsinline="true"
-            preload="metadata"
+            preload="auto"
+            disablePictureInPicture
+            aria-hidden="true"
             poster={HERO_POSTER}
             className="h-full w-full object-cover"
           />

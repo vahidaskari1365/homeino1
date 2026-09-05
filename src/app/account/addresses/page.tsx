@@ -5,6 +5,7 @@ import { MapPin, Plus, Trash2, Pencil, BadgeCheck, RefreshCcw } from "lucide-rea
 import { Button, EmptyState, Badge, ConfirmDialog } from "@/components/ui/primitives";
 import { listSavedAddresses, addSavedAddress, updateSavedAddress, deleteSavedAddress, setDefaultAddress, type SavedAddress } from "@/data/localAddresses";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useDataVersion } from "@/lib/useDataVersion";
 import { useUi } from "@/stores/useApp";
 import { fromFa } from "@/lib/utils";
 
@@ -13,6 +14,7 @@ const input = "w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm ou
 export default function AddressBookPage() {
   const { toast } = useUi();
   const hydrated = useHasHydrated();
+  useDataVersion(); // live refresh when another tab mutates the local data layer
   const [version, setVersion] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SavedAddress | null>(null);

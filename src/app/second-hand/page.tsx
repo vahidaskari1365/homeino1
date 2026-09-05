@@ -12,6 +12,7 @@ import {
   AD_CONDITIONS, MAX_IMAGE_BYTES, type AdCondition,
 } from "@/data/localSecondHandAds";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useDataVersion } from "@/lib/useDataVersion";
 import { toFa, formatPrice, cn } from "@/lib/utils";
 import { useUi } from "@/stores/useApp";
 
@@ -22,6 +23,7 @@ export default function SecondHandPage() {
   const [showForm, setShowForm] = useState(false);
   const [version, setVersion] = useState(0);
   const hydrated = useHasHydrated();
+  useDataVersion(); // live refresh when another tab mutates the local data layer
   const { toast } = useUi();
 
   // Real, persisted data — user ads come from localStorage after hydration.

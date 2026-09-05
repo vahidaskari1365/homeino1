@@ -156,6 +156,16 @@ export function removeSecondHandAd(id: string): boolean {
   return true;
 }
 
+/** Admin moderation — set any local ad's status ("active" | "sold"). */
+export function setSecondHandAdStatus(id: string, status: "active" | "sold"): LocalSecondHandAd | null {
+  const ads = read();
+  const target = ads.find((ad) => ad.id === id);
+  if (!target) return null;
+  const next = { ...target, status };
+  write(ads.map((ad) => (ad.id === id ? next : ad)));
+  return next;
+}
+
 // ------------------------------------------------------------
 // SAVED ADS — the heart button on /second-hand. Kept in this module (NOT the
 // product wishlist) because sh*/my-* ids can never resolve as products.

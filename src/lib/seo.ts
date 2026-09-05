@@ -73,6 +73,24 @@ export function articleJsonLd(a: {
   };
 }
 
+/** Portfolio project (CreativeWork) — /projects/[id]. */
+export function projectJsonLd(p: {
+  title: string; id: string; description: string; cover: string; gallery: string[];
+  style: string; room: string; client: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: p.title,
+    description: p.description,
+    image: [p.cover, ...p.gallery].filter(Boolean),
+    url: absoluteUrl(`/projects/${p.id}`),
+    creator: { "@type": "Organization", name: "Homeino" },
+    keywords: [p.style, p.room].filter(Boolean).join("، "),
+    contributor: { "@type": "Person", name: p.client },
+  };
+}
+
 export function breadcrumbJsonLd(items: { name: string; url: string }[]) {
   return {
     "@context": "https://schema.org",

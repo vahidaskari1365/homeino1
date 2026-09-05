@@ -7,12 +7,14 @@ import { Button, EmptyState, Badge, ConfirmDialog } from "@/components/ui/primit
 import { SmartImage } from "@/components/ui/SmartImage";
 import { listMySecondHandAds, markSecondHandAdSold, removeSecondHandAd, type LocalSecondHandAd } from "@/data/localSecondHandAds";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useDataVersion } from "@/lib/useDataVersion";
 import { useUi } from "@/stores/useApp";
 import { toFa, formatPrice } from "@/lib/utils";
 
 export default function MyAdsPage() {
   const { toast } = useUi();
   const hydrated = useHasHydrated();
+  useDataVersion(); // live refresh when another tab mutates the local data layer
   const [version, setVersion] = useState(0);
   const [confirmSold, setConfirmSold] = useState<LocalSecondHandAd | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<LocalSecondHandAd | null>(null);
