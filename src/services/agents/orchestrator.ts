@@ -25,6 +25,7 @@ import { listApprovals, decideApproval, expireStaleApprovals } from "../automati
 import { listExecutionLogs, executionSummary } from "../automation/executionLog";
 import { checkRunBudget, getBudgetStatus, setBudget } from "../automation/costControl";
 import { listAgents, listToolRegistry, agentRegistryMeta } from "./registry";
+import { findCatalogProduct } from "./catalog";
 import { listWorkflows, workflowBuilderMeta } from "../workflows/registry";
 import { customerMemory } from "../memory/customerMemory";
 import { effectiveProfile } from "../memory/preferenceEngine";
@@ -98,7 +99,7 @@ export interface RouteIntentRequest {
   agentKey?: string;
   /** Recent conversation turns (role + text) for multi-turn continuity. */
   history?: { role: "user" | "assistant"; content: string }[];
-  /** Page/product context built by the UI (e.g. «محصول: … id … sku …»). */
+  /** Page/product context built by the UI (e.g. «محصول: … id … sku … slug …»). */
   context?: string;
 }
 
@@ -137,23 +138,26 @@ function expandCheaperFollowUp(message: string, history: { role: string; content
   return message;
 }
 
-/** «محصول: نام محصول (id: p1، sku: SOF-1024)» → structured product context. */
-export function parseProductContext(context?: string): { name: string; id: string; sku: string } | null {
+/** «محصول: نام محصول (id: p1، sku: SOF-1024، slug: sofa-x)» → structured product context.
+ *  slug is optional (older clients omit it) — it lets the server resolve
+ *  DB-only products the static client catalog does not know. */
+export function parseProductContext(context?: string): { name: string; id: string; sku: string; slug: string } | null {
   if (!context || !context.startsWith("محصول:")) return null;
   const rest = context.slice("محصول:".length).trim();
-  const bracket = rest.indexOf("(id:");
+  const metaMatch = /\((?:id|sku|slug):/.exec(rest);
+  const bracket = metaMatch ? metaMatch.index : -1;
   const name = (bracket >= 0 ? rest.slice(0, bracket) : rest).replace(/[—–-]\s*$/, "").trim();
   const meta = bracket >= 0 ? rest.slice(bracket) : rest;
   const id = /id:\s*([A-Za-z0-9_-]+)/i.exec(meta)?.[1] ?? "";
   const sku = /sku:\s*([A-Za-z0-9_-]+)/i.exec(meta)?.[1] ?? "";
-  return name || id || sku ? { name, id, sku } : null;
+  const slug = /slug:\s*([A-Za-z0-9_-]+)/i.exec(meta)?.[1] ?? "";
+  return name || id || sku || slug ? { name, id, sku, slug } : null;
 }
 
 /** True when the turn explicitly refers to «این محصول» (the PDP context product). */
 function wantsCurrentProduct(message: string): boolean {
   return /این محصول|همین محصول|این کالا/.test(message) && /قیمت|شرایط|condition|مشخصات|موجودی|ارسال|تحویل|خرید/.test(message);
 }
-
 /**
  * Route a customer message to the right agent.
  * SKU lookup wins; design requests go to the designer; everything else goes to
@@ -164,7 +168,7 @@ export async function routeIntent(req: RouteIntentRequest): Promise<RouteResult>
   const forced = req.agentKey;
   const productContext = parseProductContext(req.context);
   const history = (req.history ?? []).slice(-8);
-  const wantsPdpProduct = wantsCurrentProduct(message) && Boolean(productContext?.sku);
+  const wantsPdpProduct = wantsCurrentProduct(message) && Boolean(productContext?.sku || productContext?.slug);
 
   // Cheap follow-up rewriting happens BEFORE parsing so the NLU sees a full
   // shopping query («ارزون‌ترش داری؟» → previous query with a lowered budget).
@@ -174,9 +178,20 @@ export async function routeIntent(req: RouteIntentRequest): Promise<RouteResult>
 
   let understanding = message ? extractShoppingIntent(message) : null;
 
-  // Product-page context («قیمت و شرایط این محصول») → treat as exact SKU lookup.
+  // Product-page context («قیمت و شرایط این محصول») → resolve the REAL catalog
+  // product from sku OR slug against the live DB pool, then treat as exact
+  // lookup. The client context may carry a static id that only exists in the
+  // DB under a different uuid — the resolved row's own sku is authoritative.
   if (wantsPdpProduct && understanding) {
-    understanding = { ...understanding, sku: productContext!.sku, isShopping: true, summary: productContext?.name ? `محصول ${productContext.name}` : (understanding.summary || "") };
+    const resolved = (productContext?.sku || productContext?.slug)
+      ? await findCatalogProduct({ sku: productContext!.sku || null, slug: productContext!.slug || null }).catch(() => undefined)
+      : undefined;
+    understanding = {
+      ...understanding,
+      sku: resolved?.sku ?? (productContext!.sku || null),
+      isShopping: true,
+      summary: productContext?.name ? `محصول ${productContext.name}` : (understanding.summary || ""),
+    };
   }
 
   let target = forced ?? "shopping-assistant";

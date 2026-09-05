@@ -9,10 +9,15 @@
 // exactly like a skilled interior-design salesperson.
 // No network, no fabrication: unknown product → null (caller
 // falls back to the normal chat chain).
+//
+// Two data modes share the SAME pure core (buildAdviceFor):
+//   • buildProductAdvice        → static shipped catalog (client fallback)
+//   • productAdviceServer.ts    → live database catalog (server, preferred)
 // ============================================================
 import { getProduct, getProductById, similarProducts } from "@/data/products";
-import { getStyle } from "@/data/styles";
-import type { Product } from "@/types";
+import { styles as staticStyles } from "@/data/styles";
+import { scoreSimilarProducts } from "@/lib/similarProducts";
+import type { Product, Style } from "@/types";
 
 export type AdviceTopic = "pair" | "color" | "style";
 
@@ -24,6 +29,12 @@ export interface AdviceCard {
   currency: string;
   image?: string;
   url: string;
+}
+
+/** Injected catalog context — the pure core never imports data itself. */
+export interface AdviceDataContext {
+  styles: Style[];
+  similar: Product[];
 }
 
 /** Topic detection tuned to the exact PDP chip texts + free-typed variants.
@@ -52,16 +63,18 @@ const CATEGORY_ROLES: Record<string, string> = {
   bathroom: "تکمیل سرویس",
 };
 
-function resolveProduct(slugOrId: string): Product | undefined {
-  return getProduct(slugOrId) ?? getProductById(slugOrId);
+function resolveStyles(product: Product, styles: Style[]): Style[] {
+  return product.styleSlugs
+    .map((s) => styles.find((style) => style.slug === s))
+    .filter((s): s is Style => Boolean(s));
 }
 
 /** Style answer — which style the product belongs to and where it shines. */
-function styleAdvice(product: Product): string | null {
-  const styles = product.styleSlugs.map((s) => getStyle(s)).filter((s) => Boolean(s));
-  const primary = styles[0];
+function styleAdvice(product: Product, styles: Style[]): string | null {
+  const resolved = resolveStyles(product, styles);
+  const primary = resolved[0];
   if (!primary) return null;
-  const secondary = styles[1];
+  const secondary = resolved[1];
   const rooms = primary.suitableRooms?.slice(0, 2).join(" و ");
   const signature = primary.keyFeatures?.[0];
   const parts = [
@@ -73,9 +86,9 @@ function styleAdvice(product: Product): string | null {
 }
 
 /** Color answer — grounded in the product's own colors + its style palette. */
-function colorAdvice(product: Product): string | null {
+function colorAdvice(product: Product, styles: Style[]): string | null {
   const own = product.colors.map((c) => c.name).filter(Boolean);
-  const style = product.styleSlugs.map((s) => getStyle(s)).find((s) => Boolean(s));
+  const style = resolveStyles(product, styles)[0];
   const companion =
     style?.colorPalette.find((c) => !own.includes(c.name) && !NEUTRALS.some((n) => c.name.includes(n))) ??
     style?.colorPalette[0];
@@ -89,10 +102,9 @@ function colorAdvice(product: Product): string | null {
 }
 
 /** Pairing answer — real complementary products scored by style overlap. */
-function pairAdvice(product: Product): { text: string; products: AdviceCard[] } | null {
-  const scored = similarProducts(product.id, 12);
+function pairAdvice(product: Product, similar: Product[]): { text: string; products: AdviceCard[] } | null {
   // Complementary = different sub-category (a sofa pairs with a rug, not another sofa).
-  const complementary = scored.filter(
+  const complementary = similar.filter(
     (p) => p.id !== product.id && (p.categorySlug !== product.categorySlug || (p.subCategorySlug ?? "") !== (product.subCategorySlug ?? "-")),
   );
   // One pick per category → a balanced trio, best-scored first.
@@ -122,20 +134,36 @@ function pairAdvice(product: Product): { text: string; products: AdviceCard[] } 
   return { text, products };
 }
 
-/** Build a grounded answer for a topic + product. null → caller falls back. */
+/** The pure core: a grounded answer for a topic + product + injected data. */
+export function buildAdviceFor(
+  topic: AdviceTopic,
+  product: Product,
+  data: AdviceDataContext,
+): { text: string; products?: AdviceCard[] } | null {
+  if (topic === "style") {
+    const text = styleAdvice(product, data.styles);
+    return text ? { text } : null;
+  }
+  if (topic === "color") {
+    const text = colorAdvice(product, data.styles);
+    return text ? { text } : null;
+  }
+  return pairAdvice(product, data.similar);
+}
+
+/** Static-catalog fallback (client-side, offline-safe). The server path in
+ *  productAdviceServer.ts is preferred — it reads the LIVE database. */
 export function buildProductAdvice(
   topic: AdviceTopic,
   slugOrId: string,
 ): { text: string; products?: AdviceCard[] } | null {
-  const product = resolveProduct(slugOrId);
+  const product = getProduct(slugOrId) ?? getProductById(slugOrId);
   if (!product) return null;
-  if (topic === "style") {
-    const text = styleAdvice(product);
-    return text ? { text } : null;
-  }
-  if (topic === "color") {
-    const text = colorAdvice(product);
-    return text ? { text } : null;
-  }
-  return pairAdvice(product);
+  return buildAdviceFor(topic, product, {
+    styles: staticStyles,
+    similar: similarProducts(product.id, 12),
+  });
 }
+
+/** Re-exported for callers that want to rescore a fresh pool themselves. */
+export { scoreSimilarProducts };

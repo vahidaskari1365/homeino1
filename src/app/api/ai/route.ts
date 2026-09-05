@@ -25,7 +25,7 @@ import { requireUser } from "@/lib/api/auth";
 //   • No keys, providers, or model names reach the client
 // ============================================================
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
         p[key] = sanitizeUserPrompt(p[key] as string);
       }
     }
-    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU", "sessionId", "agentKey", "scenario"]) {
+    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU", "sessionId", "agentKey", "scenario", "slug", "topic"]) {
       if (key in p && typeof p[key] === "string") {
         p[key] = (p[key] as string).replace(/<[^>]+>/g, "").slice(0, 200);
       }
@@ -256,18 +256,40 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
 
     // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----
     if (action === "resolve-sku") {
+      // DB-backed: matches sku OR id OR slug in the live catalog (Supabase),
+      // falling back to the shipped mock catalog when the DB is absent.
       const code = typeof p.code === "string" ? p.code : typeof p.sku === "string" ? p.sku : "";
-      const { getProductBySkuOrCode } = await import("@/data/products");
-      const product = getProductBySkuOrCode(code);
+      const { productsRepository } = await import("@/repositories");
+      const product = code.trim() ? await productsRepository.bySku(code) : undefined;
       if (!product) {
         return json({ error: "این کد محصول در کاتالوگ Homeino پیدا نشد. لطفاً کد محصول را بررسی کنید.", code: "INVALID_SKU" }, 404, requestId);
       }
       return json({ product }, 200, requestId);
     }
     if (action === "match-products") {
+      // The matcher accepts an injectable catalog — feed it the LIVE database
+      // pool (mock catalog when the DB is absent) instead of static rows.
       const { matchStoreProducts } = await import("@/services/ai/roomState");
-      const matches = matchStoreProducts(p as never);
+      const { productsRepository } = await import("@/repositories");
+      const catalog = await productsRepository.list();
+      const matches = matchStoreProducts({ ...(p as Record<string, unknown>), catalog } as never);
       return json({ products: matches }, 200, requestId);
+    }
+    if (action === "advice") {
+      // DB-backed PDP quick questions (pair / color / style) — the live
+      // catalog twin of the client-side static fallback.
+      const { resolveProductAdvice } = await import("@/services/ai/productAdviceServer");
+      const topic = typeof p.topic === "string" ? p.topic : "";
+      const slug = typeof p.slug === "string" ? p.slug : "";
+      try {
+        const advice = await resolveProductAdvice(topic, slug);
+        finish(advice ? "ok" : "degraded", { provider: "product-advice" });
+        return json({ advice }, 200, requestId);
+      } catch {
+        // Never fail the panel: advice:null → client falls back to static.
+        finish("degraded", { provider: "product-advice", errorCode: "ADVICE_UNAVAILABLE" });
+        return json({ advice: null }, 200, requestId);
+      }
     }
     if (action === "understand") {
       const { analysis, source, degraded } = await understandIntent(p as unknown as IntentRequest);

@@ -4,9 +4,10 @@ import {
   categories,
   inventory,
   productCategories,
-  products,
   productImages,
   productStyles,
+  productVariants,
+  products,
   vendors,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -32,14 +33,27 @@ const SORTERS = {
   rating: desc(products.rating),
 } as const;
 
-/** Map a product row + joined images/categories/vendor into a catalog DTO. */
+/** Map a product row + joined images/categories/variants/vendor into a catalog DTO.
+ *  Colors come from the REAL per-color variants (name + attributes.hex) so the
+ *  agents and the storefront see the same palette the vendor configured.
+ *  subCategorySlug is derived from the linked CHILD category (parentId set) —
+ *  without it the agents' structured sub-category filters match nothing. */
 export function serializeProduct(row: {
   product: typeof products.$inferSelect;
   vendor?: typeof vendors.$inferSelect;
   images?: { url: string; alt: string | null; isPrimary: boolean }[];
-  categories?: { slug: string }[];
+  categories?: { slug: string; parentId?: string | null }[];
+  variants?: { name: string; attributes: Record<string, string> | null }[];
 }) {
   const p = row.product;
+  const variantColors = (row.variants ?? [])
+    .map((v) => ({ name: String(v.name ?? "").trim(), hex: String(v.attributes?.hex ?? "").trim() }))
+    .filter((c) => c.name && c.name !== "پیش‌فرض");
+  const colors: { name: string; hex: string }[] = [];
+  for (const c of variantColors) if (!colors.some((x) => x.name === c.name)) colors.push(c);
+  if (!colors.length && p.color) colors.push({ name: p.color, hex: "" });
+  const linkedCategories = row.categories ?? [];
+  const subCategorySlug = linkedCategories.find((c) => c.parentId != null)?.slug;
   return {
     id: p.id,
     slug: p.slug,
@@ -56,6 +70,11 @@ export function serializeProduct(row: {
     tags: p.tags ?? [],
     shortDescription: p.shortDescription,
     inStock: p.status === "active",
+    sku: p.sku ?? undefined,
+    material: p.material ?? undefined,
+    color: p.color ?? undefined,
+    colors,
+    subCategorySlug: subCategorySlug ?? undefined,
     vendor: row.vendor
       ? {
           id: row.vendor.id,
@@ -74,7 +93,7 @@ export function serializeProduct(row: {
 export async function listProducts(query: CatalogQuery = {}) {
   const db = getDb();
   const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(50, Math.max(1, query.limit ?? 12));
+  const limit = Math.min(200, Math.max(1, query.limit ?? 12));
   const offset = (page - 1) * limit;
 
   const conds = [eq(products.status, "active"), isNull(products.deletedAt)];
@@ -143,7 +162,7 @@ export async function listProducts(query: CatalogQuery = {}) {
     : [];
   const cats = productIds.length
     ? await db
-        .select({ productId: productCategories.productId, slug: categories.slug })
+        .select({ productId: productCategories.productId, slug: categories.slug, parentId: categories.parentId })
         .from(productCategories)
         .innerJoin(categories, eq(categories.id, productCategories.categoryId))
         .where(inArray(productCategories.productId, productIds))
@@ -151,6 +170,15 @@ export async function listProducts(query: CatalogQuery = {}) {
 
   const byProduct = (pid: string) => images.filter((i) => i.productId === pid);
   const catsByProduct = (pid: string) => cats.filter((c) => c.productId === pid);
+
+  // Per-color variants → real color names + hexes for the catalog DTO.
+  const variants = productIds.length
+    ? await db
+        .select({ productId: productVariants.productId, name: productVariants.name, attributes: productVariants.attributes })
+        .from(productVariants)
+        .where(and(inArray(productVariants.productId, productIds), eq(productVariants.isActive, true)))
+    : [];
+  const variantsByProduct = (pid: string) => variants.filter((v) => v.productId === pid);
 
   const total = totalRows[0]?.n ?? 0;
   return {
@@ -160,6 +188,7 @@ export async function listProducts(query: CatalogQuery = {}) {
         vendor: r.vendor,
         images: byProduct(r.product.id),
         categories: catsByProduct(r.product.id),
+        variants: variantsByProduct(r.product.id),
       }),
     ),
     meta: { total, page, limit, hasMore: offset + rows.length < total },
@@ -176,17 +205,21 @@ export async function getProductBySlug(slug: string) {
     .limit(1);
   if (!row) throw ApiError.notFound("محصول یافت نشد");
 
-  const [images, cats] = await Promise.all([
+  const [images, cats, variants] = await Promise.all([
     db
       .select()
       .from(productImages)
       .where(eq(productImages.productId, row.product.id))
       .orderBy(asc(productImages.position)),
     db
-      .select({ slug: categories.slug })
+      .select({ slug: categories.slug, parentId: categories.parentId })
       .from(productCategories)
       .innerJoin(categories, eq(categories.id, productCategories.categoryId))
       .where(eq(productCategories.productId, row.product.id)),
+    db
+      .select({ name: productVariants.name, attributes: productVariants.attributes })
+      .from(productVariants)
+      .where(and(eq(productVariants.productId, row.product.id), eq(productVariants.isActive, true))),
   ]);
 
   // available quantity from inventory (real inventory, not frontend state)
@@ -197,7 +230,7 @@ export async function getProductBySlug(slug: string) {
     .limit(1);
 
   return {
-    ...serializeProduct({ product: row.product, vendor: row.vendor, images, categories: cats }),
+    ...serializeProduct({ product: row.product, vendor: row.vendor, images, categories: cats, variants }),
     description: row.product.description,
     dimensions: row.product.dimensions,
     material: row.product.material,

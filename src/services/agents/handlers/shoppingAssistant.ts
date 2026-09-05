@@ -197,17 +197,26 @@ export const runShoppingAssistant: AgentHandler = async (input, ctx) => {
   let widened = false;
   let finalRanked = ranked;
   const text = understanding.q.slice(0, 120);
+  // Widening ladder — the BUDGET is the customer's hardest constraint, so it
+  // is dropped LAST: a same-budget alternative in a neighbouring category or
+  // without the style filter is always a better suggestion than a pricier
+  // product. Each step is still a REAL catalog query (never an invented row)
+  // and `widened` is reported so the answer stays honest about the match.
   const relaxations: Record<string, unknown>[] = [
-    // 1) drop colour/material
+    // 1) drop colour/material (keep budget)
     { q: text, categorySlug: understanding.categorySlug, subCategorySlug: understanding.subCategorySlug, styleSlug: understanding.styleSlugs[0], rooms: understanding.rooms, minPrice: understanding.budget?.min, maxPrice: understanding.budget?.max, inStockOnly: true, limit: 120 },
-    // 2) also drop room + budget
-    { q: text, categorySlug: understanding.categorySlug, subCategorySlug: understanding.subCategorySlug, styleSlug: understanding.styleSlugs[0], inStockOnly: true, limit: 120 },
-    // 3) structured filters only (no free text)
+    // 2) drop rooms (keep budget)
+    { q: text, categorySlug: understanding.categorySlug, subCategorySlug: understanding.subCategorySlug, styleSlug: understanding.styleSlugs[0], minPrice: understanding.budget?.min, maxPrice: understanding.budget?.max, inStockOnly: true, limit: 120 },
+    // 3) drop the style filter (keep budget)
+    { q: text, categorySlug: understanding.categorySlug, subCategorySlug: understanding.subCategorySlug, minPrice: understanding.budget?.min, maxPrice: understanding.budget?.max, inStockOnly: true, limit: 120 },
+    // 4) drop the sub-category (keep budget)
+    { q: text, categorySlug: understanding.categorySlug, minPrice: understanding.budget?.min, maxPrice: understanding.budget?.max, inStockOnly: true, limit: 120 },
+    // 5) structured filters only, no free text (keep budget)
     { categorySlug: understanding.categorySlug, subCategorySlug: understanding.subCategorySlug, styleSlug: understanding.styleSlugs[0], inStockOnly: true, limit: 120 },
-    // 4) free text only
+    // 6) free text only (keep budget)
     { q: text, inStockOnly: true, limit: 120 },
-    // 5) category only
-    { categorySlug: understanding.categorySlug, inStockOnly: true, limit: 120 },
+    // 7) LAST resort: everything except the budget
+    { q: text, categorySlug: understanding.categorySlug, subCategorySlug: understanding.subCategorySlug, styleSlug: understanding.styleSlugs[0], inStockOnly: true, limit: 120 },
   ];
 
   for (const query of relaxations) {

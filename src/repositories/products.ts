@@ -7,6 +7,7 @@ import {
   getProductSalesCount as mockSales,
 } from "../data/products";
 import { normalizeCatalogRating } from "@/lib/rating";
+import { scoreSimilarProducts } from "@/lib/similarProducts";
 import { withDbFallback } from "./_fallback";
 
 export interface ProductsRepository {
@@ -20,7 +21,9 @@ export interface ProductsRepository {
 
 async function remoteList(params: Record<string, string | number | boolean | undefined> = {}): Promise<Product[]> {
   const { listProducts } = await import("../services/catalogService");
-  const result = await listProducts({ ...params, limit: Number(params.limit ?? 50) });
+  // 200 = the full catalog service ceiling — agents must see EVERY real row,
+  // not a truncated first page (the old limit of 50 blinded them to the tail).
+  const result = await listProducts({ ...params, limit: Number(params.limit ?? 200) });
   return result.items.map(toDomain);
 }
 
@@ -32,6 +35,14 @@ function toDomain(value: Record<string, unknown>): Product {
   const tags = Array.isArray(value.tags) ? value.tags as string[] : [];
   const color = typeof value.color === "string" ? value.color : undefined;
   const material = typeof value.material === "string" ? value.material : undefined;
+  // Real per-color variants from the DB (name + hex) — the agent color tools
+  // and PDP color advice read these; fallback to the single color column.
+  const dtoColors = Array.isArray(value.colors)
+    ? (value.colors as { name?: unknown; hex?: unknown }[])
+    : [];
+  const variantColors = dtoColors
+    .map((c) => ({ name: String(c?.name ?? "").trim(), hex: String(c?.hex ?? "").trim() || "#cdbfa6" }))
+    .filter((c) => c.name);
   return {
     id: String(value.id ?? ""),
     sku: typeof value.sku === "string" ? value.sku : undefined,
@@ -40,6 +51,7 @@ function toDomain(value: Record<string, unknown>): Product {
     brand: String(value.brand ?? vendor?.name ?? "هومینو"),
     storeId: String(vendor?.id ?? value.vendorId ?? ""),
     categorySlug: categorySlugs[0] ?? "furniture",
+    subCategorySlug: typeof value.subCategorySlug === "string" ? value.subCategorySlug : undefined,
     styleSlugs,
     price: Number(value.price ?? 0),
     oldPrice: value.compareAtPrice != null ? Number(value.compareAtPrice) : undefined,
@@ -48,7 +60,7 @@ function toDomain(value: Record<string, unknown>): Product {
     reviewsCount: Number(value.reviewsCount ?? 0),
     purchaseCount: Number(value.salesCount ?? 0),
     images,
-    colors: color ? [{ name: color, hex: "#cdbfa6" }] : [],
+    colors: variantColors.length ? variantColors : color ? [{ name: color, hex: "#cdbfa6" }] : [],
     materials: material ? [material] : [],
     dimensions: typeof value.dimensions === "string" ? value.dimensions : undefined,
     description: String(value.description ?? value.shortDescription ?? ""),
@@ -83,7 +95,16 @@ export const productsRepository: ProductsRepository = {
   },
   byCategory: async (slug) => withDbFallback(mockByCategory(slug), () => remoteList({ categorySlug: slug })),
   byStyle: async (slug) => withDbFallback(mockByStyle(slug), () => remoteList({ styleSlug: slug })),
-  similar: async (id, take = 4) => withDbFallback(mockSimilar(id, take), async () => (await remoteList()).filter(p => p.id !== id).slice(0, take)),
+  similar: async (id, take = 4) =>
+    withDbFallback(mockSimilar(id, take), async () => {
+      // Real style-overlap scoring over the live pool (shared styles × 2 +
+      // same category + same store) — replaces the old "first N rows" stub
+      // that had nothing to do with similarity.
+      const all = await remoteList();
+      const target = all.find((p) => p.id === id);
+      if (!target) return [];
+      return scoreSimilarProducts(target, all, take);
+    }),
   trending: async (take = 12) => withDbFallback(mockTrending.slice(0, take), () => remoteList({ sort: "popular", limit: take })),
   salesCount: async (product) => {
     if (!process.env.DATABASE_URL) return mockSales(product);

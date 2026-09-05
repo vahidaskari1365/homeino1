@@ -85,6 +85,10 @@ export const aiService = {
   chat: (input: ChatReplyInput) => callAiServer<ChatReply>("chat", input),
   /** Grounded chat: /api/ai action=agent → real catalog + output-guarded answers. */
   agentChat: (input: ChatReplyInput & { sessionId?: string }) => callAiServer<AgentChatResult>("agent", input),
+  /** DB-backed PDP quick questions: /api/ai action=advice → grounded pair/color/style
+   *  answer from the LIVE catalog (null → caller falls back to the static engine). */
+  productAdvice: (input: { topic: string; slug: string }) =>
+    callAiServer<{ advice: { text: string; products?: unknown[] } | null }>("advice", input),
   suggest: (input: { room: string; style: string; budget?: string }) => callAiServer<DecorSuggestion>("suggest", input),
   /** LLM intent understanding — structured JSON, free (0 credits). */
   understand: (input: IntentRequest) => callAiServer<IntentAnalysis>("understand", input),

@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { X, Sparkles, Send, ImagePlus, Wand2, Heart } from "lucide-react";
 import { useUi, useChat } from "@/stores/useApp";
 import { aiService, type AgentChatResult } from "@/services/ai";
-import { detectAdviceTopic, buildProductAdvice, type AdviceTopic } from "@/services/ai/productAdvice";
+import { detectAdviceTopic, buildProductAdvice, type AdviceTopic, type AdviceCard } from "@/services/ai/productAdvice";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { getProduct } from "@/data/products";
 import { SmartImage } from "@/components/ui/SmartImage";
@@ -59,13 +59,15 @@ export function AIPanel() {
   const hydrated = useHasHydrated();
 
   // Build context string so the AI knows where the user is. On product pages
-  // this carries the REAL Persian product name + id + sku — never an English slug.
+  // this carries the REAL Persian product name + id + sku + slug — never an
+  // English slug alone. The slug lets the SERVER resolve DB-only products
+  // (vendor-added items that the static client catalog does not know).
   const buildContext = (): string => {
     if (pathname.startsWith("/products/")) {
       const slug = decodeURIComponent(pathname.split("/products/")[1] ?? "").split(/[?#]/)[0];
       const product = getProduct(slug);
-      if (product) return `محصول: ${product.name} (id: ${product.id}، sku: ${product.sku ?? "-"})`;
-      return `محصول: ${slug}`;
+      if (product) return `محصول: ${product.name} (id: ${product.id}، sku: ${product.sku ?? "-"}، slug: ${product.slug})`;
+      return `محصول: ${slug} (slug: ${slug})`;
     }
     if (pathname.startsWith("/stores/")) return `فروشگاه: ${decodeURIComponent(pathname.split("/stores/")[1])}`;
     if (pathname.startsWith("/inspiration/")) return `الهام: در حال مشاهده ایده دکوراسیون`;
@@ -86,12 +88,11 @@ export function AIPanel() {
     scrollRef.current?.scrollTo({ top: 9e9, behavior: "smooth" });
   }, [messages]);
 
-  /** Grounded first: product-aware topics (pair/color/style) short-circuit
-   *  BEFORE the network — answered instantly from the real catalog (colors,
-   *  styleSlugs, style palettes, style-overlap scoring), so PDP quick
-   *  questions get a correct, SHORT answer every time. Everything else runs
-   *  the agent chain (real catalog products) and falls back to the chat
-   *  provider (mock advice, or LLM when keys are configured). */
+  /** Grounded first: product-aware topics (pair/color/style) are answered
+   *  from the LIVE database catalog (/api/ai action=advice — reflects vendor
+   *  adds, price changes, restocks) with the static engine as offline
+   *  fallback. Everything else runs the agent chain (real catalog products)
+   *  and falls back to the chat provider. */
   const send = async (text: string, ask?: { topic?: AdviceTopic; productSlug?: string }) => {
     if (!text.trim()) return;
     const topic = ask?.topic ?? detectAdviceTopic(text);
@@ -100,18 +101,9 @@ export function AIPanel() {
       (pathname.startsWith("/products/")
         ? decodeURIComponent(pathname.split("/products/")[1] ?? "").split(/[?#]/)[0]
         : "");
-    const advice = topic && slug ? buildProductAdvice(topic, slug) : null;
-    if (advice) {
-      setInput("");
-      push({ role: "user", content: text });
-      push({
-        role: "assistant",
-        content: advice.text,
-        ...(advice.products?.length ? { products: toProductCards(advice.products) } : {}),
-      });
-      return;
-    }
-    if (busy) return;
+    // The advice path is a cheap catalog read — it may run even while an
+    // agent turn is in flight, exactly like the previous instant answers.
+    if (busy && !(topic && slug)) return;
     setInput("");
     const history = useChat
       .getState()
@@ -129,6 +121,26 @@ export function AIPanel() {
       update(pendingId, { content: safe, pending: false, ...(products?.length ? { products } : {}) });
     };
     try {
+      if (topic && slug) {
+        // 1) live DB advice → 2) static fallback → 3) agent chain.
+        let advice: { text: string; products?: AdviceCard[] } | null = null;
+        try {
+          const res = await aiService.productAdvice({ topic, slug });
+          advice = (res?.advice ?? null) as { text: string; products?: AdviceCard[] } | null;
+        } catch {
+          // API unreachable → static engine keeps PDP chips working offline.
+        }
+        if (!advice) advice = buildProductAdvice(topic, slug);
+        if (advice) {
+          finish(advice.text, toProductCards(advice.products ?? []));
+          return;
+        }
+        if (busy) {
+          // Another turn is already running the agent chain — don't double-run.
+          finish("برای این سؤال فعلاً پاسخ آماده‌ای ندارم — یه بار دیگه امتحان کن.");
+          return;
+        }
+      }
       const agent: AgentChatResult = await aiService.agentChat({ message: text, context, history, sessionId });
       const agentText = typeof agent?.content === "string" ? agent.content.trim() : "";
       const agentCards = toProductCards(agent?.products);
