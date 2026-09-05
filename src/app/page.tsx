@@ -153,7 +153,7 @@ export default function HomePage() {
             <div className="max-w-2xl">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
                 <Badge tone="dark" className="mb-6 border-gold/30 bg-white/10 px-4 py-1.5 text-gold-soft backdrop-blur">
-                  <Sparkles size={13} /> خانه · دکوراسیون · هوش مصنوعی
+                  <Sparkles size={13} /> خانه · دکوراسیون · هومینو استودیو
                 </Badge>
               </motion.div>
               <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
@@ -167,7 +167,7 @@ export default function HomePage() {
                   <Search size={18} /> کشف محصولات
                 </Link>
                 <Link href="/ai/design" className="inline-flex items-center justify-center gap-2 rounded-xl border border-cream/30 px-5 py-3 font-medium text-cream transition hover:bg-white/10">
-                  <Wand2 size={18} /> طراحی فضای من با AI
+                  <Wand2 size={18} /> طراحی فضای من با هومینو استودیو
                 </Link>
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }} className="mt-8 flex flex-wrap items-center gap-4 text-sm text-cream/70">
@@ -194,7 +194,7 @@ export default function HomePage() {
       <section className="surface-emerald border-y border-gold/15 py-5 text-cream">
         <Container>
           <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-            {[[Lightbulb, "الهام‌بخش و واقعی"], [Store, "بازارگاه چندفروشگاهی"], [Sparkles, "طراحی با هوش مصنوعی"], [BadgeCheck, "فروشگاه معتبر"]].map(([Icon, t]) => (
+            {[[Lightbulb, "الهام‌بخش و واقعی"], [Store, "بازارگاه چندفروشگاهی"], [Sparkles, "طراحی با هومینو استودیو"], [BadgeCheck, "فروشگاه معتبر"]].map(([Icon, t]) => (
               <div key={t as string} className="flex items-center justify-center gap-2 text-sm text-cream/80"><Icon size={18} className="text-gold-soft" /> {t as string}</div>
             ))}
           </div>
@@ -249,8 +249,8 @@ export default function HomePage() {
           <Reveal>
             <div className="relative overflow-hidden rounded-[var(--radius-xl)] surface-emerald text-cream shadow-[var(--shadow-lift)]">
               <div className="grid min-h-[560px] lg:grid-cols-[.9fr_1.1fr] lg:min-h-[510px]">
-                <div className="relative min-h-64 overflow-hidden lg:order-2 lg:min-h-full"><SmartImage src={IMG.living2} alt="طراحی فضای نشیمن با Homeino AI" className="absolute inset-0 h-full w-full" /><div className="absolute inset-0 bg-gradient-to-t from-ink/72 via-transparent to-transparent lg:bg-gradient-to-r lg:from-ink/30 lg:to-transparent" /><button className="absolute left-4 top-4 flex min-h-10 items-center gap-2 rounded-full border border-white/20 bg-ink/45 px-3 text-xs font-bold text-cream backdrop-blur"><Play size={14} className="fill-current" /> دموی طراحی</button><div className="absolute bottom-4 right-4 rounded-xl border border-white/15 bg-cream/92 p-3 text-ink shadow-lg backdrop-blur"><div className="text-[10px] font-bold text-terracotta-deep">پیشنهاد هوشمند</div><div className="mt-1 flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-[#c4a47d]" /><span className="text-xs font-bold">پالت گرم و طبیعی</span></div></div></div>
-                <div className="relative flex flex-col justify-center p-6 sm:p-9 lg:p-12"><div className="absolute inset-0 grain opacity-50" /><div className="relative"><Badge tone="gold" className="border-gold/35 bg-gold/10 text-gold-soft"><Sparkles size={12} /> Homeino AI</Badge><h2 className="mt-5 text-balance text-3xl font-black text-cream sm:text-4xl">قبل از خرید، نتیجه را در خانه‌ات ببین.</h2><p className="mt-4 text-pretty text-sm leading-8 text-cream/68 sm:text-base">عکس فضای خودت را بارگذاری کن، سبک و وسایل را انتخاب کن و یک پیش‌نمایش هوشمند بساز. سپس محصولات همان چیدمان را مستقیم بخر.</p><div className="mt-6 grid gap-2 text-sm text-cream/78 sm:grid-cols-2">{["آپلود امن تصویر", "انتخاب سبک و بودجه", "محصولات واقعی بازارگاه", "خرید کامل چیدمان"].map((item) => <div key={item} className="flex items-center gap-2"><BadgeCheck size={15} className="text-sage-soft" /> {item}</div>)}</div><div className="mt-7 flex flex-col gap-3 sm:flex-row"><ButtonLink href="/ai/design" variant="gold" size="lg"><Wand2 size={18} /> طراحی فضای من</ButtonLink><ButtonLink href="/inspiration" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream">دنبال الهام بگرد</ButtonLink></div></div></div>
+                <div className="relative min-h-64 overflow-hidden lg:order-2 lg:min-h-full"><SmartImage src={IMG.living2} alt="طراحی فضای نشیمن با Homeino Studio" className="absolute inset-0 h-full w-full" /><div className="absolute inset-0 bg-gradient-to-t from-ink/72 via-transparent to-transparent lg:bg-gradient-to-r lg:from-ink/30 lg:to-transparent" /><button className="absolute left-4 top-4 flex min-h-10 items-center gap-2 rounded-full border border-white/20 bg-ink/45 px-3 text-xs font-bold text-cream backdrop-blur"><Play size={14} className="fill-current" /> دموی طراحی</button><div className="absolute bottom-4 right-4 rounded-xl border border-white/15 bg-cream/92 p-3 text-ink shadow-lg backdrop-blur"><div className="text-[10px] font-bold text-terracotta-deep">پیشنهاد هوشمند</div><div className="mt-1 flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-[#c4a47d]" /><span className="text-xs font-bold">پالت گرم و طبیعی</span></div></div></div>
+                <div className="relative flex flex-col justify-center p-6 sm:p-9 lg:p-12"><div className="absolute inset-0 grain opacity-50" /><div className="relative"><Badge tone="gold" className="border-gold/35 bg-gold/10 text-gold-soft"><Sparkles size={12} /> هومینو استودیو</Badge><h2 className="mt-5 text-balance text-3xl font-black text-cream sm:text-4xl">قبل از خرید، نتیجه را در خانه‌ات ببین.</h2><p className="mt-4 text-pretty text-sm leading-8 text-cream/68 sm:text-base">عکس فضای خودت را بارگذاری کن، سبک و وسایل را انتخاب کن و یک پیش‌نمایش هوشمند بساز. سپس محصولات همان چیدمان را مستقیم بخر.</p><div className="mt-6 grid gap-2 text-sm text-cream/78 sm:grid-cols-2">{["آپلود امن تصویر", "انتخاب سبک و بودجه", "محصولات واقعی بازارگاه", "خرید کامل چیدمان"].map((item) => <div key={item} className="flex items-center gap-2"><BadgeCheck size={15} className="text-sage-soft" /> {item}</div>)}</div><div className="mt-7 flex flex-col gap-3 sm:flex-row"><ButtonLink href="/ai/design" variant="gold" size="lg"><Wand2 size={18} /> طراحی فضای من</ButtonLink><ButtonLink href="/inspiration" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream">دنبال الهام بگرد</ButtonLink></div></div></div>
               </div>
             </div>
           </Reveal>
@@ -302,7 +302,7 @@ export default function HomePage() {
       <section className="pb-8 sm:pb-12">
         <Container>
           <div className="overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-l from-terracotta-deep to-ink p-6 text-cream shadow-[var(--shadow-card)] sm:p-10">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران خانه‌دوست</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> کشف محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با AI</ButtonLink></div></div>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران خانه‌دوست</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> کشف محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با هومینو استودیو</ButtonLink></div></div>
           </div>
         </Container>
       </section>

@@ -166,7 +166,7 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
     key: "designer",
     name: "ایجنت طراحی AI",
     description:
-      "پل بین AI Designer و سیستم ایجنتی: حفظ محصول واقعی (SKU)، تطبیق محصولات کاتالوگ با طرح تولیدشده و ذخیره پیشنهادها.",
+      "پل بین هومینو استودیو و سیستم ایجنتی: حفظ محصول واقعی (SKU)، تطبیق محصولات کاتالوگ با طرح تولیدشده و ذخیره پیشنهادها.",
     type: "generator",
     status: "active",
     runtime: "local",
@@ -320,7 +320,7 @@ export const WORKFLOW_NODE_TYPES = [
 export const NODE_TYPE_LABELS: Record<(typeof WORKFLOW_NODE_TYPES)[number], string> = {
   trigger: "تریگر",
   condition: "شرط",
-  agent: "ایجنت هوش مصنوعی",
+  agent: "ایجنت هومینو استودیو",
   db_query: "کوئری دیتابیس",
   db_update: "به‌روزرسانی دیتابیس",
   recommendation: "پیشنهاد محصول",

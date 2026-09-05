@@ -22,7 +22,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   recommendation: "پیشنهاد",
   automation: "اتوماسیون",
   commerce: "تجارت",
-  ai: "هوش مصنوعی",
+  ai: "هومینو استودیو",
   browser: "مرورگر",
   memory: "حافظه",
   notification: "اعلان",

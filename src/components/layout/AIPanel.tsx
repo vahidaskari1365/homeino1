@@ -71,7 +71,7 @@ export function AIPanel() {
     }
     if (pathname.startsWith("/stores/")) return `فروشگاه: ${decodeURIComponent(pathname.split("/stores/")[1])}`;
     if (pathname.startsWith("/inspiration/")) return `الهام: در حال مشاهده ایده دکوراسیون`;
-    if (pathname.startsWith("/ai/")) return `استودیو طراحی هوش مصنوعی`;
+    if (pathname.startsWith("/ai/")) return `هومینو استودیو`;
     if (pathname === "/") return `صفحه اصلی Homeino`;
     return `صفحه: ${pathname}`;
   };
@@ -261,7 +261,7 @@ export function AIPanel() {
             </button>
           </div>
           <button onClick={() => { setAiPanel(false); router.push("/ai/design"); }} className="mt-2 w-full text-center text-xs text-terracotta-deep hover:underline">
-            ورود به AI استودیو ←
+            ورود به هومینو استودیو ←
           </button>
         </div>
       </aside>

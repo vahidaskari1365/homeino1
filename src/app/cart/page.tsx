@@ -134,7 +134,7 @@ export default function CartPage() {
           <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-muted"><ShieldCheck size={13} className="text-sage" /> پرداخت رمزنگاری‌شده · ضمانت بازگشت ۷ روزه</div>
           <Link href="/products" className="mt-2 block text-center text-sm text-terracotta-deep hover:underline">ادامه خرید</Link>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link href="/ai/design" className="flex items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/5 py-2.5 text-[11px] font-bold text-gold transition hover:bg-gold/10"><Sparkles size={13} /> طراحی با AI</Link>
+            <Link href="/ai/design" className="flex items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/5 py-2.5 text-[11px] font-bold text-gold transition hover:bg-gold/10"><Sparkles size={13} /> طراحی با هومینو استودیو</Link>
             <Link href="/inspiration" className="flex items-center justify-center gap-1.5 rounded-xl border border-clay/50 bg-ivory-2 py-2.5 text-[11px] font-bold text-ink-muted transition hover:text-ink"><Lightbulb size={13} /> الهام بگیر</Link>
           </div>
         </aside>

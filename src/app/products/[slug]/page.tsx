@@ -227,7 +227,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               {product!.price > 30000000 && (
                 <div className="mt-3 flex items-start gap-1.5 border-t border-clay/30 pt-2 text-[11px] leading-5 text-ink-muted">
                   <ShieldCheck size={13} className="mt-0.5 shrink-0 text-sage" />
-                  <span>خرید مطمئن: این محصول دارای <b className="text-ink">ضمانت اصالت</b> و <b className="text-ink">۷ روز بازگشت بدون قید و شرط</b> است. قبل از خرید می‌توانید با هوش مصنوعی آن را در فضای خودتان تصور کنید.</span>
+                  <span>خرید مطمئن: این محصول دارای <b className="text-ink">ضمانت اصالت</b> و <b className="text-ink">۷ روز بازگشت بدون قید و شرط</b> است. قبل از خرید می‌توانید با هومینو استودیو آن را در فضای خودتان تصور کنید.</span>
                 </div>
               )}
             </div>
@@ -241,7 +241,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
             {/* AI section */}
             <div className="mt-5 rounded-2xl border border-gold/30 bg-gradient-to-bl from-gold/8 to-terracotta/5 p-5">
-              <div className="mb-3 flex items-center gap-2 font-display font-bold text-ink"><Sparkles size={18} className="text-gold" /> هوش مصنوعی برای این محصول</div>
+              <div className="mb-3 flex items-center gap-2 font-display font-bold text-ink"><Sparkles size={18} className="text-gold" /> هومینو استودیو برای این محصول</div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {aiActions.map((a) => (
                   <button key={a.label} onClick={() => onAi(a.label)} className="flex items-center gap-2 rounded-xl border border-clay/40 bg-cream px-3 py-2.5 text-right text-sm text-ink transition hover:border-gold hover:shadow-sm">

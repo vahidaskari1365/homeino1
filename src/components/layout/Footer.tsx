@@ -52,7 +52,7 @@ export function Footer() {
               <span className="font-display text-xl font-black text-cream">Home<span className="text-terracotta-soft">ino</span></span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-6 text-cream/60">
-              هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان. الهام، محصول، فروشگاه و طراحی با هوش مصنوعی.
+              هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان. الهام، محصول، فروشگاه و طراحی با هومینو استودیو.
             </p>
             {socialNote && <p className="mt-2 text-xs text-gold-soft">شبکه‌های اجتماعی Homeino به‌زودی راه می‌افتند.</p>}
             <div className="mt-4 flex gap-2">
@@ -63,7 +63,7 @@ export function Footer() {
             {/* Newsletter capture with incentive */}
             <div className="mt-5 rounded-xl border border-gold/25 bg-gold/5 p-4">
               <div className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-soft"><Gift size={16} /> عضو خبرنامه شو، هدیه بگیر</div>
-              <p className="mb-3 text-xs leading-5 text-cream/60">با عضویت، کد تخفیف ۱۰٪ و ۲۰ اعتبار هوش مصنوعی رایگان بگیر.</p>
+              <p className="mb-3 text-xs leading-5 text-cream/60">با عضویت، کد تخفیف ۱۰٪ و ۲۰ اعتبار هومینو استودیو رایگان بگیر.</p>
               <NewsletterForm />
             </div>
           </div>

@@ -5,6 +5,7 @@
 import type { RoomElement } from "@/services/ai/roomState";
 import { categoryToRoomElement } from "@/services/ai/roomState";
 import type { ProductPlacementPlan } from "@/services/ai/placement";
+import type { StudioPlacementPlan } from "@/services/ai/studioPlacement";
 import type { PipelineResult } from "@/services/ai/pipeline";
 import type { Product } from "@/types";
 import type { Placement } from "@/components/ProductOverlay";
@@ -67,4 +68,26 @@ export function buildScopeSummary(
 export function makePlacements(prods: Product[]): Placement[] {
   const n = prods.length; if (!n) return [];
   return prods.map((p, i) => { const cols = Math.min(n, 3); const col = i % cols; const row = Math.floor(i / cols); const rows = Math.ceil(n / cols); const x = cols === 1 ? 0.5 : 0.22 + (0.56 * col) / (cols - 1); const y = rows === 1 ? 0.62 : 0.42 + (0.4 * row) / Math.max(1, rows - 1); return { product: p, xNorm: x, yNorm: y, scale: 1 }; });
+}
+
+/**
+ * Studio replacement plans → overlay placements. Each product lands at the
+ * CENTER of its analyzed region with its analyzed width — so the on-screen
+ * overlay matches the composite renderer 1:1.
+ */
+export function plansToPlacements(products: Product[], plans: StudioPlacementPlan[]): Placement[] {
+  return plans.flatMap((plan) => {
+    const product = products.find((p) => p.id === plan.productId);
+    if (!product) return [];
+    return [{
+      product,
+      xNorm: Math.min(0.97, Math.max(0.03, plan.targetRegion.x + plan.targetRegion.width / 2)),
+      yNorm: Math.min(0.97, Math.max(0.03, plan.targetRegion.y + plan.targetRegion.height / 2)),
+      scale: 1,
+      rotation: plan.rotation,
+      widthPct: plan.widthPct,
+      heightSquash: plan.squash ?? 1,
+      glow: plan.glow,
+    }];
+  });
 }

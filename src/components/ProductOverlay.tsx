@@ -13,6 +13,12 @@ export interface Placement {
   yNorm: number;
   scale: number;
   rotation?: number;
+  /** Analyzed width as a share of the image width (0..1) — studio replacement. */
+  widthPct?: number;
+  /** Perspective squash for ground items (rug) — composite only. */
+  heightSquash?: number;
+  /** Light projection for luminaires — composite only. */
+  glow?: { color: string; radiusPct: number; intensity: number; warmth?: string };
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0));
@@ -115,7 +121,7 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
               role="button"
               aria-label={`${p.name} — کلیدهای جهت‌نما برای حرکت، + و - برای اندازه`}
               className={cn("absolute cursor-grab touch-none outline-none transition-[box-shadow] focus-visible:ring-2 focus-visible:ring-gold active:cursor-grabbing", isSel && "z-30")}
-              style={{ ...posStyle, width: "15%", zIndex: isSel ? 30 : 10, transform: `translate(-50%, -50%) scale(${pl.scale}) rotate(${pl.rotation || 0}deg)` }}
+              style={{ ...posStyle, width: `${Math.round(clamp01Width(pl.widthPct ?? 0.15) * 100)}%`, zIndex: isSel ? 30 : 10, transform: `translate(-50%, -50%) scale(${pl.scale}) rotate(${pl.rotation || 0}deg)` }}
               onPointerDown={(e) => startDrag(e, p.id)}
               onWheel={(e) => onWheel(e, pl)}
               onKeyDown={(e) => onKeyDown(e, pl)}
@@ -184,4 +190,8 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
 
 function clamp01Scale(v: number): number {
   return Math.min(3, Math.max(0.3, Number.isFinite(v) ? v : 1));
+}
+
+function clamp01Width(v: number): number {
+  return Math.min(0.95, Math.max(0.05, Number.isFinite(v) ? v : 0.15));
 }

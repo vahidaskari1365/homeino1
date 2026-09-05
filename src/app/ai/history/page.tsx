@@ -26,7 +26,7 @@ export default function AIHistoryPage() {
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="AI استودیو" title="تاریخچه طراحی‌ها" desc="همه‌ی طراحی‌هایی که ساخته‌ای را اینجا پیدا کن." action={<Link href="/ai/design"><Button><Sparkles size={16} /> طراحی جدید</Button></Link>} />
+      <PageHeader eyebrow="هومینو استودیو" title="تاریخچه طراحی‌ها" desc="همه‌ی طراحی‌هایی که ساخته‌ای را اینجا پیدا کن." action={<Link href="/ai/design"><Button><Sparkles size={16} /> طراحی جدید</Button></Link>} />
 
       <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
         {/* designs */}

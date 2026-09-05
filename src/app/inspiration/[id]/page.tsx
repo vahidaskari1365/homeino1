@@ -39,13 +39,13 @@ export default function InspirationDetailPage({ params }: { params: Promise<{ id
           </div>
           <h1 className="mt-4 font-display text-3xl font-black text-ink">{insp!.title}</h1>
           <p className="mt-3 leading-8 text-ink-muted">
-            این طراحی از سبک {style?.name} الهام گرفته شده. محصولات استفاده‌شده در این طراحی را می‌توانی مستقیماً از Homeino بخری یا با هوش مصنوعی، مشابه آن را برای اتاق خودت بسازی.
+            این طراحی از سبک {style?.name} الهام گرفته شده. محصولات استفاده‌شده در این طراحی را می‌توانی مستقیماً از Homeino بخری یا با هومینو استودیو، مشابه آن را برای اتاق خودت بسازی.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button variant={wished ? "primary" : "outline"} onClick={() => { wl.toggleInspiration(insp!.id); toast(wished ? "حذف شد" : "ذخیره شد"); }}>
               <Heart size={16} className={cn(wished && "fill-current")} /> {wished ? "ذخیره شد" : "ذخیره ایده"}
             </Button>
-            <Link href="/ai/design"><Button className="btn-accent"><Wand2 size={16} /> بساز مشابهش با AI</Button></Link>
+            <Link href="/ai/design"><Button className="btn-accent"><Wand2 size={16} /> بساز مشابهش با هومینو استودیو</Button></Link>
             {style && <Link href={`/styles/${style.slug}`}><Button variant="ghost">سبک {style.name} ←</Button></Link>}
           </div>
 

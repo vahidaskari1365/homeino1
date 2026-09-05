@@ -44,7 +44,7 @@ interface DraftWorkflow {
 const NODE_LABEL_FA: Record<string, string> = {
   trigger: "تریگر",
   condition: "شرط",
-  agent: "ایجنت هوش مصنوعی",
+  agent: "ایجنت هومینو استودیو",
   db_query: "کوئری پایگاه‌داده",
   db_update: "بروزرسانی پایگاه‌داده",
   recommendation: "پیشنهاد محصول",

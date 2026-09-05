@@ -42,7 +42,7 @@ export const NOTIFICATION_LABELS: Record<NotificationType, { title: string; desc
   back_in_stock: { title: "موجود شدن محصول", desc: "وقتی محصول ناموجود دوباره موجود شد" },
   design_reminder: { title: "یادآوری طراحی", desc: "یادآوری طراحی‌های ناتمام" },
   new_product: { title: "محصول جدید", desc: "محصول جدید در دسته‌های موردعلاقه" },
-  ai_suggestion: { title: "پیشنهاد هوش مصنوعی", desc: "ایده‌های طراحی جدید بر اساس سلیقه‌ات" },
+  ai_suggestion: { title: "پیشنهاد هومینو استودیو", desc: "ایده‌های طراحی جدید بر اساس سلیقه‌ات" },
   credit_bonus: { title: "پاداش و اعتبار", desc: "اعتبار هدیه و کمپین‌های تخفیف" },
   order_update: { title: "وضعیت سفارش", desc: "به‌روزرسانی وضعیت ارسال و تحویل" },
   store_update: { title: "فروشگاه‌های دنبال‌شده", desc: "محصول جدید از فروشگاه‌های دنبال‌شده" },

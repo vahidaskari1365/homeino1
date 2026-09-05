@@ -1,6 +1,6 @@
 // ============================================================
 // Product-aware advice engine — the brain behind the PDP
-// «هوش مصنوعی برای این محصول» quick questions and any
+// «هومینو استودیو برای این محصول» quick questions and any
 // pairing/color/style question asked while a product is open.
 //
 // Every answer is built from REAL catalog data (product colors,

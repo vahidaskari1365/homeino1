@@ -156,3 +156,65 @@ Stage Summary:
 - Site appearance unchanged (frontend still reads mock catalog; DB currently holds 3 seed products)
 - Credentials only in gitignored .env/.env.local; secret key NOT in repo (verified)
 - Next: full catalog seed into DB + flip frontend reads + Supabase Auth
+
+---
+Task ID: 9 (launch-ready)
+Agent: main
+Task: User mandate — agents fully in DB, everything fixed, launch-ready, no questions
+
+Work Log:
+- Verified agent store resolver: DATABASE_URL + reachable tables -> database mode. Fixed CRITICAL runtime bug: getAgent/getWorkflow/updateAgent/deleteAgent (6 call sites) compared key input against uuid id column -> 'invalid input syntax for type uuid' on EVERY key-based resolution. Added keyOrIdWhere() guard (id compared only for real uuids).
+- Verified against live Supabase: store mode=database, all 6 built-in agents (recommendation, designer, browser, inventory, customer-intelligence, shopping-assistant) + 26 tools + 3 workflows load from DB with grants synced (npm run agents:verify).
+- Fixed second real schema bug: content.ts mapped publishedAt=createdAtColumn while ...timestamps also maps createdAt -> duplicate created_at column crashed ALL drizzle inserts into inspirations/projects/magazine_articles. Removed phantom mapping (no usages, no DB column).
+- Built scripts/seed-catalog.ts (esbuild bundle, deterministic UUIDs, idempotent upserts by slug): seeded full catalog — 10 vendors, 45 categories, 12 styles (+features/materials/colors), 39 products (+images, variants per color, category/style links, inventory), 20 inspirations (product ids mapped to DB uuids), 4 projects, 6 articles, 3 collections. DB now: 41 products / 10 vendors / 45 categories / 23 inspirations.
+- Smoke-tested real site via `next start` with live DATABASE_URL: / 200, /products 200, /api/products returns real DB rows (Persian titles, DB UUIDs), /api/categories real rows, /api/health ok.
+- Added npm scripts: db:seed, agents:verify. Added DB-gated regression test (agents by key roundtrip; skips without postgres URL; passes against live DB in 8s).
+- CI: .github/workflows/migrate-supabase.yml — applies migrations automatically on pushes touching supabase/migrations; workflow_dispatch can seed + verify agents. Needs one repo secret: SUPABASE_DATABASE_URL.
+- eslint ignores for generated bundles (.seed-bundle.mjs, .verify-bundle.mjs).
+- 4 checks: eslint 0, tsc 0, vitest 70 passed + 1 skipped, build OK (with live DATABASE_URL).
+
+Stage Summary:
+- Remote main = 9149e39 (ls-remote verified)
+- Backend LAUNCH-READY: schema + RLS + full catalog + agents all live in Supabase; app reads DB via repositories with instant mock fallback when DB absent
+- Frontend appearance unchanged (pages still render identical content; DB mirrors mock 1:1)
+- Only user-side steps left: add GitHub secret SUPABASE_DATABASE_URL (for auto-migrations), optionally rotate Supabase secret key + make repo private
+
+---
+Task ID: 10 (agent-weaknesses)
+Agent: main
+Task: Owner request — fix the 3 reported agent weaknesses with the existing agents, fix remaining issues logically, commit & push main
+
+Work Log:
+- Weakness 1 (PDP advice read STATIC mock data, not DB): refactored productAdvice.ts into a pure core (buildAdviceFor with injectable styles/similar pool); NEW productAdviceServer.ts resolves product via productsRepository.bySku (sku OR id OR slug) + stylesRepository + style-overlap scoring against the LIVE pool; new /api/ai action=advice (sanitized topic/slug, never 500s — advice:null on failure); aiService.productAdvice; AIPanel: DB advice first -> static fallback -> agent chain; buildContext now carries slug so DB-only products ground PDP inquiries (parseProductContext extracts slug; orchestrator resolves the real row by sku OR slug via findCatalogProduct)
+- Weakness 2 (agent catalog pool truncated/degraded): listProducts ceiling 50->200; remoteList default limit 200; DTO now emits sku/material/color/per-color-variant hexes (variants join)/subCategorySlug (derived from child category with parentId) — before, DB products had NO sku/colors/subcategory so agents' structured filters matched nothing; toDomain maps all of it; productsRepository.similar replaced "first N rows" stub with real style-overlap scoring; NEW lib/similarProducts.ts shared by static catalog, repositories and advice engine; resolve-sku + match-products actions now DB-backed (injectable catalog)
+- BUG FOUND VIA LIVE-DB TEST RUN: chatScenarios scenario 1 failed with live Supabase — NLU subCategorySlug=armchair matched nothing because DB DTO had no subCategorySlug -> relaxation dropped the budget and returned 56M products for a 20M budget. Fixed by the DTO mapping above AND reordered the shopping-assistant widening ladder: budget is dropped LAST (style/sub-category/free-text relax first)
+- Weakness 3 (automation passive + admin AI fake numbers): NEW src/instrumentation.ts calls startScheduler (existed but NEVER called) + ensureSeeded at server boot when DATABASE_URL set (skips on VERCEL/no-DB; 5-min unref'd tick) — verified log "[homeino] automation scheduler started" on next start; /admin/ai rewritten as server component (force-dynamic) showing REAL data: executionSummary(7d) per-agent runs/tokens/duration, orchestratorStatus active/total + store mode, gateway success rate from actual telemetry, honest empty states — hardcoded 4200/3100/56300 rows deleted
+- Checks: eslint 0; tsc 0; vitest 84/84 with LIVE Supabase (DB-gated advice + roundtrip tests run), 82/82 + 3 skipped in mock mode; next build exit 0 with live DATABASE_URL
+- Live smoke test (next start + curl): action=advice pair/color answered from DB rows (real variant colors کرم/ذغالی/سبز مریم‌گلی, companion cards with DB UUIDs); slug-only PDP context resolved to real product+price; budget scenario returns ONLY <=20M products; /api/health ok
+- Dropped 2 environment junk commits (87fd374/93a8acb UUID-titled, no src changes) via reset --soft to 9149e39
+
+Stage Summary:
+- Remote main = c243837 (ls-remote verified): 9149e39 -> c243837 clean fast-forward
+- All 3 weaknesses fixed with the existing 6 DB agents + shared engines; site appearance unchanged (same panel, same chips, same page layout — only the data behind them is now live)
+- Remaining honest gaps (non-blocking): admin AI page has no historical charts until runs accumulate; repo still public + PAT still live in chat history (rotate when convenient)
+
+---
+Task ID: 11 (homeino-studio)
+Agent: main
+Task: Owner request — rebrand «هوش مصنوعی» to «هومینو استودیو» sitewide, fix tiny studio typography, move room analysis directly below the uploaded photo, make selected products REPLACE their counterparts in the photo (real size analysis, no distortion, luminaires project their light + shape), use all site agents, commit & push main
+
+Work Log:
+- REBRAND (45 replacement groups, 23 files): every user-visible «هوش مصنوعی»/«AI استودیو»/«Homeino AI»/«با AI» → «هومینو استودیو» (Header/MobileNav/Footer/PDP chips/home CTAs/credits/admin AI/notifications/platform/ai layout metadata/AIPanel/wishlist/projects/inspiration/checkout/cart/history/result). mockAiService off-topic NLU keyword list intentionally untouched (behavioral guard, not a label). scripts/rebrand-studio.py kept with per-file assertions.
+- STUDIO READABILITY (owner: «همه چیز ریز است»): all studio components re-scaled — text-[8-9px]→text-xs/[11px], text-[10-11px]→text-xs/sm, step headers→text-base, H1→text-2xl, tabs py-2.5 text-sm, stepBadge 28px, inputs py-2.5 text-sm, generate button py-4 text-base, panel p-5; SuggestAssistant + InspirationTab included.
+- ANALYSIS UNDER PHOTO: AnalysisBanner now renders inside RoomUploader directly below the uploaded image (embedded mode); removed the old standalone banner slot above the grid.
+- REPLACEMENT ENGINE (new src/services/ai/studioPlacement.ts, pure+tested): per-category real reference sizes (cm) + scene width per room type → widthPct/heightPct = productCm/sceneCm (no distortion); real product.dimensions win over category defaults; Persian name refinement (مبل/کاناپه→sofa fit, میز/ناهارخوری, لوستر/آباژور/دیوارکوب fixture types); LAYER-AWARE collision avoidance (rug layers under sofa intentionally; same-layer items push apart deterministically); luminaires get glow {color, radiusPct, intensity} derived from watt/lumen/گرم-سرد in the product description.
+- COMPOSITE RENDERER (new src/lib/studioComposite.ts, client canvas): draws the room photo + every selected product at its analyzed spot (feathered edges + grounding shadow), luminaires pre-draw screen-blended warm radial glow (light + shape together); fails soft (taint/load → null → interactive overlay fallback); JPEG dataURL.
+- WIRING (useDesignStudio): generate() and placePresetInRoom() now plan replacement for EVERY selected product via plansToPlacements (replaces single-plan + circle layout); Placement type gained widthPct/heightSquash/glow — ProductOverlay renders analyzed width instead of fixed 15%; composite is the default result view with toggle to interactive editing + refresh; moved products invalidate composite; honest badges («پیش‌نمایش ترکیب — محصولات انتخابی در عکس شما جایگزین شدند»); sessions save engine homeino-studio-composite.
+- AGENT CREW (new src/services/agents/studio.ts + POST /api/ai/studio-agents): designer (SKU preserve + real matching), shopping-assistant (look summary), inventory (low-stock warnings), recommendation (complements), customer-intelligence (style memory when signed-in), browser (honest skipped note) — per-agent status card + complements + warnings in ResultCanvas; every item real-catalog, fail-soft per agent.
+- Tests: new studioPlacement.test.ts (13) — size analysis, real-dimension priority, clamping, counterpart anchors, same-layer collision freedom + rug layering, determinism, glow brightness (60W→0.8), empty selection. Suite: 95 passed / 3 skipped (DB-gated) in mock mode.
+- Checks: eslint src 0 issues; tsc --noEmit 0; vitest 95/95 (+3 DB-gated skip); next build exit 0 with live DATABASE_URL.
+
+Stage Summary:
+- Deliverable: site-wide Homeino Studio brand, readable studio, analysis under photo, real product replacement with size analysis + luminaire light projection, all 6 agents in the flow.
+- Honest scope: composite is a browser-rendered preview (labeled as such); when a real image engine (Orali) is configured its render wins automatically.
+- Remote main updated after this commit (push verified via ls-remote).

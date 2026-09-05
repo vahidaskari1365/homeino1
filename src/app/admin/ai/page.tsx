@@ -52,7 +52,7 @@ export default async function AdminAiPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display text-xl font-black text-ink">مصرف هوش مصنوعی</h1>
+        <h1 className="font-display text-xl font-black text-ink">مصرف هومینو استودیو</h1>
         <p className="mt-1 text-xs text-ink-muted">
           داده‌های واقعی اجرای ایجنت‌ها و دروازه AI — بدون عدد فرضی
           {summary ? ` · بازه: ${toFa(new Date(summary.window.since).toLocaleDateString("fa-IR"))} تا ${toFa(new Date(summary.window.until).toLocaleDateString("fa-IR"))}` : ""}

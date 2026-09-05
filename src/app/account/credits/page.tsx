@@ -19,7 +19,7 @@ export default function CreditsPage() {
           <div>
             <div className="flex items-center gap-2 text-sm text-cream/60"><Sparkles size={16} className="text-gold" /> موجودی اعتبار</div>
             <div className="font-display text-5xl font-black">{toFa(balance)}</div>
-            <div className="mt-1 text-sm text-cream/60">هر طراحی هوش مصنوعی از این اعتبار کم می‌شود</div>
+            <div className="mt-1 text-sm text-cream/60">هر طراحی هومینو استودیو از این اعتبار کم می‌شود</div>
           </div>
           <div className="rounded-2xl bg-white/10 p-4 text-center">
             <Zap size={22} className="mx-auto text-gold" />

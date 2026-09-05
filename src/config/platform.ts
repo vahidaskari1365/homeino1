@@ -40,7 +40,7 @@ export const PLATFORM = {
     inviterBonus: 50,        // credits for inviting someone
     inviteeBonus: 30,        // credits for the invited person
     inviteeMinSpend: 1,      // minimum purchase to trigger bonus (0 = on signup)
-    shareMessage: "با کد دعوت من ثبت‌نام کن و ۳۰ اعتبار هوش مصنوعی رایگان بگیر!",
+    shareMessage: "با کد دعوت من ثبت‌نام کن و ۳۰ اعتبار هومینو استودیو رایگان بگیر!",
   },
 
   // ---- Vendor marketplace economics (display-only until real settlement exists) ----

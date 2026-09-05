@@ -208,7 +208,7 @@ export function MobileNav() {
                     <span className="absolute inset-0 -translate-x-full bg-gradient-to-l from-transparent via-white/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
                     <span className="relative flex items-center gap-2">
                       <Sparkles size={18} />
-                      استودیو طراحی با هوش مصنوعی
+                      هومینو استودیو
                     </span>
                     <ArrowLeft size={18} className="relative" />
                   </Link>
@@ -256,7 +256,7 @@ export function MobileNav() {
                 <button
                   key={it.label}
                   onClick={() => dockAction("ai")}
-                  aria-label="استودیو هوش مصنوعی"
+                  aria-label="هومینو استودیو"
                   className="flex flex-col items-center"
                 >
                   <span className="-mt-6 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-gold-soft to-gold text-ink shadow-[var(--shadow-gold)] transition-transform active:scale-90">

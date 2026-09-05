@@ -106,7 +106,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
   if (!design) {
     return (
       <Container className="py-8">
-        <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "AI استودیو", href: "/ai/design" }, { label: "نتیجه طراحی" }]} />
+        <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "هومینو استودیو", href: "/ai/design" }, { label: "نتیجه طراحی" }]} />
         <div className="mt-8">
           <EmptyState icon={<History size={28} />} title="طراحی‌ای پیدا نشد" desc="هنوز سشنی برای این آدرس ذخیره نشده." action={<Link href="/ai/design"><Button>شروع طراحی</Button></Link>} />
         </div>
@@ -116,7 +116,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
 
   return (
     <Container className="py-8">
-      <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "AI استودیو", href: "/ai/design" }, { label: "نتیجه طراحی" }]} />
+      <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "هومینو استودیو", href: "/ai/design" }, { label: "نتیجه طراحی" }]} />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         {/* image */}

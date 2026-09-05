@@ -17,7 +17,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
             <span className="font-display text-xl font-black">Home<span className="text-terracotta-soft">ino</span></span>
           </Link>
           <h2 className="font-display text-4xl font-black leading-tight">خانه‌ای که دوست داری، اینجا شکل می‌گیرد.</h2>
-          <p className="mt-2 max-w-md text-cream/70">به بزرگ‌ترین پلتفرم خانه و دکوراسیون بپیوند. الهام، محصول و طراحی با هوش مصنوعی.</p>
+          <p className="mt-2 max-w-md text-cream/70">به بزرگ‌ترین پلتفرم خانه و دکوراسیون بپیوند. الهام، محصول و طراحی با هومینو استودیو.</p>
         </div>
       </div>
       {/* form */}

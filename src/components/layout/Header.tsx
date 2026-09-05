@@ -130,10 +130,10 @@ function AiFeatureCard() {
       <div className="relative">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/15 px-3 py-1 text-[11px] font-bold text-gold-soft">
           <Sparkles size={12} />
-          استودیو هوش مصنوعی
+          هومینو استودیو
         </span>
         <h3 className="mt-4 text-xl font-black leading-7">
-          خانه‌ات را با هوش مصنوعی
+          خانه‌ات را با هومینو استودیو
           <br />
           <span className="text-gold-gradient">طراحی و چیدمان کن</span>
         </h3>
@@ -385,7 +385,7 @@ export function Header() {
                 </motion.span>
                 <motion.span variants={trustItem} className="hidden items-center gap-1.5 lg:flex">
                   <Sparkles size={13} className="text-gold-soft" />
-                  {toFa(PLATFORM.ai.startingCredits)} اعتبار هدیه هوش مصنوعی
+                  {toFa(PLATFORM.ai.startingCredits)} اعتبار هدیه هومینو استودیو
                 </motion.span>
               </motion.div>
             </Container>
@@ -480,7 +480,7 @@ export function Header() {
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-l from-transparent via-white/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
               <Wand2 size={14} className="relative z-10" />
-              <span className="relative z-10">استودیو AI</span>
+              <span className="relative z-10">هومینو استودیو</span>
               <span className="relative z-10 flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ink/40" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-ink" />

@@ -250,7 +250,7 @@ function FilterableProductGridInner({
       ? [{ key: "discount", label: "فقط تخفیف‌دار", remove: () => setSingle("discount") }]
       : []),
     ...(filters.onlyAiRecommended
-      ? [{ key: "ai", label: "پیشنهاد هوش مصنوعی", remove: () => setSingle("ai") }]
+      ? [{ key: "ai", label: "پیشنهاد هومینو استودیو", remove: () => setSingle("ai") }]
       : []),
   ];
 
@@ -309,7 +309,7 @@ function FilterableProductGridInner({
             <input type="checkbox" checked={filters.onlyDiscount} onChange={(event) => setSingle("discount", event.target.checked ? "true" : undefined)} className="h-4 w-4 rounded accent-terracotta" />
           </label>
           <label className="flex cursor-pointer items-center justify-between gap-3 text-ink-muted">
-            <span>پیشنهاد هوش مصنوعی</span>
+            <span>پیشنهاد هومینو استودیو</span>
             <input type="checkbox" checked={filters.onlyAiRecommended} onChange={(event) => setSingle("ai", event.target.checked ? "true" : undefined)} className="h-4 w-4 rounded accent-terracotta" />
           </label>
         </div>

@@ -1,10 +1,10 @@
 "use client";
 // ============================================================
-// AI DESIGN STUDIO — composition layer.
+// هومینو استودیو — composition layer.
 // Header/tabs and the tab bodies; the "design" tab composes the
 // independent steps (RoomUploader, StylePicker, ItemPicker,
-// BudgetStep, GenerationProgress, ResultCanvas). All markup was
-// moved verbatim from src/app/ai/design/page.tsx.
+// BudgetStep, GenerationProgress, ResultCanvas). The room analysis
+// lives INSIDE RoomUploader, directly below the uploaded photo.
 // ============================================================
 import Link from "next/link";
 import { Wand2, Search, Sparkles } from "lucide-react";
@@ -12,7 +12,6 @@ import { Container, Breadcrumb } from "@/components/shared";
 import { SuggestAssistant } from "@/components/ai/SuggestAssistant";
 import { cn } from "@/lib/utils";
 import type { DesignStudio as Studio } from "./useDesignStudio";
-import { AnalysisBanner } from "./AnalysisBanner";
 import { RoomUploader } from "./RoomUploader";
 import { StylePicker } from "./StylePicker";
 import { ItemPicker } from "./ItemPicker";
@@ -25,25 +24,25 @@ export function DesignStudio({ studio }: { studio: Studio }) {
   const { tab, setTab, selectStyle, setBudget, toast } = studio;
   return (
     <div className="min-h-screen bg-ivory">
-      <Container className="py-6">
-        <div className="mb-4 [&_a]:text-ink-muted"><Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "استودیو طراحی" }]} /></div>
+      <Container className="py-8">
+        <div className="mb-5 [&_a]:text-ink-muted"><Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "هومینو استودیو" }]} /></div>
 
-        {/* Compact header */}
-        <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-cream"><Wand2 size={18} /></span>
+        {/* Header */}
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-ink text-cream"><Wand2 size={24} /></span>
             <div>
-              <h1 className="font-display text-lg font-black leading-tight text-ink">استودیو طراحی هوشمند</h1>
-              <p className="text-[11px] text-ink-muted">عکس خانه‌ات را آپلود کن، وسایل انتخاب کن و نتیجه را ببین</p>
+              <h1 className="font-display text-2xl font-black leading-tight text-ink">هومینو استودیو</h1>
+              <p className="text-sm text-ink-muted">عکس خانه‌ات را آپلود کن، وسایل انتخاب کن و نتیجه را ببین</p>
             </div>
           </div>
         </header>
 
         {/* Tabs */}
-        <div className="mb-5 flex gap-2 rounded-xl border border-clay/50 bg-cream p-1">
+        <div className="mb-6 flex gap-2 rounded-xl border border-clay/50 bg-cream p-1.5">
           {([["design", "چیدمان با عکس", Wand2], ["inspiration", "اسکن بصری", Search], ["suggest", "پیشنهاد دکور", Sparkles]] as const).map(([id, label, Icon]) => (
-            <button key={id} onClick={() => setTab(id)} className={cn("flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition", tab === id ? "bg-ink text-cream" : "text-ink-muted hover:text-ink")}>
-              <Icon size={14} /> {label}
+            <button key={id} onClick={() => setTab(id)} className={cn("flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold transition", tab === id ? "bg-ink text-cream" : "text-ink-muted hover:text-ink")}>
+              <Icon size={17} /> {label}
             </button>
           ))}
         </div>
@@ -53,25 +52,21 @@ export function DesignStudio({ studio }: { studio: Studio }) {
         {tab === "inspiration" && <InspirationTab studio={studio} />}
 
         {tab === "design" && (
-          <>
-            {studio.roomAnalysis && !studio.loading && <AnalysisBanner studio={studio} />}
-
-            <div className="grid gap-4 lg:grid-cols-12">
-              {/* LEFT: Controls */}
-              <div className="space-y-3 lg:col-span-5">
-                <RoomUploader studio={studio} />
-                <StylePicker studio={studio} />
-                <ItemPicker studio={studio} />
-                <BudgetStep studio={studio} />
-                <GenerationProgress studio={studio} />
-              </div>
-
-              {/* RIGHT: Output */}
-              <ResultCanvas studio={studio} />
+          <div className="grid gap-5 lg:grid-cols-12">
+            {/* LEFT: Controls — upload card carries the studio analysis below the photo */}
+            <div className="space-y-4 lg:col-span-5">
+              <RoomUploader studio={studio} />
+              <StylePicker studio={studio} />
+              <ItemPicker studio={studio} />
+              <BudgetStep studio={studio} />
+              <GenerationProgress studio={studio} />
             </div>
-          </>
+
+            {/* RIGHT: Output */}
+            <ResultCanvas studio={studio} />
+          </div>
         )}
-        <div className="mt-6 text-center"><Link href="/ai/design" className="text-xs text-ink-muted hover:text-ink">← بازگشت به استودیو</Link></div>
+        <div className="mt-8 text-center"><Link href="/ai/design" className="text-sm text-ink-muted hover:text-ink">← بازگشت به هومینو استودیو</Link></div>
       </Container>
     </div>
   );

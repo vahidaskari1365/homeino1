@@ -93,7 +93,7 @@ export default function WishlistPage() {
             </Link>
           ))}
         </div>
-      ) : <EmptyState icon={<Sparkles size={28} />} title="طراحی AI‌ای ذخیره نکرده‌ای" action={<Link href="/ai/design"><Button>ورود به AI استودیو</Button></Link>} />)}
+      ) : <EmptyState icon={<Sparkles size={28} />} title="طراحی هومینو استودیو ذخیره نکرده‌ای" action={<Link href="/ai/design"><Button>ورود به هومینو استودیو</Button></Link>} />)}
       {tab === "stores" && (stores.length ? <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{stores.map((s) => s && <StoreCard key={s.id} store={s} />)}</div> : <EmptyState icon={<StoreIcon size={28} />} title="فروشگاهی دنبال نمی‌کنی" action={<Link href="/stores"><Button>کاوش فروشگاه‌ها</Button></Link>} />)}
     </Container>
   );

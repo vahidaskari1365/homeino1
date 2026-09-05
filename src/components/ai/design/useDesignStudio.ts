@@ -13,6 +13,9 @@ import { costForMode, aiService } from "@/services/ai";
 import type { PipelineInput, PipelineResult } from "@/services/ai/pipeline";
 import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/placement";
 import { parseProductDimensions } from "@/services/ai/placement";
+import { planReplacementPlacements, type StudioPlacementPlan } from "@/services/ai/studioPlacement";
+import { compositeRoomImage } from "@/lib/studioComposite";
+import type { StudioAgentsReport } from "@/services/agents/studio";
 import type { RoomElement } from "@/services/ai/roomState";
 import {
   detectIntent,
@@ -36,9 +39,9 @@ import type { Placement } from "@/components/ProductOverlay";
 import { STYLES, CATEGORIES, CAT_PRODUCTS, SECOND_HAND_AS_PRODUCTS, DEFAULT_ROOM_IDS, STAGE_ORDER, type Stage } from "./constants";
 import {
   deriveTargetsFromProducts,
-  buildPlacementsFromPlan,
   buildScopeSummary,
   makePlacements,
+  plansToPlacements,
 } from "./helpers";
 
 export type { Stage };
@@ -68,6 +71,13 @@ export function useDesignStudio() {
   const [selected, setSelected] = useState<Record<string, Product>>({});
   const [inspirationMatches, setInspirationMatches] = useState<Product[]>([]);
 
+  // ---- HOMINO STUDIO: replacement composite + agent crew report ----
+  const [compositeUrl, setCompositeUrl] = useState<string | null>(null);
+  const [showComposite, setShowComposite] = useState(true);
+  const [studioPlans, setStudioPlans] = useState<StudioPlacementPlan[]>([]);
+  const [studioReport, setStudioReport] = useState<StudioAgentsReport | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
   const addToCart = useCart((s) => s.add);
   const wl = useWishlist();
   const { toast } = useUi();
@@ -90,6 +100,56 @@ export function useDesignStudio() {
     } catch {}
     finally { setAnalyzing(false); }
   }, [style, rs]);
+
+  /**
+   * HOMINO STUDIO CORE — replace every selected product in the photo:
+   * analyzed spot + real size + (luminaires) light projection, then
+   * render the composite in the browser.
+   */
+  const buildReplacement = useCallback(async (chosen: Product[], roomImg: string): Promise<{ placements: Placement[]; plans: StudioPlacementPlan[]; composite: string | null }> => {
+    const studioInputs = chosen.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.categorySlug,
+      dimensions: parseProductDimensions(p.dimensions),
+      description: p.description,
+    }));
+    const plans = planReplacementPlacements(studioInputs, { roomType: rs.roomType || "نشیمن" });
+    const placements = plansToPlacements(chosen, plans);
+    const composite = await compositeRoomImage({
+      roomImage: roomImg,
+      placements: placements.map((pl) => ({
+        src: pl.product.images[0],
+        xNorm: pl.xNorm,
+        yNorm: pl.yNorm,
+        widthPct: pl.widthPct ?? 0.15,
+        heightSquash: pl.heightSquash,
+        glow: pl.glow,
+      })),
+    });
+    return { placements, plans, composite };
+  }, [rs.roomType]);
+
+  /** Ask the site's real agent crew for the studio report (fire-and-forget). */
+  const fetchStudioReport = useCallback((chosen: Product[], targets: RoomElement[], budgetNum?: number) => {
+    setReportLoading(true);
+    fetch("/api/ai/studio-agents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        products: chosen.map((p) => ({ id: p.id, name: p.name, category: p.categorySlug, sku: p.sku, price: p.price })),
+        roomType: rs.roomType || "نشیمن",
+        style: styleLabel,
+        colors: roomAnalysis?.palette?.slice(0, 3) ?? [],
+        targets,
+        budget: budgetNum,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j?.data) setStudioReport(j.data as StudioAgentsReport); })
+      .catch(() => {})
+      .finally(() => setReportLoading(false));
+  }, [rs.roomType, styleLabel, roomAnalysis]);
 
   const toggleCat = useCallback((slug: string) => setOpenCats((s) => { const n = new Set(s); n.has(slug) ? n.delete(slug) : n.add(slug); return n; }), []);
   const toggleSubType = useCallback((slug: string, label: string) => setSelectedSubTypes((s) => { const cur = s[slug] || []; return { ...s, [slug]: cur.includes(label) ? cur.filter((x) => x !== label) : [...cur, label] }; }), []);
@@ -312,14 +372,21 @@ export function useDesignStudio() {
         summary: buildScopeSummary(pipelineRes, uiScope),
       });
 
-      const renderedPlacements = plan && chosen.length >= 1
-        ? buildPlacementsFromPlan(chosen, plan)
-        : makePlacements(chosen);
+      // ---- HOMINO STUDIO REPLACEMENT ----
+      // Every selected product replaces its counterpart in the photo
+      // (analyzed spot + real size); luminaires project their light.
+      const { placements: replacementPlacements, plans: studioPlansOut, composite } = await buildReplacement(chosen, imageBase64);
+      const renderedPlacements = replacementPlacements.length ? replacementPlacements : makePlacements(chosen);
+      setStudioPlans(studioPlansOut);
       setPlacements(renderedPlacements);
+      setCompositeUrl(composite);
+      setShowComposite(true);
 
       const editedImage = pipelineRes.result.afterImage;
-      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
-      const outputImage = isPreview ? imageBase64 : editedImage;
+      const realEngineImage = !pipelineRes.result.preview && editedImage !== imageBase64 ? editedImage : null;
+      const isPreview = !realEngineImage && !composite;
+      // A real engine render wins; otherwise our browser composite; else original.
+      const outputImage = realEngineImage ?? composite ?? imageBase64;
 
       const realMatched = pipelineRes.matchedProducts && pipelineRes.matchedProducts.length > 0
         ? pipelineRes.matchedProducts
@@ -356,7 +423,8 @@ export function useDesignStudio() {
         metadata: {
           count: chosen.length,
           preview: isPreview,
-          engine: pipelineRes.imageEngine,
+          composite: Boolean(composite),
+          engine: realEngineImage ? pipelineRes.imageEngine : (composite ? "homeino-studio-composite" : pipelineRes.imageEngine),
           requestId: pipelineRes.requestId,
         },
       });
@@ -376,22 +444,51 @@ export function useDesignStudio() {
         products: chosen.map((p) => ({ label: p.name, productId: p.id })),
         creditsUsed: opCost,
         preview: isPreview,
-        imageEngine: pipelineRes.imageEngine,
+        imageEngine: realEngineImage ? pipelineRes.imageEngine : (composite ? "homeino-studio-composite" : pipelineRes.imageEngine),
       });
 
-      if (isPreview) {
-        toast("نتیجه به‌صورت پیش‌نمایش آماده شد (موتور تصویر در دسترس نیست)");
-      } else {
+      // The site's real agent crew reports on this look (designer, inventory,
+      // shopping-assistant, recommendation, customer-intelligence).
+      fetchStudioReport(chosen, finalTargets, budgetNum);
+
+      if (realEngineImage) {
         toast("چیدمان آماده شد");
+      } else if (composite) {
+        toast("محصولات جایگزین شدند — پیش‌نمایش ترکیب آماده است");
+      } else {
+        toast("نتیجه به‌صورت پیش‌نمایش آماده شد (رندر ترکیب ممکن نشد)");
       }
     } catch {
       setError("خطا در نمایش نتیجه");
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, placedProducts, designElements, presetProduct, prompt, style, budget, skuInput, rs, roomAnalysis, styleLabel, toast, saveSession]);
+  }, [imageBase64, placedProducts, designElements, presetProduct, prompt, style, budget, skuInput, rs, roomAnalysis, styleLabel, toast, saveSession, buildReplacement, fetchStudioReport]);
 
-  const updatePlacement = useCallback((id: string, patch: Partial<Placement>) => setPlacements((ps) => ps.map((pl) => (pl.product.id === id ? { ...pl, ...patch } : pl))), []);
+  const updatePlacement = useCallback((id: string, patch: Partial<Placement>) => {
+    setPlacements((ps) => ps.map((pl) => (pl.product.id === id ? { ...pl, ...patch } : pl)));
+    // A moved/resized product invalidates the composite → switch to the live overlay.
+    if (compositeUrl) setShowComposite(false);
+  }, [compositeUrl]);
+
+  /** Re-render the replacement composite from the CURRENT placements. */
+  const refreshComposite = useCallback(async () => {
+    if (!imageBase64 || !placements.length) return;
+    const composite = await compositeRoomImage({
+      roomImage: imageBase64,
+      placements: placements.map((pl) => ({
+        src: pl.product.images[0],
+        xNorm: pl.xNorm,
+        yNorm: pl.yNorm,
+        widthPct: pl.widthPct ?? 0.15,
+        heightSquash: pl.heightSquash,
+        glow: pl.glow,
+      })),
+    });
+    setCompositeUrl(composite);
+    if (composite) setShowComposite(true);
+    else toast("رندر ترکیب ممکن نشد — حالت تعاملی فعال است", "error");
+  }, [imageBase64, placements, toast]);
   const removePlacement = useCallback((id: string) => setPlacements((ps) => ps.filter((pl) => pl.product.id !== id)), []);
   const overlayCart = useCallback((p: Product) => { addToCart(p.id); toast("به سبد اضافه شد"); }, [addToCart, toast]);
   const overlayWishlist = useCallback((p: Product) => { wl.toggleProduct(p.id); toast("به علاقه‌مندی اضافه شد"); }, [wl, toast]);
@@ -462,15 +559,20 @@ export function useDesignStudio() {
 
     try {
       const pipelineRes: PipelineResult = result.result;
-      const plan = pipelineRes.placement ?? pipelineRes.instruction.placement;
-      const fallbackPlacement: Placement = { product: presetProduct, xNorm: 0.5, yNorm: 0.6, scale: 1 };
-      const newPlacements = plan
-        ? buildPlacementsFromPlan([presetProduct], plan)
-        : [fallbackPlacement];
+
+      // ---- HOMINO STUDIO REPLACEMENT (preset product) ----
+      const { placements: replacementPlacements, plans: studioPlansOut, composite } = await buildReplacement([presetProduct], imageBase64);
+      const newPlacements = replacementPlacements.length
+        ? replacementPlacements
+        : [{ product: presetProduct, xNorm: 0.5, yNorm: 0.6, scale: 1 } satisfies Placement];
+      setStudioPlans(studioPlansOut);
+      setCompositeUrl(composite);
+      setShowComposite(true);
 
       const editedImage = pipelineRes.result.afterImage;
-      const isPreview = !!pipelineRes.result.preview || editedImage === imageBase64;
-      const outputImage = isPreview ? imageBase64 : editedImage;
+      const realEngineImage = !pipelineRes.result.preview && editedImage !== imageBase64 ? editedImage : null;
+      const isPreview = !realEngineImage && !composite;
+      const outputImage = realEngineImage ?? composite ?? imageBase64;
 
       setPlacements(newPlacements);
       setStage("RENDERING");
@@ -492,7 +594,7 @@ export function useDesignStudio() {
         placements: newPlacements.map((pl) => ({
           productId: pl.product.id,
           category: pl.product.categorySlug,
-          reason: plan?.rationale ?? "جای‌گذاری محصول",
+          reason: studioPlansOut[0]?.rationale ?? "جای‌گذاری محصول",
           placement: { x: pl.xNorm, y: pl.yNorm, scale: pl.scale, rotation: pl.rotation ?? 0 },
         })),
         change: prompt || `قرار دادن ${presetProduct.name} در اتاق`,
@@ -514,16 +616,24 @@ export function useDesignStudio() {
         products: [{ label: presetProduct.name, productId: presetProduct.id }],
         creditsUsed: opCost,
         preview: isPreview,
-        imageEngine: pipelineRes.imageEngine,
+        imageEngine: realEngineImage ? pipelineRes.imageEngine : (composite ? "homeino-studio-composite" : pipelineRes.imageEngine),
       });
 
-      toast(isPreview ? "محصول به‌صورت پیش‌نمایش قرار گرفت (موتور تصویر در دسترس نیست)" : "محصول در عکس قرار گرفت");
+      fetchStudioReport([presetProduct], targets, undefined);
+
+      if (realEngineImage) {
+        toast("محصول در عکس قرار گرفت");
+      } else if (composite) {
+        toast("محصول جایگزین شد — پیش‌نمایش ترکیب آماده است");
+      } else {
+        toast("محصول به‌صورت تعاملی قرار گرفت (رندر ترکیب ممکن نشد)");
+      }
     } catch {
       setError("خطا در نمایش نتیجه");
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession]);
+  }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession, buildReplacement, fetchStudioReport]);
 
   const buyTheLook = useCallback(() => { if (!placedProducts.length) return; placedProducts.forEach((p) => addToCart(p.id)); toast("چیدمان به سبد اضافه شد"); }, [placedProducts, addToCart, toast]);
   const handleSaveToWishlist = useCallback(() => {
@@ -535,13 +645,17 @@ export function useDesignStudio() {
     toast(added > 0 ? `${added} محصول طرح به علاقه‌مندی‌ها اضافه شد` : "همه محصولات این طرح قبلاً ذخیره شده‌اند");
   }, [placedProducts, wl, toast]);
 
-  /** Clear the uploaded photo + every derived result (verbatim remove handler). */
+  /** Clear the uploaded photo + every derived result (incl. composite + report). */
   const removeImage = useCallback(() => {
     setImageBase64(null);
     setPlacements([]);
     rs.reset();
     setRoomAnalysis(null);
     setMatchedStoreProducts([]);
+    setCompositeUrl(null);
+    setShowComposite(true);
+    setStudioPlans([]);
+    setStudioReport(null);
   }, [rs]);
 
   return {
@@ -592,6 +706,14 @@ export function useDesignStudio() {
     stage,
     error,
     generate,
+    // studio replacement composite + agent crew
+    compositeUrl,
+    showComposite,
+    setShowComposite,
+    refreshComposite,
+    studioPlans,
+    studioReport,
+    reportLoading,
     // result canvas
     placements,
     setPlacements,

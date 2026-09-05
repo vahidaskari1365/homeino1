@@ -101,9 +101,9 @@ export const SECOND_HAND_AS_PRODUCTS: Record<string, Product[]> = (() => {
 })();
 export const DEFAULT_ROOM_IDS = ["p1", "p3", "p9", "p12", "p15", "p6"];
 
-/** Shared visual tokens used by the design-studio cards (verbatim). */
-export const panelCls = "rounded-2xl border border-clay/50 bg-cream p-4 shadow-[var(--shadow-soft)]";
-export const stepBadge = "grid h-5 w-5 place-items-center rounded-md bg-ink text-[10px] font-bold text-cream";
+/** Shared visual tokens used by the design-studio cards (readable sizes). */
+export const panelCls = "rounded-2xl border border-clay/50 bg-cream p-5 shadow-[var(--shadow-soft)]";
+export const stepBadge = "grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-ink text-sm font-bold text-cream";
 
 export interface ProgressStep { key: Stage; label: string; done: boolean; active: boolean }
 export function progressSteps(stage: Stage): ProgressStep[] {
