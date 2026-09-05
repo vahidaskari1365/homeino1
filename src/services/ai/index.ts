@@ -65,6 +65,16 @@ export async function callAiServer<T>(action: string, payload: unknown): Promise
   return res.json() as Promise<T>;
 }
 
+/** Grounded multi-turn chat result — real products are always catalog-verified. */
+export interface AgentChatResult {
+  content: string;
+  products?: unknown[];
+  routedTo?: string;
+  intent?: string;
+  dataState?: string;
+  agentOk?: boolean;
+}
+
 /** The ONLY AI surface the UI should import. */
 export const aiService = {
   generate: (input: GenerateDesignInput) => callAiServer<GeneratedDesign>("generate", input),
@@ -73,6 +83,8 @@ export const aiService = {
   analyze: (input: GenerateDesignInput) => callAiServer<RoomAnalysis>("analyze", input),
   recommend: (input: GenerateDesignInput) => callAiServer<RecommendedProduct[]>("recommend", input),
   chat: (input: ChatReplyInput) => callAiServer<ChatReply>("chat", input),
+  /** Grounded chat: /api/ai action=agent → real catalog + output-guarded answers. */
+  agentChat: (input: ChatReplyInput & { sessionId?: string }) => callAiServer<AgentChatResult>("agent", input),
   suggest: (input: { room: string; style: string; budget?: string }) => callAiServer<DecorSuggestion>("suggest", input),
   /** LLM intent understanding — structured JSON, free (0 credits). */
   understand: (input: IntentRequest) => callAiServer<IntentAnalysis>("understand", input),

@@ -103,6 +103,12 @@ export const runShoppingAssistant: AgentHandler = async (input, ctx) => {
     understanding = await refineWithLlm(message, understanding, ctx);
   }
 
+  // ---- 2b. SKU supplied by the orchestrator (e.g. PDP-context inquiry) ----
+  const forcedSku = str(input.sku);
+  if (forcedSku && !understanding.sku) {
+    understanding = { ...understanding, sku: forcedSku, isShopping: true };
+  }
+
   // ---- 3. explicit SKU: exact lookup, never a substitute ----
   if (understanding.sku) {
     const resolved = await ctx.callTool("matchProductsBySku", { sku: understanding.sku });

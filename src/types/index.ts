@@ -258,6 +258,16 @@ export interface ChatMessage {
   content: string;
   createdAt: number;
   pending?: boolean;
+  /** Real catalog products attached to an assistant reply (rendered as cards). */
+  products?: {
+    id: string;
+    name: string;
+    price: number;
+    currency: string;
+    image?: string;
+    url: string;
+    storeName?: string;
+  }[];
 }
 
 export interface Review {

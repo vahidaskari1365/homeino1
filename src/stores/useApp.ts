@@ -187,21 +187,49 @@ export const useCredits = create<CreditState>()(
   )
 );
 
-/* ---------------- AI CHAT (overlay conversation) ---------------- */
+/* ---------------- AI CHAT (overlay conversation) ----------------
+ * Persisted across reloads. A stable per-browser sessionId keeps multi-turn
+ * continuity working (sent with every grounded chat request). Components must
+ * gate renders on `useHasHydrated()` before reading persisted messages.
+ */
 interface ChatState {
   messages: ChatMessage[];
+  sessionId: string;
   push: (m: Omit<ChatMessage, "id" | "createdAt">) => string;
   update: (id: string, patch: Partial<ChatMessage>) => void;
   clear: () => void;
+  /** Returns the stable localStorage session id, generating it on first use. */
+  ensureSessionId: () => string;
 }
 
-export const useChat = create<ChatState>((set) => ({
-  messages: [
-    { id: "m0", role: "assistant", content: "سلام! من دستیار Homeino هستم. می‌تونم کمک کنم اتاقت رو طراحی کنم، فرش مناسب پیدا کنم یا محصولی رو با دکوراسیونت هماهنگ کنم.", createdAt: Date.now() },
-  ],
-  // id + timestamp generated here (store, not render) → keeps components pure
-  push: (m) => { const id = uid(); set((s) => ({ messages: [...s.messages, { id, createdAt: Date.now(), ...m }] })); return id; },
-  update: (id, patch) =>
-    set((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
-  clear: () => set({ messages: [] }),
-}));
+export const useChat = create<ChatState>()(
+  persist(
+    (set, get) => ({
+      messages: [
+        { id: "m0", role: "assistant", content: "سلام! من دستیار Homeino هستم. می‌تونم کمک کنم اتاقت رو طراحی کنم، فرش مناسب پیدا کنم یا محصولی رو با دکوراسیونت هماهنگ کنم.", createdAt: Date.now() },
+      ],
+      sessionId: "",
+      // id + timestamp generated here (store, not render) → keeps components pure
+      push: (m) => { const id = uid(); set((s) => ({ messages: [...s.messages, { id, createdAt: Date.now(), ...m }] })); return id; },
+      update: (id, patch) =>
+        set((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
+      clear: () => set({ messages: [], sessionId: "" }),
+      ensureSessionId: () => {
+        const current = get().sessionId;
+        if (current) return current;
+        const next = `ch_${uid()}_${Date.now().toString(36)}`;
+        set({ sessionId: next });
+        return next;
+      },
+    }),
+    {
+      name: "homeino-chat",
+      // Only finished turns are persisted (never the live "…" bubble) and the
+      // conversation is capped so localStorage stays small.
+      partialize: (s) => ({
+        messages: s.messages.filter((m) => !m.pending).slice(-60),
+        sessionId: s.sessionId,
+      }),
+    },
+  ),
+);
