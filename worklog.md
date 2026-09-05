@@ -129,3 +129,30 @@ Stage Summary:
 - Remote main = 97ec3cf = clean Round 7 delivery; local HEAD aligned
 - Local history cleaned; nothing unpushed except intentionally untracked workspace files
 - Pending user decision: logo adoption (needs SVG/transparent + Persian lockup from designer)
+
+---
+Task ID: 8 (backend-up)
+Agent: main
+Task: Bring up Supabase backend for homeino1 (yydmibcmajxpqybtfgxm) — create tables, connect site, keep appearance unchanged
+
+Work Log:
+- Probed connectivity: direct db host is IPv6-only (ENETUNREACH); discovered project region aws-1-eu-west-1 via pooler probe -> PostgreSQL 17.6 connected
+- Wrote gitignored .env + .env.local (DATABASE_URL pooler, NEXT_PUBLIC_SUPABASE_URL, publishable key, server-only secret key, SESSION_SECRET); verified git check-ignore
+- Applied supabase/migrations via npm run db:migrate — first blocker: sandbox preset DATABASE_URL=file:... shadowed dotenv (dotenv never overrides existing env)
+- Fixed migrations for real PG17 (they had never run against a live DB):
+  * 003 RLS: 'create policy if not exists' unsupported -> drop-if-exists+create (all 76); refunds policy has no user_id -> route via payments/orders; 'imagepng' MIME typo
+  * 004 seed: 14 unquoted JSONB literals fixed; inspirations INSERT 11 cols vs 10 values (phantom description column removed)
+  * 005 agentic core: ARRAY[...] -> to_jsonb(ARRAY[...]) for jsonb capabilities
+- RESULT: all 7 migrations applied — 90 tables, RLS enabled on ALL 90, seed live (6 categories, 3 styles, 3 vendors, 3 products, 3 inventory, 3 inspirations, 6 agents, 3 workflows)
+- Verified end-to-end: REST Data API returns seeded products with publishable key; anon read of users returns [] (RLS enforced)
+- src/db/index.ts getPool: reject non-postgres:// schemes (sandbox file: URL) -> instant clean mock fallback; +3 tests
+- eslint.config.mjs globalIgnores: .zz-hr/.zz-tr/homeino_review/tool-results/upload/download (junk artifacts broke lint with 37 errors)
+- 4 checks: eslint 0, tsc 0, vitest 70/70, build exit 0 (build ran with live DATABASE_URL)
+- Sanitized probe-supabase.mjs to env-based credentials (no secrets in repo); committed only src/ + supabase/ + scripts tooling
+
+Stage Summary:
+- Remote main = d2dffb4 (ls-remote verified), pushed from clean worktree
+- Supabase homeino1 is LIVE: schema + RLS + seed applied, Data API serving catalog rows
+- Site appearance unchanged (frontend still reads mock catalog; DB currently holds 3 seed products)
+- Credentials only in gitignored .env/.env.local; secret key NOT in repo (verified)
+- Next: full catalog seed into DB + flip frontend reads + Supabase Auth
