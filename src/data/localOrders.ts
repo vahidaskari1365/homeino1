@@ -10,7 +10,8 @@
 import type { CartItem } from "@/types";
 import { getProductById } from "./products";
 import { getStoreById } from "./stores";
-import { getOfferById } from "./offers";
+import { resolveCartLines, groupCartParcels } from "@/lib/marketplace";
+import { uid } from "@/lib/utils";
 
 export type OrderStatus = "processing" | "shipping" | "delivered" | "cancelled";
 
@@ -130,39 +131,43 @@ export function cancelLocalOrder(orderId: string): LocalOrder | null {
   return next;
 }
 
-export function placeLocalOrder(items: CartItem[]): LocalOrder {
-  const now = new Date().toISOString();
-  const id = `${Math.floor(102500 + Math.random() * 500)}`;
-  const grouped = new Map<string, OrderParcel>();
+/** Session-level record of ids already handed out — keeps ids collision-free
+ *  within a running module even when localStorage cannot persist (private mode). */
+const usedOrderIds = new Set<string>();
 
-  for (const item of items) {
-    const product = getProductById(item.productId);
-    if (!product) continue;
-    const offer = item.offerId ? getOfferById(item.offerId) : undefined;
-    const storeId = offer?.storeId ?? product.storeId;
-    const store = getStoreById(storeId);
-    const price = offer?.price ?? product.price;
-    const existing = grouped.get(storeId);
-    const line: OrderParcelLine = {
-      productId: product.id,
-      name: product.name,
-      image: product.images[0],
-      qty: item.qty,
-      price,
-    };
-    if (existing) existing.lines.push(line);
-    else {
-      grouped.set(storeId, { storeId, storeName: store?.name ?? "فروشگاه", shippingCost: 0, lines: [line] });
-    }
+/** Generate a unique order id without colliding with existing rows — both the
+ *  placed orders in storage and the static seed orders are checked first; the
+ *  uid() fallback keeps ids unique even when the small numeric demo range
+ *  becomes crowded (or storage is unavailable in tests). */
+function nextOrderId(): string {
+  if (usedOrderIds.size === 0) {
+    for (const order of [...read(), ...seedOrders()]) usedOrderIds.add(order.id);
   }
+  let id = `${Math.floor(102500 + Math.random() * 500)}`;
+  if (usedOrderIds.has(id)) id = uid();
+  while (usedOrderIds.has(id)) id = uid();
+  usedOrderIds.add(id);
+  return id;
+}
 
-  const parcels = [...grouped.values()].map((parcel) => {
-    const subtotal = parcel.lines.reduce((sum, line) => sum + line.price * line.qty, 0);
-    return {
-      ...parcel,
-      shippingCost: subtotal >= 5_000_000 ? 0 : 120_000,
-    };
-  });
+export function placeLocalOrder(items: CartItem[], express = false): LocalOrder {
+  const now = new Date().toISOString();
+  const id = nextOrderId();
+  // Shipping cost per parcel must EXACTLY match checkout: derive it from the
+  // same resolveCartLines + groupCartParcels pipeline so success/account totals
+  // never drift from the checkout summary.
+  const parcels: OrderParcel[] = groupCartParcels(resolveCartLines(items), express).map((parcel) => ({
+    storeId: parcel.storeId,
+    storeName: parcel.storeName,
+    shippingCost: parcel.shippingCost,
+    lines: parcel.lines.map((line) => ({
+      productId: line.product.id,
+      name: line.product.name,
+      image: line.product.images[0],
+      qty: line.item.qty,
+      price: line.unitPrice,
+    })),
+  }));
   const itemsCount = parcels.reduce((sum, parcel) => sum + parcel.lines.reduce((s, l) => s + l.qty, 0), 0);
   const total = parcels.reduce((sum, parcel) => sum + parcel.shippingCost + parcel.lines.reduce((s, l) => s + l.price * l.qty, 0), 0);
   const order: LocalOrder = { id, createdAt: now, faDate: faDate(now), status: "processing", parcels, total, itemsCount };

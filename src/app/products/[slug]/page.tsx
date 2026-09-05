@@ -16,6 +16,7 @@ import { sampleReviews } from "@/data/inspirations";
 import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/useShop";
 import { useUi, useChat } from "@/stores/useApp";
 import { toFa, formatPrice, cn } from "@/lib/utils";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 import type { Review } from "@/types";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -28,7 +29,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [tab, setTab] = useState<"desc" | "specs" | "reviews">("desc");
   const [seller, setSeller] = useState<string | undefined>(() => getBestOffer(product!.id)?.id);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [myReviews, setMyReviews] = useState<Review[]>(() => localReviews(product!.id));
+  const hydrated = useHasHydrated();
+  const productId = product!.id;
+  const [reviewVersion, setReviewVersion] = useState(0);
+  // Read the persisted reviews only after hydration so the first paint
+  // (server + pre-hydration) stays identical to SSR — zero console mismatch.
+  const myReviews = hydrated ? localReviews(productId) : [];
 
   const store = getStoreById(product!.storeId);
   const productOffers = offersForProduct(product!.id);
@@ -240,7 +246,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 <div className="mt-1 text-sm text-ink-muted">از {toFa(product!.reviewsCount)} نظر</div>
                 <Button variant="ghost" className="mt-4 w-full" onClick={() => setReviewOpen(true)}>ثبت نظر</Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3" key={reviewVersion}>
                 {reviews.map((r) => (
                   <div key={r.id} className="card-surface p-4">
                     <div className="flex items-center justify-between">
@@ -304,7 +310,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         <div className="fixed inset-x-0 bottom-16 z-30 flex items-center gap-2 border-t border-clay/40 glass px-4 py-2.5 lg:hidden">
           <div className="flex-1">
             <p className="text-[10px] text-ink-muted">{product!.brand}</p>
-            <p className="font-display text-sm font-black text-ink">{toFa(formatPrice(product!.price))} <span className="text-[10px] font-normal text-ink-muted">ت</span></p>
+            <p className="font-display text-sm font-black text-ink">{toFa(formatPrice(displayPrice))} <span className="text-[10px] font-normal text-ink-muted">ت</span></p>
           </div>
           <button onClick={() => { addToCart(product!.id, qty); toast("به سبد خرید اضافه شد"); }} className="btn-accent flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold"><ShoppingBag size={15} /> افزودن به سبد</button>
           <button onClick={() => { wl.toggleProduct(product!.id); toast(wished ? "حذف شد" : "به علاقه‌مندی اضافه شد"); }} className={cn("grid h-10 w-10 place-items-center rounded-xl border border-clay/50", wished && "border-terracotta text-terracotta-deep")} aria-label="علاقه‌مندی"><Heart size={17} className={cn(wished && "fill-terracotta")} /></button>
@@ -320,8 +326,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         productName={product!.name}
         onClose={() => setReviewOpen(false)}
         onSave={(rating, comment) => {
-          const review = saveLocalReview(product!.id, rating, comment);
-          setMyReviews((list) => [review, ...list]);
+          saveLocalReview(product!.id, rating, comment);
+          setReviewVersion((v) => v + 1);
           setReviewOpen(false);
           toast("نظرت ثبت شد (در همین مرورگر)");
         }}

@@ -4,12 +4,12 @@ import { notFound } from "next/navigation";
 import { BadgeCheck, MapPin, Package, Star, Timer, Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
-import { Button, LogoBlock, Chip } from "@/components/ui/primitives";
+import { Button, LogoBlock, Chip, Badge, Rating } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
-import { getStore} from "@/data/stores";
+import { getStore } from "@/data/stores";
 import { productsByStore } from "@/data/products";
-import { getStorefrontProfile } from "@/data/storefronts";
+import { getStorefrontProfile, reviewsForStore } from "@/data/storefronts";
 import { useWishlist } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
@@ -22,6 +22,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
   const [sort, setSort] = useState<"all" | "trending" | "discount">("all");
   const wl = useWishlist(); const { toast } = useUi();
   const profile = getStorefrontProfile(store!.id);
+  const storeReviews = reviewsForStore(store!.id);
   const wished = wl.stores.includes(store!.id);
   const list = products.filter((p) => sort === "all" ? true : sort === "trending" ? p.trending : p.oldPrice);
 
@@ -65,6 +66,41 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
           <span className="flex items-center gap-1.5 rounded-full border border-clay/50 bg-ivory-2 px-3 py-1.5 text-xs text-ink"><RotateCcw size={13} className="text-terracotta-deep" /> {toFa(profile.returnDays)} روز بازگشت</span>
         </div>
       )}
+
+      {/* Trust, policies & store reviews — from stores.ts / storefronts.ts (existing components) */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_380px]">
+        <div className="card-surface p-5">
+          <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ink"><ShieldCheck size={18} className="text-sage" /> اعتماد و سیاست‌های فروشگاه</h2>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {store!.badges.map((badge) => <Badge key={badge} tone="success">{badge}</Badge>)}
+            <Badge tone="dark">از سال {toFa(store!.sinceYear)}</Badge>
+            <Badge tone="accent">{toFa(store!.salesCount)} فروش موفق</Badge>
+          </div>
+          <div className="space-y-3 text-sm leading-7">
+            <div><span className="font-bold text-ink">سیاست ارسال: </span><span className="text-ink-muted">{store!.shippingPolicy}</span></div>
+            <div><span className="font-bold text-ink">سیاست بازگشت: </span><span className="text-ink-muted">{store!.returnPolicy}</span></div>
+          </div>
+        </div>
+        <div className="card-surface p-5">
+          <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ink"><Star size={18} className="fill-gold text-gold" /> نظرات خریداران</h2>
+          {storeReviews.length ? (
+            <div className="space-y-3">
+              {storeReviews.map((review) => (
+                <div key={review.id} className="border-b border-clay/30 pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2"><LogoBlock char={review.author[0]} color="#6b6358" size={30} /><div><div className="text-sm font-medium text-ink">{review.author}</div><div className="text-xs text-ink-muted">{review.date}</div></div></div>
+                    <Rating value={review.rating} size={13} />
+                  </div>
+                  <p className="mt-2 text-sm leading-7 text-ink-muted">{review.comment}</p>
+                  {review.verifiedPurchase && <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-sage"><BadgeCheck size={12} /> خرید تأییدشده</span>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-ink-muted">هنوز نظری برای این فروشگاه ثبت نشده است.</p>
+          )}
+        </div>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {[["all", "همه"], ["trending", "محبوب‌ها"], ["discount", "تخفیف‌دار"]].map(([k, l]) => (

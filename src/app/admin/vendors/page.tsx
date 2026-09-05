@@ -6,19 +6,24 @@ import { productsByStore } from "@/data/products";
 import { listPendingVendors, decideVendorApplication } from "@/data/vendorRegistrations";
 import { useUi } from "@/stores/useApp";
 import { toFa } from "@/lib/utils";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 
 export default function AdminVendorsPage() {
   const { toast } = useUi();
-  const [pending, setPending] = useState(listPendingVendors());
+  const hydrated = useHasHydrated();
+  const [version, setVersion] = useState(0);
+  // Read localStorage only after hydration so the first paint matches SSR —
+  // the list renders empty first, then the real persisted applications appear.
+  const pending = hydrated ? listPendingVendors() : [];
 
   function decide(id: string, approved: boolean) {
     decideVendorApplication(id, approved);
-    setPending(listPendingVendors());
+    setVersion((v) => v + 1);
     toast(approved ? "درخواست تأیید شد (در دمو فقط از فهرست خارج شد)" : "درخواست رد شد");
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-pending-version={version}>
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h1 className="font-display text-xl font-black text-ink">فروشگاه‌های تأییدشده</h1>
