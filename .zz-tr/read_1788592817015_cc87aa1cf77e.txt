@@ -1,0 +1,514 @@
+     1→import type { Product } from "@/types";
+     2→import { IMG } from "./media";
+     3→
+     4→const COLORS = {
+     5→  cream: { name: "کرم", hex: "#e7dccb" },
+     6→  charcoal: { name: "ذغالی", hex: "#2b2722" },
+     7→  terracotta: { name: "تراکوتا", hex: "#c2703f" },
+     8→  sage: { name: "سبز مریم‌گلی", hex: "#7c8467" },
+     9→  sand: { name: "شنی", hex: "#cdbfa6" },
+    10→  navy: { name: "سرمه‌ای", hex: "#4a6b7c" },
+    11→  gold: { name: "طلایی", hex: "#b8915a" },
+    12→  white: { name: "سفید", hex: "#fbf9f4" },
+    13→  plum: { name: "آلبالویی", hex: "#6b4d5a" },
+    14→};
+    15→
+    16→export const products: Product[] = [
+    17→  {
+    18→    id: "p1", sku: "SOF-1024", slug: "sofa-helia", name: "کاناپه هلیم ۳ نفره", brand: "نور مبلمان", storeId: "st1",
+    19→    categorySlug: "furniture", subCategorySlug: "sofa", styleSlugs: ["modern", "scandinavian"],
+    20→    price: 48500000, oldPrice: 62000000, currency: "تومان", rating: 4.8, reviewsCount: 142, purchaseCount: 443,
+    21→    images: [IMG.living2, IMG.living6, IMG.living7],
+    22→    colors: [COLORS.cream, COLORS.charcoal, COLORS.sage], materials: ["پارچه کتان", "چوب راش", "فوم سرد"],
+    23→    dimensions: "۲۲۰ × ۹۰ × ۸۵ سانتی‌متر",
+    24→    description: "کاناپه‌ی هلیم با طراحی مینیمال و پارچه‌ی کتان نرم، ترکیبی از راحتی و ظرافت است. پایه‌های چوبی راش گرما را به فضا می‌آورند.",
+    25→    specs: [{ label: "نوع", value: "۳ نفره" }, { label: "پایه", value: "چوب راش" }, { label: "تضمین", value: "۲۴ ماه" }],
+    26→    inStock: true, stockCount: 8, trending: true, aiRecommended: true, tags: ["پذیرایی", "مدرن"],
+    27→  },
+    28→  {
+    29→    id: "p2", sku: "SOF-1025", slug: "sofa-lumi", name: "مبل راحتی لوومی", brand: "نور مبلمان", storeId: "st1",
+    30→    categorySlug: "furniture", subCategorySlug: "armchair", styleSlugs: ["modern", "art-deco"],
+    31→    price: 18900000, currency: "تومان", rating: 4.7, reviewsCount: 88, purchaseCount: 281,
+    32→    images: [IMG.living3, IMG.living9],
+    33→    colors: [COLORS.terracotta, COLORS.charcoal], materials: ["حریر مصنوعی", "فلز"],
+    34→    dimensions: "۸۵ × ۸۰ × ۹۰ سانتی‌متر",
+    35→    description: "مبل راحتی لوومی با خطوط منحنی و روکش مخمل، برای یک گوشه‌ی دنج و شیک در پذیرایی.",
+    36→    specs: [{ label: "نوع", value: "تک‌نفره" }, { label: "پایه", value: "فلز" }],
+    37→    inStock: true, stockCount: 12, trending: true, tags: ["پذیرایی", "راحتی"],
+    38→  },
+    39→  {
+    40→    id: "p3", sku: "TBL-2041", slug: "coffee-table-oak", name: "میز جلو مبلی بلوط", brand: "آرا اتاق خواب", storeId: "st7",
+    41→    categorySlug: "furniture", subCategorySlug: "coffee-table", styleSlugs: ["scandinavian", "japandi"],
+    42→    price: 7800000, oldPrice: 9500000, currency: "تومان", rating: 4.6, reviewsCount: 54, purchaseCount: 179,
+    43→    images: [IMG.living9, IMG.decor7],
+    44→    colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب بلوط", "MDF"],
+    45→    dimensions: "۱۱۰ × ۶۰ × ۳۸ سانتی‌متر",
+    46→    description: "میز جلو مبلی با سطح چوب بلوط طبیعی و پایه‌های ظریف، کاملاً منطبق با سبک اسکاندیناوی.",
+    47→    specs: [{ label: "متریال", value: "چوب بلوط" }],
+    48→    inStock: true, stockCount: 20, isNew: true, tags: ["میز", "چوب"],
+    49→  },
+    50→  {
+    51→    id: "p4", sku: "TBL-2042", slug: "dining-set-sara", name: "میز و صندلی ناهارخوری سارا", brand: "نور مبلمان", storeId: "st1",
+    52→    categorySlug: "furniture", subCategorySlug: "dining-table", styleSlugs: ["modern", "contemporary"],
+    53→    price: 63000000, currency: "تومان", rating: 4.9, reviewsCount: 73, purchaseCount: 236,
+    54→    images: [IMG.living9, IMG.living2],
+    55→    colors: [COLORS.charcoal, COLORS.sand], materials: ["چوب راش", "پارچه"],
+    56→    dimensions: "میز ۱۸۰ × ۹۰ + ۶ صندلی",
+    57→    description: "ست کامل ناهارخوری شامل میز و ۶ صندلی، مناسب جمع‌شدن‌های خانوادگی با ظاهری مدرن.",
+    58→    specs: [{ label: "ظرفیت", value: "۶ نفر" }],
+    59→    inStock: true, stockCount: 5, tags: ["ناهارخوری", "ست"],
+    60→  },
+    61→  {
+    62→    id: "p5", sku: "CHR-3011", slug: "chair-mio", name: "صندلی مِئو", brand: "آتلیه نور", storeId: "st10",
+    63→    categorySlug: "furniture", subCategorySlug: "chair", styleSlugs: ["classic", "neoclassical"],
+    64→    price: 6200000, currency: "تومان", rating: 4.5, reviewsCount: 41, purchaseCount: 140,
+    65→    images: [IMG.decor8],
+    66→    colors: [COLORS.plum, COLORS.gold], materials: ["مخمل", "چوب گردو"],
+    67→    description: "صندلی تکی با روکش مخمل و پایه‌ی چوب گردو، یک لمس کلاسیک و لوکس برای هر فضا.",
+    68→    specs: [{ label: "جنس", value: "مخمل" }],
+    69→    inStock: true, stockCount: 16, tags: ["صندلی", "کلاسیک"],
+    70→  },
+    71→  {
+    72→    id: "p6", sku: "DEC-4011", slug: "vase-ceramic-blue", name: "گلدان سرامیکی لاجوردی", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
+    73→    categorySlug: "decor", subCategorySlug: "vase", styleSlugs: ["boho", "mediterranean"],
+    74→    price: 1450000, oldPrice: 2100000, currency: "تومان", rating: 4.8, reviewsCount: 120, purchaseCount: 377,
+    75→    images: [IMG.decor9, IMG.decor6],
+    76→    colors: [COLORS.navy, COLORS.white], materials: ["سرامیک دست‌ساز"],
+    77→    dimensions: "ارتفاع ۳۲ سانتی‌متر",
+    78→    description: "گلدان سرامیکی دست‌ساز با گل‌ولای لاجوردی، هر قطعه منحصربه‌فرد و اثری از دست هنرمند.",
+    79→    specs: [{ label: "ساخت", value: "دستی" }],
+    80→    inStock: true, stockCount: 40, trending: true, tags: ["گلدان", "سرامیک"],
+    81→  },
+    82→  {
+    83→    id: "p7", sku: "DEC-4012", slug: "mirror-arch", name: "آینه طاقی برنزی", brand: "آتلیه نور", storeId: "st10",
+    84→    categorySlug: "decor", subCategorySlug: "mirror", styleSlugs: ["modern", "neoclassical"],
+    85→    price: 4900000, currency: "تومان", rating: 4.7, reviewsCount: 36, purchaseCount: 125,
+    86→    images: [IMG.decor8],
+    87→    colors: [COLORS.gold, COLORS.charcoal], materials: ["فلز برنزی", "آینه"],
+    88→    dimensions: "۱۶۰ × ۸۰ سانتی‌متر",
+    89→    description: "آینه‌ی طاقی با قاب برنزی، نقطه‌ی کانونیِ ظریف برای دیوار پذیرایی یا راهرو.",
+    90→    specs: [{ label: "قاب", value: "فلز برنزی" }],
+    91→    inStock: true, stockCount: 9, tags: ["آینه", "دیوار"],
+    92→  },
+    93→  {
+    94→    id: "p8", sku: "ART-5011", slug: "wall-art-line", name: "تابلو خطی مدرن", brand: "چاپان دکور", storeId: "st2",
+    95→    categorySlug: "decor", subCategorySlug: "wall-art", styleSlugs: ["minimal", "modern"],
+    96→    price: 2800000, currency: "تومان", rating: 4.4, reviewsCount: 22, purchaseCount: 83,
+    97→    images: [IMG.decor6],
+    98→    colors: [COLORS.charcoal, COLORS.cream], materials: ["بوم", "چوب"],
+    99→    dimensions: "۹۰ × ۱۲۰ سانتی‌متر",
+   100→    description: "تابلوی انتزاعی با خطوط ساده، برای کامل‌کردن یک دیوار خالی و خلق حس آرامش.",
+   101→    specs: [{ label: "نوع", value: "بوم کشیده" }],
+   102→    inStock: true, stockCount: 25, tags: ["تابلو", "هنر"],
+   103→  },
+   104→  {
+   105→    id: "p9", sku: "LAMP-552", slug: "lamp-wood-minimal", name: "چراغ رومیزی چوبی مینیمال", brand: "لوامینا", storeId: "st3",
+   106→    categorySlug: "lighting", subCategorySlug: "table-lamp", styleSlugs: ["japandi", "minimal"],
+   107→    price: 3900000, oldPrice: 5200000, currency: "تومان", rating: 4.9, reviewsCount: 167, purchaseCount: 518,
+   108→    images: [IMG.decor3, IMG.decor4, IMG.decor5],
+   109→    colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب راش", "کتان"],
+   110→    dimensions: "ارتفاع ۴۵ سانتی‌متر",
+   111→    description: "چراغ رومیزی با پایه‌ی چوبی و شید کتانی، نوری گرم و آرامش‌بخش برای گوشه‌ی مطالعه.",
+   112→    specs: [{ label: "نور", value: "LED گرم" }, { label: "اتصال", value: "کابل برق" }],
+   113→    inStock: true, stockCount: 30, trending: true, aiRecommended: true, tags: ["نور", "رومیزی"],
+   114→  },
+   115→  {
+   116→    id: "p10", sku: "LGT-6012", slug: "floor-lamp-arc", name: "آباژور قوسی لوکس", brand: "لوامینا", storeId: "st3",
+   117→    categorySlug: "lighting", subCategorySlug: "floor-lamp", styleSlugs: ["art-deco", "contemporary"],
+   118→    price: 8900000, currency: "تومان", rating: 4.6, reviewsCount: 48, purchaseCount: 161,
+   119→    images: [IMG.decor3],
+   120→    colors: [COLORS.gold, COLORS.charcoal], materials: ["فلز", "مرمر"],
+   121→    dimensions: "ارتفاع ۱۸۰ سانتی‌متر",
+   122→    description: "آباژور قوسی با پایه‌ی مرمر و بدنه‌ی فلزی، یک قطعه‌ی مجسمه‌وار که نور را روی مبل می‌پراکند.",
+   123→    specs: [{ label: "پایه", value: "مرمر" }],
+   124→    inStock: true, stockCount: 7, isNew: true, tags: ["آباژور", "لوکس"],
+   125→  },
+   126→  {
+   127→    id: "p11", sku: "LGT-6013", slug: "ceiling-light-sphere", name: "چراغ سقفی کروی", brand: "لوامینا", storeId: "st3",
+   128→    categorySlug: "lighting", subCategorySlug: "ceiling", styleSlugs: ["modern", "minimal"],
+   129→    price: 5400000, currency: "تومان", rating: 4.5, reviewsCount: 33, purchaseCount: 116,
+   130→    images: [IMG.living5],
+   131→    colors: [COLORS.white, COLORS.gold], materials: ["فلز", "شیر"],
+   132→    description: "چراغ سقفی کروی با پخش نور ملایم، مناسب پذیرایی و راهرو با سقف کوتاه.",
+   133→    specs: [{ label: "نور", value: "ملایم" }],
+   134→    inStock: true, stockCount: 18, tags: ["سقفی", "نور"],
+   135→  },
+   136→  {
+   137→    id: "p12", sku: "RUG-7011", slug: "rug-berber", name: "قالیچه بربری دست‌بافت", brand: "فرش سرا", storeId: "st4",
+   138→    categorySlug: "rugs", subCategorySlug: "rug", styleSlugs: ["boho", "rustic"],
+   139→    price: 9800000, oldPrice: 13000000, currency: "تومان", rating: 4.8, reviewsCount: 95, purchaseCount: 302,
+   140→    images: [IMG.decor10, IMG.living3],
+   141→    colors: [COLORS.cream, COLORS.terracotta], materials: ["پشم", "نخ طبیعی"],
+   142→    dimensions: "۲۰۰ × ۱۵۰ سانتی‌متر",
+   143→    description: "قالیچه بربری با الگوهای هندسی و رنگ‌های زمینی، گرمی و کاراکتری منحصربه‌فرد به فضا می‌دهد.",
+   144→    specs: [{ label: "بافت", value: "دستی" }, { label: "متریال", value: "پشم" }],
+   145→    inStock: true, stockCount: 6, trending: true, tags: ["قالیچه", "پشم"],
+   146→  },
+   147→  {
+   148→    id: "p13", sku: "RUG-7012", slug: "carpet-modern-geo", name: "فرش مدرن هندسی", brand: "فرش سرا", storeId: "st4",
+   149→    categorySlug: "rugs", subCategorySlug: "carpet", styleSlugs: ["modern", "contemporary"],
+   150→    price: 14500000, currency: "تومان", rating: 4.6, reviewsCount: 51, purchaseCount: 170,
+   151→    images: [IMG.living8],
+   152→    colors: [COLORS.charcoal, COLORS.cream], materials: ["پلی‌پروپیلن", "نخ حریر"],
+   153→    dimensions: "۳۰۰ × ۲۰۰ سانتی‌متر",
+   154→    description: "فرش ماشینی با طرح هندسی مدرن و رنگ‌های خنثی، برای پذیرایی‌های امروزی.",
+   155→    specs: [{ label: "بافت", value: "ماشینی" }],
+   156→    inStock: true, stockCount: 14, tags: ["فرش", "مدرن"],
+   157→  },
+   158→  {
+   159→    id: "p14", sku: "CUR-8011", slug: "curtain-linen", name: "پرده کتان بلند", brand: "نون تکستایل", storeId: "st5",
+   160→    categorySlug: "textiles", subCategorySlug: "curtain", styleSlugs: ["scandinavian", "minimal"],
+   161→    price: 3200000, currency: "تومان", rating: 4.5, reviewsCount: 44, purchaseCount: 149,
+   162→    images: [IMG.living6],
+   163→    colors: [COLORS.cream, COLORS.sand, COLORS.sage], materials: ["کتان", "پنبه"],
+   164→    dimensions: "طول ۲۶۰ سانتی‌متر (جفتی)",
+   165→    description: "پرده‌ی کتان با ریزش طبیعی، نور را نرم فیلتر می‌کند و حس آرامش اسکاندیناوی می‌سازد.",
+   166→    specs: [{ label: "نوع", value: "جفتی" }],
+   167→    inStock: true, stockCount: 22, isNew: true, tags: ["پرده", "کتان"],
+   168→  },
+   169→  {
+   170→    id: "p15", sku: "TEX-8012", slug: "cushion-set-earth", name: "ست کوسن پالت خاکی", brand: "نون تکستایل", storeId: "st5",
+   171→    categorySlug: "textiles", subCategorySlug: "cushion", styleSlugs: ["boho", "rustic"],
+   172→    price: 1850000, oldPrice: 2400000, currency: "تومان", rating: 4.7, reviewsCount: 130, purchaseCount: 407,
+   173→    images: [IMG.living3, IMG.living6],
+   174→    colors: [COLORS.terracotta, COLORS.sand, COLORS.cream], materials: ["کتان", "ولور"],
+   175→    dimensions: "ست ۴ تایی ۴۵×۴۵",
+   176→    description: "ست چهار تایی کوسن با بافت‌های متنوع و رنگ‌های زمینی، برای لایه‌لایه‌کردن مبل.",
+   177→    specs: [{ label: "تعداد", value: "۴ عدد" }],
+   178→    inStock: true, stockCount: 35, trending: true, tags: ["کوسن", "ست"],
+   179→  },
+   180→  {
+   181→    id: "p16", sku: "TEX-8013", slug: "throw-knit", name: "پوشالی بافت‌دار", brand: "نون تکستایل", storeId: "st5",
+   182→    categorySlug: "textiles", subCategorySlug: "throw", styleSlugs: ["scandinavian", "rustic"],
+   183→    price: 1200000, currency: "تومان", rating: 4.6, reviewsCount: 67, purchaseCount: 218,
+   184→    images: [IMG.living6],
+   185→    colors: [COLORS.cream, COLORS.charcoal], materials: ["اکریلیک", "پشم"],
+   186→    description: "پوشالی نرم بافت‌دار برای روی مبل یا تخت، گرما و بافت را به فضا اضافه می‌کند.",
+   187→    specs: [{ label: "بافت", value: "دست‌باف شبیه" }],
+   188→    inStock: true, stockCount: 28, tags: ["پوشالی", "گرم"],
+   189→  },
+   190→  {
+   191→    id: "p17", sku: "KIT-9011", slug: "dinnerware-stone", name: "ست ظروف استون‌ور", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
+   192→    categorySlug: "kitchen", subCategorySlug: "dinnerware", styleSlugs: ["minimal", "japandi"],
+   193→    price: 4200000, currency: "تومان", rating: 4.8, reviewsCount: 156, purchaseCount: 485,
+   194→    images: [IMG.bed3],
+   195→    colors: [COLORS.sand, COLORS.charcoal], materials: ["سرامیک استون‌ور"],
+   196→    dimensions: "ست ۱۲ تایی (۴ نفره)",
+   197→    description: "ست ظروف استون‌ور با رنگ مات و طبیعی، میز ناهار را به یک تجربه‌ی زیبا تبدیل می‌کند.",
+   198→    specs: [{ label: "تعداد", value: "۱۲ تکه" }],
+   199→    inStock: true, stockCount: 19, trending: true, tags: ["ظروف", "ست"],
+   200→  },
+   201→  {
+   202→    id: "p18", sku: "KIT-9012", slug: "kitchen-organizer-wood", name: "نظم‌دهنده چوبی آشپزخانه", brand: "کاسه‌بو آشپزخانه", storeId: "st6",
+   203→    categorySlug: "kitchen", subCategorySlug: "organizer", styleSlugs: ["scandinavian", "minimal"],
+   204→    price: 980000, currency: "تومان", rating: 4.4, reviewsCount: 39, purchaseCount: 134,
+   205→    images: [IMG.decor7],
+   206→    colors: [COLORS.sand], materials: ["چوب بامبو"],
+   207→    description: "نظم‌دهنده‌ی بامبویی برای کشو و کابینت، سادگی و نظم را به آشپزخانه می‌آورد.",
+   208→    specs: [{ label: "متریال", value: "بامبو" }],
+   209→    inStock: true, stockCount: 50, tags: ["نظم", "آشپزخانه"],
+   210→  },
+   211→  {
+   212→    id: "p19", sku: "BED-1011", slug: "bed-nordic", name: "تخت نوردیک چوبی", brand: "آرا اتاق خواب", storeId: "st7",
+   213→    categorySlug: "bedroom", subCategorySlug: "bed", styleSlugs: ["scandinavian", "minimal"],
+   214→    price: 22500000, oldPrice: 28000000, currency: "تومان", rating: 4.7, reviewsCount: 62, purchaseCount: 203,
+   215→    images: [IMG.bed2, IMG.bed9],
+   216→    colors: [COLORS.sand, COLORS.white], materials: ["چوب راش", "MDF"],
+   217→    dimensions: "۱۶۰ × ۲۰۰ سانتی‌متر",
+   218→    description: "تخت نوردیک با پایه‌های چوبی کم‌رنگ و هددبرد ساده، آرامش یک اتاق خواب اسکاندیناویایی.",
+   219→    specs: [{ label: "سایز", value: "۱۶۰" }],
+   220→    inStock: true, stockCount: 6, aiRecommended: true, tags: ["تخت", "چوب"],
+   221→  },
+   222→  {
+   223→    id: "p20", sku: "BED-1012", slug: "nightstand-oak", name: "میز کنار تخت بلوط", brand: "آرا اتاق خواب", storeId: "st7",
+   224→    categorySlug: "bedroom", subCategorySlug: "nightstand", styleSlugs: ["scandinavian", "japandi"],
+   225→    price: 3400000, currency: "تومان", rating: 4.6, reviewsCount: 28, purchaseCount: 101,
+   226→    images: [IMG.bed3],
+   227→    colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب بلوط"],
+   228→    dimensions: "۴۵ × ۴۰ × ۵۵ سانتی‌متر",
+   229→    description: "میز کنار تخت فشرده با کشو، جا برای چراغ، کتاب و وسایل روزمره.",
+   230→    specs: [{ label: "کشو", value: "۱ عدد" }],
+   231→    inStock: true, stockCount: 24, tags: ["میز", "اتاق خواب"],
+   232→  },
+   233→  {
+   234→    id: "p21", sku: "BED-1013", slug: "bedding-linen-set", name: "روتختی کتان ساده", brand: "نون تکستایل", storeId: "st5",
+   235→    categorySlug: "bedroom", subCategorySlug: "bedding", styleSlugs: ["minimal", "scandinavian"],
+   236→    price: 2600000, currency: "تومان", rating: 4.5, reviewsCount: 71, purchaseCount: 230,
+   237→    images: [IMG.bed9],
+   238→    colors: [COLORS.cream, COLORS.sage, COLORS.charcoal], materials: ["کتان شسته"],
+   239→    description: "ست روتختی کتان شسته‌شده با حس نرم و طبیعی، برای خوابی راحت و ظاهری شیک.",
+   240→    specs: [{ label: "نخ", value: "کتان" }],
+   241→    inStock: true, stockCount: 33, isNew: true, tags: ["روتختی", "کتان"],
+   242→  },
+   243→  {
+   244→    id: "p22", sku: "WRD-1014", slug: "wardrobe-slim", name: "کمد باریک ایستاده", brand: "آرا اتاق خواب", storeId: "st7",
+   245→    categorySlug: "bedroom", subCategorySlug: "wardrobe", styleSlugs: ["modern", "minimal"],
+   246→    price: 18900000, currency: "تومان", rating: 4.4, reviewsCount: 19, purchaseCount: 74,
+   247→    images: [IMG.bed8],
+   248→    colors: [COLORS.charcoal, COLORS.sand], materials: ["MDF", "فلز"],
+   249→    dimensions: "۱۲۰ × ۶۰ × ۲۰۰ سانتی‌متر",
+   250→    description: "کمد ایستاده‌ی باریک برای فضاهای کوچک، با دستگیره‌های مخفی و ظاهر مینیمال.",
+   251→    specs: [{ label: "طبقه", value: "۳" }],
+   252→    inStock: false, stockCount: 0, tags: ["کمد", "مینیمال"],
+   253→  },
+   254→  {
+   255→    id: "p23", sku: "DSK-2011", slug: "desk-natural", name: "میز کار طبیعی", brand: "ورک‌نست", storeId: "st8",
+   256→    categorySlug: "workspace", subCategorySlug: "desk", styleSlugs: ["scandinavian", "japandi"],
+   257→    price: 6700000, currency: "تومان", rating: 4.7, reviewsCount: 58, purchaseCount: 191,
+   258→    images: [IMG.decor7, IMG.decor3],
+   259→    colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب راش", "فلز"],
+   260→    dimensions: "۱۴۰ × ۷۰ سانتی‌متر",
+   261→    description: "میز کار با سطح بزرگ چوبی و پایه‌های ظریف، انگیزه و نظم برای روزهای کاری.",
+   262→    specs: [{ label: "سطح", value: "چوب راش" }],
+   263→    inStock: true, stockCount: 11, aiRecommended: true, tags: ["میز", "کار"],
+   264→  },
+   265→  {
+   266→    id: "p24", sku: "CHR-3012", slug: "office-chair-ergo", name: "صندلی اداری ارگونومیک", brand: "ورک‌نست", storeId: "st8",
+   267→    categorySlug: "workspace", subCategorySlug: "office-chair", styleSlugs: ["modern", "contemporary"],
+   268→    price: 8900000, oldPrice: 11000000, currency: "تومان", rating: 4.6, reviewsCount: 84, purchaseCount: 269,
+   269→    images: [IMG.decor7],
+   270→    colors: [COLORS.charcoal, COLORS.sage], materials: ["توری", "فلز", "پلاستیک"],
+   271→    description: "صندلی اداری با تکیه‌گاه کمری و تنظیم ارتفاع، برای ساعت‌های طولانی پشت میز بدون خستگی.",
+   272→    specs: [{ label: "تنظیم", value: "ارتفاع + کمر" }],
+   273→    inStock: true, stockCount: 13, trending: true, tags: ["صندلی", "اداری"],
+   274→  },
+   275→  {
+   276→    id: "p25", sku: "DEC-4013", slug: "sculpture-stone", name: "مجسمه سنگی انتزاعی", brand: "آتلیه نور", storeId: "st10",
+   277→    categorySlug: "decor", subCategorySlug: "sculpture", styleSlugs: ["minimal", "japandi"],
+   278→    price: 5400000, currency: "تومان", rating: 4.5, reviewsCount: 17, purchaseCount: 68,
+   279→    images: [IMG.decor8],
+   280→    colors: [COLORS.sand, COLORS.charcoal], materials: ["رزین سنگی"],
+   281→    dimensions: "ارتفاع ۳۸ سانتی‌متر",
+   282→    description: "مجسمه‌ی انتزاعی با فرم نرم و سطح مات، یک قطعه‌ی هنری برای کنسول یا قفسه.",
+   283→    specs: [{ label: "متریال", value: "رزین سنگی" }],
+   284→    inStock: true, stockCount: 8, isNew: true, tags: ["مجسمه", "هنر"],
+   285→  },
+   286→  {
+   287→    id: "p26", sku: "DEC-4014", slug: "candle-trio", name: "ست شمع معطر سه‌تایی", brand: "چاپان دکور", storeId: "st2",
+   288→    categorySlug: "decor", subCategorySlug: "candle", styleSlugs: ["boho", "minimal"],
+   289→    price: 890000, currency: "تومان", rating: 4.6, reviewsCount: 49, purchaseCount: 164,
+   290→    images: [IMG.decor6],
+   291→    colors: [COLORS.cream, COLORS.sage, COLORS.terracotta], materials: ["موم سویا", "شیشه"],
+   292→    description: "ست سه شمع معطر با عطرهای آرامش‌بخش و ظروف شیشه‌ای، برای شب‌های دنج.",
+   293→    specs: [{ label: "عطر", value: "وانیل و چوب" }],
+   294→    inStock: true, stockCount: 42, tags: ["شمع", "معطر"],
+   295→  },
+   296→  {
+   297→    id: "p27", sku: "OUT-5011", slug: "outdoor-lounge-set", name: "ست مبلمان بالکن", brand: "بالکن‌کو", storeId: "st9",
+   298→    categorySlug: "outdoor", subCategorySlug: "outdoor-furniture", styleSlugs: ["modern", "mediterranean"],
+   299→    price: 32000000, currency: "تومان", rating: 4.4, reviewsCount: 23, purchaseCount: 86,
+   300→    images: [IMG.living5],
+   301→    colors: [COLORS.charcoal, COLORS.sage], materials: ["حصیر", "آلومینیوم", "کوسن ضدآب"],
+   302→    dimensions: "ست ۴ نفره",
+   303→    description: "ست مبلمان بالکن با متریال ضدآب و کوسن‌های مقاوم، برای لحظاتی آرام در فضای باز.",
+   304→    specs: [{ label: "مقاومت", value: "ضدآب" }],
+   305→    inStock: true, stockCount: 4, isNew: true, tags: ["بالکن", "بیرونی"],
+   306→  },
+   307→  {
+   308→    id: "p28", sku: "OUT-5012", slug: "planter-terracotta", name: "گلدان تراکوتای بزرگ", brand: "بالکن‌کو", storeId: "st9",
+   309→    categorySlug: "outdoor", subCategorySlug: "planter", styleSlugs: ["rustic", "mediterranean"],
+   310→    price: 1500000, currency: "تومان", rating: 4.3, reviewsCount: 31, purchaseCount: 110,
+   311→    images: [IMG.decor10],
+   312→    colors: [COLORS.terracotta], materials: ["تراکوتا"],
+   313→    dimensions: "ارتفاع ۵۰ سانتی‌متر",
+   314→    description: "گلدان تراکوتای بزرگ با رنگ گرم، برای گیاهان بزرگ در تراس یا پذیرایی.",
+   315→    specs: [{ label: "متریال", value: "تراکوتا" }],
+   316→    inStock: true, stockCount: 26, tags: ["گلدان", "تراس"],
+   317→  },
+   318→  {
+   319→    id: "p29", sku: "SOF-1026", slug: "sofa-bed-modular", name: "کاناپه‌ی ماژولار خواب‌دار", brand: "نور مبلمان", storeId: "st1",
+   320→    categorySlug: "furniture", subCategorySlug: "sofa", styleSlugs: ["modern", "minimal"],
+   321→    price: 56000000, oldPrice: 68000000, currency: "تومان", rating: 4.9, reviewsCount: 211, purchaseCount: 650,
+   322→    images: [IMG.living4, IMG.living8],
+   323→    colors: [COLORS.cream, COLORS.sage, COLORS.charcoal], materials: ["پارچه", "فوم"],
+   324→    dimensions: "ماژولار (قابل توسعه)",
+   325→    description: "کاناپه‌ی ماژولار با قابلیت تبدیل به تخت، انعطاف‌پذیر برای هر پلان و هر تعداد مهمان.",
+   326→    specs: [{ label: "نوع", value: "ماژولار" }, { label: "تبدیل", value: "به تخت" }],
+   327→    inStock: true, stockCount: 7, trending: true, aiRecommended: true, tags: ["کاناپه", "ماژولار"],
+   328→  },
+   329→  {
+   330→    id: "p30", sku: "SHF-6011", slug: "bookshelf-ladder", name: "میز کتابخانه‌ای نردبانی", brand: "چاپان دکور", storeId: "st2",
+   331→    categorySlug: "furniture", subCategorySlug: "coffee-table", styleSlugs: ["scandinavian", "industrial"],
+   332→    price: 4600000, currency: "تومان", rating: 4.5, reviewsCount: 37, purchaseCount: 128,
+   333→    images: [IMG.decor7],
+   334→    colors: [COLORS.charcoal, COLORS.sand], materials: ["چوب", "فلز"],
+   335→    dimensions: "۱۸۰ × ۸۰ سانتی‌متر",
+   336→    description: "قفسه‌ی نردبانی با چوب و فلز، برای نمایش کتاب، گلدان و اکسسوری در فضاهای کم‌جا.",
+   337→    specs: [{ label: "طبقه", value: "۵" }],
+   338→    inStock: true, stockCount: 17, tags: ["قفسه", "نردبانی"],
+   339→  },
+   340→  {
+   341→    id: "p31", sku: "LGT-6014", slug: "wall-sconce-brass", name: "چراغ دیواری برنجی", brand: "لوامینا", storeId: "st3",
+   342→    categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["classic", "art-deco"],
+   343→    price: 2400000, currency: "تومان", rating: 4.4, reviewsCount: 26, purchaseCount: 95,
+   344→    images: [IMG.decor3],
+   345→    colors: [COLORS.gold], materials: ["برنج", "شیشه"],
+   346→    description: "چراغ دیواری برنجی با نور ملایم، برای راهرو، پله یا کنار آینه.",
+   347→    specs: [{ label: "جنس", value: "برنج" }],
+   348→    inStock: true, stockCount: 21, tags: ["دیواری", "نور"],
+   349→  },
+   350→  {
+   351→    id: "p32", sku: "TEX-8014", slug: "table-runner-jute", name: "رومیزی چمنی دست‌بافت", brand: "نون تکستایل", storeId: "st5",
+   352→    categorySlug: "textiles", subCategorySlug: "table-runner", styleSlugs: ["boho", "rustic"],
+   353→    price: 760000, currency: "تومان", rating: 4.5, reviewsCount: 42, purchaseCount: 143,
+   354→    images: [IMG.decor10],
+   355→    colors: [COLORS.cream, COLORS.sand], materials: ["جوت", "پنبه"],
+   356→    dimensions: "۵۰ × ۲۰۰ سانتی‌متر",
+   357→    description: "رومیزی جوت دست‌بافت با بافت طبیعی، گرما و بافت را روی میز ناهارخوری می‌آورد.",
+   358→    specs: [{ label: "متریال", value: "جوت" }],
+   359→    inStock: true, stockCount: 38, tags: ["رومیزی", "بافت"],
+   360→  },
+   361→  {
+   362→    id: "p33", sku: "SOF-1027", slug: "l-sofa-avan", name: "مبل ال «آوان»", brand: "نور مبلمان", storeId: "st1",
+   363→    categorySlug: "furniture", subCategorySlug: "sofa", styleSlugs: ["modern", "minimal"],
+   364→    price: 62000000, oldPrice: 75000000, currency: "تومان", rating: 4.8, reviewsCount: 96, purchaseCount: 305,
+   365→    images: [IMG.living4, IMG.living8],
+   366→    colors: [COLORS.cream, COLORS.charcoal, COLORS.sage, COLORS.sand], materials: ["پارچه", "فوم سرد"],
+   367→    dimensions: "مبل ال ۲۶۰ × ۱۸۰ سانتی‌متر",
+   368→    description: "مبل ال با طراحی ماژولار و نشیمن گسترده، بهترین انتخاب برای پذیرایی‌های بزرگ و خانواده‌دوست.",
+   369→    specs: [{ label: "نوع", value: "ال (L)" }, { label: "تبدیل", value: "به تخت" }],
+   370→    inStock: true, stockCount: 6, trending: true, aiRecommended: true, tags: ["مبل ال", "پذیرایی"],
+   371→  },
+   372→  {
+   373→    id: "p34", sku: "LGT-6015", slug: "chandelier-nor", name: "لوستر کریستالی «نُر»", brand: "لوامینا", storeId: "st3",
+   374→    categorySlug: "lighting", subCategorySlug: "ceiling", styleSlugs: ["neoclassical", "classic"],
+   375→    price: 24000000, currency: "تومان", rating: 4.7, reviewsCount: 54, purchaseCount: 179,
+   376→    images: [IMG.living5, IMG.decor3],
+   377→    colors: [COLORS.gold, COLORS.white], materials: ["کریستال", "فلز برنجی"],
+   378→    dimensions: "قطر ۸۰ سانتی‌متر",
+   379→    description: "لوستر کریستالی با بدنه‌ی برنجی، نقطه‌ی کانونی شکوه‌آمیز برای سقف پذیرایی یا ناهارخوری.",
+   380→    specs: [{ label: "نوع", value: "لوستر" }],
+   381→    inStock: true, stockCount: 7, isNew: true, tags: ["لوستر", "سقفی"],
+   382→  },
+   383→  {
+   384→    id: "p35", sku: "TBL-2043", slug: "dining-table-sepa", name: "میز ناهارخوری چوب بلوط «سِپا»", brand: "نور مبلمان", storeId: "st1",
+   385→    categorySlug: "furniture", subCategorySlug: "dining-table", styleSlugs: ["scandinavian", "modern"],
+   386→    price: 18500000, currency: "تومان", rating: 4.6, reviewsCount: 41, purchaseCount: 140,
+   387→    images: [IMG.living9],
+   388→    colors: [COLORS.sand, COLORS.charcoal], materials: ["چوب بلوط", "فلز"],
+   389→    dimensions: "۱۸۰ × ۹۰ سانتی‌متر",
+   390→    description: "میز ناهارخوری با سطح چوب بلوط طبیعی و پایه‌های ظریف، جایی برای دورهمی‌های خانوادگی.",
+   391→    specs: [{ label: "ظرفیت", value: "۶ نفر" }],
+   392→    inStock: true, stockCount: 9, isNew: true, tags: ["میز ناهارخوری", "چوب"],
+   393→  },
+   394→  {
+   395→    id: "p36", sku: "LGT-6016", slug: "floor-lamp-hila", name: "آباژور ایستاده مدرن «هیلا»", brand: "لوامینا", storeId: "st3",
+   396→    categorySlug: "lighting", subCategorySlug: "floor-lamp", styleSlugs: ["modern", "minimal"],
+   397→    price: 6700000, oldPrice: 8200000, currency: "تومان", rating: 4.5, reviewsCount: 33, purchaseCount: 116,
+   398→    images: [IMG.decor3, IMG.decor4],
+   399→    colors: [COLORS.charcoal, COLORS.gold, COLORS.sand], materials: ["فلز", "کتان"],
+   400→    dimensions: "ارتفاع ۱۶۰ سانتی‌متر",
+   401→    description: "آباژور ایستاده با خطوط ساده و نور گرم، برای روشن‌کردن گوشه‌ای از پذیرایی یا اتاق خواب.",
+   402→    specs: [{ label: "نوع", value: "آباژور" }],
+   403→    inStock: true, stockCount: 14, tags: ["آباژور", "نور"],
+   404→  },
+   405→  {
+   406→    id: "p37", sku: "LGT-6017", slug: "wall-sconce-zar", name: "دیوارکوب برنجی «زَر»", brand: "لوامینا", storeId: "st3",
+   407→    categorySlug: "lighting", subCategorySlug: "wall-lamp", styleSlugs: ["neoclassical", "art-deco"],
+   408→    price: 2900000, currency: "تومان", rating: 4.4, reviewsCount: 22, purchaseCount: 83,
+   409→    images: [IMG.decor3],
+   410→    colors: [COLORS.gold], materials: ["برنج", "شیشه"],
+   411→    description: "دیوارکوب برنجی با نور ملایم، برای راهرو، پله یا کنار آینه.",
+   412→    specs: [{ label: "نوع", value: "دیوارکوب" }],
+   413→    inStock: true, stockCount: 30, tags: ["دیوارکوب", "نور"],
+   414→  },
+   415→  {
+   416→    id: "p38", sku: "SOF-1028", slug: "pouf-narm", name: "پوف مخملی «نَرم»", brand: "نون تکستایل", storeId: "st5",
+   417→    categorySlug: "furniture", subCategorySlug: "armchair", styleSlugs: ["boho", "modern"],
+   418→    price: 2400000, currency: "تومان", rating: 4.3, reviewsCount: 18, purchaseCount: 71,
+   419→    images: [IMG.living3],
+   420→    colors: [COLORS.terracotta, COLORS.sage, COLORS.cream, COLORS.plum], materials: ["مخمل", "فوم"],
+   421→    dimensions: "قطر ۴۵ سانتی‌متر",
+   422→    description: "پوف مخملی سبک برای نشستن یا به‌عنوان میز عرفی، یک لمس رنگین و راحت به فضا.",
+   423→    specs: [{ label: "نوع", value: "پوف" }],
+   424→    inStock: true, stockCount: 25, isNew: true, tags: ["پوف", "راحتی"],
+   425→  },
+   426→  {
+   427→    id: "p39", sku: "SHF-6012", slug: "console-line", name: "کنسول چوبی «لاین»", brand: "آرا اتاق خواب", storeId: "st7",
+   428→    categorySlug: "furniture", subCategorySlug: "coffee-table", styleSlugs: ["minimal", "scandinavian"],
+   429→    price: 8900000, currency: "تومان", rating: 4.5, reviewsCount: 27, purchaseCount: 98,
+   430→    images: [IMG.living9, IMG.decor7],
+   431→    colors: [COLORS.charcoal, COLORS.sand], materials: ["چوب", "فلز"],
+   432→    dimensions: "۱۲۰ × ۳۵ سانتی‌متر",
+   433→    description: "کنسول باریک برای راهرو یا پشت مبل، با کشو برای نگهداری و سطحی برای دکور.",
+   434→    specs: [{ label: "کشو", value: "۲ عدد" }],
+   435→    inStock: true, stockCount: 12, tags: ["کنسول", "راهرو"],
+   436→  },
+   437→];
+   438→
+   439→export const getProduct = (slug: string) => products.find((p) => p.slug === slug);
+   440→export const getProductById = (id: string) => products.find((p) => p.id === id);
+   441→export const trendingProducts = products.filter((p) => p.trending);
+   442→export const aiRecommendedProducts = products.filter((p) => p.aiRecommended);
+   443→export const newProducts = products.filter((p) => p.isNew);
+   444→export const productsByCategory = (slug: string) =>
+   445→  products.filter((p) => p.categorySlug === slug);
+   446→export const productsByStore = (storeId: string) =>
+   447→  products.filter((p) => p.storeId === storeId);
+   448→export const productsByStyle = (slug: string) =>
+   449→  products.filter((p) => p.styleSlugs.includes(slug as never));
+   450→
+   451→// ============================================================
+   452→// DISCOVERY — Similar products (style + category overlap).
+   453→// ============================================================
+   454→export const similarProducts = (productId: string, limit = 4): Product[] => {
+   455→  const target = products.find((p) => p.id === productId);
+   456→  if (!target) return [];
+   457→  return products
+   458→    .filter((p) => p.id !== productId)
+   459→    .map((p) => {
+   460→      const sharedStyles = p.styleSlugs.filter((s) => target.styleSlugs.includes(s)).length;
+   461→      const sameCategory = p.categorySlug === target.categorySlug ? 1 : 0;
+   462→      const sameStore = p.storeId === target.storeId ? 1 : 0;
+   463→      return { p, score: sharedStyles * 2 + sameCategory + sameStore };
+   464→    })
+   465→    .filter((x) => x.score > 0)
+   466→    .sort((a, b) => b.score - a.score)
+   467→    .slice(0, limit)
+   468→    .map((x) => x.p);
+   469→};
+   470→
+   471→// ============================================================
+   472→// TRUST — per-product purchase count for the trust panel.
+   473→// Deterministic & stable (seeded by reviews + rating) so it never
+   474→// flickers between renders. Replace with real sales from backend.
+   475→// ============================================================
+   476→export const getProductSalesCount = (p: Product): number =>
+   477→  Math.max(1, Math.round(p.reviewsCount * 6 + p.rating * 12));
+   478→
+   479→
+   480→// ============================================================
+   481→// SKU / PRODUCT CODE RESOLUTION
+   482→// ============================================================
+   483→
+   484→export const SKU_ALIASES: Record<string, string> = {
+   485→  "home-sf-8821": "p1",
+   486→  "sof-1024": "p1",
+   487→  "sof-1025": "p2",
+   488→  "lamp-552": "p9",
+   489→  "rug-441": "p12",
+   490→  "cur-301": "p14",
+   491→  "tbl-2041": "p3",
+   492→  "chr-3011": "p5",
+   493→  "bed-1011": "p19",
+   494→};
+   495→
+   496→export const getProductBySku = (sku: string): Product | undefined => {
+   497→  if (!sku) return undefined;
+   498→  const clean = sku.trim().toLowerCase();
+   499→  if (SKU_ALIASES[clean]) {
+   500→    const aliased = getProductById(SKU_ALIASES[clean]);
+   501→    if (aliased) return aliased;
+   502→  }
+   503→  return products.find(
+   504→    (p) =>
+   505→      (p.sku && p.sku.toLowerCase() === clean) ||
+   506→      p.id.toLowerCase() === clean ||
+   507→      p.slug.toLowerCase() === clean
+   508→  );
+   509→};
+   510→
+   511→export const getProductBySkuOrCode = (code: string): Product | undefined => {
+   512→  return getProductBySku(code);
+   513→};
+   514→

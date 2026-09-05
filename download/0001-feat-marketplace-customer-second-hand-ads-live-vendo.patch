@@ -1,0 +1,2891 @@
+From fe8bb9b6b2ef6de73068d5a04ef95ea9edd4128a Mon Sep 17 00:00:00 2001
+From: vahidaskari1365 <250786241+vahidaskari1365@users.noreply.github.com>
+Date: Sat, 5 Sep 2026 08:08:35 +0000
+Subject: [PATCH] feat(marketplace): customer second-hand ads + live vendor
+ bridge + precise per-parcel tracking
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Second-hand ads: customers post used-product listings from /account/ads
+  (or the public /second-hand page) using the REAL catalog categories;
+  ads persist in localStorage, render with an 'آگهی تو' badge, support
+  mark-sold/delete, honest heart saves (no wishlist pollution) and a
+  computed discount stat. New data layer src/data/localSecondHandAds.ts (+7 tests).
+- Tracking precision: per-parcel status + status history
+  (src/lib/orderTracking.ts), deterministic step dates (6h/26h/74h),
+  multi-store orders track each parcel separately; checkout really
+  validates address fields now and captures destination/pay/shipping
+  into the order; success page shows an honest status tone.
+- Vendor bridge: orders buyers place appear in /vendor/orders
+  ('سفارش خریدار') and vendor advance writes straight back into the
+  buyer's tracking; vendor store edits (name/cover/logo/policies) and
+  session-added products now surface on the public /stores/[slug] page;
+  buyer seeds cleaned to single-store parcels; stats and charts derive
+  from real orders (hydration-safe).
+- Honesty sweep: dead /projects cards fixed (id-or-slug), add-to-cart
+  uses the selected offer price (displayed price = cart price), real
+  category counts in header mega/search/category hero, admin cards
+  derive from the catalog with honest 'sample' labels, fake confirm
+  buttons (profile save, data download, copy/share, AI result edit,
+  continue design) now do the real thing, persisted settings toggles,
+  hydration-safe header counters, footer link fixes, producer brand
+  seeds the vendor panel.
+
+No visual redesign: every page keeps its exact existing design language.
+
+Checks: eslint 0 · tsc 0 errors · vitest 35/35 · next build ok
+---
+ src/app/account/ads/new/page.tsx            |  21 +++
+ src/app/account/ads/page.tsx                | 103 +++++++++++
+ src/app/account/designs/page.tsx            |  59 +++++-
+ src/app/account/layout.tsx                  |   3 +-
+ src/app/account/orders/page.tsx             |  74 +++++---
+ src/app/account/page.tsx                    |  50 +++--
+ src/app/account/profile/page.tsx            |  36 +++-
+ src/app/account/settings/page.tsx           |  65 ++++++-
+ src/app/admin/page.tsx                      |  14 +-
+ src/app/admin/users/page.tsx                |   4 +-
+ src/app/admin/vendors/page.tsx              |   2 +-
+ src/app/ai/result/[id]/page.tsx             |  12 +-
+ src/app/category/[slug]/page.tsx            |   2 +-
+ src/app/checkout/page.tsx                   |  50 ++++-
+ src/app/checkout/success/page.tsx           |  18 +-
+ src/app/collections/page.tsx                |   2 +-
+ src/app/login/page.tsx                      |  11 +-
+ src/app/magazine/[slug]/page.tsx            |   7 +-
+ src/app/products/[slug]/page.tsx            |  19 +-
+ src/app/projects/[id]/page.tsx              |   6 +-
+ src/app/register/page.tsx                   |   8 +-
+ src/app/second-hand/page.tsx                | 112 +++++++++---
+ src/app/stores/[slug]/page.tsx              |  11 +-
+ src/app/vendor/analytics/page.tsx           |  19 +-
+ src/app/vendor/orders/page.tsx              |  32 ++--
+ src/app/vendor/page.tsx                     |  25 ++-
+ src/app/vendor/store/page.tsx               |  26 ++-
+ src/app/wishlist/page.tsx                   |  16 +-
+ src/components/ads/SecondHandAdForm.tsx     | 128 +++++++++++++
+ src/components/ai/design/useDesignStudio.ts |  23 ++-
+ src/components/layout/Footer.tsx            |   8 +-
+ src/components/layout/GlobalChrome.tsx      |   3 +-
+ src/components/layout/Header.tsx            |  13 +-
+ src/components/layout/SearchOverlay.tsx     |   3 +-
+ src/data/localOrders.ts                     | 190 +++++++++++++++----
+ src/data/localSecondHandAds.test.ts         |  89 +++++++++
+ src/data/localSecondHandAds.ts              | 191 ++++++++++++++++++++
+ src/data/storefronts.ts                     |   4 +-
+ src/data/vendorSession.ts                   | 124 +++++++++++--
+ src/lib/orderTracking.ts                    |  96 ++++++++++
+ src/stores/useApp.ts                        |  16 ++
+ 41 files changed, 1487 insertions(+), 208 deletions(-)
+ create mode 100644 src/app/account/ads/new/page.tsx
+ create mode 100644 src/app/account/ads/page.tsx
+ create mode 100644 src/components/ads/SecondHandAdForm.tsx
+ create mode 100644 src/data/localSecondHandAds.test.ts
+ create mode 100644 src/data/localSecondHandAds.ts
+ create mode 100644 src/lib/orderTracking.ts
+
+diff --git a/src/app/account/ads/new/page.tsx b/src/app/account/ads/new/page.tsx
+new file mode 100644
+index 0000000..e5d987b
+--- /dev/null
++++ b/src/app/account/ads/new/page.tsx
+@@ -0,0 +1,21 @@
++"use client";
++// Post a new second-hand ad from the customer profile.
++import Link from "next/link";
++import { ChevronRight, Tag } from "lucide-react";
++import SecondHandAdForm from "@/components/ads/SecondHandAdForm";
++
++export default function NewAdPage() {
++  return (
++    <div className="space-y-5">
++      <div>
++        <h1 className="font-display text-xl font-black text-ink">ثبت آگهی دسته دوم</h1>
++        <p className="text-sm text-ink-muted">کالایت را در دسته‌بندی خود سایت آگهی کن — بعد از ثبت، در بازار دسته دوم منتشر می‌شود.</p>
++      </div>
++      <div className="card-surface p-6">
++        <div className="mb-5 flex items-center gap-2 text-sm font-bold text-ink"><Tag size={16} /> مشخصات کالا</div>
++        <SecondHandAdForm />
++      </div>
++      <Link href="/account/ads" className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><ChevronRight size={15} /> بازگشت به آگهی‌های من</Link>
++    </div>
++  );
++}
+diff --git a/src/app/account/ads/page.tsx b/src/app/account/ads/page.tsx
+new file mode 100644
+index 0000000..52987b2
+--- /dev/null
++++ b/src/app/account/ads/page.tsx
+@@ -0,0 +1,103 @@
++"use client";
++// «آگهی‌های من» — the customer's own second-hand listings.
++import { useState } from "react";
++import Link from "next/link";
++import { Tag, Plus, Trash2, BadgeCheck, RefreshCcw } from "lucide-react";
++import { Button, EmptyState, Badge, ConfirmDialog } from "@/components/ui/primitives";
++import { SmartImage } from "@/components/ui/SmartImage";
++import { listMySecondHandAds, markSecondHandAdSold, removeSecondHandAd, type LocalSecondHandAd } from "@/data/localSecondHandAds";
++import { useHasHydrated } from "@/lib/useHasHydrated";
++import { useUi } from "@/stores/useApp";
++import { toFa, formatPrice } from "@/lib/utils";
++
++export default function MyAdsPage() {
++  const { toast } = useUi();
++  const hydrated = useHasHydrated();
++  const [version, setVersion] = useState(0);
++  const [confirmSold, setConfirmSold] = useState<LocalSecondHandAd | null>(null);
++  const [confirmDelete, setConfirmDelete] = useState<LocalSecondHandAd | null>(null);
++  const ads = hydrated ? listMySecondHandAds() : [];
++
++  return (
++    <div className="space-y-5" data-ads-version={version}>
++      <div className="flex flex-wrap items-center justify-between gap-3">
++        <div>
++          <h1 className="font-display text-xl font-black text-ink">آگهی‌های من</h1>
++          <p className="text-sm text-ink-muted">آگهی‌های دسته دومی که خودت ثبت کرده‌ای — همین‌جا مدیریتشان کن.</p>
++        </div>
++        <div className="flex gap-2">
++          <Link href="/second-hand"><Button variant="outline">مشاهده بازار دسته دوم</Button></Link>
++          <Link href="/account/ads/new"><Button><Plus size={16} /> آگهی جدید</Button></Link>
++        </div>
++      </div>
++
++      {ads.length ? (
++        <div className="grid gap-4 sm:grid-cols-2">
++          {ads.map((ad) => (
++            <div key={ad.id} className="card-surface flex gap-4 p-4">
++              <SmartImage src={ad.image} alt={ad.title} className="h-24 w-24 shrink-0 rounded-xl" />
++              <div className="flex min-w-0 flex-1 flex-col">
++                <div className="flex items-start justify-between gap-2">
++                  <div className="min-w-0">
++                    <h3 className="truncate font-display font-bold text-ink">{ad.title}</h3>
++                    <p className="text-xs text-ink-muted">{ad.categoryLabel} · {ad.city} · {ad.createdAt}</p>
++                  </div>
++                  <Badge tone={ad.status === "sold" ? "dark" : "success"}>{ad.status === "sold" ? "فروخته شد" : "فعال"}</Badge>
++                </div>
++                <p className="mt-1 line-clamp-2 text-xs leading-6 text-ink-muted">{ad.description}</p>
++                <div className="mt-auto flex items-center justify-between gap-2 pt-2">
++                  <span className="font-display text-sm font-black text-ink">{toFa(formatPrice(ad.price))} تومان</span>
++                  <div className="flex gap-1.5">
++                    {ad.status === "active" && (
++                      <Button size="sm" variant="outline" onClick={() => setConfirmSold(ad)}><BadgeCheck size={14} /> فروخته شد</Button>
++                    )}
++                    <Button size="sm" variant="ghost" className="text-danger" onClick={() => setConfirmDelete(ad)}><Trash2 size={14} /> حذف</Button>
++                  </div>
++                </div>
++              </div>
++            </div>
++          ))}
++        </div>
++      ) : (
++        <EmptyState
++          icon={<Tag size={28} />}
++          title="هنوز آگهی‌ای نداری"
++          desc="وسایل دسته دومی که لازم نداری را آگهی کن — با همان دسته‌بندی‌های خود سایت."
++          action={<Link href="/account/ads/new"><Button><Plus size={16} /> ثبت اولین آگهی</Button></Link>}
++        />
++      )}
++
++      {ads.length > 0 && (
++        <p className="flex items-center gap-2 text-[11px] text-ink-muted"><RefreshCcw size={12} /> آگهی‌ها در همین مرورگر ذخیره می‌شوند و در صفحهٔ عمومی «دسته دوم» با برچسب «آگهی تو» نمایش داده می‌شوند.</p>
++      )}
++
++      <ConfirmDialog
++        open={Boolean(confirmSold)}
++        onClose={() => setConfirmSold(null)}
++        onConfirm={() => {
++          if (confirmSold && markSecondHandAdSold(confirmSold.id)) {
++            setVersion((v) => v + 1);
++            toast("وضعیت آگهی به «فروخته شد» تغییر کرد");
++          }
++        }}
++        title="فروش این آگهی را تأیید می‌کنی؟"
++        description={`وضعیت «${confirmSold?.title ?? ""}» به «فروخته شد» تغییر می‌کند.`}
++        confirmLabel="فروخته شد"
++      />
++      <ConfirmDialog
++        open={Boolean(confirmDelete)}
++        onClose={() => setConfirmDelete(null)}
++        onConfirm={() => {
++          if (confirmDelete && removeSecondHandAd(confirmDelete.id)) {
++            setVersion((v) => v + 1);
++            toast("آگهی حذف شد");
++          }
++        }}
++        title="حذف آگهی"
++        description={`«${confirmDelete?.title ?? ""}» برای همیشه از آگهی‌های تو حذف می‌شود.`}
++        confirmLabel="حذف کن"
++        destructive
++      />
++    </div>
++  );
++}
+diff --git a/src/app/account/designs/page.tsx b/src/app/account/designs/page.tsx
+index d8883de..9245782 100644
+--- a/src/app/account/designs/page.tsx
++++ b/src/app/account/designs/page.tsx
+@@ -1,13 +1,50 @@
+ "use client";
++// «طراحی‌های من» — the user's REAL persisted AI design sessions (was: global
++// fixture seeds whose /ai/result links were dead ends). Copy/Share now use
++// the real clipboard/share helpers from lib/share.
+ import Link from "next/link";
+-import { Wand2, Sparkles, Copy, Share2 } from "lucide-react";
++import { Wand2, Sparkles, Copy, Share2, Trash2 } from "lucide-react";
+ import { Badge, Button, EmptyState } from "@/components/ui/primitives";
+-import { aiDesigns } from "@/data/inspirations";
++import { useDesignSessions } from "@/stores/useDesignSessions";
+ import { useUi } from "@/stores/useApp";
++import { useHasHydrated } from "@/lib/useHasHydrated";
++import { shareContent, buildShareUrl } from "@/lib/share";
+ import { toFa } from "@/lib/utils";
+ 
++const faDate = (iso: number) => {
++  try {
++    return new Date(iso).toLocaleDateString("fa-IR");
++  } catch {
++    return "";
++  }
++};
++
+ export default function MyDesignsPage() {
+   const { toast } = useUi();
++  const hydrated = useHasHydrated();
++  const sessions = useDesignSessions((s) => s.sessions);
++  const removeSession = useDesignSessions((s) => s.removeSession);
++  const designs = hydrated ? sessions : [];
++
++  async function copy(design: { id: string; title: string; prompt: string }) {
++    try {
++      await navigator.clipboard.writeText(`${design.title}\n${design.prompt}`);
++      toast("طراحی کپی شد");
++    } catch {
++      toast("کپی ممکن نشد", "error");
++    }
++  }
++
++  async function share(design: { id: string; title: string; prompt: string }) {
++    const result = await shareContent({
++      title: design.title,
++      text: design.prompt,
++      url: buildShareUrl(`/ai/result/${design.id}`),
++    });
++    if (result.method === "failed") toast("اشتراک‌گذاری انجام نشد", "error");
++    else toast(result.method === "native" ? "پنجره اشتراک‌گذاری باز شد" : "لینک کپی شد");
++  }
++
+   return (
+     <div className="space-y-5">
+       <div className="flex items-center justify-between">
+@@ -15,14 +52,17 @@ export default function MyDesignsPage() {
+         <Link href="/ai/design"><Button><Wand2 size={16} /> طراحی جدید</Button></Link>
+       </div>
+ 
+-      {aiDesigns.length ? (
++      {designs.length ? (
+         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+-          {aiDesigns.map((d) => (
++          {designs.map((d) => (
+             <div key={d.id} className="card-surface overflow-hidden">
+               <Link href={`/ai/result/${d.id}`} className="group relative block">
+                 <img src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full object-cover transition group-hover:scale-105" />
+                 {d.beforeImage && <img src={d.beforeImage} alt="" className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream object-cover" />}
+-                <div className="absolute right-2 top-2 flex gap-1"><Badge tone="dark">{d.room}</Badge></div>
++                <div className="absolute right-2 top-2 flex gap-1">
++                  {d.preview && <Badge tone="gold">پیش‌نمایش</Badge>}
++                  <Badge tone="dark">{d.roomType}</Badge>
++                </div>
+               </Link>
+               <div className="p-4">
+                 <div className="flex items-start justify-between gap-2">
+@@ -31,19 +71,20 @@ export default function MyDesignsPage() {
+                     <p className="truncate text-xs text-ink-muted">{d.prompt}</p>
+                   </div>
+                   <div className="flex shrink-0 gap-1">
+-                    <button onClick={() => toast("طراحی کپی شد")} aria-label="کپی طراحی" className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted transition hover:bg-ivory-2"><Copy size={15} /></button>
+-                    <button onClick={() => toast("لینک کپی شد", "info")} aria-label="اشتراک‌گذاری" className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted transition hover:bg-ivory-2"><Share2 size={15} /></button>
++                    <button onClick={() => copy(d)} aria-label="کپی طراحی" className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted transition hover:bg-ivory-2"><Copy size={15} /></button>
++                    <button onClick={() => share(d)} aria-label="اشتراک‌گذاری" className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted transition hover:bg-ivory-2"><Share2 size={15} /></button>
++                    <button onClick={() => { removeSession(d.id); toast("طراحی حذف شد"); }} aria-label="حذف طراحی" className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted transition hover:bg-ivory-2 hover:text-danger"><Trash2 size={15} /></button>
+                   </div>
+                 </div>
+                 <div className="mt-3 flex items-center justify-between border-t border-clay/40 pt-3 text-xs text-ink-muted">
+-                  <span>{d.createdAt}</span>
++                  <span>{faDate(d.createdAt)}</span>
+                   <span className="flex items-center gap-1"><Sparkles size={11} className="text-gold" /> {toFa(d.creditsUsed)} اعتبار</span>
+                 </div>
+               </div>
+             </div>
+           ))}
+         </div>
+-      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" action={<Link href="/ai/design"><Button>اولین طراحی‌ات را بساز</Button></Link>} />}
++      ) : <EmptyState icon={<Wand2 size={28} />} title="هنوز طراحی‌ای نداری" desc="اولین طراحی AI خودت را بساز — همین‌جا ذخیره می‌شود." action={<Link href="/ai/design"><Button>اولین طراحی‌ات را بساز</Button></Link>} />}
+     </div>
+   );
+ }
+diff --git a/src/app/account/layout.tsx b/src/app/account/layout.tsx
+index c2d30ad..7aab223 100644
+--- a/src/app/account/layout.tsx
++++ b/src/app/account/layout.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ import type { ReactNode } from "react";
+-import { LayoutDashboard, User, Settings, Sparkles, Package, Wand2 } from "lucide-react";
++import { LayoutDashboard, User, Settings, Sparkles, Package, Wand2, Tag } from "lucide-react";
+ import { DashboardLayout, type NavItem } from "@/components/layout/DashboardLayout";
+ import { useAuth } from "@/stores/useApp";
+ 
+@@ -9,6 +9,7 @@ const NAV: NavItem[] = [
+   { label: "پروفایل", href: "/account/profile", icon: User },
+   { label: "اعتبار AI", href: "/account/credits", icon: Sparkles },
+   { label: "سفارش‌ها", href: "/account/orders", icon: Package },
++  { label: "آگهی‌های من", href: "/account/ads", icon: Tag },
+   { label: "طراحی‌های من", href: "/account/designs", icon: Wand2 },
+   { label: "تنظیمات", href: "/account/settings", icon: Settings },
+ ];
+diff --git a/src/app/account/orders/page.tsx b/src/app/account/orders/page.tsx
+index 2b1d51a..6880295 100644
+--- a/src/app/account/orders/page.tsx
++++ b/src/app/account/orders/page.tsx
+@@ -1,12 +1,13 @@
+ "use client";
+ import { useState } from "react";
+ import Link from "next/link";
+-import { Package, Truck, CheckCircle2, Clock, Ban, X, ChevronLeft } from "lucide-react";
++import { Package, Truck, CheckCircle2, Clock, Ban, X, ChevronLeft, MapPin, CreditCard } from "lucide-react";
+ import { Badge, EmptyState, Button, Modal } from "@/components/ui/primitives";
+ import { useUi } from "@/stores/useApp";
+ import { toFa, formatPrice } from "@/lib/utils";
+ import { useHasHydrated } from "@/lib/useHasHydrated";
+-import { listLocalOrders, cancelLocalOrder, trackLocalOrder, STATUS_LABEL, type LocalOrder } from "@/data/localOrders";
++import { listLocalOrders, cancelLocalOrder, orderDisplayStatus, STATUS_LABEL, PAY_LABEL, SHIPPING_LABEL, type LocalOrder, type OrderParcel } from "@/data/localOrders";
++import { parcelTimeline, destinationLine } from "@/lib/orderTracking";
+ 
+ const STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = {
+   delivered: "success",
+@@ -21,6 +22,7 @@ export default function OrdersPage() {
+   const hydrated = useHasHydrated();
+   const [version, setVersion] = useState(0);
+   const [tracking, setTracking] = useState<LocalOrder | null>(null);
++  const [trackingParcel, setTrackingParcel] = useState(0);
+   // Read localStorage only after client hydration so the first paint matches
+   // SSR (empty first, then the persisted list appears) — zero console mismatch.
+   // `version` lets cancel re-read after a mutation.
+@@ -36,18 +38,21 @@ export default function OrdersPage() {
+     toast(`سفارش #${toFa(order.id)} لغو شد`);
+   }
+ 
++  const destination = tracking ? destinationLine(tracking) : null;
++
+   return (
+     <div className="space-y-4" data-orders-version={version}>
+       <h1 className="font-display text-xl font-black text-ink">سفارش‌های من</h1>
+       <p className="text-xs text-ink-muted">سفارش‌ها در همین مرورگر (دمو بدون دیتابیس) نگهداری می‌شوند؛ هر تغییری — از جمله لغو — همین‌جا ذخیره می‌شود.</p>
+       {orders.length ? orders.map((order) => {
+-        const St = STATUS_ICON[order.status];
+-        const cancellable = order.status === "processing" || order.status === "shipping";
++        const status = orderDisplayStatus(order);
++        const St = STATUS_ICON[status];
++        const cancellable = status === "processing" || status === "shipping";
+         return (
+           <div key={order.id} className="card-surface p-5">
+             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-clay/40 pb-3">
+               <div className="flex items-center gap-2"><Package size={16} className="text-ink-muted" /><span className="text-sm font-bold text-ink">سفارش #{toFa(order.id)}</span></div>
+-              <Badge tone={STATUS_TONE[order.status]}><St size={12} /> {STATUS_LABEL[order.status]}</Badge>
++              <Badge tone={STATUS_TONE[status]}><St size={12} /> {STATUS_LABEL[status]}</Badge>
+             </div>
+             <div className="mt-3 space-y-3">
+               {order.parcels.map((parcel) => (
+@@ -75,7 +80,7 @@ export default function OrdersPage() {
+               <span className="font-bold text-ink">{toFa(formatPrice(order.total))} تومان</span>
+             </div>
+             <div className="mt-3 flex flex-wrap gap-2">
+-              <Button size="sm" variant="outline" onClick={() => setTracking(order)}>پیگیری سفارش</Button>
++              <Button size="sm" variant="outline" onClick={() => { setTracking(order); setTrackingParcel(0); }}>پیگیری سفارش</Button>
+               {cancellable && <Button size="sm" variant="ghost" onClick={() => cancel(order)}>لغو سفارش</Button>}
+             </div>
+           </div>
+@@ -84,26 +89,49 @@ export default function OrdersPage() {
+         <EmptyState icon={<Package size={28} />} title="هنوز سفارشی نداری" action={<Link href="/products"><Button>شروع خرید</Button></Link>} />
+       )}
+ 
+-      {/* tracking */}
+-      <Modal open={Boolean(tracking)} onClose={() => setTracking(null)} title={`پیگیری سفارش #${toFa(tracking?.id ?? "")}`} description="مراحل این سفارش در حالت دمو">
+-        {tracking && (
+-          <div className="space-y-3">
+-            {trackLocalOrder(tracking).map((step, index) => (
+-              <div key={step.label} className="flex items-start gap-3">
+-                <div className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs ${step.done ? "border-sage bg-sage/15 text-success" : "border-clay/60 text-ink-muted"}`}>{step.done ? <CheckCircle2 size={15} /> : toFa(index + 1)}</div>
+-                <div className="min-w-0">
+-                  <div className="text-sm font-medium text-ink">{step.label}</div>
+-                  {step.note && <div className="text-xs text-ink-muted">{step.note}</div>}
++      {/* tracking — one precise timeline per parcel */}
++      <Modal open={Boolean(tracking)} onClose={() => setTracking(null)} title={`پیگیری سفارش #${toFa(tracking?.id ?? "")}`} description="وضعیت دقیق هر مرسوله، با تاریخ و ساعت هر مرحله">
++        {tracking && (() => {
++          const parcels = tracking.parcels;
++          const active: OrderParcel = parcels[Math.min(trackingParcel, parcels.length - 1)];
++          return (
++            <div className="space-y-3">
++              {parcels.length > 1 && (
++                <div className="flex flex-wrap gap-2">
++                  {parcels.map((parcel, index) => (
++                    <button key={parcel.storeId} onClick={() => setTrackingParcel(index)} className={`rounded-full border px-3 py-1 text-xs font-bold transition ${index === trackingParcel ? "border-ink bg-ink text-cream" : "border-clay/60 text-ink hover:border-ink"}`}>
++                      {parcel.storeName}
++                    </button>
++                  ))}
++                </div>
++              )}
++              {destination && (
++                <div className="flex items-start gap-2 rounded-lg bg-ivory-2 p-3 text-xs leading-6 text-ink-muted">
++                  <MapPin size={13} className="mt-0.5 shrink-0" />
++                  <span>تحویل به: {destination}{tracking.address?.fullName ? ` — ${tracking.address.fullName}` : ""}</span>
+                 </div>
++              )}
++              <div className="flex flex-wrap gap-2 text-[11px] text-ink-muted">
++                {tracking.shippingMethod && <span className="rounded-full bg-ivory-2 px-2 py-1">ارسال: {SHIPPING_LABEL[tracking.shippingMethod] ?? tracking.shippingMethod}</span>}
++                {tracking.payMethod && <span className="flex items-center gap-1 rounded-full bg-ivory-2 px-2 py-1"><CreditCard size={11} /> {PAY_LABEL[tracking.payMethod] ?? tracking.payMethod}</span>}
+               </div>
+-            ))}
+-            <div className="flex items-start gap-2 rounded-lg bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">
+-              <X size={13} className="mt-0.5 shrink-0" />
+-              <span>در دمو، وضعیت سفارش‌های نمونه ثابت است؛ سفارش‌هایی که خودت ثبت می‌کنی در همین مرورگر «در حال پردازش» می‌مانند.</span>
++              {parcelTimeline(tracking, active).map((step, index) => (
++                <div key={step.label} className="flex items-start gap-3">
++                  <div className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs ${step.done ? "border-sage bg-sage/15 text-success" : "border-clay/60 text-ink-muted"}`}>{step.done ? <CheckCircle2 size={15} /> : toFa(index + 1)}</div>
++                  <div className="min-w-0">
++                    <div className="text-sm font-medium text-ink">{step.label}</div>
++                    {step.note && <div className="text-xs text-ink-muted">{step.note}</div>}
++                  </div>
++                </div>
++              ))}
++              <div className="flex items-start gap-2 rounded-lg bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">
++                <X size={13} className="mt-0.5 shrink-0" />
++                <span>در دمو بدون دیتابیس: مرسولهٔ «{active.storeName}» را همان فروشگاه از پنل فروشنده جلو می‌برد و بقیه مرسوله‌ها طبق زمان‌بندی دمو (۶/۲۶/۷۴ ساعت) دقیق جلو می‌روند. هر تغییر همان لحظه در همین صفحه اعمال می‌شود.</span>
++              </div>
++              <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setTracking(null)}><ChevronLeft size={15} /> بستن</Button></div>
+             </div>
+-            <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setTracking(null)}><ChevronLeft size={15} /> بستن</Button></div>
+-          </div>
+-        )}
++          );
++        })()}
+       </Modal>
+     </div>
+   );
+diff --git a/src/app/account/page.tsx b/src/app/account/page.tsx
+index b582c6a..956c897 100644
+--- a/src/app/account/page.tsx
++++ b/src/app/account/page.tsx
+@@ -1,11 +1,14 @@
+ "use client";
+ import Link from "next/link";
+ import { useEffect, useState } from "react";
+-import { Sparkles, Package, Heart, Wand2, TrendingUp, ArrowLeft } from "lucide-react";
+-import { Button, LogoBlock, Badge } from "@/components/ui/primitives";
++import { Sparkles, Package, Heart, Wand2, ArrowLeft, Tag } from "lucide-react";
++import { Button, LogoBlock, Badge, EmptyState } from "@/components/ui/primitives";
+ import { useAuth, useCredits } from "@/stores/useApp";
+-import { useWishlist, useCart } from "@/stores/useShop";
+-import { aiDesigns } from "@/data/inspirations";
++import { useWishlist } from "@/stores/useShop";
++import { useDesignSessions } from "@/stores/useDesignSessions";
++import { listLocalOrders } from "@/data/localOrders";
++import { listMySecondHandAds } from "@/data/localSecondHandAds";
++import { useHasHydrated } from "@/lib/useHasHydrated";
+ import { toFa } from "@/lib/utils";
+ import { trackEvent } from "@/lib/tracking";
+ import { curatedRecommendations, recommendationsRepository, type RecommendationEntry } from "@/repositories/recommendations";
+@@ -15,7 +18,12 @@ export default function AccountOverview() {
+   const user = useAuth((s) => s.user);
+   const balance = useCredits((s) => s.balance);
+   const wish = useWishlist((s) => s.total());
+-  const cart = useCart((s) => s.items.length);
++  const hydrated = useHasHydrated();
++  // Real persisted data — never hardcoded counts.
++  const ordersCount = hydrated ? listLocalOrders().length : 0;
++  const adsCount = hydrated ? listMySecondHandAds().length : 0;
++  const sessions = useDesignSessions((s) => s.sessions);
++  const myDesigns = hydrated ? sessions.filter((s) => s.status !== "error").slice(0, 3) : [];
+   // Real, agent-ranked recommendations (persisted per customer/session).
+   // The curated catalog list is only the initial paint + honest fallback.
+   const [recommended, setRecommended] = useState<RecommendationEntry[]>(() => curatedRecommendations(3));
+@@ -40,9 +48,9 @@ export default function AccountOverview() {
+ 
+   const stats = [
+     { label: "اعتبار AI", value: toFa(balance), icon: Sparkles, color: "text-gold" },
+-    { label: "سفارش‌ها", value: toFa(3), icon: Package, color: "text-terracotta-deep" },
++    { label: "سفارش‌ها", value: toFa(ordersCount), icon: Package, color: "text-terracotta-deep" },
++    { label: "آگهی‌های من", value: toFa(adsCount), icon: Tag, color: "text-sage" },
+     { label: "علاقه‌مندی", value: toFa(wish), icon: Heart, color: "text-danger" },
+-    { label: "سبد خرید", value: toFa(cart), icon: TrendingUp, color: "text-sage" },
+   ];
+ 
+   return (
+@@ -67,21 +75,29 @@ export default function AccountOverview() {
+       </div>
+ 
+       <div className="grid gap-6 lg:grid-cols-2">
+-        {/* recent designs */}
++        {/* recent designs — the user's REAL persisted sessions (was: fixture seeds with dead links) */}
+         <div className="card-surface p-6">
+           <div className="mb-4 flex items-center justify-between">
+             <h3 className="font-display font-bold text-ink">طراحی‌های اخیر</h3>
+             <Link href="/account/designs" className="text-sm text-terracotta-deep">همه ←</Link>
+           </div>
+-          <div className="space-y-3">
+-            {aiDesigns.slice(0, 3).map((d) => (
+-              <Link key={d.id} href={`/ai/result/${d.id}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
+-                <img src={d.afterImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
+-                <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{d.title}</div><div className="text-xs text-ink-muted">{d.createdAt}</div></div>
+-                <Badge tone="gold">{toFa(d.creditsUsed)}</Badge>
+-              </Link>
+-            ))}
+-          </div>
++          {myDesigns.length ? (
++            <div className="space-y-3">
++              {myDesigns.map((d) => (
++                <Link key={d.id} href={`/ai/result/${d.id}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
++                  <img src={d.afterImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
++                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{d.title}</div><div className="text-xs text-ink-muted">{d.prompt || d.roomType}</div></div>
++                  <Badge tone="gold">{toFa(d.creditsUsed)}</Badge>
++                </Link>
++              ))}
++            </div>
++          ) : (
++            <EmptyState
++              icon={<Wand2 size={22} />}
++              title="هنوز طراحی‌ای نساخته‌ای"
++              action={<Link href="/ai/design"><Button size="sm">اولین طراحی‌ات را بساز</Button></Link>}
++            />
++          )}
+         </div>
+         {/* recommendations */}
+         <div className="card-surface p-6">
+diff --git a/src/app/account/profile/page.tsx b/src/app/account/profile/page.tsx
+index 83b484e..70c20b0 100644
+--- a/src/app/account/profile/page.tsx
++++ b/src/app/account/profile/page.tsx
+@@ -3,12 +3,40 @@ import { useState } from "react";
+ import { Button, LogoBlock } from "@/components/ui/primitives";
+ import { useAuth, useUi } from "@/stores/useApp";
+ 
++// Demo profile persistence: name/email go to the persisted auth store (the
++// header badge updates instantly); phone/city live in their own localStorage
++// profile record — both refill on the next visit. No fake success toast.
++const PROFILE_KEY = "homeino-profile";
++
++type StoredProfile = { phone: string; city: string };
++
++function readStoredProfile(): StoredProfile {
++  if (typeof window === "undefined") return { phone: "", city: "" };
++  try {
++    const raw = window.localStorage.getItem(PROFILE_KEY);
++    return raw ? (JSON.parse(raw) as StoredProfile) : { phone: "", city: "" };
++  } catch {
++    return { phone: "", city: "" };
++  }
++}
++
+ export default function ProfilePage() {
+-  const user = useAuth((s) => s.user); const { toast } = useUi();
++  const user = useAuth((s) => s.user); const updateProfile = useAuth((s) => s.updateProfile); const { toast } = useUi();
+   const [name, setName] = useState(user?.name ?? "");
+   const [email, setEmail] = useState(user?.email ?? "");
+-  const [phone, setPhone] = useState("09120000000");
+-  const [city, setCity] = useState("تهران");
++  const stored = readStoredProfile();
++  const [phone, setPhone] = useState(stored.phone);
++  const [city, setCity] = useState(stored.city);
++
++  function save(e: React.FormEvent) {
++    e.preventDefault();
++    if (!name.trim()) { toast("نام را وارد کن", "error"); return; }
++    updateProfile({ name, email });
++    try {
++      window.localStorage.setItem(PROFILE_KEY, JSON.stringify({ phone, city } satisfies StoredProfile));
++    } catch { /* private mode — demo keeps working */ }
++    toast("پروفایل ذخیره شد — نام در هدر سایت هم به‌روز شد");
++  }
+ 
+   return (
+     <div className="space-y-6">
+@@ -17,7 +45,7 @@ export default function ProfilePage() {
+           <LogoBlock char={user?.avatar ?? "م"} color="var(--color-ink)" size={64} />
+           <div><h1 className="font-display text-xl font-black text-ink">پروفایل من</h1><p className="text-sm text-ink-muted">اطلاعات حسابت را به‌روز نگه دار</p></div>
+         </div>
+-        <form onSubmit={(e) => { e.preventDefault(); toast("پروفایل ذخیره شد"); }} className="grid gap-4 sm:grid-cols-2">
++        <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
+           {[["نام و نام خانوادگی", name, setName], ["ایمیل", email, setEmail], ["شماره موبایل", phone, setPhone], ["شهر", city, setCity]].map(([label, val, set]) => (
+             <div key={label as string}>
+               <label className="mb-1.5 block text-sm font-medium text-ink">{label as string}</label>
+diff --git a/src/app/account/settings/page.tsx b/src/app/account/settings/page.tsx
+index 41b9f20..252138b 100644
+--- a/src/app/account/settings/page.tsx
++++ b/src/app/account/settings/page.tsx
+@@ -1,21 +1,78 @@
+ "use client";
+ import { useState } from "react";
+-import { Bell, Globe, Shield, Trash2 } from "lucide-react";
++import { Bell, Globe, Shield, Trash2, Download } from "lucide-react";
+ import { Button } from "@/components/ui/primitives";
+ import { useUi, useAuth } from "@/stores/useApp";
+ import { useRouter } from "next/navigation";
+ import { DEFAULT_NOTIFICATION_PREFS, NOTIFICATION_LABELS, type NotificationType } from "@/config/notifications";
++import { useHasHydrated } from "@/lib/useHasHydrated";
+ import { cn } from "@/lib/utils";
+ 
++// Toggles persist across reloads in their own localStorage record.
++const SETTINGS_KEY = "homeino-settings";
++type SettingsPrefs = { notif: boolean; email: boolean; sms: boolean; dark: boolean };
++const DEFAULTS: SettingsPrefs = { notif: true, email: false, sms: true, dark: false };
++
++function readPrefs(): SettingsPrefs {
++  if (typeof window === "undefined") return DEFAULTS;
++  try {
++    const raw = window.localStorage.getItem(SETTINGS_KEY);
++    return raw ? { ...DEFAULTS, ...(JSON.parse(raw) as Partial<SettingsPrefs>) } : DEFAULTS;
++  } catch {
++    return DEFAULTS;
++  }
++}
++
++function writePrefs(prefs: SettingsPrefs) {
++  try {
++    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(prefs));
++  } catch { /* private mode */ }
++}
++
++/** "دریافت داده‌های من" — real download of every homeino-* record in this browser. */
++function downloadMyData() {
++  if (typeof window === "undefined") return;
++  const data: Record<string, unknown> = { exportedAt: new Date().toISOString(), note: "خروجی دمو از داده‌های ذخیره‌شده در همین مرورگر" };
++  for (let i = 0; i < window.localStorage.length; i += 1) {
++    const key = window.localStorage.key(i);
++    if (!key?.startsWith("homeino")) continue;
++    try {
++      data[key] = JSON.parse(window.localStorage.getItem(key) ?? "");
++    } catch {
++      data[key] = window.localStorage.getItem(key);
++    }
++  }
++  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
++  const url = URL.createObjectURL(blob);
++  const a = document.createElement("a");
++  a.href = url;
++  a.download = "homeino-my-data.json";
++  document.body.appendChild(a);
++  a.click();
++  a.remove();
++  URL.revokeObjectURL(url);
++}
++
+ export default function SettingsPage() {
+   const { toast } = useUi(); const { logout } = useAuth(); const router = useRouter();
+-  const [prefs, setPrefs] = useState({ notif: true, email: false, sms: true, dark: false });
++  const hydrated = useHasHydrated();
++  const [version, setVersion] = useState(0);
+   const [notifPrefs, setNotifPrefs] = useState(DEFAULT_NOTIFICATION_PREFS);
++  // Derived read: defaults for SSR/first paint, persisted values after
++  // hydration. `version` forces the re-read after each toggle.
++  const prefs = (() => {
++    void version;
++    return hydrated ? readPrefs() : DEFAULTS;
++  })();
++  const toggle = (k: keyof SettingsPrefs) => {
++    const next = { ...prefs, [k]: !prefs[k] };
++    writePrefs(next);
++    setVersion((v) => v + 1);
++  };
+   const toggleNotif = (type: NotificationType) => {
+     setNotifPrefs((cur) => cur.map((p) => p.type === type ? { ...p, enabled: !p.enabled } : p));
+     toast("ترجیحات ذخیره شد");
+   };
+-  const toggle = (k: keyof typeof prefs) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
+ 
+   const groups = [
+     { icon: Bell, title: "اعلان‌ها", items: [["notif", "اعلان‌های درون‌برنامه‌ای"], ["email", "ایمیل بازاریابی"], ["sms", "پیامک سفارش"]] as const },
+@@ -47,7 +104,7 @@ export default function SettingsPage() {
+         <div className="mb-3 flex items-center gap-2 text-sm font-bold text-ink"><Shield size={16} /> امنیت و حریم خصوصی</div>
+         <div className="flex flex-wrap gap-3">
+           <Button variant="outline" onClick={() => toast("تغییر رمز به‌زودی", "info")}>تغییر رمز عبور</Button>
+-          <Button variant="outline" onClick={() => toast("داده‌ها با موفقیت دریافت شدند", "info")}>دریافت داده‌های من</Button>
++          <Button variant="outline" onClick={() => { downloadMyData(); toast("فایل داده‌های تو دانلود شد"); }}><Download size={15} /> دریافت داده‌های من</Button>
+           <Button variant="ghost" className="text-danger" onClick={() => { logout(); toast("از حساب خارج شدی"); router.push("/"); }}><Trash2 size={15} /> خروج از حساب</Button>
+         </div>
+       </div>
+diff --git a/src/app/admin/page.tsx b/src/app/admin/page.tsx
+index 4e6421c..8619eac 100644
+--- a/src/app/admin/page.tsx
++++ b/src/app/admin/page.tsx
+@@ -2,12 +2,16 @@
+ import Link from "next/link";
+ import { Users, Store, Package, DollarSign, Sparkles, TrendingUp } from "lucide-react";
+ import { toFa } from "@/lib/utils";
++import { products } from "@/data/products";
++import { stores } from "@/data/stores";
+ 
++// Catalog numbers derive from the same fixtures the storefront shows —
++// fantasy counts (۵٬۱۲۰ محصول!) next to a 39-product catalog killed trust.
+ const stats = [
+-  { label: "کاربران", value: "۱۸٫۴ هزار", icon: Users, change: "+۳۲۰" },
+-  { label: "فروشندگان", value: "۱۲۴", icon: Store, change: "+۸" },
+-  { label: "محصولات", value: "۵٬۱۲۰", icon: Package, change: "+۹۰" },
+-  { label: "درآمد پلتفرم", value: "۲٫۴ میلیارد", icon: DollarSign, change: "+۱۵٪" },
++  { label: "فروشندگان (تأییدشده)", value: toFa(stores.filter((s) => s.verified).length), icon: Store, change: "" },
++  { label: "محصولات", value: toFa(products.length), icon: Package, change: "" },
++  { label: "کاربران (نمونه)", value: "۱۸٫۴ هزار", icon: Users, change: "+۳۲۰" },
++  { label: "درآمد پلتفرم (نمونه)", value: "۲٫۴ میلیارد", icon: DollarSign, change: "+۱۵٪" },
+ ];
+ 
+ const activity = [
+@@ -24,7 +28,7 @@ export default function AdminDashboard() {
+       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+         {stats.map((s) => (
+           <div key={s.label} className="card-surface p-5">
+-            <div className="flex items-center justify-between"><s.icon size={20} className="text-terracotta-deep" /><span className="flex items-center gap-0.5 text-xs font-bold text-success"><TrendingUp size={12} />{s.change}</span></div>
++            <div className="flex items-center justify-between"><s.icon size={20} className="text-terracotta-deep" />{s.change && <span className="flex items-center gap-0.5 text-xs font-bold text-success"><TrendingUp size={12} />{s.change}</span>}</div>
+             <div className="mt-2 font-display text-2xl font-black text-ink">{s.value}</div>
+             <div className="text-xs text-ink-muted">{s.label}</div>
+           </div>
+diff --git a/src/app/admin/users/page.tsx b/src/app/admin/users/page.tsx
+index 7f2af5d..0c6a98f 100644
+--- a/src/app/admin/users/page.tsx
++++ b/src/app/admin/users/page.tsx
+@@ -1,6 +1,7 @@
+ "use client";
+ import { Badge, LogoBlock } from "@/components/ui/primitives";
+ import { toFa } from "@/lib/utils";
++import { useUi } from "@/stores/useApp";
+ 
+ const USERS = [
+   { name: "نگار مرادی", email: "negar@mail.com", role: "customer", status: "active", tone: "success" as const },
+@@ -13,6 +14,7 @@ const ROLE_LABEL: Record<string, string> = { customer: "مشتری", vendor: "ف
+ const STATUS_LABEL: Record<string, string> = { active: "فعال", pending: "در انتظار", blocked: "مسدود" };
+ 
+ export default function AdminUsersPage() {
++  const { toast } = useUi();
+   return (
+     <div className="space-y-5">
+       <h1 className="font-display text-xl font-black text-ink">مدیریت کاربران</h1>
+@@ -27,7 +29,7 @@ export default function AdminUsersPage() {
+                 <td className="p-3"><div className="flex items-center gap-2"><LogoBlock char={u.name[0]} color="#6b6358" size={36} /><div><div className="font-medium text-ink">{u.name}</div><div className="text-xs text-ink-muted">{u.email}</div></div></div></td>
+                 <td className="p-3 text-ink">{ROLE_LABEL[u.role]}</td>
+                 <td className="p-3"><Badge tone={u.tone}>{STATUS_LABEL[u.status]}</Badge></td>
+-                <td className="p-3 text-left"><button className="rounded-lg border border-clay/60 px-3 py-1 text-xs text-ink hover:bg-ivory-2">مدیریت</button></td>
++                <td className="p-3 text-left"><button onClick={() => toast("مدیریت کامل کاربران با اتصال backend فعال می‌شود", "info")} className="rounded-lg border border-clay/60 px-3 py-1 text-xs text-ink hover:bg-ivory-2">مدیریت</button></td>
+               </tr>
+             ))}
+           </tbody>
+diff --git a/src/app/admin/vendors/page.tsx b/src/app/admin/vendors/page.tsx
+index 86ca88f..cff93b0 100644
+--- a/src/app/admin/vendors/page.tsx
++++ b/src/app/admin/vendors/page.tsx
+@@ -38,7 +38,7 @@ export default function AdminVendorsPage() {
+                   <td className="p-3"><div className="flex items-center gap-2"><LogoBlock char={s.logo} color={s.logoColor} size={32} /><span className="font-medium text-ink">{s.name}</span></div></td>
+                   <td className="p-3 text-ink">{toFa(productsByStore(s.id).length)}</td>
+                   <td className="p-3 text-ink">{toFa(s.rating.toFixed(1))}</td>
+-                  <td className="p-3">{s.verified ? <Badge tone="success">تأیید شده</Badge> : <Badge tone="gold">در انتظار</Badge>}</td>
++                  <td className="p-3">{s.verified ? <Badge tone="success">تأیید شده</Badge> : <Badge tone="gold">مدارک در حال بررسی</Badge>}</td>
+                 </tr>
+               ))}
+             </tbody>
+diff --git a/src/app/ai/result/[id]/page.tsx b/src/app/ai/result/[id]/page.tsx
+index 5eb7296..5eda794 100644
+--- a/src/app/ai/result/[id]/page.tsx
++++ b/src/app/ai/result/[id]/page.tsx
+@@ -1,6 +1,7 @@
+ "use client";
+ import { use, useState } from "react";
+ import Link from "next/link";
++import { useRouter } from "next/navigation";
+ import { Download, Share2, Heart, RotateCcw, Edit3, Sparkles, ShoppingBag, Wand2, History } from "lucide-react";
+ import { Container, Breadcrumb } from "@/components/shared";
+ import { Button, Badge, LogoBlock, EmptyState } from "@/components/ui/primitives";
+@@ -8,7 +9,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
+ import { BeforeAfterSlider } from "@/components/ui/BeforeAfterSlider";
+ import { getProductById } from "@/data/products";
+ import { getStoreById } from "@/data/stores";
+-import { useUi, useChat, useCredits } from "@/stores/useApp";
++import { useUi, useCredits } from "@/stores/useApp";
+ import { useCart, useWishlist } from "@/stores/useShop";
+ import { useDesignSessions } from "@/stores/useDesignSessions";
+ import { aiService } from "@/services/ai";
+@@ -37,13 +38,16 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string
+   const saveSession = useDesignSessions((s) => s.saveSession);
+   const hydrated = useHasHydrated();
+   const design = hydrated ? sessions.find((s) => s.id === id) : undefined;
+-  const { toast } = useUi(); const { push } = useChat();
++  const { toast } = useUi();
++  const router = useRouter();
+   const addToCart = useCart((s) => s.add); const wl = useWishlist();
+   const [busy, setBusy] = useState(false);
+ 
+   const onEdit = () => {
+-    push({ role: "user", content: "این طراحی رو کمی گرم‌تر کن" });
+-    toast("پنجره‌ی ویرایش AI باز شد");
++    // REAL continue-editing: reopens the studio with this session restored
++    // (was: a fake toast that claimed an editor opened).
++    if (design) router.push(`/ai/design?session=${design.id}`);
++    else toast("اول صبر کن طراحی بارگذاری شود", "info");
+   };
+ 
+   const onDownload = () => {
+diff --git a/src/app/category/[slug]/page.tsx b/src/app/category/[slug]/page.tsx
+index 4ec72e7..8aadc38 100644
+--- a/src/app/category/[slug]/page.tsx
++++ b/src/app/category/[slug]/page.tsx
+@@ -72,7 +72,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
+         <div className="absolute inset-0 flex flex-col justify-center p-8 text-cream">
+           <h1 className="font-display text-3xl font-black sm:text-4xl">{category.name}</h1>
+           <p className="mt-2 max-w-md text-cream/75">{category.description}</p>
+-          <div className="mt-3 text-sm text-cream/60">{toFa(category.productCount)} محصول · {toFa(category.subcategories.length)} زیردسته</div>
++          <div className="mt-3 text-sm text-cream/60">{toFa(productsByCategory(category.slug).length)} محصول · {toFa(category.subcategories.length)} زیردسته</div>
+         </div>
+       </div>
+ 
+diff --git a/src/app/checkout/page.tsx b/src/app/checkout/page.tsx
+index c22830d..67f936a 100644
+--- a/src/app/checkout/page.tsx
++++ b/src/app/checkout/page.tsx
+@@ -20,6 +20,9 @@ export default function CheckoutPage() {
+   const [step, setStep] = useState(0);
+   const [shipping, setShipping] = useState("post");
+   const [pay, setPay] = useState("online");
++  const [address, setAddress] = useState<{
++    fullName: string; phone: string; city: string; line: string; postalCode: string;
++  } | null>(null);
+ 
+   const lines = resolveCartLines(items);
+   const parcels = groupCartParcels(lines, shipping === "express");
+@@ -29,7 +32,11 @@ export default function CheckoutPage() {
+ 
+   const next = () => {
+     if (step < 2) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+-    const order = placeLocalOrder(items, shipping === "express");
++    const order = placeLocalOrder(items, shipping === "express", {
++      address: address ?? undefined,
++      payMethod: pay,
++      shippingMethod: shipping,
++    });
+     clear();
+     toast(`سفارش #${toFa(order.id)} ثبت شد و در «سفارش‌های من» ذخیره شد`);
+     router.push(`/checkout/success?order=${order.id}`);
+@@ -58,15 +65,32 @@ export default function CheckoutPage() {
+         {/* form */}
+         <div className="card-surface p-6">
+           {step === 0 && (
+-            <div className="space-y-4">
++            <form
++              className="space-y-4"
++              onSubmit={(e) => {
++                e.preventDefault();
++                const fd = new FormData(e.currentTarget);
++                setAddress({
++                  fullName: String(fd.get("fullName") ?? ""),
++                  phone: String(fd.get("phone") ?? ""),
++                  city: String(fd.get("city") ?? ""),
++                  line: String(fd.get("address") ?? ""),
++                  postalCode: String(fd.get("postalCode") ?? ""),
++                });
++                next();
++              }}
++            >
+               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><MapPin size={18} /> نشانی تحویل</h2>
+               <div className="grid gap-4 sm:grid-cols-2">
+-                {[["fullName", "نام و نام خانوادگی", "نام کامل"], ["phone", "شماره موبایل", "09xxxxxxxxx"], ["postalCode", "کد پستی", "کد پستی"]].map(([id, label, ph]) => (
+-                  <div key={id}><label htmlFor={id} className="mb-1 block text-sm text-ink-muted">{label}</label><input id={id} name={id} required placeholder={ph} className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+-                ))}
++                <div><label htmlFor="fullName" className="mb-1 block text-sm text-ink-muted">نام و نام خانوادگی</label><input id="fullName" name="fullName" required placeholder="نام کامل" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
++                <div><label htmlFor="phone" className="mb-1 block text-sm text-ink-muted">شماره موبایل</label><input id="phone" name="phone" required inputMode="tel" dir="ltr" placeholder="09xxxxxxxxx" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
++                <div><label htmlFor="city" className="mb-1 block text-sm text-ink-muted">شهر</label><input id="city" name="city" required placeholder="شهر" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
++                <div><label htmlFor="postalCode" className="mb-1 block text-sm text-ink-muted">کد پستی</label><input id="postalCode" name="postalCode" required inputMode="numeric" dir="ltr" placeholder="کد پستی" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+               </div>
+               <div><label htmlFor="address" className="mb-1 block text-sm text-ink-muted">نشانی کامل</label><textarea id="address" name="address" required rows={2} placeholder="استان، شهر، خیابان، پلاک…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+-            </div>
++              {/* hidden submit — the footer button clicks it so native required validation runs */}
++              <button type="submit" id="address-submit" className="hidden" aria-hidden tabIndex={-1} />
++            </form>
+           )}
+           {step === 1 && (
+             <div className="space-y-4">
+@@ -94,7 +118,19 @@ export default function CheckoutPage() {
+           )}
+           <div className="mt-6 flex gap-3">
+             {step > 0 && <Button variant="ghost" onClick={() => setStep(step - 1)}>مرحله قبل</Button>}
+-            <Button className="flex-1" onClick={next}>{step < 2 ? "مرحله بعد" : "ثبت نهایی سفارش"}</Button>
++            <Button
++              className="flex-1"
++              onClick={() => {
++                if (step === 0) {
++                  // Trigger the address form's submit so native `required` validation runs.
++                  const submit = document.getElementById("address-submit") as HTMLButtonElement | null;
++                  if (submit) { submit.click(); return; }
++                }
++                next();
++              }}
++            >
++              {step < 2 ? "مرحله بعد" : "ثبت نهایی سفارش"}
++            </Button>
+           </div>
+         </div>
+ 
+diff --git a/src/app/checkout/success/page.tsx b/src/app/checkout/success/page.tsx
+index dff73ef..1fd644b 100644
+--- a/src/app/checkout/success/page.tsx
++++ b/src/app/checkout/success/page.tsx
+@@ -6,11 +6,22 @@ import { CheckCircle2, Package, Home, Sparkles, Info } from "lucide-react";
+ import { Container } from "@/components/shared";
+ import { Button } from "@/components/ui/primitives";
+ import { toFa, formatPrice } from "@/lib/utils";
+-import { listLocalOrders, STATUS_LABEL } from "@/data/localOrders";
++import { listLocalOrders, orderDisplayStatus, STATUS_LABEL, PAY_LABEL, SHIPPING_LABEL } from "@/data/localOrders";
++import { destinationLine } from "@/lib/orderTracking";
++
++// Status → honest text tone (cancelled was green before — a lie).
++const STATUS_TONE: Record<string, string> = {
++  delivered: "text-success",
++  shipping: "text-ink",
++  processing: "text-ink",
++  cancelled: "text-ink-muted",
++};
+ 
+ function SuccessInner() {
+   const sp = useSearchParams();
+   const order = listLocalOrders().find((o) => o.id === sp.get("order")) ?? null;
++  const status = order ? orderDisplayStatus(order) : null;
++  const destination = order ? destinationLine(order) : null;
+ 
+   return (
+     <Container className="py-20">
+@@ -23,7 +34,10 @@ function SuccessInner() {
+           <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">شماره سفارش</span><span className="font-bold text-ink">#{toFa(order?.id ?? "")}</span></div>
+           {order && (
+             <>
+-              <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">وضعیت</span><span className="font-bold text-success">{STATUS_LABEL[order.status]}</span></div>
++              <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">وضعیت</span><span className={`font-bold ${STATUS_TONE[status ?? ""] ?? "text-ink"}`}>{STATUS_LABEL[status ?? order.status]}</span></div>
++              {destination && <div className="flex justify-between gap-4 border-b border-clay/40 py-2 text-sm"><span className="shrink-0 text-ink-muted">تحویل به</span><span className="text-left font-medium text-ink">{destination}</span></div>}
++              {order.shippingMethod && <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">ارسال</span><span className="font-bold text-ink">{SHIPPING_LABEL[order.shippingMethod] ?? order.shippingMethod}</span></div>}
++              {order.payMethod && <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">پرداخت</span><span className="font-bold text-ink">{PAY_LABEL[order.payMethod] ?? order.payMethod}</span></div>}
+               <div className="flex justify-between border-b border-clay/40 py-2 text-sm"><span className="text-ink-muted">تعداد مرسوله</span><span className="font-bold text-ink">{toFa(order.parcels.length)}</span></div>
+               <div className="flex justify-between py-2 text-sm"><span className="text-ink-muted">مبلغ</span><span className="font-bold text-ink">{toFa(formatPrice(order.total))} تومان</span></div>
+             </>
+diff --git a/src/app/collections/page.tsx b/src/app/collections/page.tsx
+index 056a50c..768a64c 100644
+--- a/src/app/collections/page.tsx
++++ b/src/app/collections/page.tsx
+@@ -92,7 +92,7 @@ export default function CollectionsPage() {
+                     </div>
+                   </div>
+                 </>
+-              ) : <EmptyState icon={<FolderHeart size={28} />} title="این کالکشن هنوز خالی است" desc="از پیشنهادهای پایین شروع کن یا در صفحه محصول «ذخیره در کالکشن» را بزن." />}
++              ) : <EmptyState icon={<FolderHeart size={28} />} title="این کالکشن هنوز خالی است" desc="از پیشنهادهای پایین شروع کن یا محصولات را از همین صفحه به کالکشن اضافه کن." />}
+ 
+               {addCandidates.length > 0 && (
+                 <div className="mt-10 border-t border-clay/35 pt-7">
+diff --git a/src/app/login/page.tsx b/src/app/login/page.tsx
+index 04647b6..2397284 100644
+--- a/src/app/login/page.tsx
++++ b/src/app/login/page.tsx
+@@ -8,6 +8,11 @@ import { Button, Spinner } from "@/components/ui/primitives";
+ import { useAuth, useUi } from "@/stores/useApp";
+ import { cn } from "@/lib/utils";
+ 
++function readRememberFlag(): boolean {
++  if (typeof window === "undefined") return false;
++  try { return window.localStorage.getItem("homeino-remember") === "1"; } catch { return false; }
++}
++
+ export default function LoginPage() {
+   const router = useRouter();
+   const { login } = useAuth(); const { toast } = useUi();
+@@ -16,6 +21,10 @@ export default function LoginPage() {
+   const [show, setShow] = useState(false);
+   const [loading, setLoading] = useState(false);
+   const [err, setErr] = useState("");
++  // Remember-me is a real persisted flag, derived (not effect-set) to keep
++  // the first paint identical to SSR.
++  const [rememberOverride, setRememberOverride] = useState<boolean | null>(null);
++  const remember = rememberOverride ?? Boolean(readRememberFlag());
+ 
+   const submit = (e: React.FormEvent) => {
+     e.preventDefault();
+@@ -39,7 +48,7 @@ export default function LoginPage() {
+           </div>
+         </div>
+         <div className="flex justify-between text-sm">
+-          <label className="flex items-center gap-2 text-ink-muted"><input type="checkbox" className="accent-terracotta" /> مرا به خاطر بسپار</label>
++          <label className="flex items-center gap-2 text-ink-muted"><input type="checkbox" checked={remember} onChange={(e) => { setRememberOverride(e.target.checked); try { window.localStorage.setItem("homeino-remember", e.target.checked ? "1" : "0"); } catch { /* private mode */ } }} className="accent-terracotta" /> مرا به خاطر بسپار</label>
+           <Link href="/forgot-password" className="text-terracotta-deep hover:underline">رمز را فراموش کرده‌ای؟</Link>
+         </div>
+         {err && <p className="text-sm text-danger">{err}</p>}
+diff --git a/src/app/magazine/[slug]/page.tsx b/src/app/magazine/[slug]/page.tsx
+index 806fcb2..4735eec 100644
+--- a/src/app/magazine/[slug]/page.tsx
++++ b/src/app/magazine/[slug]/page.tsx
+@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/primitives";
+ import { getArticle, articles } from "@/data/content";
+ import { useUi } from "@/stores/useApp";
+ import { toFa } from "@/lib/utils";
++import { shareContent, buildShareUrl } from "@/lib/share";
+ 
+ export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+   const { slug } = use(params);
+@@ -32,7 +33,11 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
+           {article!.content.map((p, i) => <p key={i}>{p}</p>)}
+         </div>
+         <div className="mt-8 flex items-center justify-between border-y border-clay/40 py-4">
+-          <Button variant="outline" onClick={() => toast("لینک مقاله کپی شد", "info")}><Share2 size={16} /> اشتراک‌گذاری</Button>
++          <Button variant="outline" onClick={async () => {
++            const result = await shareContent({ title: article!.title, text: article!.excerpt, url: buildShareUrl(`/magazine/${article!.slug}`) });
++            if (result.method === "failed") toast("اشتراک‌گذاری انجام نشد", "error");
++            else toast(result.method === "native" ? "پنجره اشتراک‌گذاری باز شد" : "لینک مقاله کپی شد", "info");
++          }}><Share2 size={16} /> اشتراک‌گذاری</Button>
+           <Link href="/magazine" className="inline-flex items-center gap-1 text-sm text-terracotta-deep"><ArrowRight size={15} /> بازگشت به مجله</Link>
+         </div>
+       </article>
+diff --git a/src/app/products/[slug]/page.tsx b/src/app/products/[slug]/page.tsx
+index 6a58c49..a6a7b29 100644
+--- a/src/app/products/[slug]/page.tsx
++++ b/src/app/products/[slug]/page.tsx
+@@ -9,6 +9,7 @@ import { Button, Badge, Rating, Price, EmptyState, LogoBlock, Modal } from "@/co
+ import { SmartImage } from "@/components/ui/SmartImage";
+ import { Reveal } from "@/components/motion/Reveal";
+ import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
++import { findVendorProductPublic } from "@/data/vendorSession";
+ import { getStyle } from "@/data/styles";
+ import { getStoreById } from "@/data/stores";
+ import { offersForProduct, getBestOffer } from "@/data/offers";
+@@ -21,13 +22,15 @@ import type { Review } from "@/types";
+ 
+ export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+   const { slug } = use(params);
+-  const product = getProduct(slug);
++  // Catalog first, then the vendor panel's session-added products (vp-*).
++  const product = getProduct(slug) ?? findVendorProductPublic(slug);
+   if (!product) notFound();
+ 
+   const [active, setActive] = useState(0);
+   const [qty, setQty] = useState(1);
+   const [tab, setTab] = useState<"desc" | "specs" | "reviews">("desc");
+   const [seller, setSeller] = useState<string | undefined>(() => getBestOffer(product!.id)?.id);
++  const [selectedColor, setSelectedColor] = useState(0);
+   const [reviewOpen, setReviewOpen] = useState(false);
+   const hydrated = useHasHydrated();
+   const productId = product!.id;
+@@ -113,7 +116,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug:
+               <div className="mt-4 rounded-xl border border-clay/40 bg-ivory-2 p-3">
+                 <div className="mb-2 flex items-center justify-between">
+                   <span className="text-xs font-bold text-ink">{toFa(offerCount)} فروشنده برای این محصول</span>
+-                  <span className="flex items-center gap-1 text-[10px] text-success"><Check size={11} /> بهترین قیمت selected</span>
++                  <span className="flex items-center gap-1 text-[10px] text-success"><Check size={11} /> بهترین قیمت انتخاب شد</span>
+                 </div>
+                 <div className="space-y-1.5">
+                   {productOffers.filter((o) => o.inStock).sort((a, b) => (a.price + a.shippingCost) - (b.price + b.shippingCost)).map((offer, idx) => {
+@@ -141,12 +144,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug:
+               </div>
+             )}
+ 
+-            {/* colors */}
++            {/* colors — actually selectable */}
+             <div className="mt-5">
+-              <div className="mb-2 text-sm font-medium text-ink">رنگ: <span className="text-ink-muted">{product!.colors[0]?.name}</span></div>
++              <div className="mb-2 text-sm font-medium text-ink">رنگ: <span className="text-ink-muted">{product!.colors[selectedColor]?.name ?? "—"}</span></div>
+               <div className="flex gap-2">
+-                {product!.colors.map((c) => (
+-                  <span key={c.name} title={c.name} className="h-8 w-8 cursor-pointer rounded-full border-2 border-clay/50 transition hover:border-ink" style={{ background: c.hex }} />
++                {product!.colors.map((c, i) => (
++                  <button key={c.name} type="button" title={c.name} aria-label={`رنگ ${c.name}`} aria-pressed={selectedColor === i} onClick={() => setSelectedColor(i)} className={cn("h-8 w-8 rounded-full border-2 transition", selectedColor === i ? "border-ink" : "border-clay/50 hover:border-ink")} style={{ background: c.hex }} />
+                 ))}
+               </div>
+             </div>
+@@ -170,7 +173,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug:
+ 
+             {/* actions */}
+             <div className="mt-5 flex gap-2">
+-              <Button size="lg" className="flex-1" disabled={!product!.inStock} onClick={() => { addToCart(product!.id, qty); toast("به سبد خرید اضافه شد"); }}>
++              <Button size="lg" className="flex-1" disabled={!product!.inStock} onClick={() => { addToCart(product!.id, qty, bestOffer?.id); toast("به سبد خرید اضافه شد"); }}>
+                 <ShoppingBag size={18} /> افزودن به سبد
+               </Button>
+               <Button size="lg" variant="outline" onClick={() => { wl.toggleProduct(product!.id); toast(wished ? "حذف شد" : "به علاقه‌مندی اضافه شد"); }} className={cn(wished && "border-terracotta text-terracotta-deep")}>
+@@ -312,7 +315,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug:
+             <p className="text-[10px] text-ink-muted">{product!.brand}</p>
+             <p className="font-display text-sm font-black text-ink">{toFa(formatPrice(displayPrice))} <span className="text-[10px] font-normal text-ink-muted">ت</span></p>
+           </div>
+-          <button onClick={() => { addToCart(product!.id, qty); toast("به سبد خرید اضافه شد"); }} className="btn-accent flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold"><ShoppingBag size={15} /> افزودن به سبد</button>
++          <button onClick={() => { addToCart(product!.id, qty, bestOffer?.id); toast("به سبد خرید اضافه شد"); }} className="btn-accent flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold"><ShoppingBag size={15} /> افزودن به سبد</button>
+           <button onClick={() => { wl.toggleProduct(product!.id); toast(wished ? "حذف شد" : "به علاقه‌مندی اضافه شد"); }} className={cn("grid h-10 w-10 place-items-center rounded-xl border border-clay/50", wished && "border-terracotta text-terracotta-deep")} aria-label="علاقه‌مندی"><Heart size={17} className={cn(wished && "fill-terracotta")} /></button>
+         </div>
+       )}
+diff --git a/src/app/projects/[id]/page.tsx b/src/app/projects/[id]/page.tsx
+index fbbe3e8..3395d99 100644
+--- a/src/app/projects/[id]/page.tsx
++++ b/src/app/projects/[id]/page.tsx
+@@ -6,14 +6,16 @@ import { ArrowLeft, ShoppingBag } from "lucide-react";
+ import { Container, Breadcrumb } from "@/components/shared";
+ import { SmartImage } from "@/components/ui/SmartImage";
+ import {Badge } from "@/components/ui/primitives";
+-import { getProject } from "@/data/content";
++import { getProject, projects } from "@/data/content";
+ import { getProductById } from "@/data/products";
+ import { useCart } from "@/stores/useShop";
+ import { useUi } from "@/stores/useApp";
+ 
+ export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+   const { id } = use(params);
+-  const project = getProject(id);
++  // Cards link with the project id (pr1…) while URLs accept the slug too —
++  // resolve both so no project page is ever a dead end.
++  const project = getProject(id) ?? projects.find((p) => p.id === id);
+   if (!project) notFound();
+   const addToCart = useCart((s) => s.add); const { toast } = useUi();
+ 
+diff --git a/src/app/register/page.tsx b/src/app/register/page.tsx
+index 0ff7a62..6b2cd67 100644
+--- a/src/app/register/page.tsx
++++ b/src/app/register/page.tsx
+@@ -6,6 +6,7 @@ import { User, Mail, Lock, Phone, MapPin, Store, Factory, Check, Sparkles } from
+ import { AuthShell } from "@/components/auth/AuthShell";
+ import { Button, Spinner } from "@/components/ui/primitives";
+ import { useAuth, useUi } from "@/stores/useApp";
++import { updateVendorStoreProfile } from "@/data/vendorSession";
+ import { categories } from "@/data/categories";
+ import { cn } from "@/lib/utils";
+ 
+@@ -42,7 +43,12 @@ export default function RegisterPage() {
+     setLoading(true);
+     setTimeout(() => {
+       login(email, isProducer ? { name: brand, role: "vendor", brand } : { name });
+-      toast(isProducer ? "ثبت‌نام تولیدکننده با موفقیت انجام شد" : "ثبت‌نام با موفقیت انجام شد");
++      if (isProducer) {
++        // The panel greets the vendor with the brand they registered — keeps
++        // the registration promise «پنل فروشنده فعال می‌شود» true in the demo.
++        updateVendorStoreProfile({ name: brand.trim(), city: city.trim() || undefined });
++      }
++      toast(isProducer ? "ثبت‌نام تولیدکننده انجام شد — پنل فروشنده‌ات فعال است" : "ثبت‌نام با موفقیت انجام شد");
+       router.push(isProducer ? "/vendor" : "/account");
+     }, 900);
+   };
+diff --git a/src/app/second-hand/page.tsx b/src/app/second-hand/page.tsx
+index eafdfc3..5f92d4e 100644
+--- a/src/app/second-hand/page.tsx
++++ b/src/app/second-hand/page.tsx
+@@ -1,24 +1,81 @@
+ "use client";
+ import { useState } from "react";
+-import { Recycle, Plus, MapPin, Heart, TrendingDown } from "lucide-react";
++import { Recycle, Plus, MapPin, Heart, TrendingDown, Tag } from "lucide-react";
+ import { Container, PageHeader } from "@/components/shared";
+ import { Button, Chip } from "@/components/ui/primitives";
+ import { SmartImage } from "@/components/ui/SmartImage";
+ import { secondHandProducts } from "@/data/secondHand";
+-import { useWishlist } from "@/stores/useShop";
+-import { useUi } from "@/stores/useApp";
++import type { SecondHandProduct } from "@/types";
++import { categories } from "@/data/categories";
++import {
++  mergedSecondHandFeed, createSecondHandAd, toggleSavedAd, listSavedAdIds,
++  AD_CONDITIONS, MAX_IMAGE_BYTES, type AdCondition,
++} from "@/data/localSecondHandAds";
++import { useHasHydrated } from "@/lib/useHasHydrated";
+ import { toFa, formatPrice, cn } from "@/lib/utils";
++import { useUi } from "@/stores/useApp";
+ 
+ const CONDITIONS: Record<string, string> = { "نو": "bg-sage/15 text-sage border-sage/30", "خوب": "bg-gold/15 text-gold border-gold/30", "قابل‌قبول": "bg-warning/15 text-warning border-warning/30" };
+ 
+ export default function SecondHandPage() {
+   const [cat, setCat] = useState("همه");
+   const [showForm, setShowForm] = useState(false);
+-  const wl = useWishlist();
++  const [version, setVersion] = useState(0);
++  const hydrated = useHasHydrated();
+   const { toast } = useUi();
+ 
+-  const cats = ["همه", ...Array.from(new Set(secondHandProducts.map((p) => p.categoryLabel)))];
+-  const list = cat === "همه" ? secondHandProducts : secondHandProducts.filter((p) => p.categoryLabel === cat);
++  // Real, persisted data — user ads come from localStorage after hydration.
++  const feed: (SecondHandProduct & { mine?: boolean })[] = hydrated ? mergedSecondHandFeed() : secondHandProducts.map((p) => ({ ...p }));
++  const savedIds = hydrated ? listSavedAdIds() : [];
++  // Compute the real average saving from the fixtures — never a hardcoded claim.
++  const discountPercent = (() => {
++    const withOriginal = secondHandProducts.filter((p) => p.originalPrice && p.originalPrice > p.price);
++    if (!withOriginal.length) return 0;
++    const avg = withOriginal.reduce((sum, p) => sum + ((p.originalPrice! - p.price) / p.originalPrice!) * 100, 0) / withOriginal.length;
++    return Math.round(avg);
++  })();
++
++  // Category chips are derived from the real catalog slugs used by the data.
++  const usedSlugs = Array.from(new Set(feed.map((p) => p.category)));
++  const catChips = [{ slug: "همه", label: "همه" }, ...usedSlugs.map((slug) => ({ slug, label: categories.find((c) => c.slug === slug)?.name ?? slug }))];
++  const list = cat === "همه" ? feed : feed.filter((p) => p.category === cat);
++
++  function submitAd(e: React.FormEvent<HTMLFormElement>) {
++    e.preventDefault();
++    const fd = new FormData(e.currentTarget);
++    const imageFile = fd.get("image");
++    const finish = (image?: string) => {
++      const result = createSecondHandAd({
++        title: String(fd.get("title") ?? ""),
++        categorySlug: String(fd.get("category") ?? ""),
++        price: Number(String(fd.get("price") ?? "").replace(/[^\d]/g, "")),
++        condition: String(fd.get("condition") ?? "").replace("وضعیت: ", "") as AdCondition,
++        city: String(fd.get("city") ?? ""),
++        age: String(fd.get("age") ?? ""),
++        description: String(fd.get("description") ?? ""),
++        image,
++      });
++      if (!result.ok) {
++        toast(result.error, "error");
++        return;
++      }
++      toast("آگهی تو منتشر شد — در «حساب من ← آگهی‌های من» هم ذخیره شد");
++      setVersion((v) => v + 1);
++      setShowForm(false);
++    };
++    if (imageFile instanceof File && imageFile.size > 0) {
++      if (imageFile.size > MAX_IMAGE_BYTES) {
++        toast("حجم تصویر باید کمتر از ۸۰۰ کیلوبایت باشد", "error");
++        return;
++      }
++      const reader = new FileReader();
++      reader.onload = () => finish(typeof reader.result === "string" ? reader.result : undefined);
++      reader.onerror = () => finish(undefined);
++      reader.readAsDataURL(imageFile);
++    } else {
++      finish(undefined);
++    }
++  }
+ 
+   return (
+     <Container className="py-10">
+@@ -39,30 +96,31 @@ export default function SecondHandPage() {
+           </div>
+         </div>
+         <div className="flex gap-6">
+-          <div className="text-center"><div className="font-display text-xl font-black text-sage">{toFa(secondHandProducts.length)}</div><div className="text-xs text-ink-muted">آگهی فعال</div></div>
+-          <div className="text-center"><div className="font-display text-xl font-black text-gold">٪{toFa(50)}+</div><div className="text-xs text-ink-muted">ارزان‌تر از نو</div></div>
++          <div className="text-center"><div className="font-display text-xl font-black text-sage">{toFa(feed.filter((p) => p.status === "active").length)}</div><div className="text-xs text-ink-muted">آگهی فعال</div></div>
++          <div className="text-center"><div className="font-display text-xl font-black text-gold">٪{toFa(discountPercent)}</div><div className="text-xs text-ink-muted">ارزان‌تر از نو</div></div>
+         </div>
+       </div>
+ 
+-      {/* listing form */}
++      {/* listing form — real categories + real persistence */}
+       {showForm && (
+         <div className="mb-8 rounded-2xl border border-clay/50 bg-cream p-5">
+           <h3 className="mb-4 flex items-center gap-2 font-display font-bold text-ink"><Plus size={18} /> ثبت آگهی جدید</h3>
+-          <form onSubmit={(e) => { e.preventDefault(); toast("آگهی شما ثبت شد — پس از تأیید منتشر می‌شود"); setShowForm(false); }} className="grid gap-4 sm:grid-cols-2">
+-            <input required placeholder="عنوان آگهی" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
+-            <select className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage">
+-              <option>مبلمان</option><option>فرش</option><option>نورپردازی</option><option>دکوراسیون</option><option>فضای کار</option><option>منسوجات</option>
++          <form onSubmit={submitAd} className="grid gap-4 sm:grid-cols-2">
++            <input required name="title" placeholder="عنوان آگهی" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
++            <select required name="category" defaultValue="" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage">
++              <option value="" disabled>دسته‌بندی را انتخاب کن</option>
++              {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+             </select>
+-            <input required type="number" placeholder="قیمت (تومان)" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
+-            <select className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage">
+-              <option>وضعیت: نو</option><option>وضعیت: خوب</option><option>وضعیت: قابل‌قبول</option>
++            <input required name="price" type="number" min={1000} placeholder="قیمت (تومان)" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
++            <select required name="condition" defaultValue="خوب" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage">
++              {AD_CONDITIONS.map((c) => <option key={c} value={c}>وضعیت: {c}</option>)}
+             </select>
+-            <input required placeholder="شهر" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
+-            <input placeholder="مدت استفاده (مثلاً ۲ سال)" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
+-            <textarea required placeholder="توضیحات آگهی..." className="sm:col-span-2 min-h-[80px] resize-none rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
++            <input required name="city" placeholder="شهر" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
++            <input name="age" placeholder="مدت استفاده (مثلاً ۲ سال)" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
++            <textarea required name="description" minLength={20} placeholder="توضیحات آگهی (حداقل ۲۰ نویسه)..." className="sm:col-span-2 min-h-[80px] resize-none rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
+             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 py-6 text-sm text-ink-muted hover:border-sage sm:col-span-2">
+-              <Plus size={18} /> افزودن تصویر محصول
+-              <input type="file" accept="image/*" className="hidden" />
++              <Plus size={18} /> افزودن تصویر محصول (اختیاری — حداکثر ۸۰۰ کیلوبایت)
++              <input type="file" name="image" accept="image/*" className="hidden" />
+             </label>
+             <div className="sm:col-span-2"><Button type="submit" className="w-full">ثبت آگهی</Button></div>
+           </form>
+@@ -70,10 +128,10 @@ export default function SecondHandPage() {
+       )}
+ 
+       {/* filters */}
+-      <div className="mb-6 flex flex-wrap gap-2">{cats.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>)}</div>
++      <div className="mb-6 flex flex-wrap gap-2">{catChips.map((c) => <Chip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)}>{c.label}</Chip>)}</div>
+ 
+       {/* grid */}
+-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
++      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4" data-ads-version={version}>
+         {list.map((p) => (
+           <div key={p.id} className="group relative overflow-hidden rounded-[var(--radius-lg)] bg-ink shadow-[var(--shadow-soft)] transition hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
+             <div className="relative aspect-[3/4] overflow-hidden">
+@@ -81,13 +139,15 @@ export default function SecondHandPage() {
+               <div className="absolute right-2 top-2 flex flex-col gap-1">
+                 <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold", CONDITIONS[p.condition])}>{p.condition}</span>
+                 <span className="flex items-center gap-0.5 rounded-full bg-gold/90 px-2 py-0.5 text-[10px] font-bold text-ink"><TrendingDown size={10} /> دسته دوم</span>
++                {p.mine && <span className="flex items-center gap-0.5 rounded-full bg-sage px-2 py-0.5 text-[10px] font-bold text-cream"><Tag size={10} /> آگهی تو</span>}
++                {p.status === "sold" && <span className="rounded-full bg-ink/80 px-2 py-0.5 text-[10px] font-bold text-cream">فروخته شد</span>}
+               </div>
+               <button
+                 aria-label="افزودن به علاقه‌مندی"
+-                onClick={() => { wl.toggleProduct(p.id); toast("به علاقه‌مندی اضافه شد"); }}
++                onClick={() => { const added = toggleSavedAd(p.id); toast(added ? "به نشان‌شده‌ها اضافه شد" : "از نشان‌شده‌ها حذف شد"); setVersion((v) => v + 1); }}
+                 className="absolute left-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-ink/60 text-cream backdrop-blur transition hover:bg-ink/80"
+               >
+-                <Heart size={15} />
++                <Heart size={15} className={cn(savedIds.includes(p.id) && "fill-terracotta text-terracotta")} />
+               </button>
+             </div>
+             {/* overlay info */}
+@@ -95,7 +155,7 @@ export default function SecondHandPage() {
+               <div className="flex items-center gap-1 text-[10px] text-cream/60"><MapPin size={10} /> {p.city} · {p.categoryLabel}</div>
+               <p className="mt-0.5 line-clamp-1 text-sm font-bold text-cream">{p.title}</p>
+               <div className="mt-1 flex items-center gap-2">
+-                <span className="text-sm font-black text-gold-soft">{toFa(formatPrice(p.price))} ت</span>
++                <span className={cn("text-sm font-black text-gold-soft", p.status === "sold" && "line-through opacity-60")}>{toFa(formatPrice(p.price))} ت</span>
+                 {p.originalPrice && <span className="text-[11px] text-cream/40 line-through">{toFa(formatPrice(p.originalPrice))}</span>}
+               </div>
+               <p className="mt-0.5 text-[10px] text-cream/50">مدت استفاده: {p.age}</p>
+diff --git a/src/app/stores/[slug]/page.tsx b/src/app/stores/[slug]/page.tsx
+index 4148cd7..12980ce 100644
+--- a/src/app/stores/[slug]/page.tsx
++++ b/src/app/stores/[slug]/page.tsx
+@@ -8,7 +8,7 @@ import { Button, LogoBlock, Chip, Badge, Rating } from "@/components/ui/primitiv
+ import { SmartImage } from "@/components/ui/SmartImage";
+ import { Reveal } from "@/components/motion/Reveal";
+ import { getStore } from "@/data/stores";
+-import { productsByStore } from "@/data/products";
++import { resolvePublicStore, allStoreProductsPublic } from "@/data/vendorSession";
+ import { getStorefrontProfile, reviewsForStore } from "@/data/storefronts";
+ import { useWishlist } from "@/stores/useShop";
+ import { useUi } from "@/stores/useApp";
+@@ -16,9 +16,12 @@ import { toFa } from "@/lib/utils";
+ 
+ export default function StoreDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+   const { slug } = use(params);
+-  const store = getStore(slug);
+-  if (!store) notFound();
+-  const products = productsByStore(store!.id);
++  // The demo vendor's session edits (name/cover/logo/policies) and added
++  // products are merged here — what the vendor saves is what visitors see.
++  const base = getStore(slug);
++  if (!base) notFound();
++  const store = resolvePublicStore(base);
++  const products = allStoreProductsPublic(base.id);
+   const [sort, setSort] = useState<"all" | "trending" | "discount">("all");
+   const wl = useWishlist(); const { toast } = useUi();
+   const profile = getStorefrontProfile(store!.id);
+diff --git a/src/app/vendor/analytics/page.tsx b/src/app/vendor/analytics/page.tsx
+index 7c5a42a..ee6ad23 100644
+--- a/src/app/vendor/analytics/page.tsx
++++ b/src/app/vendor/analytics/page.tsx
+@@ -2,11 +2,22 @@
+ import { Percent, Wallet, Info } from "lucide-react";
+ import { Badge } from "@/components/ui/primitives";
+ import { toFa, formatPrice } from "@/lib/utils";
+-import { vendorStats } from "@/data/vendorSession";
++import { useHasHydrated } from "@/lib/useHasHydrated";
++import { vendorStats, listVendorOrdersWithBuyers } from "@/data/vendorSession";
+ import { PLATFORM } from "@/config/platform";
+ 
+ export default function VendorAnalyticsPage() {
+-  const stats = vendorStats();
++  const hydrated = useHasHydrated();
++  // Money cards = real orders (session seeds + buyer-placed ones after hydration).
++  const stats = vendorStats(hydrated);
++  const rows = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);
++  // Bars derive from the 12 most recent order totals — not a hardcoded array.
++  const bars = (() => {
++    const totals = rows.map(({ total }) => total).slice(0, 12);
++    if (!totals.length) return [];
++    const max = Math.max(...totals);
++    return totals.map((total) => Math.max(10, Math.round((total / max) * 100)));
++  })();
+   return (
+     <div className="space-y-5">
+       <h1 className="font-display text-xl font-black text-ink">تحلیل و گزارش</h1>
+@@ -34,11 +45,11 @@ export default function VendorAnalyticsPage() {
+       <div className="card-surface p-6">
+         <h3 className="mb-4 font-display font-bold text-ink">روند فروش</h3>
+         <div className="flex h-48 items-end justify-between gap-1.5">
+-          {[35, 60, 45, 75, 50, 85, 65, 95, 70, 80, 55, 90].map((h, i) => (
++          {bars.map((h, i) => (
+             <div key={i} className="group relative flex-1 rounded-t bg-gradient-to-t from-ink to-ink-soft transition-all hover:from-terracotta hover:to-terracotta-deep" style={{ height: `${h}%` }}><span className="absolute -top-5 right-1/2 translate-x-1/2 text-[10px] text-ink-muted opacity-0 group-hover:opacity-100">{toFa(h)}</span></div>
+           ))}
+         </div>
+-        <p className="mt-3 text-center text-xs text-ink-muted">آمار فروش ۱۲ ماه اخیر (داده نمونه)</p>
++        <p className="mt-3 text-center text-xs text-ink-muted">ارتفاع میله‌ها از مبلغ ۱۲ سفارش آخر همین فروشگاه محاسبه می‌شود</p>
+       </div>
+ 
+       <div className="flex items-start gap-2 rounded-xl border border-clay/40 bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">
+diff --git a/src/app/vendor/orders/page.tsx b/src/app/vendor/orders/page.tsx
+index 94db8f5..eda6d5a 100644
+--- a/src/app/vendor/orders/page.tsx
++++ b/src/app/vendor/orders/page.tsx
+@@ -1,35 +1,40 @@
+ "use client";
+ import { useState } from "react";
+ import Link from "next/link";
+-import { ChevronLeft } from "lucide-react";
++import { ChevronLeft, Inbox } from "lucide-react";
+ import { Badge, Button } from "@/components/ui/primitives";
+ import { toFa, formatPrice } from "@/lib/utils";
+ import { useUi } from "@/stores/useApp";
+-import { listVendorOrders, advanceVendorOrder } from "@/data/vendorSession";
++import { useHasHydrated } from "@/lib/useHasHydrated";
++import { listVendorOrdersWithBuyers, advanceVendorOrder, type VendorOrderRow } from "@/data/vendorSession";
+ import { getProductById } from "@/data/products";
+ 
+ const LABEL: Record<string, string> = { processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده", cancelled: "لغو شده" };
+ const TONE: Record<string, "gold" | "accent" | "success" | "dark"> = { processing: "gold", shipping: "accent", delivered: "success", cancelled: "dark" };
+-const FILTERS = ["all", "processing", "shipping", "delivered"] as const;
+-const FILTER_FA: Record<string, string> = { all: "همه", processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده" };
++const FILTERS = ["all", "processing", "shipping", "delivered", "cancelled"] as const;
++const FILTER_FA: Record<string, string> = { all: "همه", processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده", cancelled: "لغو شده" };
+ 
+ export default function VendorOrdersPage() {
+   const { toast } = useUi();
++  const hydrated = useHasHydrated();
+   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
+   const [expanded, setExpanded] = useState<string | null>(null);
+-  const [items, setItems] = useState(listVendorOrders());
++  const [version, setVersion] = useState(0);
++  // Seeds render on the first paint; buyer-placed orders (localStorage) merge
++  // in after hydration — the established hydration-safe pattern.
++  const items: VendorOrderRow[] = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);
+ 
+   const list = items.filter(({ order }) => filter === "all" || order.status === filter);
+ 
+   function advance(orderId: string) {
+     const next = advanceVendorOrder(orderId);
+-    setItems(listVendorOrders());
++    setVersion((v) => v + 1);
+     const label = next ? LABEL[next] : null;
+-    toast(label ? `وضعیت سفارش #${toFa(orderId)} به «${label}» تغییر کرد` : "وضعیت تغییر نکرد", label ? "success" : "info");
++    toast(label ? `وضعیت سفارش #${toFa(orderId)} به «${label}» تغییر کرد — خریدار همان لحظه در «سفارش‌های من» می‌بیند` : "وضعیت تغییر نکرد", label ? "success" : "info");
+   }
+ 
+   return (
+-    <div className="space-y-5">
++    <div className="space-y-5" data-orders-version={version}>
+       <h1 className="font-display text-xl font-black text-ink">سفارش‌ها</h1>
+       <div className="flex flex-wrap gap-2">
+         {FILTERS.map((key) => (
+@@ -40,7 +45,7 @@ export default function VendorOrdersPage() {
+       {list.length === 0 && <div className="card-surface p-10 text-center text-sm text-ink-muted">سفارشی با این وضعیت نیست.</div>}
+ 
+       <div className="space-y-3">
+-        {list.map(({ order, total }) => {
++        {list.map(({ order, total, fromBuyer }) => {
+           const open = expanded === order.id;
+           return (
+             <div key={order.id} className="card-surface p-4">
+@@ -51,7 +56,7 @@ export default function VendorOrdersPage() {
+                   <Badge tone={TONE[order.status]}>{LABEL[order.status]}</Badge>
+                 </button>
+                 <div className="flex items-center gap-3">
+-                  <span className="text-xs text-ink-muted">{order.customer} · {order.date} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</span>
++                  <span className="text-xs text-ink-muted">{fromBuyer && <span className="ml-1 rounded bg-terracotta/10 px-1.5 py-0.5 text-[10px] font-bold text-terracotta-deep">سفارش خریدار</span>}{order.customer} · {order.date} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</span>
+                   <span className="font-bold text-ink">{toFa(formatPrice(total))} ت</span>
+                 </div>
+               </div>
+@@ -86,8 +91,11 @@ export default function VendorOrdersPage() {
+           );
+         })}
+       </div>
+-      <p className="text-[11px] text-ink-muted">
+-        این سفارش‌ها مربوط به فروشگاه نمونهٔ {listVendorOrders()[0]?.storeName ?? "شما"} هستند و تغییر وضعیت فقط در حافظهٔ همین دمو ذخیره می‌شود. — <Link href="/account/orders" className="underline">سفارش‌های من (خریدار) ←</Link>
++      <p className="flex items-start gap-2 text-[11px] leading-6 text-ink-muted">
++        <Inbox size={13} className="mt-0.5 shrink-0" />
++        <span>
++          سفارش‌هایی که خریداران در همین مرورگر ثبت می‌کنند بلافاصله همین‌جا می‌آیند؛ با دکمهٔ «ارسال شد / تحویل شد»، وضعیت دقیقاً در «سفارش‌های من» همان خریدار به‌روز می‌شود. — <Link href="/account/orders" className="underline">سفارش‌های من (خریدار) ←</Link>
++        </span>
+       </p>
+     </div>
+   );
+diff --git a/src/app/vendor/page.tsx b/src/app/vendor/page.tsx
+index 87d550a..856f4e0 100644
+--- a/src/app/vendor/page.tsx
++++ b/src/app/vendor/page.tsx
+@@ -3,15 +3,28 @@ import Link from "next/link";
+ import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck } from "lucide-react";
+ import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
+ import { toFa, formatCompactFa, formatPrice } from "@/lib/utils";
+-import { vendorStats, listVendorOrders, vendorStoreProfile, vendorProductCount } from "@/data/vendorSession";
++import { useHasHydrated } from "@/lib/useHasHydrated";
++import { vendorStats, listVendorOrdersWithBuyers, vendorStoreProfile, vendorProductCount, type VendorOrderRow } from "@/data/vendorSession";
+ 
+ const ORDER_STATUS_LABEL: Record<string, string> = { delivered: "تحویل شده", shipping: "در حال ارسال", processing: "در حال پردازش", cancelled: "لغو شده" };
+ const ORDER_STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = { delivered: "success", shipping: "accent", processing: "gold", cancelled: "dark" };
+ 
+ export default function VendorDashboard() {
+-  const stats = vendorStats();
++  const hydrated = useHasHydrated();
++  // Session seeds render first; buyer-placed orders merge in after hydration
++  // so SSR and the first client paint stay identical (zero console mismatch).
++  const stats = vendorStats(hydrated);
+   const profile = vendorStoreProfile();
+-  const recent = listVendorOrders().slice(0, 4);
++  const rows: VendorOrderRow[] = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);
++  const recent = rows.slice(0, 4);
++  // Bars derive from the 12 most recent order totals — not a hardcoded array.
++  const bars = (() => {
++    const totals = rows.map(({ total }) => total);
++    const last12 = totals.slice(0, 12);
++    if (!last12.length) return [];
++    const max = Math.max(...last12);
++    return last12.map((total) => Math.max(12, Math.round((total / max) * 100)));
++  })();
+   const tiles = [
+     { label: "فروش این ماه", value: `${toFa(formatCompactFa(stats.monthSales))} ت`, icon: DollarSign },
+     { label: "سفارش‌ها", value: toFa(stats.ordersCount), icon: ShoppingCart },
+@@ -56,11 +69,11 @@ export default function VendorDashboard() {
+         <div className="card-surface p-6">
+           <h3 className="mb-4 font-display font-bold text-ink">عملکرد فروش</h3>
+           <div className="flex h-40 items-end justify-between gap-1.5">
+-            {[40, 65, 50, 80, 55, 90, 70, 100, 75, 85, 60, 95].map((h, i) => (
+-              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-terracotta to-terracotta-soft transition-all hover:opacity-80" style={{ height: `${h}%` }} title={`ماه ${toFa(i + 1)}`} />
++            {bars.map((h, i) => (
++              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-terracotta to-terracotta-soft transition-all hover:opacity-80" style={{ height: `${h}%` }} title={`سفارش ${toFa(i + 1)}`} />
+             ))}
+           </div>
+-          <div className="mt-3 text-center text-xs text-ink-muted">آمار ۱۲ ماه اخیر (نمونه)</div>
++          <div className="mt-3 text-center text-xs text-ink-muted">ارتفاع میله‌ها از مبلغ ۱۲ سفارش آخر محاسبه می‌شود</div>
+           <div className="mt-4 space-y-2 border-t border-clay/40 pt-3 text-xs text-ink-muted">
+             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><CheckCircle2 size={13} className="text-sage" /> تحویل‌شده</span><b className="text-ink">{toFa(stats.deliveredCount)}</b></div>
+             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Truck size={13} className="text-terracotta-deep" /> در حال ارسال</span><b className="text-ink">{toFa(stats.shippingCount)}</b></div>
+diff --git a/src/app/vendor/store/page.tsx b/src/app/vendor/store/page.tsx
+index cd7617c..7f3b2f7 100644
+--- a/src/app/vendor/store/page.tsx
++++ b/src/app/vendor/store/page.tsx
+@@ -4,16 +4,23 @@ import { Button, LogoBlock } from "@/components/ui/primitives";
+ import { useUi } from "@/stores/useApp";
+ import { SmartImage } from "@/components/ui/SmartImage";
+ import { vendorStoreProfile, updateVendorStoreProfile } from "@/data/vendorSession";
++import { cn } from "@/lib/utils";
++import { ExternalLink } from "lucide-react";
+ 
+ const input = "w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink";
++const LOGO_COLORS = ["#c2703f", "#6b7f5e", "#3f5f6b", "#8a5a44", "#4a4a4a"];
+ 
+ export default function VendorStorePage() {
+   const { toast } = useUi();
+   const [profile, setProfile] = useState(vendorStoreProfile());
++  const [logoColor, setLogoColor] = useState(profile.logoColor);
+ 
+   return (
+     <div className="space-y-5">
+-      <h1 className="font-display text-xl font-black text-ink">تنظیمات فروشگاه</h1>
++      <div className="flex flex-wrap items-center justify-between gap-3">
++        <h1 className="font-display text-xl font-black text-ink">تنظیمات فروشگاه</h1>
++        <a href="/stores/noor-mobl" target="_blank" rel="noreferrer"><Button variant="outline" size="sm"><ExternalLink size={14} /> مشاهده فروشگاه در سایت</Button></a>
++      </div>
+       <div className="card-surface p-6">
+         <div className="mb-5"><SmartImage src={profile.cover} alt="کاور" className="aspect-[4/1] w-full rounded-xl" /></div>
+         <div className="-mt-10 mb-5 flex items-end gap-4">
+@@ -26,14 +33,25 @@ export default function VendorStorePage() {
+           city: String(fd.get("city") ?? ""),
+           phone: String(fd.get("phone") ?? ""),
+           logoChar: String(fd.get("logoChar") ?? ""),
++          logoColor,
+           cover: String(fd.get("cover") ?? ""),
+           shippingPolicy: String(fd.get("shippingPolicy") ?? ""),
+           returnPolicy: String(fd.get("returnPolicy") ?? ""),
+-        }); setProfile(next); toast("تغییرات فروشگاه در همین دمو ذخیره شد"); }} className="grid gap-4 sm:grid-cols-2">
++        }); setProfile(next); setLogoColor(next.logoColor); toast("ذخیره شد — همان لحظه در صفحهٔ عمومی فروشگاه هم اعمال می‌شود"); }} className="grid gap-4 sm:grid-cols-2">
+           <div className="sm:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">نام فروشگاه</label><input name="name" defaultValue={profile.name} className={input} /></div>
+           <div className="sm:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">توضیحات</label><textarea name="description" rows={2} defaultValue={profile.description} className={`${input} resize-none`} /></div>
+-          <div className="sm:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">کاراکتر لوگو</label><input name="logoChar" defaultValue={profile.logoChar} maxLength={1} className={input} dir="rtl" /></div>
+-          <div className="sm:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">کاور فروشگاه (آدرس تصویر)</label><input name="cover" defaultValue={profile.cover} className={input} dir="ltr" /></div>
++          <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
++            <div className="min-w-40 flex-1"><label className="mb-1.5 block text-sm font-medium text-ink">کاراکتر لوگو</label><input name="logoChar" defaultValue={profile.logoChar} maxLength={1} className={input} dir="rtl" /></div>
++            <div className="min-w-40 flex-1">
++              <label className="mb-1.5 block text-sm font-medium text-ink">رنگ لوگو</label>
++              <div className="flex gap-2 pt-1">
++                {LOGO_COLORS.map((color) => (
++                  <button type="button" key={color} aria-label={`رنگ ${color}`} onClick={() => setLogoColor(color)} className={cn("h-8 w-8 rounded-full border-2 transition", logoColor === color ? "border-ink" : "border-transparent hover:border-clay")} style={{ background: color }} />
++                ))}
++              </div>
++            </div>
++          </div>
++          <div className="sm:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">کاور فروشگاه (آدرس تصویر — خالی بگذاری، تصویر فعلی می‌ماند)</label><input name="cover" defaultValue={profile.cover} className={input} dir="ltr" /></div>
+           <div><label className="mb-1.5 block text-sm font-medium text-ink">شهر</label><input name="city" defaultValue={profile.city} className={input} /></div>
+           <div><label className="mb-1.5 block text-sm font-medium text-ink">شماره تماس</label><input name="phone" defaultValue={profile.phone} className={input} /></div>
+           <div className="sm:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">سیاست ارسال</label><textarea name="shippingPolicy" rows={2} defaultValue={profile.shippingPolicy} className={`${input} resize-none`} /></div>
+diff --git a/src/app/wishlist/page.tsx b/src/app/wishlist/page.tsx
+index dca6ae3..3757f7c 100644
+--- a/src/app/wishlist/page.tsx
++++ b/src/app/wishlist/page.tsx
+@@ -7,6 +7,8 @@ import { FilterableProductGrid } from "@/components/products/FilterableProductGr
+ import { Button, EmptyState } from "@/components/ui/primitives";
+ import { StoreCard, InspirationCard } from "@/components/cards";
+ import { useWishlist } from "@/stores/useShop";
++import { useDesignSessions } from "@/stores/useDesignSessions";
++import { useHasHydrated } from "@/lib/useHasHydrated";
+ import { getProductById } from "@/data/products";
+ import { getStyle } from "@/data/styles";
+ import { getInspiration } from "@/data/inspirations";
+@@ -24,10 +26,20 @@ const TABS = [
+ export default function WishlistPage() {
+   const wl = useWishlist();
+   const [tab, setTab] = useState<typeof TABS[number]["id"]>("products");
++  const hydrated = useHasHydrated();
++  const sessions = useDesignSessions((s) => s.sessions);
+ 
+   const products = wl.products.map((id) => getProductById(id)).filter(Boolean);
+   const insp = wl.inspirations.map((id) => getInspiration(id)).filter(Boolean);
+-  const designs = wl.designs.map((id) => getAiDesign(id)).filter(Boolean);
++  // Saved AI designs: real persisted sessions first, then the fixture seeds —
++  // a saved ds_* id used to land in a black hole and never render.
++  const designs = [
++    ...(hydrated ? sessions.filter((s) => wl.designs.includes(s.id)).map((s) => ({ id: s.id, title: s.title, afterImage: s.afterImage, room: s.roomType })) : []),
++    ...wl.designs.flatMap((id) => {
++      const d = getAiDesign(id);
++      return d ? [{ id: d.id, title: d.title, afterImage: d.afterImage, room: d.room }] : [];
++    }),
++  ];
+   const stores = wl.stores.map((id) => getStoreById(id)).filter(Boolean);
+   const count = { products: products.length, inspirations: insp.length, designs: designs.length, stores: stores.length };
+ 
+@@ -74,7 +86,7 @@ export default function WishlistPage() {
+       {tab === "inspirations" && (insp.length ? <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">{insp.map((i, idx) => i && <InspirationCard key={i.id} insp={i} index={idx} />)}</div> : <EmptyState icon={<ImageIcon size={28} />} title="ایده‌ای ذخیره نکرده‌ای" action={<Link href="/inspiration"><Button>گالری الهام</Button></Link>} />)}
+       {tab === "designs" && (designs.length ? (
+         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+-          {designs.map((d) => d && (
++          {designs.map((d) => (
+             <Link key={d.id} href={`/ai/result/${d.id}`} className="card-surface overflow-hidden">
+               <img src={d.afterImage} alt={d.title} className="aspect-video w-full object-cover" />
+               <div className="p-4"><div className="text-xs text-ink-muted">{d.room}</div><div className="font-display font-bold text-ink">{d.title}</div></div>
+diff --git a/src/components/ads/SecondHandAdForm.tsx b/src/components/ads/SecondHandAdForm.tsx
+new file mode 100644
+index 0000000..2ddef7f
+--- /dev/null
++++ b/src/components/ads/SecondHandAdForm.tsx
+@@ -0,0 +1,128 @@
++"use client";
++// Second-hand ad form for the account area — same fields as the public
++// /second-hand form but in the dashboard card style. Categories come from
++// the real catalog; the ad persists via the same localStorage data layer.
++import { useState } from "react";
++import { useRouter } from "next/navigation";
++import { Plus, Tag } from "lucide-react";
++import { Button } from "@/components/ui/primitives";
++import { categories } from "@/data/categories";
++import { createSecondHandAd, AD_CONDITIONS, MAX_IMAGE_BYTES, type AdCondition } from "@/data/localSecondHandAds";
++import { useUi } from "@/stores/useApp";
++import { cn } from "@/lib/utils";
++
++const input = "w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink";
++const label = "mb-1.5 block text-sm font-medium text-ink";
++
++export default function SecondHandAdForm() {
++  const router = useRouter();
++  const { toast } = useUi();
++  const [condition, setCondition] = useState<AdCondition>("خوب");
++  const [image, setImage] = useState<string | null>(null);
++  const [imageName, setImageName] = useState<string>("");
++  const [catSlug, setCatSlug] = useState("");
++  const [busy, setBusy] = useState(false);
++
++  const subcategories = catSlug ? categories.find((c) => c.slug === catSlug)?.subcategories ?? [] : [];
++
++  function onPickImage(file: File | undefined) {
++    if (!file) { setImage(null); setImageName(""); return; }
++    if (file.size > MAX_IMAGE_BYTES) {
++      toast("حجم تصویر باید کمتر از ۸۰۰ کیلوبایت باشد", "error");
++      return;
++    }
++    const reader = new FileReader();
++    reader.onload = () => {
++      if (typeof reader.result === "string") { setImage(reader.result); setImageName(file.name); }
++    };
++    reader.readAsDataURL(file);
++  }
++
++  function submit(e: React.FormEvent<HTMLFormElement>) {
++    e.preventDefault();
++    if (busy) return;
++    setBusy(true);
++    const fd = new FormData(e.currentTarget);
++    const result = createSecondHandAd({
++      title: String(fd.get("title") ?? ""),
++      categorySlug: String(fd.get("category") ?? ""),
++      price: Number(String(fd.get("price") ?? "").replace(/[^\d]/g, "")),
++      condition,
++      city: String(fd.get("city") ?? ""),
++      age: String(fd.get("age") ?? ""),
++      reason: String(fd.get("reason") ?? ""),
++      description: String(fd.get("description") ?? ""),
++      image: image ?? undefined,
++    });
++    if (!result.ok) {
++      toast(result.error, "error");
++      setBusy(false);
++      return;
++    }
++    toast("آگهی تو ثبت شد و در بازار دسته دوم منتشر شد");
++    router.push("/account/ads");
++  }
++
++  return (
++    <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
++      <div className="sm:col-span-2">
++        <label className={label}>عنوان آگهی</label>
++        <input name="title" required minLength={3} placeholder="مثلاً: کاناپه سه نفره طوسی" className={input} />
++      </div>
++      <div>
++        <label className={label}>دسته‌بندی (از دسته‌های واقعی سایت)</label>
++        <select name="category" required defaultValue="" onChange={(e) => setCatSlug(e.target.value)} className={input}>
++          <option value="" disabled>انتخاب دسته</option>
++          {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
++        </select>
++      </div>
++      <div>
++        <label className={label}>زیردسته (اختیاری)</label>
++        <select name="subCategory" className={input} disabled={!subcategories.length}>
++          <option value="">—</option>
++          {subcategories.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
++        </select>
++      </div>
++      <div>
++        <label className={label}>قیمت (تومان)</label>
++        <input name="price" required type="number" min={1000} dir="ltr" placeholder="9500000" className={input} />
++      </div>
++      <div>
++        <label className={label}>وضعیت کالا</label>
++        <div className="flex gap-2">
++          {AD_CONDITIONS.map((c) => (
++            <button type="button" key={c} onClick={() => setCondition(c)} className={cn("flex-1 rounded-xl border px-3 py-2.5 text-sm transition", condition === c ? "border-ink bg-ink text-cream" : "border-clay/60 text-ink hover:border-ink")}>{c}</button>
++          ))}
++        </div>
++      </div>
++      <div>
++        <label className={label}>شهر</label>
++        <input name="city" required placeholder="تهران" className={input} />
++      </div>
++      <div>
++        <label className={label}>مدت استفاده</label>
++        <input name="age" placeholder="مثلاً ۲ سال" className={input} />
++      </div>
++      <div className="sm:col-span-2">
++        <label className={label}>دلیل فروش</label>
++        <input name="reason" placeholder="مثلاً اسباب‌کشی" className={input} />
++      </div>
++      <div className="sm:col-span-2">
++        <label className={label}>توضیحات</label>
++        <textarea name="description" required minLength={20} rows={3} placeholder="جزئیات کالا، سالم بودن، امکان تست و…" className={cn(input, "resize-none")} />
++      </div>
++      <div className="sm:col-span-2">
++        <label className={label}>تصویر (اختیاری — حداکثر ۸۰۰ کیلوبایت)</label>
++        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-clay/60 bg-cream py-6 text-sm text-ink-muted transition hover:border-sage">
++          <Plus size={18} /> {imageName ? `انتخاب شد: ${imageName}` : "افزودن تصویر محصول"}
++          <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickImage(e.target.files?.[0])} />
++        </label>
++      </div>
++      <div className="sm:col-span-2 flex items-center gap-2 rounded-lg bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">
++        <Tag size={14} className="shrink-0" />
++        <span>آگهی تو بلافاصله در صفحهٔ «بازار دسته دوم» با برچسب «آگهی تو» منتشر می‌شود و در همین حساب هم ذخیره می‌ماند.</span>
++      </div>
++      <div className="sm:col-span-2"><Button type="submit" disabled={busy}>ثبت آگهی</Button></div>
++    </form>
++  );
++}
+diff --git a/src/components/ai/design/useDesignStudio.ts b/src/components/ai/design/useDesignStudio.ts
+index 9897f84..71e12e4 100644
+--- a/src/components/ai/design/useDesignStudio.ts
++++ b/src/components/ai/design/useDesignStudio.ts
+@@ -118,6 +118,20 @@ export function useDesignStudio() {
+     if (presetSlug) { const p = products.find((x) => x.slug === presetSlug); if (p) { setPresetProduct(p); setSelected((s) => ({ ...s, [p.id]: p })); setTab("inspiration"); } } // eslint-disable-line react-hooks/set-state-in-effect
+   }, [presetSlug]);
+ 
++  // CONTINUE DESIGN: ?session=<id> restores a saved design session (uploaded
++  // room photo + prompt + style) instead of silently opening an empty studio.
++  // Continuation restore — same single-line disable pattern as presetSlug above.
++  useEffect(() => {
++    const sid = sp.get("session");
++    if (!sid || imageBase64) return;
++    const session = useDesignSessions.getState().sessions.find((s) => s.id === sid);
++    if (!session) return;
++    if (session.beforeImage) { setImageBase64(session.beforeImage); rs.loadRoom(session.beforeImage, style === "office" ? "فضای اداری" : "پذیرایی"); } // eslint-disable-line react-hooks/set-state-in-effect
++    if (session.prompt) setPrompt(session.prompt);
++    if (session.style) setStyle(session.style);
++    toast("طراحی ذخیره‌شده بازیابی شد — از همین‌جا ادامه بده");
++  }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
++
+   const handleFile = useCallback((file: File, set: (v: string) => void = setImageBase64) => {
+     if (!ALLOWED_TYPES.includes(file.type)) return toast("فقط JPG، PNG یا WEBP", "error");
+     if (file.size > MAX_FILE_SIZE) return toast("حداکثر حجم تصویر ۱۰ مگابایت", "error");
+@@ -512,7 +526,14 @@ export function useDesignStudio() {
+   }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession]);
+ 
+   const buyTheLook = useCallback(() => { if (!placedProducts.length) return; placedProducts.forEach((p) => addToCart(p.id)); toast("چیدمان به سبد اضافه شد"); }, [placedProducts, addToCart, toast]);
+-  const handleSaveToWishlist = useCallback(() => { placedProducts.forEach((p) => wl.toggleProduct(p.id)); toast("طراحی ذخیره شد"); }, [placedProducts, wl, toast]);
++  const handleSaveToWishlist = useCallback(() => {
++    if (!placedProducts.length) return toast("اول محصولاتی در طرح قرار بده", "info");
++    // Idempotent add — the old toggle could silently REMOVE everything on a
++    // second click while the toast kept claiming it was saved.
++    let added = 0;
++    placedProducts.forEach((p) => { if (!wl.products.includes(p.id)) { wl.toggleProduct(p.id); added += 1; } });
++    toast(added > 0 ? `${added} محصول طرح به علاقه‌مندی‌ها اضافه شد` : "همه محصولات این طرح قبلاً ذخیره شده‌اند");
++  }, [placedProducts, wl, toast]);
+ 
+   /** Clear the uploaded photo + every derived result (verbatim remove handler). */
+   const removeImage = useCallback(() => {
+diff --git a/src/components/layout/Footer.tsx b/src/components/layout/Footer.tsx
+index 06a2c9a..e0561b3 100644
+--- a/src/components/layout/Footer.tsx
++++ b/src/components/layout/Footer.tsx
+@@ -8,8 +8,8 @@ import { categories } from "@/data/categories";
+ const COLS = [
+   { title: "کاوش", links: [["همه محصولات", "/products"], ["دسته دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["مجله", "/magazine"]] },
+   { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دسته دوم", "/second-hand"]] },
+-  { title: "حساب کاربری", links: [["پروفایل", "/account"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["طراحی‌های من", "/account/designs"]] },
+-  { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/vendor"]] },
++  { title: "حساب کاربری", links: [["پروفایل", "/account/profile"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["آگهی‌های من", "/account/ads"], ["طراحی‌های من", "/account/designs"]] },
++  { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/register/vendor"]] },
+ ];
+ 
+ function NewsletterForm() {
+@@ -30,6 +30,7 @@ function NewsletterForm() {
+ }
+ 
+ export function Footer() {
++  const [socialNote, setSocialNote] = useState(false);
+   return (
+     <footer className="mt-24 border-t border-clay/40 bg-ink text-cream/80">
+       <Container className="py-14">
+@@ -53,9 +54,10 @@ export function Footer() {
+             <p className="mt-3 max-w-xs text-sm leading-6 text-cream/60">
+               هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان. الهام، محصول، فروشگاه و طراحی با هوش مصنوعی.
+             </p>
++            {socialNote && <p className="mt-2 text-xs text-gold-soft">شبکه‌های اجتماعی Homeino به‌زودی راه می‌افتند.</p>}
+             <div className="mt-4 flex gap-2">
+               {[AtSign, Send, Globe].map((Icon, i) => (
+-                <span key={i} className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg bg-white/10 transition hover:bg-white/20"><Icon size={17} /></span>
++                <button key={i} type="button" aria-label="شبکه‌های اجتماعی" onClick={() => setSocialNote(true)} className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg bg-white/10 transition hover:bg-white/20"><Icon size={17} /></button>
+               ))}
+             </div>
+             {/* Newsletter capture with incentive */}
+diff --git a/src/components/layout/GlobalChrome.tsx b/src/components/layout/GlobalChrome.tsx
+index 2a7fb6f..aa21126 100644
+--- a/src/components/layout/GlobalChrome.tsx
++++ b/src/components/layout/GlobalChrome.tsx
+@@ -10,7 +10,7 @@ const ICONS = { success: CheckCircle2, error: XCircle, info: Info };
+ 
+ /** Floating AI button + scroll-to-top + toast stack + compare bar. */
+ export function GlobalChrome() {
+-  const { aiPanelOpen, setAiPanel, toasts, dismissToast } = useUi();
++  const { setAiPanel, toasts, dismissToast } = useUi();
+   const balance = useCredits((s) => s.balance);
+   const cmpCount = useCompare((s) => s.ids.length);
+   const [showTop, setShowTop] = useState(false);
+@@ -71,7 +71,6 @@ export function GlobalChrome() {
+         <Sparkles size={13} className="text-terracotta-deep" /> {toFa(balance)} اعتبار
+       </Link>
+ 
+-      {aiPanelOpen && null}
+     </>
+   );
+ }
+diff --git a/src/components/layout/Header.tsx b/src/components/layout/Header.tsx
+index 5ae4b64..44d78b8 100644
+--- a/src/components/layout/Header.tsx
++++ b/src/components/layout/Header.tsx
+@@ -32,8 +32,10 @@ import {
+   Wand2,
+ } from "lucide-react";
+ import { useCart, useWishlist, useCompare } from "@/stores/useShop";
++import { useHasHydrated } from "@/lib/useHasHydrated";
+ import { useUi } from "@/stores/useApp";
+ import { categories } from "@/data/categories";
++import { productsByCategory } from "@/data/products";
+ import { styles } from "@/data/styles";
+ import { PLATFORM, formatThreshold } from "@/config/platform";
+ import { cn, toFa } from "@/lib/utils";
+@@ -184,7 +186,7 @@ function MegaPanel({ mega }: { mega: MegaKey }) {
+                       className="-translate-x-1 text-terracotta opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+                     />
+                   </div>
+-                  <div className="text-xs text-ink-muted">{toFa(c.productCount)} محصول</div>
++                  <div className="text-xs text-ink-muted">{toFa(productsByCategory(c.slug).length)} محصول</div>
+                 </div>
+               </Link>
+             </motion.div>
+@@ -294,9 +296,12 @@ export function Header() {
+   const [scrolled, setScrolled] = useState(false);
+   const pathname = usePathname();
+ 
+-  const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.qty, 0));
+-  const wishCount = useWishlist((s) => s.total());
+-  const cmpCount = useCompare((s) => s.ids.length);
++  // Persisted counters read only after hydration — first paint matches SSR,
++  // then the real localStorage numbers appear (zero console mismatch).
++  const hydrated = useHasHydrated();
++  const cartCount = useCart((s) => (hydrated ? s.items.reduce((n, i) => n + i.qty, 0) : 0));
++  const wishCount = useWishlist((s) => (hydrated ? s.total() : 0));
++  const cmpCount = useCompare((s) => (hydrated ? s.ids.length : 0));
+ 
+   /* Page scroll progress (RTL: bar grows from the right edge) */
+   const { scrollYProgress } = useScroll();
+diff --git a/src/components/layout/SearchOverlay.tsx b/src/components/layout/SearchOverlay.tsx
+index d2686c8..bbca28f 100644
+--- a/src/components/layout/SearchOverlay.tsx
++++ b/src/components/layout/SearchOverlay.tsx
+@@ -6,6 +6,7 @@ import { Search, X, TrendingUp, Clock, ArrowLeft } from "lucide-react";
+ import { useUi } from "@/stores/useApp";
+ import { products } from "@/data/products";
+ import { stores } from "@/data/stores";
++import { productsByCategory } from "@/data/products";
+ import { categories } from "@/data/categories";
+ import { styles } from "@/data/styles";
+ import { toFa, faIncludes, formatPrice } from "@/lib/utils";
+@@ -93,7 +94,7 @@ export function SearchOverlay() {
+                   {categories.slice(0, 4).map((c) => (
+                     <button key={c.id} onClick={() => go(`/category/${c.slug}`)} className="rounded-xl border border-clay/40 bg-ivory-2 p-3 text-right transition hover:border-ink">
+                       <div className="text-sm font-medium text-ink">{c.name}</div>
+-                      <div className="text-xs text-ink-muted">{toFa(c.productCount)} محصول</div>
++                      <div className="text-xs text-ink-muted">{toFa(productsByCategory(c.slug).length)} محصول</div>
+                     </button>
+                   ))}
+                 </div>
+diff --git a/src/data/localOrders.ts b/src/data/localOrders.ts
+index 17d1b1c..b3f1dd3 100644
+--- a/src/data/localOrders.ts
++++ b/src/data/localOrders.ts
+@@ -6,12 +6,18 @@
+ // /account/orders). Seed rows give the demo an instant believable history;
+ // placed orders append on top. Cancel/track actions mutate the same store.
+ // Swap for the real orders API when the backend lands — pages keep working.
++//
++// TRACKING PRECISION: every parcel carries its own status + status history,
++// so the vendor panel (st1) can advance the parcel it fulfils while other
++// stores' parcels progress deterministically with the elapsed time. All
++// timeline dates come from src/lib/orderTracking.ts — one source, no drift.
+ // ============================================================
+ import type { CartItem } from "@/types";
+ import { getProductById } from "./products";
+ import { getStoreById } from "./stores";
+ import { resolveCartLines, groupCartParcels } from "@/lib/marketplace";
+ import { uid } from "@/lib/utils";
++import { PLATFORM } from "@/config/platform";
+ 
+ export type OrderStatus = "processing" | "shipping" | "delivered" | "cancelled";
+ 
+@@ -30,6 +36,19 @@ export interface OrderParcel {
+   /** 0 = ارسال رایگان */
+   shippingCost: number;
+   lines: OrderParcelLine[];
++  /** Parcel-level status override (set by the vendor panel or cancel).
++   *  Missing = derive deterministically from elapsed time. */
++  status?: OrderStatus;
++  /** Real transition log — rendered verbatim in the tracking timeline. */
++  statusHistory?: { label: string; at: string }[];
++}
++
++export interface OrderAddress {
++  fullName: string;
++  phone: string;
++  city: string;
++  line: string;
++  postalCode?: string;
+ }
+ 
+ export interface LocalOrder {
+@@ -40,6 +59,12 @@ export interface LocalOrder {
+   parcels: OrderParcel[];
+   total: number;
+   itemsCount: number;
++  /** Delivery destination captured at checkout (demo — no DB yet). */
++  address?: OrderAddress;
++  /** "online" | "wallet" | "cod" */
++  payMethod?: string;
++  /** "post" | "express" */
++  shippingMethod?: string;
+ }
+ 
+ const KEY = "homeino-orders";
+@@ -50,6 +75,16 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
+   cancelled: "لغو شده",
+ };
+ 
++export const PAY_LABEL: Record<string, string> = {
++  online: "پرداخت آنلاین",
++  wallet: "کیف پول Homeino",
++  cod: "پرداخت در محل",
++};
++export const SHIPPING_LABEL: Record<string, string> = {
++  post: "پست عادی",
++  express: "پیک سریع",
++};
++
+ function read(): LocalOrder[] {
+   if (typeof window === "undefined") return [];
+   try {
+@@ -69,9 +104,9 @@ function write(orders: LocalOrder[]) {
+   }
+ }
+ 
+-export function listLocalOrders(): LocalOrder[] {
+-  const seeds = seedOrders();
+-  return [...read(), ...seeds].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
++/** Raw stored orders only (no seeds) — shared with the vendor panel bridge. */
++export function readStoredOrders(): LocalOrder[] {
++  return read();
+ }
+ 
+ function faDate(iso: string): string {
+@@ -82,9 +117,66 @@ function faDate(iso: string): string {
+   }
+ }
+ 
++/** Deterministic parcel status when no one has overridden it: the "other
++ *  stores" of the demo fulfil on their own schedule (6h/26h/74h), matching
++ *  the offsets shown in the tracking timeline. */
++export function timeBasedStatus(createdAt: string, now = Date.now()): OrderStatus {
++  const hours = (now - new Date(createdAt).getTime()) / 3_600_000;
++  if (hours >= 74) return "delivered";
++  if (hours >= 26) return "shipping";
++  return "processing";
++}
++
++/** The status a parcel should display: explicit override wins (vendor panel
++ *  action / cancel), otherwise the deterministic time-based progression. */
++export function parcelStatus(order: LocalOrder, parcel: OrderParcel): OrderStatus {
++  if (order.status === "cancelled") return "cancelled";
++  return parcel.status ?? timeBasedStatus(order.createdAt);
++}
++
++const STAGE: Record<OrderStatus, number> = { cancelled: 0, processing: 1, shipping: 2, delivered: 3 };
++
++/** Order-level badge status = the least-advanced parcel (multi-store honest). */
++export function orderDisplayStatus(order: LocalOrder): OrderStatus {
++  if (order.status === "cancelled") return "cancelled";
++  return order.parcels.reduce<OrderStatus>(
++    (min, parcel) => (STAGE[parcelStatus(order, parcel)] < STAGE[min] ? parcelStatus(order, parcel) : min),
++    "delivered",
++  );
++}
++
++/** Advance only the st1 (demo vendor) parcel of a buyer-placed order, then
++ *  recompute the order status. Called from the vendor panel. */
++export function advanceStoredParcel(orderId: string, storeId: string): OrderStatus | null {
++  const orders = read();
++  const target = orders.find((order) => order.id === orderId);
++  if (!target) return null;
++  if (target.status === "cancelled" || target.status === "delivered") return target.status;
++  let next: OrderStatus | null = null;
++  const updated: LocalOrder = {
++    ...target,
++    parcels: target.parcels.map((parcel) => {
++      if (parcel.storeId !== storeId) return parcel;
++      next = parcel.status === "processing" ? "shipping" : "delivered";
++      return {
++        ...parcel,
++        status: next,
++        statusHistory: [...(parcel.statusHistory ?? []), { label: STATUS_LABEL[next], at: new Date().toISOString() }],
++      };
++    }),
++  };
++  if (!next) return target.status;
++  const stages = updated.parcels.map((parcel) => STAGE[parcelStatus(updated, parcel)]);
++  const minStage = Math.min(...stages);
++  updated.status = (Object.keys(STAGE) as OrderStatus[]).find((s) => STAGE[s] === minStage) ?? updated.status;
++  write(orders.map((order) => (order.id === orderId ? updated : order)));
++  return next;
++}
++
+ function seedOrders(): LocalOrder[] {
+   // Static ids/statuses intentionally match the old mock list — but item names
+-  // are resolved from the real catalog at read time.
++  // are resolved from the real catalog at read time, and each store ships in
++  // its own parcel (same rule as groupCartParcels).
+   const demo = (
+     id: string,
+     daysAgo: number,
+@@ -92,7 +184,7 @@ function seedOrders(): LocalOrder[] {
+     parcels: { storeId: string; lines: { productId: string; qty: number }[] }[],
+   ): LocalOrder => {
+     const createdAt = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+-    const builtParcels = parcels.map((parcel) => {
++    const builtParcels: OrderParcel[] = parcels.map((parcel) => {
+       const store = getStoreById(parcel.storeId);
+       const lines = parcel.lines.map((line) => {
+         const product = getProductById(line.productId);
+@@ -102,11 +194,20 @@ function seedOrders(): LocalOrder[] {
+         return { productId: line.productId, name, image, qty: line.qty, price };
+       });
+       const subtotal = lines.reduce((sum, line) => sum + line.price * line.qty, 0);
++      const threshold = PLATFORM.policies.freeShippingThreshold;
++      // Sample history — history entries follow the same offsets the
++      // tracking timeline renders (6h/26h/74h), so dates stay consistent.
++      const at = (hours: number) => new Date(new Date(createdAt).getTime() + hours * 3_600_000).toISOString();
++      const history: { label: string; at: string }[] = [{ label: "ثبت سفارش", at: createdAt }];
++      if (status !== "processing") history.push({ label: STATUS_LABEL.shipping, at: at(26) });
++      if (status === "delivered") history.push({ label: STATUS_LABEL.delivered, at: at(74) });
+       return {
+         storeId: parcel.storeId,
+         storeName: store?.name ?? "فروشگاه",
+-        shippingCost: subtotal >= 5_000_000 ? 0 : 120_000,
++        shippingCost: subtotal >= threshold ? 0 : 120_000,
+         lines,
++        status,
++        statusHistory: history,
+       };
+     });
+     const total = builtParcels.reduce((sum, parcel) => sum + parcel.shippingCost + parcel.lines.reduce((s, l) => s + l.price * l.qty, 0), 0);
+@@ -115,20 +216,56 @@ function seedOrders(): LocalOrder[] {
+   };
+ 
+   return [
+-    demo("102456", 21, "delivered", [{ storeId: "st1", lines: [{ productId: "p1", qty: 1 }, { productId: "p15", qty: 1 }] }]),
++    // st1 (فروشگاه دمو) و st5 هر کدام مرسولهٔ خودشان — مثل گروه‌بندی واقعی checkout
++    demo("102456", 21, "delivered", [{ storeId: "st1", lines: [{ productId: "p1", qty: 1 }] }, { storeId: "st5", lines: [{ productId: "p15", qty: 1 }] }]),
+     demo("102401", 34, "shipping", [{ storeId: "st3", lines: [{ productId: "p9", qty: 1 }] }]),
+     demo("102389", 47, "processing", [{ storeId: "st4", lines: [{ productId: "p12", qty: 1 }] }]),
+   ];
+ }
+ 
++export function listLocalOrders(): LocalOrder[] {
++  const stored = read();
++  const storedIds = new Set(stored.map((order) => order.id));
++  const seeds = seedOrders().filter((order) => !storedIds.has(order.id));
++  return [...stored, ...seeds].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
++}
++
+ export function cancelLocalOrder(orderId: string): LocalOrder | null {
+   const orders = read();
+   const target = orders.find((order) => order.id === orderId);
+-  if (!target) return null;
+-  if (target.status === "cancelled" || target.status === "delivered") return null;
+-  const next = { ...target, status: "cancelled" as OrderStatus };
+-  write(orders.map((order) => (order.id === orderId ? next : order)));
+-  return next;
++  if (target) {
++    if (target.status === "cancelled" || target.status === "delivered") return null;
++    const now = new Date().toISOString();
++    const next: LocalOrder = {
++      ...target,
++      status: "cancelled",
++      parcels: target.parcels.map((parcel) => ({
++        ...parcel,
++        status: "cancelled",
++        statusHistory: [...(parcel.statusHistory ?? []), { label: STATUS_LABEL.cancelled, at: now }],
++      })),
++    };
++    write(orders.map((order) => (order.id === orderId ? next : order)));
++    return next;
++  }
++  // Seed orders live only in code — materialize a cancelled copy so the
++  // cancel action always produces a real, persisted result (write-through).
++  const seed = seedOrders().find((order) => order.id === orderId);
++  if (seed && (seed.status === "processing" || seed.status === "shipping")) {
++    const now = new Date().toISOString();
++    const cancelled: LocalOrder = {
++      ...seed,
++      status: "cancelled",
++      parcels: seed.parcels.map((parcel) => ({
++        ...parcel,
++        status: "cancelled",
++        statusHistory: [...(parcel.statusHistory ?? []), { label: STATUS_LABEL.cancelled, at: now }],
++      })),
++    };
++    write([cancelled, ...orders].slice(0, 40));
++    return cancelled;
++  }
++  return null;
+ }
+ 
+ /** Session-level record of ids already handed out — keeps ids collision-free
+@@ -150,7 +287,13 @@ function nextOrderId(): string {
+   return id;
+ }
+ 
+-export function placeLocalOrder(items: CartItem[], express = false): LocalOrder {
++export interface PlaceOrderMeta {
++  address?: OrderAddress;
++  payMethod?: string;
++  shippingMethod?: string;
++}
++
++export function placeLocalOrder(items: CartItem[], express = false, meta: PlaceOrderMeta = {}): LocalOrder {
+   const now = new Date().toISOString();
+   const id = nextOrderId();
+   // Shipping cost per parcel must EXACTLY match checkout: derive it from the
+@@ -160,6 +303,8 @@ export function placeLocalOrder(items: CartItem[], express = false): LocalOrder
+     storeId: parcel.storeId,
+     storeName: parcel.storeName,
+     shippingCost: parcel.shippingCost,
++    status: "processing",
++    statusHistory: [{ label: "ثبت سفارش", at: now }],
+     lines: parcel.lines.map((line) => ({
+       productId: line.product.id,
+       name: line.product.name,
+@@ -170,26 +315,9 @@ export function placeLocalOrder(items: CartItem[], express = false): LocalOrder
+   }));
+   const itemsCount = parcels.reduce((sum, parcel) => sum + parcel.lines.reduce((s, l) => s + l.qty, 0), 0);
+   const total = parcels.reduce((sum, parcel) => sum + parcel.shippingCost + parcel.lines.reduce((s, l) => s + l.price * l.qty, 0), 0);
+-  const order: LocalOrder = { id, createdAt: now, faDate: faDate(now), status: "processing", parcels, total, itemsCount };
++  const order: LocalOrder = { id, createdAt: now, faDate: faDate(now), status: "processing", parcels, total, itemsCount, ...meta };
+ 
+   const orders = read();
+   write([order, ...orders].slice(0, 40));
+   return order;
+ }
+-
+-/** Demo "tracking": 4 static steps with honest done state per status. */
+-export function trackLocalOrder(order: LocalOrder): { label: string; done: boolean; note?: string }[] {
+-  const cancelled = order.status === "cancelled";
+-  const atLeast = (step: number) => {
+-    if (cancelled) return step <= 1;
+-    if (order.status === "processing") return step <= 1;
+-    if (order.status === "shipping") return step <= 2;
+-    return step <= 4;
+-  };
+-  return [
+-    { label: "ثبت سفارش", done: true, note: order.faDate },
+-    { label: "تأیید و آماده‌سازی توسط فروشنده", done: atLeast(2), note: cancelled ? "لغو شد" : order.status === "processing" ? "در انتظار" : order.status === "shipping" ? "انجام شد" : order.faDate },
+-    { label: "تحویل به مامور ارسال", done: atLeast(3), note: order.status === "shipping" ? "در جریان است" : "" },
+-    { label: "تحویل به شما", done: atLeast(4), note: order.status === "delivered" ? "تکمیل شد" : "" },
+-  ];
+-}
+diff --git a/src/data/localSecondHandAds.test.ts b/src/data/localSecondHandAds.test.ts
+new file mode 100644
+index 0000000..76563f4
+--- /dev/null
++++ b/src/data/localSecondHandAds.test.ts
+@@ -0,0 +1,89 @@
++import type { AdCondition } from "./localSecondHandAds";
++import { describe, expect, it } from "vitest";
++import {
++  createSecondHandAd,
++  listMySecondHandAds,
++  listAllSecondHandAds,
++  markSecondHandAdSold,
++  removeSecondHandAd,
++  mergedSecondHandFeed,
++  toggleSavedAd,
++  listSavedAdIds,
++  adCategories,
++  adCategoryLabel,
++  MAX_IMAGE_BYTES,
++} from "./localSecondHandAds";
++
++const draft = {
++  title: "کاناپه سه نفره طوسی",
++  categorySlug: "furniture",
++  price: 9_500_000,
++  condition: "خوب" as const,
++  city: "تهران",
++  age: "۱ سال",
++  reason: "اسباب‌کشی",
++  description: "کاناپه سه نفره با پارچه مخمل طوسی، بدون لکه و آسیب، عالی برای پذیرایی.",
++};
++
++describe("second-hand ads", () => {
++  it("creates a valid ad with a real catalog category label", () => {
++    const result = createSecondHandAd(draft);
++    expect(result.ok).toBe(true);
++    if (!result.ok) return;
++    expect(result.ad.categoryLabel).toBe("مبلمان");
++    expect(result.ad.status).toBe("active");
++    expect(result.ad.mine).toBe(true);
++    expect(result.ad.isoCreatedAt).toBeTruthy();
++  });
++
++  it("rejects invalid drafts with a Persian error", () => {
++    expect(createSecondHandAd({ ...draft, title: "ک" }).ok).toBe(false);
++    expect(createSecondHandAd({ ...draft, price: 0 }).ok).toBe(false);
++    expect(createSecondHandAd({ ...draft, categorySlug: "nope" }).ok).toBe(false);
++    expect(createSecondHandAd({ ...draft, description: "کم" }).ok).toBe(false);
++    expect(createSecondHandAd({ ...draft, city: "  " }).ok).toBe(false);
++    expect(createSecondHandAd({ ...draft, condition: "نوک" as unknown as AdCondition }).ok).toBe(false);
++  });
++
++  it("lists my ads newest-first and merges them with fixtures", () => {
++    const first = createSecondHandAd(draft);
++    const second = createSecondHandAd({ ...draft, title: "میز کنسول چوبی" });
++    expect(first.ok && second.ok).toBe(true);
++
++    const mine = listMySecondHandAds();
++    expect(mine.length).toBeGreaterThanOrEqual(2);
++    expect(mine[0].title).toBe("میز کنسول چوبی"); // newest first
++
++    const feed = mergedSecondHandFeed();
++    expect(first.ok && feed.some((item) => item.id === first.ad.id)).toBe(true);
++    expect(feed.some((item) => item.id === "sh1")).toBe(true); // fixtures still present
++  });
++
++  it("marks sold and removes", () => {
++    const result = createSecondHandAd(draft);
++    if (!result.ok) throw new Error("setup failed");
++    const sold = markSecondHandAdSold(result.ad.id);
++    expect(sold?.status).toBe("sold");
++    expect(listAllSecondHandAds().find((ad) => ad.id === result.ad.id)?.status).toBe("sold");
++    expect(removeSecondHandAd(result.ad.id)).toBe(true);
++    expect(listAllSecondHandAds().find((ad) => ad.id === result.ad.id)).toBeUndefined();
++    expect(removeSecondHandAd("my-nope")).toBe(false);
++  });
++
++  it("saved-ids toggle is honest (no product-wishlist pollution)", () => {
++    expect(toggleSavedAd("sh3")).toBe(true);
++    expect(listSavedAdIds()).toContain("sh3");
++    expect(toggleSavedAd("sh3")).toBe(false);
++    expect(listSavedAdIds()).not.toContain("sh3");
++  });
++
++  it("category helpers come from the real catalog", () => {
++    expect(adCategories().length).toBeGreaterThanOrEqual(9);
++    expect(adCategoryLabel("rugs")).toBe("فرش و کف");
++    expect(adCategoryLabel("unknown")).toBe("دسته‌بندی");
++  });
++
++  it("keeps uploaded images inside the storage quota", () => {
++    expect(MAX_IMAGE_BYTES).toBeLessThan(1024 * 1024);
++  });
++});
+diff --git a/src/data/localSecondHandAds.ts b/src/data/localSecondHandAds.ts
+new file mode 100644
+index 0000000..4b0fea5
+--- /dev/null
++++ b/src/data/localSecondHandAds.ts
+@@ -0,0 +1,191 @@
++// ============================================================
++// SECOND-HAND ADS — customer-posted listings (demo persistence).
++//
++// Customers post their own used-product ads from the account area or the
++// public /second-hand page; ads live in localStorage (same contract as
++// localOrders) and render merged with the marketplace fixtures. Categories
++// always come from the REAL catalog (src/data/categories.ts) — the slug is
++// stored, the Persian label is derived, so a category rename never orphans
++// an ad. Swap for the real ads API when the backend lands.
++// ============================================================
++import type { SecondHandProduct } from "@/types";
++import { categories, getCategory } from "./categories";
++import { secondHandProducts } from "./secondHand";
++import { uid } from "@/lib/utils";
++
++const KEY = "homeino-second-hand-ads";
++const MAX_ADS = 40;
++export const MAX_IMAGE_BYTES = 800 * 1024; // data-URL quota safety
++
++export type AdCondition = SecondHandProduct["condition"];
++export const AD_CONDITIONS: AdCondition[] = ["نو", "خوب", "قابل‌قبول"];
++
++export interface SecondHandAdDraft {
++  title: string;
++  categorySlug: string;
++  price: number;
++  condition: AdCondition;
++  city: string;
++  age?: string;
++  reason?: string;
++  description: string;
++  image?: string; // data-URL from the file input, or an IMG fallback
++}
++
++export interface LocalSecondHandAd extends SecondHandProduct {
++  /** true = posted by the logged-in customer in this browser. */
++  mine: true;
++  /** ISO stamp for precise sorting (fixtures only carry a display date). */
++  isoCreatedAt: string;
++}
++
++// In-memory fallback for environments without localStorage (tests, SSR,
++// private mode) — the demo keeps working for the session either way.
++let memoryAds: LocalSecondHandAd[] = [];
++
++function read(): LocalSecondHandAd[] {
++  if (typeof window === "undefined") return memoryAds;
++  try {
++    const raw = window.localStorage.getItem(KEY);
++    return raw ? (JSON.parse(raw) as LocalSecondHandAd[]) : [];
++  } catch {
++    return [];
++  }
++}
++
++function write(ads: LocalSecondHandAd[]) {
++  if (typeof window === "undefined") {
++    memoryAds = ads;
++    return;
++  }
++  try {
++    window.localStorage.setItem(KEY, JSON.stringify(ads));
++  } catch {
++    memoryAds = ads; // private mode / full quota — session memory keeps working
++  }
++}
++
++function faDate(iso: string): string {
++  try {
++    return new Date(iso).toLocaleDateString("fa-IR");
++  } catch {
++    return iso;
++  }
++}
++
++export function adCategories() {
++  return categories.map((category) => ({ slug: category.slug, name: category.name, subcategories: category.subcategories }));
++}
++
++export function adCategoryLabel(slug: string): string {
++  return getCategory(slug)?.name ?? "دسته‌بندی";
++}
++
++/** All ads shown on the public page: the customer's own ads first, then the
++ *  marketplace fixtures (sorted newest-first inside each group). */
++export function listAllSecondHandAds(): LocalSecondHandAd[] {
++  return read().sort((a, b) => b.isoCreatedAt.localeCompare(a.isoCreatedAt));
++}
++
++/** The customer's own ads — for «آگهی‌های من» in the account area. */
++export function listMySecondHandAds(): LocalSecondHandAd[] {
++  return read().sort((a, b) => b.isoCreatedAt.localeCompare(a.isoCreatedAt));
++}
++
++/** Merge for the public grid: mine + fixtures, one typed list. */
++export function mergedSecondHandFeed(): (SecondHandProduct & { mine?: boolean })[] {
++  const mine = listAllSecondHandAds().map((ad) => ({ ...ad }));
++  const mineIds = new Set(mine.map((ad) => ad.id));
++  return [...mine, ...secondHandProducts.filter((item) => !mineIds.has(item.id))];
++}
++
++export function createSecondHandAd(draft: SecondHandAdDraft): { ok: true; ad: LocalSecondHandAd } | { ok: false; error: string } {
++  const title = draft.title.trim();
++  const city = draft.city.trim();
++  const description = draft.description.trim();
++  if (title.length < 3) return { ok: false, error: "عنوان آگهی باید حداقل ۳ نویسه باشد" };
++  if (!getCategory(draft.categorySlug)) return { ok: false, error: "دسته‌بندی را انتخاب کن" };
++  if (!Number.isFinite(draft.price) || draft.price <= 0) return { ok: false, error: "قیمت باید عددی مثبت باشد" };
++  if (!AD_CONDITIONS.includes(draft.condition)) return { ok: false, error: "وضعیت کالا را انتخاب کن" };
++  if (!city) return { ok: false, error: "شهر را وارد کن" };
++  if (description.length < 20) return { ok: false, error: "توضیحات باید حداقل ۲۰ نویسه باشد" };
++  if (draft.image && !draft.image.startsWith("data:image/")) return { ok: false, error: "تصویر نامعتبر است" };
++
++  const now = new Date().toISOString();
++  const id = `my-${uid()}`;
++  const ad: LocalSecondHandAd = {
++    id,
++    slug: id,
++    title,
++    category: draft.categorySlug,
++    categoryLabel: adCategoryLabel(draft.categorySlug),
++    price: Math.round(draft.price),
++    condition: draft.condition,
++    city,
++    sellerName: "تو",
++    image: draft.image || secondHandProducts[0]?.image || "",
++    description,
++    age: draft.age?.trim() || "نامشخص",
++    reason: draft.reason?.trim() || "—",
++    status: "active",
++    // Same contract as the fixtures: createdAt is the Persian display date;
++    // isoCreatedAt carries the sortable ISO stamp.
++    createdAt: faDate(now),
++    isoCreatedAt: now,
++    mine: true,
++  };
++
++  const ads = read();
++  write([ad, ...ads].slice(0, MAX_ADS));
++  return { ok: true, ad };
++}
++
++export function markSecondHandAdSold(id: string): LocalSecondHandAd | null {
++  const ads = read();
++  const target = ads.find((ad) => ad.id === id);
++  if (!target) return null;
++  const next = { ...target, status: "sold" as const };
++  write(ads.map((ad) => (ad.id === id ? next : ad)));
++  return next;
++}
++
++export function removeSecondHandAd(id: string): boolean {
++  const ads = read();
++  if (!ads.some((ad) => ad.id === id)) return false;
++  write(ads.filter((ad) => ad.id !== id));
++  return true;
++}
++
++// ------------------------------------------------------------
++// SAVED ADS — the heart button on /second-hand. Kept in this module (NOT the
++// product wishlist) because sh*/my-* ids can never resolve as products.
++// ------------------------------------------------------------
++const SAVED_KEY = "homeino-secondhand-saved";
++
++let memorySaved: string[] = [];
++
++export function listSavedAdIds(): string[] {
++  if (typeof window === "undefined") return memorySaved;
++  try {
++    const raw = window.localStorage.getItem(SAVED_KEY);
++    return raw ? (JSON.parse(raw) as string[]) : [];
++  } catch {
++    return [];
++  }
++}
++
++export function toggleSavedAd(id: string): boolean {
++  const current = listSavedAdIds();
++  const has = current.includes(id);
++  const next = has ? current.filter((x) => x !== id) : [...current, id];
++  if (typeof window === "undefined") {
++    memorySaved = next;
++    return !has;
++  }
++  try {
++    window.localStorage.setItem(SAVED_KEY, JSON.stringify(next));
++  } catch {
++    memorySaved = next; // non-critical — session memory keeps working
++  }
++  return !has;
++}
+diff --git a/src/data/storefronts.ts b/src/data/storefronts.ts
+index b3b04eb..2b9ecad 100644
+--- a/src/data/storefronts.ts
++++ b/src/data/storefronts.ts
+@@ -3,7 +3,7 @@ import type { StorefrontProfile, StoreReview } from "@/types";
+ // Frontend fixture contract for future vendor-profile and store-review APIs.
+ // Claims are read only from this data layer; components never manufacture them.
+ const baseProfiles: Record<string, Omit<StorefrontProfile, "storeId">> = {
+-  st1: { joinedAt: "۱۳۹۹", fulfilledOrders: 3840, responseRate: 97, responseTime: "کمتر از ۲ ساعت", dispatchTime: "۱ تا ۲ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "مبلمان حجیم با هماهنگی قبلی و بیمه حمل ارسال می‌شود.", returnDays: 7, returnNote: "کالای استفاده‌نشده با بسته‌بندی سالم تا ۷ روز قابل بازگشت است.", authenticityNote: "هویت و اطلاعات کارگاه توسط Homeino بررسی شده است." },
++  st1: { joinedAt: "۱۳۹۹", fulfilledOrders: 3840, responseRate: 97, responseTime: "زیر ۲ ساعت", dispatchTime: "۱ تا ۲ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "مبلمان حجیم با هماهنگی قبلی و بیمه حمل ارسال می‌شود.", returnDays: 7, returnNote: "کالای استفاده‌نشده با بسته‌بندی سالم تا ۷ روز قابل بازگشت است.", authenticityNote: "هویت و اطلاعات کارگاه توسط Homeino بررسی شده است." },
+   st2: { joinedAt: "۱۴۰۲", fulfilledOrders: 1180, responseRate: 94, responseTime: "کمتر از ۴ ساعت", dispatchTime: "۱ تا ۳ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "کالاهای شکستنی با بسته‌بندی محافظ ارسال می‌شوند.", returnDays: 7, returnNote: "بازگشت کالای سالم و استفاده‌نشده تا ۷ روز پذیرفته می‌شود.", authenticityNote: "هویت و نشانی فروشگاه توسط Homeino بررسی شده است." },
+   st3: { joinedAt: "۱۴۰۰", fulfilledOrders: 2710, responseRate: 98, responseTime: "کمتر از ۱ ساعت", dispatchTime: "۱ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "ارسال استاندارد و اکسپرس برای بیشتر محصولات فعال است.", returnDays: 7, returnNote: "در صورت نصب‌نشدن کالا، بازگشت تا ۷ روز امکان‌پذیر است.", authenticityNote: "هویت، نشانی و سابقه فروشگاه توسط Homeino بررسی شده است." },
+   st4: { joinedAt: "۱۳۹۸", fulfilledOrders: 1950, responseRate: 93, responseTime: "همان روز کاری", dispatchTime: "۲ تا ۴ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "فرش‌ها به‌صورت رول‌شده و بیمه‌شده ارسال می‌شوند.", returnDays: 7, returnNote: "محصول بدون استفاده و آسیب تا ۷ روز قابل بازگشت است.", authenticityNote: "هویت و نشانی فروشگاه توسط Homeino بررسی شده است." },
+@@ -12,7 +12,7 @@ const baseProfiles: Record<string, Omit<StorefrontProfile, "storeId">> = {
+   st7: { joinedAt: "۱۳۹۹", fulfilledOrders: 1680, responseRate: 95, responseTime: "کمتر از ۳ ساعت", dispatchTime: "۲ تا ۵ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "زمان دقیق ارسال محصولات حجیم پیش از نهایی‌کردن سفارش اعلام می‌شود.", returnDays: 7, returnNote: "محصولات استاندارد تا ۷ روز و پیش از مونتاژ قابل بازگشت‌اند.", authenticityNote: "هویت و نشانی فروشگاه توسط Homeino بررسی شده است." },
+   st8: { joinedAt: "۱۴۰۳", fulfilledOrders: 430, responseRate: 89, responseTime: "همان روز کاری", dispatchTime: "۲ تا ۴ روز کاری", shippingCoverage: "تهران و شهرهای منتخب", shippingNote: "پوشش ارسال هر محصول در صفحه همان محصول نمایش داده می‌شود.", returnDays: 7, returnNote: "کالای مونتاژنشده تا ۷ روز قابل بازگشت است.", authenticityNote: "مدارک تأیید فروشگاه هنوز در حال تکمیل است." },
+   st9: { joinedAt: "۱۴۰۲", fulfilledOrders: 510, responseRate: 90, responseTime: "همان روز کاری", dispatchTime: "۲ تا ۵ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "هزینه حمل محصولات فضای باز بر اساس مقصد محاسبه می‌شود.", returnDays: 7, returnNote: "کالای استفاده‌نشده تا ۷ روز قابل بازگشت است.", authenticityNote: "مدارک تأیید فروشگاه هنوز در حال تکمیل است." },
+-  st10: { joinedAt: "۱۳۹۸", fulfilledOrders: 2960, responseRate: 98, responseTime: "کمتر از ۲ ساعت", dispatchTime: "۱ تا ۳ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "سفارش‌های خاص با بسته‌بندی و بیمه حمل ارسال می‌شوند.", returnDays: 7, returnNote: "شرایط بازگشت کالای سفارشی پیش از خرید به‌طور جداگانه اعلام می‌شود.", authenticityNote: "هویت، نشانی و سابقه فروشگاه توسط Homeino بررسی شده است." },
++  st10: { joinedAt: "۱۳۹۸", fulfilledOrders: 2960, responseRate: 98, responseTime: "زیر ۲ ساعت", dispatchTime: "۱ تا ۳ روز کاری", shippingCoverage: "ارسال به سراسر ایران", shippingNote: "سفارش‌های خاص با بسته‌بندی و بیمه حمل ارسال می‌شوند.", returnDays: 7, returnNote: "شرایط بازگشت کالای سفارشی پیش از خرید به‌طور جداگانه اعلام می‌شود.", authenticityNote: "هویت، نشانی و سابقه فروشگاه توسط Homeino بررسی شده است." },
+ };
+ 
+ export const storefrontProfiles: StorefrontProfile[] = Object.entries(baseProfiles).map(([storeId, profile]) => ({ storeId, ...profile }));
+diff --git a/src/data/vendorSession.ts b/src/data/vendorSession.ts
+index be10152..2c99082 100644
+--- a/src/data/vendorSession.ts
++++ b/src/data/vendorSession.ts
+@@ -14,6 +14,8 @@ import { productsByStore, getProductById } from "./products";
+ import { getStoreById } from "./stores";
+ import { IMG } from "./media";
+ import { PLATFORM } from "@/config/platform";
++import { readStoredOrders, advanceStoredParcel, parcelStatus, type LocalOrder } from "./localOrders";
++import type { Store } from "@/types";
+ 
+ export type VendorOrderStatus = "processing" | "shipping" | "delivered" | "cancelled";
+ 
+@@ -63,12 +65,15 @@ let profilePatch: {
+ } = {};
+ 
+ function seedOrders(): VendorOrder[] {
++  // All line items are st1 products — the st1 vendor must never see (or
++  // fulfil) another store's items. Ids stay clear of the buyer-side seed
++  // range (102456/102401/102389) so the two worlds never double-count.
+   const price = (productId: string, fallback: number) => getProductById(productId)?.price ?? fallback;
+   return [
+-    { id: "102456", customer: "نگار م.", date: "۱۴۰۳/۰۸/۱۵", status: "delivered", lines: [{ productId: "p1", qty: 1, price: price("p1", 48500000) }, { productId: "p15", qty: 1, price: price("p15", 1750000) }] },
++    { id: "102457", customer: "نگار م.", date: "۱۴۰۳/۰۸/۱۵", status: "delivered", lines: [{ productId: "p1", qty: 1, price: price("p1", 48500000) }, { productId: "p4", qty: 1, price: price("p4", 63000000) }] },
+     { id: "102455", customer: "آرش ر.", date: "۱۴۰۳/۰۸/۱۴", status: "shipping", lines: [{ productId: "p2", qty: 1, price: price("p2", 18900000) }] },
+     { id: "102454", customer: "سارا ک.", date: "۱۴۰۳/۰۸/۱۳", status: "processing", lines: [{ productId: "p33", qty: 1, price: price("p33", 62000000) }] },
+-    { id: "102453", customer: "محمد ت.", date: "۱۴۰۳/۰۸/۱۲", status: "processing", lines: [{ productId: "p3", qty: 1, price: price("p3", 7800000) }] },
++    { id: "102453", customer: "محمد ت.", date: "۱۴۰۳/۰۸/۱۲", status: "processing", lines: [{ productId: "p2", qty: 1, price: price("p2", 18900000) }] },
+     { id: "102451", customer: "نگین ش.", date: "۱۴۰۳/۰۸/۱۰", status: "delivered", lines: [{ productId: "p4", qty: 1, price: price("p4", 63000000) }] },
+     { id: "102448", customer: "حسین ق.", date: "۱۴۰۳/۰۸/۰۶", status: "delivered", lines: [{ productId: "p1", qty: 1, price: price("p1", 48500000) }, { productId: "p2", qty: 1, price: price("p2", 18900000) }] },
+   ];
+@@ -91,10 +96,13 @@ export function vendorProductCount(): number {
+   return vendorProducts.length;
+ }
+ 
++let skuSeq = 0;
++
+ export function addVendorProduct(draft: VendorDraftProduct) {
+   const store = getStoreById(VENDOR_ID);
+   const id = `vp-${Date.now().toString(36)}`;
+-  const sku = `NM-${String(vendorProducts.length + 1).padStart(3, "0")}`;
++  skuSeq += 1;
++  const sku = `NM-${String(skuSeq + vendorProducts.length).padStart(3, "0")}`;
+   const product: (typeof vendorProducts)[number] = {
+     id,
+     sku,
+@@ -144,12 +152,53 @@ export function removeVendorProduct(id: string) {
+ }
+ 
+ // ------------------------------------------------------------
+-// Orders — derived state + lifecycle
++// Orders — derived state + lifecycle + buyer bridge
+ // ------------------------------------------------------------
+ export function listVendorOrders(): { order: VendorOrder; total: number; storeName: string }[] {
+   return orders.map((order) => ({ order, total: orderTotal(order), storeName: getStoreById(VENDOR_ID)?.name ?? "فروشگاه من" }));
+ }
+ 
++export interface VendorOrderRow {
++  order: VendorOrder;
++  total: number;
++  storeName: string;
++  /** true = placed by a real buyer in this browser (localStorage), so the
++   *  vendor's status changes write straight back into the buyer's tracking. */
++  fromBuyer?: boolean;
++}
++
++/** Session seeds + buyer-placed orders whose st1 parcel arrives here.
++ *  Client-side only — server render simply gets the seeds. */
++export function listVendorOrdersWithBuyers(): VendorOrderRow[] {
++  const rows: VendorOrderRow[] = listVendorOrders().map((row) => ({ ...row }));
++  if (typeof window === "undefined") return rows;
++  let buyerOrders: LocalOrder[] = [];
++  try {
++    buyerOrders = readStoredOrders();
++  } catch {
++    buyerOrders = [];
++  }
++  for (const buyerOrder of buyerOrders) {
++    for (const parcel of buyerOrder.parcels) {
++      if (parcel.storeId !== VENDOR_ID) continue;
++      const status = parcelStatus(buyerOrder, parcel);
++      rows.push({
++        order: {
++          id: buyerOrder.id,
++          customer: buyerOrder.address?.fullName || "خریدار Homeino",
++          date: buyerOrder.faDate,
++          status,
++          lines: parcel.lines.map((line) => ({ productId: line.productId, qty: line.qty, price: line.price })),
++        },
++        total: parcel.lines.reduce((sum, line) => sum + line.price * line.qty, 0),
++        storeName: getStoreById(VENDOR_ID)?.name ?? "فروشگاه من",
++        fromBuyer: true,
++      });
++    }
++  }
++  return rows;
++}
++
+ export function nextOrderStatus(status: VendorOrderStatus): VendorOrderStatus {
+   if (status === "processing") return "shipping";
+   if (status === "shipping") return "delivered";
+@@ -158,17 +207,31 @@ export function nextOrderStatus(status: VendorOrderStatus): VendorOrderStatus {
+ 
+ export function advanceVendorOrder(id: string): VendorOrderStatus | null {
+   const target = orders.find((order) => order.id === id);
+-  if (!target) return null;
+-  const next = nextOrderStatus(target.status);
+-  if (next !== target.status) {
+-    orders = orders.map((order) => (order.id === id ? { ...order, status: next } : order));
++  if (target) {
++    const next = nextOrderStatus(target.status);
++    if (next !== target.status) {
++      orders = orders.map((order) => (order.id === id ? { ...order, status: next } : order));
++    }
++    return next;
+   }
+-  return next;
++  // Not a seed row → it is a buyer-placed order in this browser. Advance the
++  // st1 parcel in localStorage so the buyer's tracking updates instantly.
++  return advanceStoredParcel(id, VENDOR_ID);
+ }
+ 
+-export function vendorStats() {
+-  const active = orders.filter((order) => order.status !== "cancelled");
+-  const delivered = orders.filter((order) => order.status === "delivered");
++export function vendorStats(includeBuyers = false) {
++  // includeBuyers=true merges buyer-placed orders (localStorage) into the
++  // sales math — call it only after hydration (client) to avoid SSR drift.
++  const allOrders: VendorOrder[] = includeBuyers
++    ? [
++        ...orders,
++        ...listVendorOrdersWithBuyers()
++          .filter((row) => row.fromBuyer && !orders.some((seed) => seed.id === row.order.id))
++          .map((row) => row.order),
++      ]
++    : orders;
++  const active = allOrders.filter((order) => order.status !== "cancelled");
++  const delivered = allOrders.filter((order) => order.status === "delivered");
+   const monthSales = active.reduce((sum, order) => sum + orderTotal(order), 0);
+   const pendingOrders = active.filter((order) => order.status === "processing").length;
+   return {
+@@ -224,7 +287,9 @@ export function updateVendorStoreProfile(patch: {
+   if (patch.description !== undefined) next.description = patch.description;
+   if (patch.city !== undefined && patch.city.trim()) next.city = patch.city.trim();
+   if (patch.phone !== undefined && patch.phone.trim()) next.phone = patch.phone.trim();
+-  if (patch.cover !== undefined) next.cover = patch.cover;
++  // An empty cover would break the public page image — fall back to the
++  // fixture cover instead of storing "".
++  if (patch.cover !== undefined && patch.cover.trim()) next.cover = patch.cover.trim();
+   if (patch.logoChar !== undefined && patch.logoChar.trim()) next.logoChar = patch.logoChar.trim();
+   if (patch.logoColor !== undefined && patch.logoColor.trim()) next.logoColor = patch.logoColor.trim();
+   if (patch.shippingPolicy !== undefined) next.shippingPolicy = patch.shippingPolicy;
+@@ -232,3 +297,36 @@ export function updateVendorStoreProfile(patch: {
+   profilePatch = next;
+   return vendorStoreProfile();
+ }
++
++// ------------------------------------------------------------
++// PUBLIC MIRROR — vendor edits/products surface on the public site
++// ------------------------------------------------------------
++
++/** The public store record with the vendor's session edits applied. */
++export function resolvePublicStore(store: Store): Store {
++  if (store.id !== VENDOR_ID) return store;
++  return {
++    ...store,
++    name: profilePatch.name ?? store.name,
++    description: profilePatch.description ?? store.description,
++    city: profilePatch.city ?? store.city,
++    cover: profilePatch.cover ?? store.cover,
++    logo: profilePatch.logoChar ?? store.logo,
++    logoColor: profilePatch.logoColor ?? store.logoColor,
++    shippingPolicy: profilePatch.shippingPolicy ?? store.shippingPolicy,
++    returnPolicy: profilePatch.returnPolicy ?? store.returnPolicy,
++  };
++}
++
++/** Store products including the vendor's session-added products (st1). */
++export function allStoreProductsPublic(storeId: string): ReturnType<typeof productsByStore> {
++  const base = productsByStore(storeId);
++  if (storeId !== VENDOR_ID) return base;
++  const baseIds = new Set(base.map((product) => product.id));
++  return [...vendorProducts.filter((product) => !baseIds.has(product.id)), ...base];
++}
++
++/** Resolve a vendor-added product by id or slug (for /products/[slug]). */
++export function findVendorProductPublic(idOrSlug: string): ReturnType<typeof productsByStore>[number] | undefined {
++  return vendorProducts.find((product) => product.id === idOrSlug || product.slug === idOrSlug);
++}
+diff --git a/src/lib/orderTracking.ts b/src/lib/orderTracking.ts
+new file mode 100644
+index 0000000..c06b437
+--- /dev/null
++++ b/src/lib/orderTracking.ts
+@@ -0,0 +1,96 @@
++// ============================================================
++// ORDER TRACKING — one deterministic timeline source.
++//
++// The account tracking modal, the checkout success page and the vendor panel
++// all derive from here, so a status/date shown in one place is exactly what
++// the other places show. Steps are per-PARCEL (multi-store orders track each
++// shipment separately) and every done step carries a precise date+time.
++//
++// Date rules:
++//  - "ثبت سفارش" = the real order createdAt.
++//  - Explicit transitions (vendor panel action, cancel) = the real timestamp
++//    recorded in parcel.statusHistory.
++//  - Everything else = deterministic offsets from createdAt (6h/26h/74h),
++//    identical for every viewer — nothing random to explain to an investor.
++// ============================================================
++import type { LocalOrder, OrderParcel, OrderStatus } from "@/data/localOrders";
++import { parcelStatus, STATUS_LABEL } from "@/data/localOrders";
++
++const OFFSET_HOURS = { confirm: 6, dispatch: 26, deliver: 74 };
++
++/** Persian date + time (تقویم شمسی) — e.g. «۱۴۰۳/۸/۱۵، ۱۴:۳۰». */
++export function faDateTime(iso: string): string {
++  try {
++    return new Date(iso).toLocaleString("fa-IR", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
++  } catch {
++    return iso;
++  }
++}
++
++export interface TrackingStep {
++  label: string;
++  done: boolean;
++  note?: string;
++}
++
++function offsetIso(createdAt: string, hours: number): string {
++  return new Date(new Date(createdAt).getTime() + hours * 3_600_000).toISOString();
++}
++
++function recordedAt(parcel: OrderParcel, label: string): string | undefined {
++  const entries = (parcel.statusHistory ?? []).filter((entry) => entry.label === label);
++  return entries.length ? entries[entries.length - 1].at : undefined;
++}
++
++/** Full 4-step timeline for ONE parcel. */
++export function parcelTimeline(order: LocalOrder, parcel: OrderParcel): TrackingStep[] {
++  const status: OrderStatus = parcelStatus(order, parcel);
++  if (status === "cancelled") {
++    const cancelAt = recordedAt(parcel, STATUS_LABEL.cancelled) ?? offsetIso(order.createdAt, 2);
++    return [
++      { label: "ثبت سفارش", done: true, note: faDateTime(order.createdAt) },
++      { label: "لغو سفارش", done: true, note: faDateTime(cancelAt) },
++    ];
++  }
++  const stage = status === "processing" ? 1 : status === "shipping" ? 2 : 3;
++  const confirmAt = recordedAt(parcel, STATUS_LABEL.shipping) ?? offsetIso(order.createdAt, OFFSET_HOURS.confirm);
++  const dispatchAt = recordedAt(parcel, STATUS_LABEL.shipping) ?? offsetIso(order.createdAt, OFFSET_HOURS.dispatch);
++  const deliverAt = recordedAt(parcel, STATUS_LABEL.delivered) ?? offsetIso(order.createdAt, OFFSET_HOURS.deliver);
++  return [
++    { label: "ثبت سفارش", done: true, note: faDateTime(order.createdAt) },
++    {
++      label: "تأیید و آماده‌سازی توسط فروشنده",
++      done: stage >= 1,
++      note: stage >= 2 ? faDateTime(confirmAt) : "در انتظار تأیید فروشنده",
++    },
++    {
++      label: "تحویل به مأمور ارسال",
++      done: stage >= 2,
++      note: stage >= 2 ? faDateTime(dispatchAt) : "پس از آماده‌سازی",
++    },
++    {
++      label: "تحویل به شما",
++      done: stage >= 3,
++      note: stage >= 3 ? faDateTime(deliverAt) : "۲ تا ۵ روز کاری",
++    },
++  ];
++}
++
++/** Vendor-panel action labels (same lifecycle as vendorSession). */
++export function nextStatusLabel(status: OrderStatus): string | null {
++  if (status === "processing") return STATUS_LABEL.shipping;
++  if (status === "shipping") return STATUS_LABEL.delivered;
++  return null;
++}
++
++/** Destination summary line for the modal/success — empty before checkout captures it. */
++export function destinationLine(order: LocalOrder): string | null {
++  if (!order.address) return null;
++  const { city, line } = order.address;
++  return `${city} — ${line}`;
++}
++
++/** Raw item count of a parcel — callers format it with toFa. */
++export function parcelItemsCount(parcel: OrderParcel): number {
++  return parcel.lines.reduce((sum, line) => sum + line.qty, 0);
++}
+diff --git a/src/stores/useApp.ts b/src/stores/useApp.ts
+index fe44d73..a5079f7 100644
+--- a/src/stores/useApp.ts
++++ b/src/stores/useApp.ts
+@@ -49,6 +49,9 @@ interface AuthUser {
+ interface AuthState {
+   user: AuthUser | null;
+   login: (email: string, opts?: { name?: string; role?: Role; brand?: string }) => void;
++  /** Patch the logged-in user's own profile (name/city/phone) — persisted.
++   *  Avatar re-derives from the name like login does. */
++  updateProfile: (patch: { name?: string; email?: string; city?: string; phone?: string }) => void;
+   logout: () => void;
+ }
+ 
+@@ -71,6 +74,19 @@ export const useAuth = create<AuthState>()(
+             brand: opts.brand,
+           },
+         }),
++      updateProfile: (patch) =>
++        set((state) => {
++          if (!state.user) return state;
++          const name = patch.name?.trim() || state.user.name;
++          return {
++            user: {
++              ...state.user,
++              name,
++              email: patch.email?.trim() || state.user.email,
++              avatar: name[0],
++            },
++          };
++        }),
+       logout: () => set({ user: isDev ? DEV_USER : null }),
+     }),
+     { name: "homeino-auth" }
+-- 
+2.47.3
+
