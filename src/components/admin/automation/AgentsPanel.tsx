@@ -5,7 +5,7 @@
 // permissions are validated on the server; the form only offers real values.
 // ============================================================
 import { useMemo, useState } from "react";
-import { Bot, Play, ShieldCheck, Wrench } from "lucide-react";
+import { Bot, Play, ShieldCheck, Wrench, Clock3, ShieldAlert } from "lucide-react";
 import { Badge, Button, Modal } from "@/components/ui/primitives";
 import { toFa } from "@/lib/utils";
 import { useUi } from "@/stores/useApp";
@@ -57,6 +57,121 @@ const EMPTY_FORM: AgentFormState = {
   maxCostMicro: "0",
   config: "{}",
 };
+
+// ------------------------------------------------------------
+// Readable renderers for run output — dataState and _agent.guard as badges
+// and lists, never raw JSON.
+// ------------------------------------------------------------
+interface GuardShape {
+  removals?: { path?: string; value?: unknown; reason?: string }[];
+  warnings?: string[];
+  pricesCorrected?: number;
+  emptyProductList?: boolean;
+}
+
+type DataStateTone = "success" | "gold" | "neutral" | "accent" | "dark";
+
+const DATA_STATE_META: Record<string, { label: string; tone: DataStateTone }> = {
+  ok: { label: "دادهٔ کامل", tone: "success" },
+  not_enough_data: { label: "دادهٔ ناکافی", tone: "gold" },
+  no_data: { label: "بدون داده", tone: "neutral" },
+  degraded: { label: "کاهش‌یافته", tone: "accent" },
+};
+
+export function DataStateBadge({ dataState }: { dataState?: string | null }) {
+  const meta = DATA_STATE_META[String(dataState ?? "")];
+  if (!meta) return null;
+  return <Badge tone={meta.tone}>dataState: {meta.label}</Badge>;
+}
+
+/** Pulls { dataState, _agent.guard } out of an AgentRunResult-shaped object. */
+function runFacts(result: Record<string, unknown>) {
+  const output = (result.output && typeof result.output === "object" ? result.output : result) as Record<string, unknown>;
+  const agentMeta = (output._agent && typeof output._agent === "object" ? output._agent : {}) as Record<string, unknown>;
+  const guard = (agentMeta.guard && typeof agentMeta.guard === "object" ? agentMeta.guard : null) as GuardShape | null;
+  return {
+    output,
+    guard,
+    dataState: String(output.dataState ?? result.dataState ?? agentMeta.dataState ?? ""),
+    attempts: typeof agentMeta.attempts === "number" ? agentMeta.attempts : undefined,
+    guardCount: guard?.removals?.length ?? 0,
+    guardWarnings: guard?.warnings?.length ?? 0,
+  };
+}
+
+function formatWhen(iso?: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return `${toFa(d.toLocaleDateString("fa-IR"))} ${toFa(d.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }))}`;
+  } catch {
+    return "—";
+  }
+}
+
+/** Persian description of an agent schedule (daily/weekly/cron). */
+function scheduleLabel(schedule?: Record<string, unknown> | null): string {
+  if (!schedule || typeof schedule !== "object") return "";
+  const kind = String(schedule.kind ?? "");
+  const at = String(schedule.at ?? "");
+  if (kind === "daily") return `روزانه ساعت ${at || "—"}`;
+  if (kind === "weekly") return `هفتگی (${String(schedule.day ?? "")}) ساعت ${at || "—"}`;
+  if (kind === "hourly") return `هر ${String(schedule.every ?? "")} ساعت`;
+  if (kind === "cron") return `cron: ${String(schedule.cron ?? "")}`;
+  return "زمان‌بندی‌شده";
+}
+
+function GuardRemovals({ guard }: { guard: GuardShape }) {
+  const removals = guard.removals ?? [];
+  const warnings = guard.warnings ?? [];
+  const corrected = guard.pricesCorrected ?? 0;
+  return (
+    <div className="space-y-1.5 rounded-lg border border-clay/40 bg-ivory-2 p-2.5">
+      {removals.length > 0 && (
+        <div>
+          <div className="mb-1 flex items-center gap-1 text-[11px] font-bold text-terracotta-deep"><ShieldAlert size={12} /> {toFa(removals.length)} مقدار نامعتبر حذف شد</div>
+          {removals.slice(0, 8).map((removal, index) => (
+            <div key={index} className="flex items-start gap-1.5 border-t border-clay/30 py-1 text-[11px] leading-5">
+              <code dir="ltr" className="shrink-0 rounded bg-cream px-1.5 font-mono text-[10px] text-ink">{removal.path ?? "?"}</code>
+              <span className="text-ink-muted">{removal.reason ?? "حذف شد"}</span>
+            </div>
+          ))}
+          {removals.length > 8 && <div className="text-[11px] text-ink-muted">… و {toFa(removals.length - 8)} مورد دیگر</div>}
+        </div>
+      )}
+      {corrected > 0 && <Badge tone="gold">{toFa(corrected)} قیمت با کاتالوگ واقعی اصلاح شد</Badge>}
+      {guard.emptyProductList && <Badge tone="neutral">فهرست محصولات پس از حذف‌ها خالی ماند</Badge>}
+      {warnings.length > 0 && (
+        <div className="flex flex-wrap gap-1 pt-1">
+          {warnings.slice(0, 4).map((warning, index) => <Badge key={index} tone="neutral">{warning}</Badge>)}
+        </div>
+      )}
+      {!removals.length && !corrected && !warnings.length && !guard.emptyProductList && <div className="text-[11px] text-ink-muted">هیچ مقدار نامعتبری در خروجی نبود ✓</div>}
+    </div>
+  );
+}
+
+function RunSummary({ result }: { result: Record<string, unknown> }) {
+  const facts = runFacts(result);
+  const status = String(result.status ?? "");
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <DataStateBadge dataState={facts.dataState} />
+        <StatusBadge status={status || "unknown"} />
+        {facts.attempts ? <Badge>تلاش: {toFa(facts.attempts)}</Badge> : null}
+        {typeof result.errorCode === "string" && result.errorCode ? <Badge tone="accent">{String(result.errorCode)}</Badge> : null}
+        {typeof result.error === "string" && result.error ? <Badge tone="dark">{String(result.error)}</Badge> : null}
+      </div>
+      {facts.guard ? <GuardRemovals guard={facts.guard} /> : null}
+      <details className="text-[11px] text-ink-muted">
+        <summary className="cursor-pointer select-none">مشاهدهٔ خروجی خام</summary>
+        <div className="mt-1.5"><JsonBox value={result} max={10} /></div>
+      </details>
+    </div>
+  );
+}
 
 function formFromAgent(agent: AgentRow): AgentFormState {
   return {
@@ -216,7 +331,7 @@ export function AgentsPanel() {
         </div>
 
         {agents.length ? (
-          <TableShell head={["ایجنت", "نوع", "ابزارها", "مجوزها", "وضعیت", "عملیات"]} minWidth={880}>
+          <TableShell head={["ایجنت", "نوع", "ابزارها", "مجوزها", "زمان‌بندی و اجرا", "وضعیت", "عملیات"]} minWidth={1040}>
             {agents.map((agent) => (
               <Row key={agent.key}>
                 <Cell>
@@ -235,6 +350,20 @@ export function AgentsPanel() {
                   </div>
                 </Cell>
                 <Cell><div className="flex flex-wrap gap-1">{agent.permissions.slice(0, 3).map((p) => <Badge key={p}>{p}</Badge>)}{agent.permissions.length > 3 && <Badge>+{toFa(agent.permissions.length - 3)}</Badge>}</div></Cell>
+                <Cell>
+                  <div className="space-y-1 text-[11px]">
+                    {agent.schedule && Object.keys(agent.schedule).length ? (
+                      <div className="flex items-center gap-1.5 font-medium text-ink">
+                        <Clock3 size={12} className="shrink-0 text-terracotta-deep" />
+                        <span>{scheduleLabel(agent.schedule as Record<string, unknown> | null)}</span>
+                      </div>
+                    ) : (
+                      <div className="text-ink-muted">اجرا: دستی</div>
+                    )}
+                    <div className="text-ink-muted">آخرین اجرا: {formatWhen(agent.lastRunAt ?? null)}</div>
+                    {agent.nextRunAt ? <div className="text-ink-muted">اجرای بعدی: {formatWhen(agent.nextRunAt)}</div> : null}
+                  </div>
+                </Cell>
                 <Cell><StatusBadge status={agent.status} /></Cell>
                 <Cell>
                   <div className="flex flex-wrap gap-1.5">
@@ -366,7 +495,7 @@ export function AgentsPanel() {
             {running.result ? (
               <div>
                 <div className="mb-1 text-xs font-medium text-ink-muted">خروجی</div>
-                <JsonBox value={running.result} max={18} />
+                <RunSummary result={running.result as Record<string, unknown>} />
               </div>
             ) : (
               <p className="text-xs text-ink-muted">هنوز اجرایی انجام نشده است.</p>
@@ -388,7 +517,30 @@ export function AgentsPanel() {
             </div>
             <JsonBox value={{ tools: details.agent.tools, permissions: details.agent.permissions, config: details.agent.config }} max={14} />
             <div className="text-xs font-medium text-ink-muted">آخرین اجراها</div>
-            <JsonBox value={details.runs} max={16} />
+            {details.runs.length ? (
+              <div className="space-y-2">
+                {details.runs.slice(0, 10).map((run) => {
+                  const record = run as Record<string, unknown>;
+                  return (
+                    <div key={String(record.id ?? JSON.stringify(record))} className="rounded-lg border border-clay/40 bg-ivory-2 p-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <StatusBadge status={String(record.status ?? "")} />
+                        {typeof record.startedAt === "string" && <span className="text-ink-muted">{formatWhen(record.startedAt)}</span>}
+                        {typeof record.durationMs === "number" && <span className="text-ink-muted">زمان: {toFa(record.durationMs)}ms</span>}
+                        {typeof record.errorCode === "string" && record.errorCode ? <Badge tone="accent">{String(record.errorCode)}</Badge> : null}
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {Array.isArray(record.toolsUsed) ? (record.toolsUsed as string[]).slice(0, 5).map((tool) => <Badge key={tool}>{tool}</Badge>) : null}
+                      </div>
+                      {typeof record.error === "string" && record.error ? <div className="mt-1 text-[11px] leading-5 text-ink-muted">{record.error}</div> : null}
+                    </div>
+                  );
+                })}
+                {details.runs.length > 10 && <div className="text-[11px] text-ink-muted">… و {toFa(details.runs.length - 10)} اجرای دیگر</div>}
+              </div>
+            ) : (
+              <NoData title="هنوز اجرایی ثبت نشده" desc="با دکمهٔ «اجرا» اولین اجرای این ایجنت را ببین." />
+            )}
           </div>
         )}
       </Modal>

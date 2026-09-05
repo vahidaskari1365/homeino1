@@ -18,7 +18,7 @@ export const runCustomerIntelligence: AgentHandler = async (input, ctx) => {
   if (!userId && !sessionId) {
     ctx.log("هیچ کاربر یا نشستی برای تحلیل وجود ندارد");
     return {
-      output: { dataState: "no_data", reason: "no_user_or_session", profile: null, eventCount: 0 },
+      output: { dataState: "no_data", reason: "no_user_or_session", profile: null, eventCount: 0, summary: "کاربر یا نشستی برای تحلیل رفتار مشخص نشده است." },
       dataState: "no_data",
     };
   }
@@ -30,7 +30,7 @@ export const runCustomerIntelligence: AgentHandler = async (input, ctx) => {
 
   if (eventCount === 0) {
     return {
-      output: { dataState: "no_data", reason: "no_events", profile: null, eventCount: 0 },
+      output: { dataState: "no_data", reason: "no_events", profile: null, eventCount: 0, summary: "رویداد رفتاری‌ای برای این کاربر ثبت نشده است — هنوز داده‌ی کافی برای پروفایل وجود ندارد." },
       dataState: "no_data",
     };
   }

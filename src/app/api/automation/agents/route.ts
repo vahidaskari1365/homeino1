@@ -8,7 +8,7 @@ import { ok } from "@/lib/api/response";
 import { ApiError } from "@/lib/api/errors";
 import { rateLimit } from "@/lib/api/rateLimit";
 import { requireAdminUser } from "@/lib/api/auth";
-import { listAgents, createAgent, agentRegistryMeta, validateAgentInput } from "@/services/agents/registry";
+import { listAgents, createAgent, agentRegistryMeta, validateAgentInput, agentRunMeta } from "@/services/agents/registry";
 import { AGENT_STATUSES, AGENT_TYPES, AGENT_RUNTIMES } from "@/services/agents/registry";
 import { HANDLER_KEYS } from "@/services/agents/handlers";
 
@@ -21,7 +21,8 @@ export const GET = guard(async (req) => {
   const [agents, meta] = await Promise.all([listAgents(), agentRegistryMeta()]);
   const status = url.searchParams.get("status");
   const filtered = status && AGENT_STATUSES.includes(status as never) ? agents.filter((a) => a.status === status) : agents;
-  return ok({ items: filtered, meta });
+  const items = await Promise.all(filtered.map(async (agent) => ({ ...agent, ...(await agentRunMeta(agent)) })));
+  return ok({ items, meta });
 });
 
 export const POST = guard(async (req) => {
