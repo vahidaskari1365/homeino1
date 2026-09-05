@@ -42,6 +42,18 @@ export const PLATFORM = {
     inviteeMinSpend: 1,      // minimum purchase to trigger bonus (0 = on signup)
     shareMessage: "با کد دعوت من ثبت‌نام کن و ۳۰ اعتبار هوش مصنوعی رایگان بگیر!",
   },
+
+  // ---- Vendor marketplace economics (display-only until real settlement exists) ----
+  // Single source for every commission/settlement figure shown in the demo.
+  // Rule: the vendor panels NEVER hardcode these numbers — import them here.
+  vendor: {
+    commissionRatePercent: 8,   // کمیسیون پلتفرم از هر فروش
+    demoStoreId: "st1",         // فروشگاه نمونهٔ پنل فروشنده
+    demo: {
+      enabled: true,
+      label: "حالت دمو — این پنل با دادهٔ آزمایشی و بدون اتصال به پایگاه‌داده اجرا می‌شود.",
+    },
+  },
 } as const;
 
 // ---- Dynamic stats (from real data files) ----

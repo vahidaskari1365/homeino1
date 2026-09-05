@@ -9,7 +9,7 @@ const COLS = [
   { title: "کاوش", links: [["همه محصولات", "/products"], ["دسته دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["مجله", "/magazine"]] },
   { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دسته دوم", "/second-hand"]] },
   { title: "حساب کاربری", links: [["پروفایل", "/account"], ["اعتبار AI", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["طراحی‌های من", "/account/designs"]] },
-  { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/vendor"], ["پیوستن به ما", "/vendor"]] },
+  { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/vendor"]] },
 ];
 
 function NewsletterForm() {

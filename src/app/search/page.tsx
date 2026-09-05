@@ -10,7 +10,7 @@ import { stores } from "@/data/stores";
 import { styles } from "@/data/styles";
 import { categories } from "@/data/categories";
 import { StoreCard } from "@/components/cards";
-import { toFa } from "@/lib/utils";
+import { toFa, faIncludes } from "@/lib/utils";
 import Link from "next/link";
 
 const TRENDING = ["کاناپه مدرن", "ژاپندی", "آینه طاقی", "ست کوسن"];
@@ -22,12 +22,12 @@ function SearchInner() {
 
   const results = useMemo(() => {
     if (!term) return { products: [], stores: [], styles: [], cats: [] };
-    const match = (t: string) => t.includes(term);
+    const match = (t: string) => faIncludes(t, term);
     return {
-      products: products.filter((p) => p.name.includes(term) || p.brand.includes(term) || p.tags.some(match) || p.styleSlugs.some((s) => styles.find((x) => x.slug === s)?.name.includes(term))),
-      stores: stores.filter((s) => s.name.includes(term)),
-      styles: styles.filter((s) => s.name.includes(term)),
-      cats: categories.filter((c) => c.name.includes(term)),
+      products: products.filter((p) => faIncludes(p.name, term) || faIncludes(p.brand, term) || p.tags.some(match) || p.styleSlugs.some((s) => styles.find((x) => x.slug === s)?.name && faIncludes(styles.find((x) => x.slug === s)!.name, term))),
+      stores: stores.filter((s) => faIncludes(s.name, term)),
+      styles: styles.filter((s) => faIncludes(s.name, term)),
+      cats: categories.filter((c) => faIncludes(c.name, term)),
     };
   }, [term]);
 
