@@ -9,6 +9,7 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getStore } from "@/data/stores";
 import { resolvePublicStore, allStoreProductsPublic } from "@/data/vendorSession";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { getStorefrontProfile, reviewsForStore } from "@/data/storefronts";
 import { useWishlist } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
@@ -16,6 +17,10 @@ import { toFa } from "@/lib/utils";
 
 export default function StoreDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  // re-render once the persisted vendor session lands (post-hydration) so the
+  // demo vendor's saved profile/products show up without any user action
+  const vsVersion = useVendorSessionVersion();
+  void vsVersion;
   // The demo vendor's session edits (name/cover/logo/policies) and added
   // products are merged here — what the vendor saves is what visitors see.
   const base = getStore(slug);

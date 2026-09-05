@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, Ruler } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { FilterableProductGrid } from "@/components/products/FilterableProductGrid";
-import { Button, Badge, Rating, Price, EmptyState, LogoBlock, Modal } from "@/components/ui/primitives";
+import { Button, Badge, Rating, Price, EmptyState, LogoBlock, Modal, Skeleton } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
 import { getProduct, getProductById, products, productsByCategory } from "@/data/products";
@@ -18,46 +18,74 @@ import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/us
 import { useUi, useChat } from "@/stores/useApp";
 import { toFa, formatPrice, cn } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import type { Review } from "@/types";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  // Catalog first, then the vendor panel's session-added products (vp-*).
+  const hydrated = useHasHydrated();
+  // re-render the moment the persisted vendor session lands (post-hydration)
+  const vsVersion = useVendorSessionVersion();
+  void vsVersion;
+  // Catalog first, then the vendor panel's session-added products (vp-*) —
+  // those live only in the browser's persisted vendor session, so they get
+  // one hydration cycle (a brief skeleton) before a 404 is declared.
   const product = getProduct(slug) ?? findVendorProductPublic(slug);
-  if (!product) notFound();
+  const pendingVendorProduct = !product && !hydrated && slug.startsWith("vp-");
+  if (!product && !pendingVendorProduct) notFound();
 
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "specs" | "reviews">("desc");
-  const [seller, setSeller] = useState<string | undefined>(() => getBestOffer(product!.id)?.id);
+  const [seller, setSeller] = useState<string | undefined>(() => getBestOffer(product?.id ?? "")?.id);
   const [selectedColor, setSelectedColor] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const hydrated = useHasHydrated();
-  const productId = product!.id;
+  const productId = product?.id ?? "";
   const [reviewVersion, setReviewVersion] = useState(0);
   // Read the persisted reviews only after hydration so the first paint
   // (server + pre-hydration) stays identical to SSR — zero console mismatch.
-  const myReviews = hydrated ? localReviews(productId) : [];
+  const myReviews = hydrated && productId ? localReviews(productId) : [];
 
-  const store = getStoreById(product!.storeId);
-  const productOffers = offersForProduct(product!.id);
-  const bestOffer = getBestOffer(product!.id);
-  const displayPrice = bestOffer?.price ?? product!.price;
-  const offerCount = productOffers.filter((o) => o.inStock).length;
   const wl = useWishlist(); const cmp = useCompare(); const addToCart = useCart((s) => s.add);
   const { toast, setAiPanel } = useUi();
   const { push } = useChat();
-  const wished = wl.products.includes(product!.id);
-  const compared = cmp.has(product!.id);
-  const related = productsByCategory(product!.categorySlug).filter((p) => p.id !== product!.id).slice(0, 4);
   const trackRecent = useRecentlyViewed((s) => s.track);
+  useEffect(() => { if (product) trackRecent(product.id); }, [product, trackRecent]);
+  const router = useRouter();
+
+  // One-frame placeholder while a vp-* product hydrates out of the persisted
+  // vendor session — every hook above already ran, so the swap is clean.
+  if (!product) {
+    return (
+      <Container className="py-8">
+        <Skeleton className="h-5 w-56" />
+        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+          <Skeleton className="aspect-square w-full rounded-[var(--radius-lg)]" />
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-6 w-44" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
+  // — product is guaranteed from here on (catalog hit, or hydrated vp-*) —
+  const store = getStoreById(product.storeId);
+  const productOffers = offersForProduct(product.id);
+  const bestOffer = getBestOffer(product.id);
+  const displayPrice = bestOffer?.price ?? product.price;
+  const offerCount = productOffers.filter((o) => o.inStock).length;
+  const wished = wl.products.includes(product.id);
+  const compared = cmp.has(product.id);
+  const related = productsByCategory(product.categorySlug).filter((p) => p.id !== product.id).slice(0, 4);
   const reviews = [...myReviews, ...sampleReviews];
   const buyFromSeller = (offer: (typeof productOffers)[number], sellerName: string) => {
-    addToCart(product!.id, qty, offer.id);
+    addToCart(product.id, qty, offer.id);
     setSeller(offer.id);
-    toast(`«${product!.name}» از فروشندهٔ ${sellerName} به سبد اضافه شد`);
+    toast(`«${product.name}» از فروشندهٔ ${sellerName} به سبد اضافه شد`);
   };
-  useEffect(() => { if (product) trackRecent(product.id); }, [product, trackRecent]);
 
   const aiActions = [
     { label: "این محصول را در اتاق من قرار بده", icon: Wand2 },
@@ -66,13 +94,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     { label: "برای چه سبکی مناسب است؟", icon: Sparkles },
   ];
 
-  const router = useRouter();
   const onAi = (label: string) => {
     if (label.includes("در اتاق من قرار بده")) {
-      router.push(`/ai/design?tab=inspiration&product=${product!.slug}`);
+      router.push(`/ai/design?tab=inspiration&product=${product.slug}`);
       return;
     }
-    push({ role: "user", content: `${label} — ${product!.name}` });
+    push({ role: "user", content: `${label} — ${product.name}` });
     setAiPanel(true);
   };
 

@@ -4,6 +4,7 @@ import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck } f
 import { Button, Badge, LogoBlock } from "@/components/ui/primitives";
 import { toFa, formatCompactFa, formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { vendorStats, listVendorOrdersWithBuyers, vendorStoreProfile, vendorProductCount, type VendorOrderRow } from "@/data/vendorSession";
 
 const ORDER_STATUS_LABEL: Record<string, string> = { delivered: "تحویل شده", shipping: "در حال ارسال", processing: "در حال پردازش", cancelled: "لغو شده" };
@@ -11,6 +12,9 @@ const ORDER_STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> 
 
 export default function VendorDashboard() {
   const hydrated = useHasHydrated();
+  // persisted session (products/profile/statuses) lands right after hydration
+  const vsVersion = useVendorSessionVersion();
+  void vsVersion;
   // Session seeds render first; buyer-placed orders merge in after hydration
   // so SSR and the first client paint stay identical (zero console mismatch).
   const stats = vendorStats(hydrated);

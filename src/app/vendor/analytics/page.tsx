@@ -3,11 +3,14 @@ import { Percent, Wallet, Info } from "lucide-react";
 import { Badge } from "@/components/ui/primitives";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { vendorStats, listVendorOrdersWithBuyers } from "@/data/vendorSession";
 import { PLATFORM } from "@/config/platform";
 
 export default function VendorAnalyticsPage() {
   const hydrated = useHasHydrated();
+  const vsVersion = useVendorSessionVersion();
+  void vsVersion;
   // Money cards = real orders (session seeds + buyer-placed ones after hydration).
   const stats = vendorStats(hydrated);
   const rows = hydrated ? listVendorOrdersWithBuyers() : listVendorOrdersWithBuyers().filter((row) => !row.fromBuyer);

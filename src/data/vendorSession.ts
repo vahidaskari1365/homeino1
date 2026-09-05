@@ -4,8 +4,10 @@
 // The vendor area (dashboard / products / orders / store / analytics) reads
 // ONLY from here. Everything is derived from the real catalog (st1 = نور
 // مبلمان) so numbers always match product pages — nothing is hardcoded on a
-// page. Mutations live in process memory (demo): adding/removing products,
-// advancing order status, editing the store profile.
+// page. Mutations (adding/removing products, advancing order status, editing
+// the store profile) are persisted to localStorage, so the vendor's work
+// survives a refresh — restored right after hydration via
+// useVendorSessionVersion() (src/lib/useVendorSessionVersion.ts).
 //
 // When the real marketplace backend arrives, swap this module with the API —
 // the pages keep working unchanged.
@@ -98,6 +100,69 @@ export function vendorProductCount(): number {
 
 let skuSeq = 0;
 
+// ------------------------------------------------------------
+// PERSISTENCE — the vendor's demo session survives refresh.
+// Seeds render first (SSR + first paint identical); the persisted snapshot
+// is restored inside subscribeVendorSession, which React calls right after
+// the hydration commit — so server HTML and the first client paint agree,
+// and the persisted state lands one frame later without any mismatch.
+// ------------------------------------------------------------
+const PERSIST_KEY = "homeino-vendor-session-v1";
+
+interface PersistedVendorSession {
+  v: 1;
+  products: ReturnType<typeof productsByStore>;
+  orders: VendorOrder[];
+  profilePatch: typeof profilePatch;
+  skuSeq: number;
+}
+
+let sessionVersion = 0;
+const sessionListeners = new Set<() => void>();
+let restoreAttempted = false;
+
+function bumpSession() {
+  sessionVersion += 1;
+  if (typeof window !== "undefined") {
+    try {
+      const snapshot: PersistedVendorSession = { v: 1, products: vendorProducts, orders, profilePatch, skuSeq };
+      window.localStorage.setItem(PERSIST_KEY, JSON.stringify(snapshot));
+    } catch {
+      // quota / private mode — the session keeps working in memory only
+    }
+  }
+  sessionListeners.forEach((listener) => listener());
+}
+
+/** Subscribes UI to session changes and performs the one-time restore on the
+ *  first subscribe (React fires it right after the hydration commit).
+ *  Consumed through useVendorSessionVersion(). */
+export function subscribeVendorSession(onChange: () => void): () => void {
+  if (!restoreAttempted && typeof window !== "undefined") {
+    restoreAttempted = true;
+    try {
+      const raw = window.localStorage.getItem(PERSIST_KEY);
+      const saved = raw ? (JSON.parse(raw) as PersistedVendorSession | null) : null;
+      if (saved && saved.v === 1) {
+        if (Array.isArray(saved.products)) vendorProducts = saved.products;
+        if (Array.isArray(saved.orders)) orders = saved.orders;
+        if (saved.profilePatch && typeof saved.profilePatch === "object") profilePatch = saved.profilePatch;
+        if (typeof saved.skuSeq === "number") skuSeq = saved.skuSeq;
+        sessionVersion += 1;
+      }
+    } catch {
+      // corrupted snapshot — ignore it, the seed session stays live
+    }
+  }
+  sessionListeners.add(onChange);
+  return () => sessionListeners.delete(onChange);
+}
+
+/** Current session version — 0 during SSR and the hydration render. */
+export function vendorSessionVersion(): number {
+  return sessionVersion;
+}
+
 export function addVendorProduct(draft: VendorDraftProduct) {
   const store = getStoreById(VENDOR_ID);
   const id = `vp-${Date.now().toString(36)}`;
@@ -130,6 +195,7 @@ export function addVendorProduct(draft: VendorDraftProduct) {
     tags: [],
   };
   vendorProducts = [product, ...vendorProducts];
+  bumpSession();
   return product;
 }
 
@@ -145,10 +211,12 @@ export function updateVendorProduct(id: string, patch: { name?: string; price?: 
         }
       : product,
   );
+  bumpSession();
 }
 
 export function removeVendorProduct(id: string) {
   vendorProducts = vendorProducts.filter((product) => product.id !== id);
+  bumpSession();
 }
 
 // ------------------------------------------------------------
@@ -211,6 +279,7 @@ export function advanceVendorOrder(id: string): VendorOrderStatus | null {
     const next = nextOrderStatus(target.status);
     if (next !== target.status) {
       orders = orders.map((order) => (order.id === id ? { ...order, status: next } : order));
+      bumpSession();
     }
     return next;
   }
@@ -295,6 +364,7 @@ export function updateVendorStoreProfile(patch: {
   if (patch.shippingPolicy !== undefined) next.shippingPolicy = patch.shippingPolicy;
   if (patch.returnPolicy !== undefined) next.returnPolicy = patch.returnPolicy;
   profilePatch = next;
+  bumpSession();
   return vendorStoreProfile();
 }
 

@@ -2,14 +2,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MapPin, Truck, CreditCard, Check, ShieldCheck, Store } from "lucide-react";
+import { MapPin, Truck, CreditCard, Check, ShieldCheck, Store, BookMarked } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { Button } from "@/components/ui/primitives";
 import { useCart } from "@/stores/useShop";
 import { useUi } from "@/stores/useApp";
 import { resolveCartLines, groupCartParcels } from "@/lib/marketplace";
 import { placeLocalOrder } from "@/data/localOrders";
-import { toFa, formatPrice, cn } from "@/lib/utils";
+import { listSavedAddresses, addSavedAddress } from "@/data/localAddresses";
+import { useHasHydrated } from "@/lib/useHasHydrated";
+import { toFa, formatPrice, cn, fromFa } from "@/lib/utils";
 
 const STEPS = ["نشانی", "ارسال", "پرداخت"] as const;
 
@@ -17,6 +19,12 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, clear } = useCart();
   const { toast } = useUi();
+  const hydrated = useHasHydrated();
+  // Address book: empty during SSR/first paint (identical HTML), the picker
+  // and the save checkbox appear once localStorage is readable.
+  const saved = hydrated ? listSavedAddresses() : [];
+  const [pickedId, setPickedId] = useState("");
+  const [saveToBook, setSaveToBook] = useState(false);
   const [step, setStep] = useState(0);
   const [shipping, setShipping] = useState("post");
   const [pay, setPay] = useState("online");
@@ -70,17 +78,55 @@ export default function CheckoutPage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
-                setAddress({
-                  fullName: String(fd.get("fullName") ?? ""),
-                  phone: String(fd.get("phone") ?? ""),
-                  city: String(fd.get("city") ?? ""),
-                  line: String(fd.get("address") ?? ""),
-                  postalCode: String(fd.get("postalCode") ?? ""),
-                });
+                const digits = (key: string) => fromFa(String(fd.get(key) ?? "")).replace(/[^\d]/g, "");
+                const data = {
+                  fullName: String(fd.get("fullName") ?? "").trim(),
+                  phone: digits("phone"),
+                  city: String(fd.get("city") ?? "").trim(),
+                  line: String(fd.get("line") ?? "").trim(),
+                  postalCode: digits("postalCode"),
+                };
+                if (!/^09\d{9}$/.test(data.phone)) { toast("شماره موبایل باید ۱۱ رقم و با 09 شروع شود", "error"); return; }
+                if (!/^\d{10}$/.test(data.postalCode)) { toast("کد پستی باید ۱۰ رقم باشد", "error"); return; }
+                setAddress(data);
+                // «ذخیره در دفترچهٔ آدرس» — idempotent: the same address never
+                // lands twice in the book.
+                if (saveToBook) {
+                  const res = addSavedAddress(data);
+                  if (res.ok && res.created) toast("آدرس در دفترچهٔ آدرس هم ذخیره شد");
+                }
                 next();
               }}
             >
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><MapPin size={18} /> نشانی تحویل</h2>
+              {saved.length > 0 && (
+                <div className="rounded-xl border border-clay/40 bg-ivory-2 p-3">
+                  <label htmlFor="savedAddress" className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink"><BookMarked size={13} /> آدرس‌های ذخیره‌شده</label>
+                  <select
+                    id="savedAddress"
+                    value={pickedId}
+                    onChange={(e) => {
+                      setPickedId(e.target.value);
+                      const picked = saved.find((a) => a.id === e.target.value);
+                      const form = e.currentTarget.form;
+                      if (picked && form) {
+                        (form.elements.namedItem("fullName") as HTMLInputElement).value = picked.fullName;
+                        (form.elements.namedItem("phone") as HTMLInputElement).value = picked.phone;
+                        (form.elements.namedItem("city") as HTMLInputElement).value = picked.city;
+                        (form.elements.namedItem("line") as HTMLTextAreaElement).value = picked.line;
+                        (form.elements.namedItem("postalCode") as HTMLInputElement).value = picked.postalCode;
+                        setSaveToBook(false); // already in the book
+                      }
+                    }}
+                    className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink"
+                  >
+                    <option value="">— انتخاب کن (یا دستی تایپ کن) —</option>
+                    {saved.map((a) => (
+                      <option key={a.id} value={a.id}>{a.label} — {a.city} · {a.fullName}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div><label htmlFor="fullName" className="mb-1 block text-sm text-ink-muted">نام و نام خانوادگی</label><input id="fullName" name="fullName" required placeholder="نام کامل" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
                 <div><label htmlFor="phone" className="mb-1 block text-sm text-ink-muted">شماره موبایل</label><input id="phone" name="phone" required inputMode="tel" dir="ltr" placeholder="09xxxxxxxxx" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
@@ -88,6 +134,10 @@ export default function CheckoutPage() {
                 <div><label htmlFor="postalCode" className="mb-1 block text-sm text-ink-muted">کد پستی</label><input id="postalCode" name="postalCode" required inputMode="numeric" dir="ltr" placeholder="کد پستی" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
               </div>
               <div><label htmlFor="address" className="mb-1 block text-sm text-ink-muted">نشانی کامل</label><textarea id="address" name="address" required rows={2} placeholder="استان، شهر، خیابان، پلاک…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+              <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-ink-muted">
+                <input type="checkbox" checked={saveToBook} onChange={(e) => setSaveToBook(e.target.checked)} className="accent-terracotta" />
+                ذخیره در دفترچهٔ آدرس برای سفارش‌های بعدی
+              </label>
               {/* hidden submit — the footer button clicks it so native required validation runs */}
               <button type="submit" id="address-submit" className="hidden" aria-hidden tabIndex={-1} />
             </form>

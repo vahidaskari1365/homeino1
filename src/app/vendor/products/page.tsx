@@ -3,29 +3,32 @@ import { Plus, Search, Pencil, Trash2, PackagePlus, Save } from "lucide-react";
 import { Button, Badge, Rating, Modal } from "@/components/ui/primitives";
 import { useUi } from "@/stores/useApp";
 import { listVendorProducts, removeVendorProduct, addVendorProduct, updateVendorProduct, type VendorDraftProduct } from "@/data/vendorSession";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { categories } from "@/data/categories";
 import { toFa, formatPrice } from "@/lib/utils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const input = "w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink";
 
 export default function VendorProductsPage() {
   const { toast } = useUi();
   const [q, setQ] = useState("");
-  const [products, setProducts] = useState(listVendorProducts());
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  // Derived straight from the session store: every mutation bumps its version
+  // (and the post-hydration restore lands as a version change too), so the
+  // table is always a pure projection of vendorSession — no local copy.
+  const vsVersion = useVendorSessionVersion();
+  const products = useMemo(() => {
+    void vsVersion;
+    return listVendorProducts();
+  }, [vsVersion]);
 
   const editing = products.find((p) => p.id === editId) ?? null;
   const list = products.filter((p) => (q.trim() ? p.name.includes(q.trim()) || (p.sku ?? "").includes(q.trim()) : true));
 
-  function refresh() {
-    setProducts(listVendorProducts());
-  }
-
   function remove(id: string, name: string) {
     removeVendorProduct(id);
-    refresh();
     toast(`«${name}» حذف شد`, "info");
   }
 
@@ -33,7 +36,6 @@ export default function VendorProductsPage() {
     const product = products.find((p) => p.id === id);
     if (!product) return;
     updateVendorProduct(id, { stockCount: Math.max(0, product.stockCount + delta) });
-    refresh();
   }
 
   function saveNew(e: React.FormEvent<HTMLFormElement>) {
@@ -52,7 +54,6 @@ export default function VendorProductsPage() {
       description: String(fd.get("description") ?? ""),
     };
     const created = addVendorProduct(draft);
-    refresh();
     setShowAdd(false);
     toast(`محصول «${created.name}» ثبت شد`);
   }
@@ -68,7 +69,6 @@ export default function VendorProductsPage() {
       price: price || undefined,
       stockCount: stock,
     });
-    refresh();
     setEditId(null);
     toast("محصول بروزرسانی شد");
   }
@@ -114,7 +114,7 @@ export default function VendorProductsPage() {
       </div>
 
       {/* add product — writes into the demo session */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="افزودن محصول جدید" description="در این دمو، محصول به حافظهٔ پنل فروشنده اضافه می‌شود و در همین نشست دیده می‌شود.">
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="افزودن محصول جدید" description="محصول در پنل فروشنده ذخیره می‌شود، در صفحهٔ عمومی فروشگاه هم نمایش داده می‌شود و با رفرش هم نمی‌پرد.">
         <form onSubmit={saveNew} className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><label className="mb-1 block text-sm text-ink-muted">نام محصول</label><input name="name" required placeholder="مثلاً میز تلویزیون گردو" className={input} /></div>
           <div><label className="mb-1 block text-sm text-ink-muted">برند</label><input name="brand" placeholder="نور مبلمان" className={input} /></div>

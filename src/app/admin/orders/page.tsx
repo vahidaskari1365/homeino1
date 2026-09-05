@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/primitives";
 import { useUi } from "@/stores/useApp";
 import { listVendorOrders, advanceVendorOrder, vendorStoreProfile, type VendorOrder } from "@/data/vendorSession";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { toFa, formatPrice } from "@/lib/utils";
 
 const LABEL: Record<string, string> = { processing: "در حال پردازش", shipping: "در حال ارسال", delivered: "تحویل شده", cancelled: "لغو شده" };
@@ -10,13 +11,18 @@ const TONE: Record<string, "success" | "accent" | "gold" | "dark"> = { delivered
 
 export default function AdminOrdersPage() {
   const { toast } = useUi();
-  const [orders, setOrders] = useState(listVendorOrders());
+  // Derived from the session store: status changes (and the post-hydration
+  // restore) bump the version, so the table is always a pure projection.
+  const vsVersion = useVendorSessionVersion();
+  const orders = useMemo(() => {
+    void vsVersion;
+    return listVendorOrders();
+  }, [vsVersion]);
 
   function next(order: VendorOrder) {
     const nextStatus = advanceVendorOrder(order.id);
     if (!nextStatus || nextStatus === order.status) { toast("وضعیت تغییر نکرد", "info"); return; }
-    setOrders(listVendorOrders());
-    toast(`سفارش #${toFa(order.id)} → ${LABEL[nextStatus]} (در حافظهٔ همین دمو)`);
+    toast(`سفارش #${toFa(order.id)} → ${LABEL[nextStatus]} (در همین مرورگر ذخیره شد)`);
   }
 
   return (

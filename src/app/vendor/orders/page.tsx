@@ -6,6 +6,7 @@ import { Badge, Button } from "@/components/ui/primitives";
 import { toFa, formatPrice } from "@/lib/utils";
 import { useUi } from "@/stores/useApp";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { listVendorOrdersWithBuyers, advanceVendorOrder, type VendorOrderRow } from "@/data/vendorSession";
 import { getProductById } from "@/data/products";
 
@@ -17,6 +18,8 @@ const FILTER_FA: Record<string, string> = { all: "همه", processing: "در ح�
 export default function VendorOrdersPage() {
   const { toast } = useUi();
   const hydrated = useHasHydrated();
+  const vsVersion = useVendorSessionVersion();
+  void vsVersion;
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [version, setVersion] = useState(0);

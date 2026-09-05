@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
-import { Bell, Globe, Shield, Trash2, Download } from "lucide-react";
+import { useRef, useState } from "react";
+import { Bell, Globe, Shield, Trash2, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/primitives";
 import { useUi, useAuth } from "@/stores/useApp";
 import { useRouter } from "next/navigation";
 import { DEFAULT_NOTIFICATION_PREFS, NOTIFICATION_LABELS, type NotificationType } from "@/config/notifications";
 import { useHasHydrated } from "@/lib/useHasHydrated";
-import { cn } from "@/lib/utils";
+import { cn, toFa } from "@/lib/utils";
 
 // Toggles persist across reloads in their own localStorage record.
 const SETTINGS_KEY = "homeino-settings";
@@ -53,8 +53,38 @@ function downloadMyData() {
   URL.revokeObjectURL(url);
 }
 
+/** "بازیابی داده‌ها" — the other half of the export: pour a homeino backup
+ *  file back into this browser (manual cross-device transfer until the
+ *  backend lands). Only homeino-* keys are accepted, rows are validated
+ *  one-by-one so a corrupt row never blocks the rest. */
+function restoreMyData(file: File, onDone: (count: number) => void, onError: (message: string) => void) {
+  if (typeof window === "undefined") return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result ?? "{}")) as Record<string, unknown>;
+      let restored = 0;
+      for (const [key, value] of Object.entries(parsed)) {
+        if (!key.startsWith("homeino")) continue;
+        try {
+          window.localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+          restored += 1;
+        } catch {
+          // skip a bad row — the rest still restore
+        }
+      }
+      if (!restored) { onError("چیزی قابل بازیابی در این فایل پیدا نشد"); return; }
+      onDone(restored);
+    } catch {
+      onError("فایل پشتیبان معتبر نیست");
+    }
+  };
+  reader.readAsText(file);
+}
+
 export default function SettingsPage() {
   const { toast } = useUi(); const { logout } = useAuth(); const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const hydrated = useHasHydrated();
   const [version, setVersion] = useState(0);
   const [notifPrefs, setNotifPrefs] = useState(DEFAULT_NOTIFICATION_PREFS);
@@ -105,6 +135,29 @@ export default function SettingsPage() {
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" onClick={() => toast("تغییر رمز به‌زودی", "info")}>تغییر رمز عبور</Button>
           <Button variant="outline" onClick={() => { downloadMyData(); toast("فایل داده‌های تو دانلود شد"); }}><Download size={15} /> دریافت داده‌های من</Button>
+          <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload size={15} /> بازیابی داده‌ها</Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            aria-hidden
+            tabIndex={-1}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                restoreMyData(
+                  file,
+                  (count) => {
+                    toast(`${toFa(count)} بخش داده بازیابی شد — صفحه تازه‌سازی می‌شود`, "success");
+                    setTimeout(() => window.location.reload(), 900);
+                  },
+                  (message) => toast(message, "error"),
+                );
+              }
+              e.target.value = "";
+            }}
+          />
           <Button variant="ghost" className="text-danger" onClick={() => { logout(); toast("از حساب خارج شدی"); router.push("/"); }}><Trash2 size={15} /> خروج از حساب</Button>
         </div>
       </div>

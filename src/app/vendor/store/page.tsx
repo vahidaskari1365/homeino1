@@ -4,6 +4,7 @@ import { Button, LogoBlock } from "@/components/ui/primitives";
 import { useUi } from "@/stores/useApp";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { vendorStoreProfile, updateVendorStoreProfile } from "@/data/vendorSession";
+import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 
@@ -12,8 +13,19 @@ const LOGO_COLORS = ["#c2703f", "#6b7f5e", "#3f5f6b", "#8a5a44", "#4a4a4a"];
 
 export default function VendorStorePage() {
   const { toast } = useUi();
+  const vsVersion = useVendorSessionVersion();
   const [profile, setProfile] = useState(vendorStoreProfile());
   const [logoColor, setLogoColor] = useState(profile.logoColor);
+  const [syncedVersion, setSyncedVersion] = useState(vsVersion);
+  // Render-phase sync (the React-documented alternative to setState-in-effect):
+  // when the persisted session lands post-hydration — or after a save — the
+  // local form mirror re-reads it. Uncontrolled inputs keep typing untouched.
+  if (syncedVersion !== vsVersion) {
+    setSyncedVersion(vsVersion);
+    const next = vendorStoreProfile();
+    setProfile(next);
+    setLogoColor(next.logoColor);
+  }
 
   return (
     <div className="space-y-5">
