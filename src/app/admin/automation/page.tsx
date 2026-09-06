@@ -6,10 +6,11 @@
 // overview · agents · tools · workflows · tasks · approvals · logs · budgets
 // ============================================================
 import { useState } from "react";
-import { Bot, Coins, FileSearch, LayoutDashboard, ListChecks, ShieldCheck, Workflow, Wrench } from "lucide-react";
+import { Bot, Coins, FileSearch, LayoutDashboard, ListChecks, Newspaper, ShieldCheck, Workflow, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OverviewPanel } from "@/components/admin/automation/OverviewPanel";
 import { AgentsPanel } from "@/components/admin/automation/AgentsPanel";
+import { ContentAgentsPanel } from "@/components/admin/automation/ContentAgentsPanel";
 import { ToolsPanel } from "@/components/admin/automation/ToolsPanel";
 import { WorkflowsPanel } from "@/components/admin/automation/WorkflowsPanel";
 import { TasksPanel } from "@/components/admin/automation/TasksPanel";
@@ -17,10 +18,11 @@ import { ApprovalsPanel } from "@/components/admin/automation/ApprovalsPanel";
 import { LogsPanel } from "@/components/admin/automation/LogsPanel";
 import { BudgetsPanel } from "@/components/admin/automation/BudgetsPanel";
 
-type TabId = "overview" | "agents" | "tools" | "workflows" | "tasks" | "approvals" | "logs" | "budgets";
+type TabId = "overview" | "content" | "agents" | "tools" | "workflows" | "tasks" | "approvals" | "logs" | "budgets";
 
 const TABS: { id: TabId; label: string; icon: typeof Bot }[] = [
   { id: "overview", label: "نمای کلی", icon: LayoutDashboard },
+  { id: "content", label: "ایجنت‌های محتوا", icon: Newspaper },
   { id: "agents", label: "ایجنت‌ها", icon: Bot },
   { id: "tools", label: "ابزارها", icon: Wrench },
   { id: "workflows", label: "ورک‌فلوها", icon: Workflow },
@@ -59,6 +61,7 @@ export default function AdminAutomationPage() {
       </div>
 
       {tab === "overview" && <OverviewPanel />}
+      {tab === "content" && <ContentAgentsPanel />}
       {tab === "agents" && <AgentsPanel />}
       {tab === "tools" && <ToolsPanel />}
       {tab === "workflows" && <WorkflowsPanel />}

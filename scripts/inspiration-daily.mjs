@@ -12,6 +12,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GEN_FILE = join(ROOT, "src/data/inspirations.generated.json");
@@ -128,6 +129,7 @@ function searchImage(query) {
 }
 
 // ---------- اجرا ----------
+const RUN_STARTED = Date.now();
 const gen = existsSync(GEN_FILE) ? JSON.parse(readFileSync(GEN_FILE, "utf8")) : [];
 const seenImgs = new Set(gen.map((p) => p.image));
 const today = new Date().toISOString().slice(0, 10);
@@ -194,3 +196,22 @@ else {
   writeFileSync(GEN_FILE, JSON.stringify(capped, null, 2) + "\n");
   console.log(`\n${added.length} پین جدید → ${GEN_FILE} (مجموع: ${capped.length})`);
 }
+
+// ثبت کارکرد ایجنت برای پنل ادمین (/admin/automation)
+await logContentAgentRun(ROOT, {
+  agentKey: "inspiration-curator",
+  ok: added.length > 0,
+  dry: DRY,
+  durationMs: Date.now() - RUN_STARTED,
+  summary: DRY
+    ? `اجرای آزمایشی: ${added.length} پین ساخته شد (فایل نوشته نشد)`
+    : added.length > 0
+      ? `${added.length} پین الهام جدید (${added.some((p) => p._via === "llm") ? "بازنویسی LLM" : "قالب پایدار"})`
+      : "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+  detail: {
+    added: added.length,
+    total: capped.length,
+    via: added.filter((p) => p._via === "llm").length ? "llm" : "template",
+    combos: combos.map((c) => `${c.style.name} × ${c.space.slug}`),
+  },
+});

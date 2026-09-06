@@ -17,6 +17,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, "..");
@@ -253,6 +254,7 @@ function slugify(title, date) {
 
 async function main() {
   console.log(`[magazine-daily] ${new Date().toISOString()} — starting`);
+  const RUN_STARTED = Date.now();
   const db = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   const existing = db.briefs ?? [];
   const existingUrls = new Set(existing.map((b) => b.source?.url).filter(Boolean));
@@ -346,6 +348,13 @@ async function main() {
 
   if (created.length === 0) {
     console.log("[magazine-daily] no briefs produced — file unchanged");
+    await logContentAgentRun(REPO, {
+      agentKey: "magazine-editor",
+      ok: false,
+      durationMs: Date.now() - RUN_STARTED,
+      summary: "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود یا همه تکراری بودند",
+      detail: { added: 0, total: existing.length },
+    });
     return;
   }
 
@@ -356,6 +365,18 @@ async function main() {
 
   fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs: merged }, null, 2)}\n`, "utf8");
   console.log(`[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
+  await logContentAgentRun(REPO, {
+    agentKey: "magazine-editor",
+    ok: true,
+    durationMs: Date.now() - RUN_STARTED,
+    summary: `${created.length} بریف ترند جدید (${created.map((b) => b.category).join("، ")})`,
+    detail: {
+      added: created.length,
+      total: merged.length,
+      titles: created.map((b) => b.title).slice(0, 4),
+      sources: [...new Set(created.map((b) => b.source?.name).filter(Boolean))].slice(0, 4),
+    },
+  });
 }
 
 main().catch((e) => {

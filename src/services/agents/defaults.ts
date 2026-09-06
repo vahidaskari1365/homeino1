@@ -195,6 +195,43 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
     permissions: ["BROWSER_AUTOMATION", "EXTERNAL_ACTION", "READ_PRODUCTS"] as AgentPermissionKey[],
     tools: ["browserTask", "httpRequest"],
   },
+  // ------------------------------------------------------------
+  // Content agents — run on GitHub Actions (external cron), their
+  // execution history lands in src/data/agent-runs.json and is
+  // shown in the admin «ایجنت‌های محتوا» panel.
+  // ------------------------------------------------------------
+  {
+    isBuiltin: true,
+    key: "inspiration-curator",
+    name: "ایجنت الهام (Pinterest)",
+    description:
+      "روزی ۳ بار: چرخش ماتریس ۱۲ سبک × ۵ فضا، یافتن چیدمان واقعی از Pinterest و منابع دیزاین، بازنویسی فارسی اورجینال و افزودن پین به بخش الهام.",
+    type: "generator",
+    status: "active",
+    runtime: "local",
+    maxRetries: 1,
+    timeoutMs: 300000,
+    schedule: { kind: "cron", cron: "30 3,8,13 * * *", timezone: "UTC" },
+    config: { runsPerDay: 3, pinsPerRun: 6, matrix: "12 styles × 5 spaces", workflow: "inspiration-daily.yml", script: "scripts/inspiration-daily.mjs" },
+    permissions: ["CALL_LLM", "BROWSER_AUTOMATION", "EXTERNAL_ACTION"] as AgentPermissionKey[],
+    tools: ["llmComplete", "browserTask", "httpRequest"],
+  },
+  {
+    isBuiltin: true,
+    key: "magazine-editor",
+    name: "ایجنت مجله ترندها",
+    description:
+      "روزانه: جمع‌آوری اخبار دیزاین از Dezeen/ArchDaily/Design Milk/Yanko Design، بازنویسی اورجینال فارسی با منبع شفاف و انتشار در مجله ترندها.",
+    type: "generator",
+    status: "active",
+    runtime: "local",
+    maxRetries: 1,
+    timeoutMs: 600000,
+    schedule: { kind: "cron", cron: "0 4 * * *", timezone: "UTC" },
+    config: { sources: ["dezeen", "archdaily", "designmilk", "yankodesign"], workflow: "magazine-daily.yml", script: "scripts/magazine-daily.mjs" },
+    permissions: ["CALL_LLM", "BROWSER_AUTOMATION", "EXTERNAL_ACTION"] as AgentPermissionKey[],
+    tools: ["llmComplete", "browserTask", "httpRequest"],
+  },
 ];
 
 // ------------------------------------------------------------
