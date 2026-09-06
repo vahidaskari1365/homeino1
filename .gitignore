@@ -42,3 +42,4 @@ tool-results/
 .verify-bundle.mjs
 .smoke-bundle.mjs
 *.tsbuildinfo
+scripts/.llm-tmp.json
