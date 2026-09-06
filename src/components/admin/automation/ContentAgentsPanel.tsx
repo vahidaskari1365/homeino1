@@ -30,7 +30,7 @@ interface ContentAgentsPayload {
     description: string;
     status: string;
     schedule: { kind: string; cron?: string } | null;
-    config: Record<string, unknown>;
+    config?: Record<string, unknown>;
   }[];
   runs: ContentRun[];
   perAgent: Record<string, { runs: number; ok: number; failed: number; itemsAdded: number; lastRunAt: string | null; lastSummary: string | null }>;

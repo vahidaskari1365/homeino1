@@ -58,7 +58,9 @@ export function AgentRunStatus() {
   return (
     <div className="mb-8 rounded-2xl card-surface px-4 py-3 text-sm leading-6">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <span className="font-black">کارکرد خودکار ایجنت‌ها</span>
+        <a href="/agents" className="font-black underline decoration-transparent underline-offset-4 transition hover:decoration-ink" title="گزارش کامل و تاریخچه اجراها">
+          کارکرد خودکار ایجنت‌ها ↗
+        </a>
         {AGENTS.map(({ key, label }) => {
           const run = lastRunFor(key);
           const total = totalRunsFor(key);

@@ -46,7 +46,11 @@ describe("trends data", () => {
   });
 
   it("categories are from the editorial list", () => {
-    const allowed = ["رنگ", "مبلمان", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند"];
+    // همان لیست CATEGORIES_FA در scripts/magazine-daily.mjs — ۸ دسته پایه + ۴ دسته توسعه (ویلا/حیاط/کار/وسایل)
+    const allowed = [
+      "رنگ", "مبلمان", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند",
+      "ویلا و باغ", "حیاط و بیرونی", "محیط کار", "وسایل ترند",
+    ];
     for (const c of trendCategories) expect(allowed).toContain(c);
   });
 });

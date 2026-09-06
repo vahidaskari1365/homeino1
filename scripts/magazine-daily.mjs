@@ -10,8 +10,12 @@
  *      (هرگز ترجمه/کپی تحت‌اللفظی نیست — فقط واقعیت‌ها + روایت مستقل)
  *   5. خروجی را به src/content/trends/trends.json اضافه می‌کند (با نگه‌داری ۱۲۰ روز)
  *
- * LLM: یا env سرویس‌سازگار-OpenAI (LLM_BASE_URL + LLM_API_KEY [+ LLM_MODEL])
- * یا در سندباکس، z-ai-web-dev-sdk. بدون هیچ‌کدام: خروجی بدون تغییر، exit 0.
+ * LLM: زنجیره چندلایه (رایگان و بدون کلید تا کلید اختصاصی):
+ *   1) env سازگار-OpenAI (LLM_BASE_URL + LLM_API_KEY [+ LLM_MODEL]) — مثلاً کلید GLM کاربر
+ *   2) OMNIROUTE_BASE_URL — گیت‌وی خودمیزبان OmniRoute (مدل auto، فال‌بک چند ارائه‌دهنده)
+ *   3) زنجیره رایگانِ بدون‌کلید OpenCode Zen (glm/kimi/qwen/deepseek-tier مدل‌های -free)
+ * در سندباکس z-ai-web-dev-sdk هم امتحان می‌شود. اگر همه شکست خوردند: خروجی بدون تغییر، exit 0
+ * و لاگ اجرا صادقانه علت را می‌نویسد.
  * کاور: از استخر کاورهای موجود بر اساس دسته انتخاب می‌شود (بدون وابستگی خارجی).
  */
 import fs from "node:fs";
@@ -75,6 +79,93 @@ const COVER_BY_CATEGORY = {
 const DEFAULT_COVER = "/images/trends/trends-guide-2026.png";
 
 const UA = { "User-Agent": "Mozilla/5.0 (compatible; HomeinoMagazineBot/1.0; +https://homeino.ir)" };
+
+// ============================================================
+// زنجیره رایگان بدون‌کلید (تست‌شده زنده 2026-09-06)
+// منبع کشف: awesome-freellm-apis + کاتالوگ no-auth اومی‌روت (OpenCode Free)
+// هر کاندیدا: endpoint سازگار-OpenAI + مدل + بودجه توکن (nemotron به فضای فکرکردن نیاز دارد)
+// ============================================================
+const FREE_CHAIN = [
+  { id: "opencode:ling-3.0-flash-fin-free", base: "https://opencode.ai/zen/v1", model: "ling-3.0-flash-fin-free", maxTokens: 3000 },
+  { id: "opencode:nemotron-3.5-lightning-free", base: "https://opencode.ai/zen/v1", model: "nemotron-3.5-lightning-free", maxTokens: 6000 },
+  { id: "opencode:mimo-v2.5-free", base: "https://opencode.ai/zen/v1", model: "mimo-v2.5-free", maxTokens: 3000 },
+  { id: "opencode:big-pickle", base: "https://opencode.ai/zen/v1", model: "big-pickle", maxTokens: 3000 },
+  { id: "opencode:deepseek-v4-flash-free", base: "https://opencode.ai/zen/v1", model: "deepseek-v4-flash-free", maxTokens: 3000 },
+];
+
+async function chatCompletion(base, model, apiKey, messages, maxTokens, timeoutMs = 100_000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    const res = await fetch(`${base.replace(/\/+$/, "")}/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: maxTokens }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      const retriable = res.status === 429 || res.status >= 500;
+      const body = await res.text().catch(() => "");
+      return { error: `HTTP ${res.status}: ${body.slice(0, 120)}`, retriable };
+    }
+    const json = await res.json();
+    const content = json?.choices?.[0]?.message?.content ?? "";
+    const finish = json?.choices?.[0]?.finish_reason;
+    return { content, finish };
+  } catch (e) {
+    return { error: e?.name === "AbortError" ? "timeout" : e?.message ?? "fetch failed", retriable: true };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function callLlm(messages) {
+  const { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OMNIROUTE_BASE_URL, OMNIROUTE_API_KEY } = process.env;
+  const attempts = [];
+  // 1) کلید اختصاصی کاربر (هر سرویس سازگار-OpenAI؛ اولویت با آن)
+  if (LLM_API_KEY && LLM_BASE_URL) {
+    attempts.push({ id: `env:${LLM_MODEL || "default"}`, base: LLM_BASE_URL, model: LLM_MODEL || "gpt-4o-mini", key: LLM_API_KEY, maxTokens: 1600 });
+  }
+  // 2) گیت‌وی خودمیزبان OmniRoute (فال‌بک داخلی چند ارائه‌دهنده، مدل auto)
+  if (OMNIROUTE_BASE_URL) {
+    attempts.push({ id: "omniroute:auto", base: OMNIROUTE_BASE_URL, model: "auto", key: OMNIROUTE_API_KEY || "", maxTokens: 3000 });
+  }
+  // 3) زنجیره رایگان بدون‌کلید
+  attempts.push(...FREE_CHAIN.map((c) => ({ id: c.id, base: c.base, model: c.model, key: "", maxTokens: c.maxTokens })));
+
+  for (const a of attempts) {
+    for (let tryNo = 0; tryNo < 2; tryNo++) {
+      const r = await chatCompletion(a.base, a.model, a.key, messages, a.maxTokens);
+      if (r.content && r.content.trim()) {
+        if (tryNo > 0 || a !== attempts[0]) console.log(`  llm via ${a.id}${tryNo ? " (retry)" : ""}`);
+        callLlm.lastVia = a.id;
+        return r.content;
+      }
+      if (r.error && !r.retriable) {
+        console.log(`  llm ${a.id}: ${r.error}`);
+        break; // مدل بعدی
+      }
+      if (tryNo === 0) await new Promise((s) => setTimeout(s, 8_000)); // فاصله برای 429/5xx
+      else console.log(`  llm ${a.id}: ${r.error ?? "empty"}`);
+    }
+  }
+  // سندباکس: z-ai-web-dev-sdk (در node_modules بالادست نصب است)
+  try {
+    const mod = await import("z-ai-web-dev-sdk");
+    const ZAI = mod.default ?? mod;
+    const zai = await ZAI.create();
+    const res = await zai.chat.completions.create({ messages, temperature: 0.7 });
+    const out = res?.choices?.[0]?.message?.content ?? "";
+    if (out) {
+      callLlm.lastVia = "zai-sdk";
+      return out;
+    }
+  } catch { /* LLM در دسترس نیست */ }
+  callLlm.lastVia = null;
+  return null;
+}
 
 async function fetchText(url, timeoutMs = 12000) {
   const ctrl = new AbortController();
@@ -157,35 +248,6 @@ function isoDay(d) {
   return d.toISOString().slice(0, 10);
 }
 
-async function callLlm(messages) {
-  const { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL } = process.env;
-  if (LLM_API_KEY && LLM_BASE_URL) {
-    const res = await fetch(`${LLM_BASE_URL.replace(/\/+$/, "")}/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LLM_API_KEY}` },
-      body: JSON.stringify({
-        model: LLM_MODEL || "gpt-4o-mini",
-        messages,
-        temperature: 0.7,
-        max_tokens: 1600,
-      }),
-    });
-    if (!res.ok) throw new Error(`LLM HTTP ${res.status}`);
-    const json = await res.json();
-    return json?.choices?.[0]?.message?.content ?? "";
-  }
-  // سندباکس: z-ai-web-dev-sdk (در node_modules بالادست نصب است)
-  try {
-    const mod = await import("z-ai-web-dev-sdk");
-    const ZAI = mod.default ?? mod;
-    const zai = await ZAI.create();
-    const res = await zai.chat.completions.create({ messages, temperature: 0.7 });
-    return res?.choices?.[0]?.message?.content ?? "";
-  } catch {
-    return null; // LLM در دسترس نیست
-  }
-}
-
 function extractJson(text) {
   if (!text) return null;
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -227,7 +289,8 @@ const BRIEF_PROMPT = (item, sourceText, dateFa) => [
       "وظیفه‌ات نوشتن بریف‌های ترندِ کاملاً اورجینال به فارسی روان است. قواعد غیرقابل‌عبور:\n" +
       "1) هرگز متن منبع را ترجمهٔ تحت‌اللفظی یا کپی نکن؛ فقط واقعیت‌ها و ایده‌ها را بردار و با روایت و واژگان خودت بنویس.\n" +
       "2) لحن مجله‌ای، گرم و دقیق؛ برای مخاطب فارسی‌زبان که می‌خواهد خانه‌اش را به‌روز کند.\n" +
-      "3) خروجی فقط JSON معتبر باشد، بدون هیچ متن اضافه.",
+      "3) مقادیر JSON را کامل و واقعی بنویس؛ هرگز «...» یا متن الگو به‌جای مقدار ننویس.\n" +
+      "4) خروجی نهایی فقط داخل یک بلوک ```json ``` باشد و هیچ متن خارج از آن ننویس.",
   },
   {
     role: "user",
@@ -347,17 +410,17 @@ async function main() {
   }
 
   if (created.length === 0) {
-    const llmConfigured = Boolean(process.env.LLM_API_KEY && process.env.LLM_BASE_URL);
-    const summary = llmConfigured
-      ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود یا همه تکراری بودند"
-      : "بدون کلید LLM اجرا شد؛ بازنویسی فارسی بریف‌ها بدون LLM ممکن نیست — برای فعال‌سازی، Secretهای LLM_API_KEY و LLM_BASE_URL را در مخزن ست کنید";
-    console.log(`[magazine-daily] no briefs produced — file unchanged (${llmConfigured ? "no candidates" : "no LLM key"})`);
+    const via = callLlm.lastVia ?? null;
+    const summary = via
+      ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود، همه تکراری بودند یا خروجی معتبر نبود"
+      : "هیچ مسیر LLM در دسترس نبود (زنجیره رایگان شکست خورد) — در اجرای بعدی دوباره تلاش می‌شود";
+    console.log(`[magazine-daily] no briefs produced — file unchanged (${via ? "no valid briefs" : "llm unreachable"})`);
     await logContentAgentRun(REPO, {
       agentKey: "magazine-editor",
       ok: false,
       durationMs: Date.now() - RUN_STARTED,
       summary,
-      detail: { added: 0, total: existing.length, reason: llmConfigured ? "no_candidates" : "no_llm_key" },
+      detail: { added: 0, total: existing.length, reason: via ? "no_valid_briefs" : "llm_unreachable", via },
     });
     return;
   }
@@ -373,10 +436,11 @@ async function main() {
     agentKey: "magazine-editor",
     ok: true,
     durationMs: Date.now() - RUN_STARTED,
-    summary: `${created.length} بریف ترند جدید (${created.map((b) => b.category).join("، ")})`,
+    summary: `${created.length} بریف ترند جدید (${created.map((b) => b.category).join("، ")})${callLlm.lastVia ? ` — از طریق ${callLlm.lastVia}` : ""}`,
     detail: {
       added: created.length,
       total: merged.length,
+      via: callLlm.lastVia ?? "unknown",
       titles: created.map((b) => b.title).slice(0, 4),
       sources: [...new Set(created.map((b) => b.source?.name).filter(Boolean))].slice(0, 4),
     },

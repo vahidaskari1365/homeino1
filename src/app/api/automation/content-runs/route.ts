@@ -1,17 +1,21 @@
 // ============================================================
-// /api/automation/content-runs — external content-agent activity (admin)
+// /api/automation/content-runs — external content-agent activity
 //
 // The content agents (inspiration-curator, magazine-editor) run on
 // GitHub Actions. Their execution records land in
-// src/data/agent-runs.json (committed by the workflow itself).
-// This route merges that history with the live registry definitions
-// (schedule + config) so the admin panel shows REAL agent work.
+// src/data/agent-runs/<agentKey>.json (committed by the workflow
+// itself). This route merges that history with the live registry
+// definitions (schedule) so agents' REAL work is visible.
+//
+// PUBLIC & read-only by design: the same run summaries ship inside
+// the public bundle for the trust strip on /trends, /magazine and
+// /inspiration. No secrets live here — keys stay in env. Owners
+// shouldn't need SQL or a role setup just to SEE their agents.
 // ============================================================
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { guard } from "@/lib/api/http";
 import { ok } from "@/lib/api/response";
-import { requireAdminUser } from "@/lib/api/auth";
 import { listAgents } from "@/services/agents/registry";
 
 export const runtime = "nodejs";
@@ -62,7 +66,6 @@ async function readRunsFile(): Promise<{ updatedAt: string | null; runs: FileRun
 }
 
 export const GET = guard(async (req) => {
-  await requireAdminUser(req);
   const days = Math.min(90, Math.max(1, Number(new URL(req.url).searchParams.get("days") ?? 14) || 14));
   const since = Date.now() - days * 86_400_000;
 
@@ -75,7 +78,6 @@ export const GET = guard(async (req) => {
       description: a.description,
       status: a.status,
       schedule: a.schedule ?? null,
-      config: a.config ?? {},
     }));
 
   const runs = file.runs.filter((r) => {
