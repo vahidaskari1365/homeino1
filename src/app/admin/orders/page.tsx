@@ -55,7 +55,7 @@ export default function AdminOrdersPage() {
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-ink-muted">همین جدول، فهرست سفارش‌های پنل فروشنده را هم تغذیه می‌کند (منبع دادهٔ واحد) — هر تغییر وضعیت در هر دو پنل دیده می‌شود.</p>
+      <p className="text-2xs text-ink-muted">همین جدول، فهرست سفارش‌های پنل فروشنده را هم تغذیه می‌کند (منبع دادهٔ واحد) — هر تغییر وضعیت در هر دو پنل دیده می‌شود.</p>
     </div>
   );
 }

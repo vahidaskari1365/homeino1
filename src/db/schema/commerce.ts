@@ -167,7 +167,8 @@ export const orderStatusHistory = pgTable(
       .references(() => orders.id, { onDelete: "cascade" }),
     fromStatus: orderStatusEnum("from_status"),
     toStatus: orderStatusEnum("to_status").notNull(),
-    actorId: uuid("actor_id"),
+    // text (not uuid): system actors like "payment:dev" / "user:<id>" are legal
+    actorId: text("actor_id"),
     note: text("note"),
     createdAt: createdAtColumn,
   },

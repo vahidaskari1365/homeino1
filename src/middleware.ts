@@ -12,14 +12,19 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 const PROTECTED = [/^\/admin(\/|$)/, /^\/vendor(\/|$)/, /^\/account(\/|$)/];
 
-function hasSessionCookie(req: NextRequest): boolean {
+export function hasSessionCookie(req: NextRequest): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) return true; // demo mode — no gate
   const match = url.match(/https:\/\/([a-z0-9]+)\./i);
   const ref = match?.[1];
   if (!ref) return true;
-  // Supabase JS v2 stores the session under `sb-<ref>-auth-token` (+ .0/.1 chunks)
-  return req.cookies.getAll().some((c) => c.name.startsWith(`sb-${ref}-auth-token`));
+  const names = req.cookies.getAll().map((c) => c.name);
+  // supabase-js v2 browser storage → our own auth API copies the session into
+  // `sb-<ref>-auth-token` (+ .0/.1 chunked) AND plain `sb-access-token`.
+  // Matching BOTH keeps authenticated users out of the login redirect loop.
+  return (
+    names.some((n) => n.startsWith(`sb-${ref}-auth-token`)) || names.includes("sb-access-token")
+  );
 }
 
 export function middleware(req: NextRequest) {

@@ -41,7 +41,7 @@ export function AnalysisBanner({ studio, embedded = false }: { studio: DesignStu
                 <div>
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-xs font-bold text-ink">{sg.title}</span>
-                    <span className="shrink-0 rounded bg-gold/15 px-1.5 py-0.5 text-[11px] font-bold text-gold">{sg.category}</span>
+                    <span className="shrink-0 rounded bg-gold/15 px-1.5 py-0.5 text-2xs font-bold text-gold">{sg.category}</span>
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-muted">{sg.desc}</p>
                 </div>

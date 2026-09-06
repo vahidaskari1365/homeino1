@@ -59,7 +59,7 @@ export default function VendorOrdersPage() {
                   <Badge tone={TONE[order.status]}>{LABEL[order.status]}</Badge>
                 </button>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-ink-muted">{fromBuyer && <span className="ml-1 rounded bg-terracotta/10 px-1.5 py-0.5 text-[10px] font-bold text-terracotta-deep">سفارش خریدار</span>}{order.customer} · {order.date} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</span>
+                  <span className="text-xs text-ink-muted">{fromBuyer && <span className="ml-1 rounded bg-terracotta/10 px-1.5 py-0.5 text-2xs font-bold text-terracotta-deep">سفارش خریدار</span>}{order.customer} · {order.date} · {toFa(order.lines.reduce((n, l) => n + l.qty, 0))} کالا</span>
                   <span className="font-bold text-ink">{toFa(formatPrice(total))} ت</span>
                 </div>
               </div>
@@ -94,7 +94,7 @@ export default function VendorOrdersPage() {
           );
         })}
       </div>
-      <p className="flex items-start gap-2 text-[11px] leading-6 text-ink-muted">
+      <p className="flex items-start gap-2 text-2xs leading-6 text-ink-muted">
         <Inbox size={13} className="mt-0.5 shrink-0" />
         <span>
           سفارش‌هایی که خریداران در همین مرورگر ثبت می‌کنند بلافاصله همین‌جا می‌آیند؛ با دکمهٔ «ارسال شد / تحویل شد»، وضعیت دقیقاً در «سفارش‌های من» همان خریدار به‌روز می‌شود. — <Link href="/account/orders" className="underline">سفارش‌های من (خریدار) ←</Link>

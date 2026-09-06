@@ -68,7 +68,7 @@ export function ApprovalsPanel() {
           {FILTERS.map((item) => (
             <Button key={item} size="sm" variant={status === item ? "primary" : "outline"} onClick={() => setStatus(item)}>{item}</Button>
           ))}
-          {data.expiredNow > 0 && <span className="text-[11px] text-ink-muted">{toFa(data.expiredNow)} درخواست منقضی شد</span>}
+          {data.expiredNow > 0 && <span className="text-2xs text-ink-muted">{toFa(data.expiredNow)} درخواست منقضی شد</span>}
         </div>
 
         <Field label="یادداشت تصمیم (اختیاری — برای همه تصمیم‌های این نشست)">
@@ -82,14 +82,14 @@ export function ApprovalsPanel() {
                 <Row key={approval.id}>
                   <Cell>
                     <div className="font-medium text-ink" dir="ltr">{approval.action}</div>
-                    {approval.reason && <div className="mt-1 text-[11px] text-ink-muted">{approval.reason}</div>}
-                    <div className="mt-1 text-[11px] text-ink-muted">
+                    {approval.reason && <div className="mt-1 text-2xs text-ink-muted">{approval.reason}</div>}
+                    <div className="mt-1 text-2xs text-ink-muted">
                       {approval.createdAt ? toFa(new Date(approval.createdAt).toLocaleString("fa-IR")) : "—"}
                       {approval.expiresAt ? ` · انقضا: ${toFa(new Date(approval.expiresAt).toLocaleString("fa-IR"))}` : ""}
                     </div>
                   </Cell>
                   <Cell><RiskBadge risk={approval.riskLevel} /></Cell>
-                  <Cell className="text-[11px]"><span dir="ltr">{approval.agentKey ?? "—"}</span></Cell>
+                  <Cell className="text-2xs"><span dir="ltr">{approval.agentKey ?? "—"}</span></Cell>
                   <Cell><JsonBox value={approval.payload ?? {}} max={8} /></Cell>
                   <Cell><StatusBadge status={approval.status} /></Cell>
                   <Cell>
@@ -99,7 +99,7 @@ export function ApprovalsPanel() {
                         <Button size="sm" variant="danger" disabled={busyId === approval.id} onClick={() => decide(approval, "rejected")}><XCircle size={14} /> رد</Button>
                       </div>
                     ) : (
-                      <span className="text-[11px] text-ink-muted">{approval.decidedBy ? `توسط ${approval.decidedBy.slice(0, 8)}…` : "تصمیم ثبت شده"}</span>
+                      <span className="text-2xs text-ink-muted">{approval.decidedBy ? `توسط ${approval.decidedBy.slice(0, 8)}…` : "تصمیم ثبت شده"}</span>
                     )}
                   </Cell>
                 </Row>

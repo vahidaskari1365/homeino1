@@ -30,7 +30,7 @@ export const GET = guard(async (req) => {
 
 export const POST = guard(async (req) => {
   const { user } = await requireAdminUser(req);
-  rateLimit(`tasks:create:${user.id}`, { windowMs: 60_000, max: 30 });
+  await rateLimit(`tasks:create:${user.id}`, { windowMs: 60_000, max: 30 });
   const body = (await readBody(req, 100_000)) as Record<string, unknown>;
 
   const title = String(body.title ?? "").trim();

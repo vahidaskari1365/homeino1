@@ -118,7 +118,7 @@ export default function SecondHandAdForm() {
           <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickImage(e.target.files?.[0])} />
         </label>
       </div>
-      <div className="sm:col-span-2 flex items-center gap-2 rounded-lg bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">
+      <div className="sm:col-span-2 flex items-center gap-2 rounded-lg bg-ivory-2 p-3 text-2xs leading-6 text-ink-muted">
         <Tag size={14} className="shrink-0" />
         <span>آگهی تو بلافاصله در صفحهٔ «بازار دسته دوم» با برچسب «آگهی تو» منتشر می‌شود و در همین حساب هم ذخیره می‌ماند.</span>
       </div>

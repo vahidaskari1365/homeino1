@@ -93,7 +93,7 @@ export default async function StyleDetailPage({ params }: { params: Promise<{ sl
                 {style.colorPalette.map((color) => (
                   <div key={color.hex} className="overflow-hidden rounded-xl border border-clay/40 bg-cream">
                     <span className="block h-20 w-full sm:h-28" style={{ backgroundColor: color.hex }} />
-                    <span className="block p-2 text-center"><strong className="block text-[11px] text-ink">{color.name}</strong><span dir="ltr" className="mt-0.5 block font-mono text-[9px] text-ink-muted">{color.hex}</span></span>
+                    <span className="block p-2 text-center"><strong className="block text-2xs text-ink">{color.name}</strong><span dir="ltr" className="mt-0.5 block font-mono text-2xs text-ink-muted">{color.hex}</span></span>
                   </div>
                 ))}
               </div>

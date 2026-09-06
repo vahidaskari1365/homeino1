@@ -56,14 +56,19 @@ const nextConfig: NextConfig = {
         value: "max-age=63072000; includeSubDomains; preload",
       },
       {
-        // Report-Only so a conservative policy cannot break the demo.
-        key: "Content-Security-Policy-Report-Only",
+        // ENFORCING policy. script-src keeps 'unsafe-inline'/'unsafe-eval'
+        // because the Next.js App Router bootstrap requires them without a
+        // nonce infrastructure; every other directive is genuinely
+        // restrictive: frame-ancestors kills clickjacking, object-src
+        // 'none' blocks plugin content, base-uri/form-action lock navigation.
+        key: "Content-Security-Policy",
         value: [
           "default-src 'self'",
           "base-uri 'self'",
           "form-action 'self'",
           "frame-ancestors 'self'",
           "object-src 'none'",
+          "upgrade-insecure-requests",
           "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: blob: https:",

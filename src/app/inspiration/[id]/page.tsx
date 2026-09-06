@@ -69,7 +69,7 @@ export default function InspirationDetailPage({ params }: { params: Promise<{ id
                 <div className="text-xs text-ink-muted">{p.brand}</div>
                 <div className="line-clamp-1 font-medium text-ink">{p.name}</div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="font-bold text-ink">{toFa(p.price.toLocaleString("fa-IR"))} <span className="text-[10px] text-ink-muted">تومان</span></span>
+                  <span className="font-bold text-ink">{toFa(p.price.toLocaleString("fa-IR"))} <span className="text-2xs text-ink-muted">تومان</span></span>
                   <button onClick={() => { addToCart(p.id); toast("به سبد اضافه شد"); }} aria-label="افزودن به سبد" className="btn-accent grid h-9 w-9 place-items-center rounded-lg"><ShoppingBag size={15} /></button>
                 </div>
               </div>

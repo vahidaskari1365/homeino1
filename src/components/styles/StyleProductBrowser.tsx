@@ -79,7 +79,7 @@ export function StyleProductBrowser({ products, styleName }: StyleProductBrowser
                 option.slug === activeCategory ? "border-ink bg-ink text-cream" : "border-clay/60 bg-cream text-ink-muted hover:border-ink hover:text-ink",
               )}
             >
-              {option.name} <span className={cn("text-[10px]", option.slug === activeCategory ? "text-cream/70" : "text-ink-muted/70")}>{toFa(option.count)}</span>
+              {option.name} <span className={cn("text-2xs", option.slug === activeCategory ? "text-cream/70" : "text-ink-muted/70")}>{toFa(option.count)}</span>
             </button>
           ))}
         </div>

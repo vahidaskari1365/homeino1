@@ -64,7 +64,7 @@ export default function AdminVendorsPage() {
                   <Badge tone="gold">در انتظار</Badge>
                 </div>
                 <p className="mt-2 rounded-lg bg-ivory-2 px-3 py-2 text-xs leading-6 text-ink-muted">{app.category} — {app.description || "بدون توضیح"}</p>
-                <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-ink-muted">
+                <div className="mt-3 flex items-center justify-between gap-2 text-2xs text-ink-muted">
                   <span>درخواست در تاریخ {app.faRequestedAt}</span>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => decide(app.id, false)}>رد</Button>

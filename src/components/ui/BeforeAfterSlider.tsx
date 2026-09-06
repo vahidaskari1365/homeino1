@@ -67,8 +67,8 @@ export function BeforeAfterSlider({ before, after, className }: { before: string
       </div>
 
       {/* labels */}
-      <span className="absolute right-3 top-3 rounded-full bg-ink/70 px-2.5 py-0.5 text-[11px] font-medium text-cream backdrop-blur">قبل</span>
-      <span className="absolute left-3 top-3 rounded-full bg-terracotta/80 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur">بعد</span>
+      <span className="absolute right-3 top-3 rounded-full bg-ink/70 px-2.5 py-0.5 text-2xs font-medium text-cream backdrop-blur">قبل</span>
+      <span className="absolute left-3 top-3 rounded-full bg-terracotta/80 px-2.5 py-0.5 text-2xs font-medium text-white backdrop-blur">بعد</span>
 
       {/* handle */}
       <div className="pointer-events-none absolute inset-y-0" style={{ right: `${pos}%`, transform: "translateX(50%)" }}>

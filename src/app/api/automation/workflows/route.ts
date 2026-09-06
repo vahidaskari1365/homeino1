@@ -64,7 +64,7 @@ export const GET = guard(async (req) => {
 
 export const POST = guard(async (req) => {
   const { user } = await requireAdminUser(req);
-  rateLimit(`workflows:create:${user.id}`, { windowMs: 60_000, max: 20 });
+  await rateLimit(`workflows:create:${user.id}`, { windowMs: 60_000, max: 20 });
   const body = (await readBody(req, 500_000)) as Record<string, unknown>;
 
   const key = String(body.key ?? "").trim().toLowerCase();
@@ -106,6 +106,7 @@ export const POST = guard(async (req) => {
     );
     return ok({ workflow, warnings: validation.warnings }, { status: 201 });
   } catch (error) {
-    throw ApiError.conflict(error instanceof Error ? error.message : "ساخت ورک‌فلو ناموفق بود");
+    console.error("[automation]", error);
+    throw ApiError.conflict("ساخت ورک‌فلو ناموفق بود");
   }
 });

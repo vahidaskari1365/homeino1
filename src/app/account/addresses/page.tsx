@@ -104,7 +104,7 @@ export default function AddressBookPage() {
       )}
 
       {addresses.length > 0 && (
-        <p className="flex items-center gap-2 text-[11px] text-ink-muted"><RefreshCcw size={12} /> آدرس‌ها فقط در همین مرورگر ذخیره می‌شوند و در مرحلهٔ نشانیِ پرداخت به‌صورت آماده پیشنهاد می‌شوند.</p>
+        <p className="flex items-center gap-2 text-2xs text-ink-muted"><RefreshCcw size={12} /> آدرس‌ها فقط در همین مرورگر ذخیره می‌شوند و در مرحلهٔ نشانیِ پرداخت به‌صورت آماده پیشنهاد می‌شوند.</p>
       )}
 
       <ConfirmDialog

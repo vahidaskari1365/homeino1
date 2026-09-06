@@ -23,15 +23,15 @@ export async function register() {
   try {
     const { ensureSeeded } = await import("@/services/agents/store");
     await ensureSeeded().catch((error: unknown) => {
-      console.warn("[homeino] agent store bootstrap deferred:", (error as Error).message);
+      console.warn("[h[homeino] agent store bootstrap deferred:", (error as Error).message);
     });
 
     const { startScheduler } = await import("@/services/workflows/scheduler");
     // 5 minutes: due workflows run soon after their slot, without hammering
     // the DB. The handle is unref'd — it never keeps the process alive.
     const handle = startScheduler(300_000);
-    if (handle) console.log("[homeino] automation scheduler started — due workflows tick every 5 min");
+    if (handle) console.log("[h[homeino] automation scheduler started — due workflows tick every 5 min");
   } catch (error) {
-    console.warn("[homeino] instrumentation bootstrap skipped:", (error as Error).message);
+    console.warn("[h[homeino] instrumentation bootstrap skipped:", (error as Error).message);
   }
 }

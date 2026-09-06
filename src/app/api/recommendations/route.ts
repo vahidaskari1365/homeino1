@@ -79,7 +79,7 @@ async function agentRecommendations(options: {
 
 export const GET = guard(async (req) => {
   const identity = await optionalUser(req);
-  rateLimit(`recommendations:${identity.userId ?? getClientIp(req)}`, { windowMs: 60_000, max: 60 });
+  await rateLimit(`recommendations:${identity.userId ?? getClientIp(req)}`, { windowMs: 60_000, max: 60 });
 
   const url = new URL(req.url);
   const scenario = readScenario(url.searchParams.get("scenario"));
@@ -112,7 +112,7 @@ export const GET = guard(async (req) => {
 
 export const POST = guard(async (req) => {
   const identity = await optionalUser(req);
-  rateLimit(`recommendations:write:${identity.userId ?? getClientIp(req)}`, { windowMs: 60_000, max: 20 });
+  await rateLimit(`recommendations:write:${identity.userId ?? getClientIp(req)}`, { windowMs: 60_000, max: 20 });
   const body = (await readBody(req, 50_000)) as Record<string, unknown>;
 
   const scenario = readScenario(body.scenario);

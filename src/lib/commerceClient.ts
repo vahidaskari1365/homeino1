@@ -79,8 +79,17 @@ export interface ServerOrder {
 export function createServerOrder(input: {
   shippingAddress: Record<string, unknown>;
   customerNote?: string;
+  shippingMethod?: "post" | "express";
 }) {
   return call<ServerOrder>("/api/orders", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function fetchServerOrderByNumber(orderNumber: string) {
+  return call<ServerOrder>(`/api/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
+}
+
+export function cancelServerOrder(orderId: string) {
+  return call<ServerOrder>(`/api/orders/${orderId}/cancel`, { method: "POST" });
 }
 
 export function fetchServerOrders(page = 1) {

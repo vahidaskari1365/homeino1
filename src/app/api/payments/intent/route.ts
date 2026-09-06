@@ -29,10 +29,18 @@ export const POST = guard(async (req) => {
 
   const gateway = paymentGateway();
   const intent = await gateway.createIntent({
-    amount: order.total,
-    currency: order.currency,
+    // DB amounts are TOMAN (currency:"IRT"); gateways settle in IRR (×10).
+    amount: order.total * 10,
+    currency: "IRR",
     orderId: order.id,
-    metadata: { orderNumber: order.orderNumber },
+    // kind+orderId are what the webhook fulfillment path switches on —
+    // without them paid orders stay pending forever.
+    metadata: {
+      kind: "order",
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      userId: user.id,
+    },
   });
 
   // record the payment row for reconciliation

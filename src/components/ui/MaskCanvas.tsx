@@ -99,7 +99,7 @@ export function MaskCanvas({ imageSrc, onConfirm, onCancel }: { imageSrc: string
           <button onClick={clearMask} className="rounded-md bg-slate-800 p-1.5 text-slate-300 hover:text-white" title="پاک کردن"><RotateCcw size={14} /></button>
         </div>
       </div>
-      <div className="flex items-center gap-2 text-[11px] text-slate-400">
+      <div className="flex items-center gap-2 text-2xs text-slate-400">
         <span>اندازه قلم:</span>
         <input type="range" min={10} max={80} value={brush} onChange={(e) => setBrush(+e.target.value)} className="w-40 accent-emerald-500" />
       </div>

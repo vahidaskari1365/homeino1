@@ -70,7 +70,7 @@ export default function WishlistPage() {
               const topStyles = Object.entries(styleCounts).sort((a, b) => b[1] - a[1]).slice(0, 2);
               if (topStyles.length > 0) {
                 return (
-                  <p className="flex items-center gap-1 text-[11px] text-ink-muted"><Lightbulb size={12} className="text-gold" /> {toFa(products.length)} محصول ذخیره کرده‌ای که عمدتاً با سبک <b className="text-ink">{topStyles.map(([slug]) => getStyle(slug)?.name ?? slug).join(" و ")}</b> هماهنگ هستند.</p>
+                  <p className="flex items-center gap-1 text-2xs text-ink-muted"><Lightbulb size={12} className="text-gold" /> {toFa(products.length)} محصول ذخیره کرده‌ای که عمدتاً با سبک <b className="text-ink">{topStyles.map(([slug]) => getStyle(slug)?.name ?? slug).join(" و ")}</b> هماهنگ هستند.</p>
                 );
               }
               return null;

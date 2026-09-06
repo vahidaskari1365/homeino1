@@ -13,7 +13,7 @@ export function ItemPicker({ studio }: { studio: DesignStudio }) {
       <div className="grid grid-cols-3 gap-2">
         {CATEGORIES.map((c) => { const open = openCats.has(c.slug); const selCount = (selectedSubTypes[c.slug] || []).length; return (
           <button key={c.slug} onClick={() => toggleCat(c.slug)} className={cn("flex items-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition", open ? "border-terracotta bg-terracotta/10 text-terracotta-deep" : "border-clay/40 bg-ivory-2 text-ink-muted hover:border-terracotta/50")}>
-            <c.Icon size={15} className="shrink-0" /> <span className="line-clamp-1">{c.label}</span>{selCount > 0 && <span className="rounded-full bg-terracotta px-1.5 py-0.5 text-[11px] text-white">{toFa(selCount)}</span>}
+            <c.Icon size={15} className="shrink-0" /> <span className="line-clamp-1">{c.label}</span>{selCount > 0 && <span className="rounded-full bg-terracotta px-1.5 py-0.5 text-2xs text-white">{toFa(selCount)}</span>}
           </button>
         ); })}
       </div>

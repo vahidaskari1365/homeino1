@@ -76,11 +76,11 @@ export function BudgetsPanel() {
             {data.items.map((row) => (
               <Row key={row.id}>
                 <Cell className="text-xs">{row.scope}</Cell>
-                <Cell className="text-[11px]"><span dir="ltr">{row.scopeKey ?? "—"}</span></Cell>
-                <Cell className="text-[11px]">{row.dailyLimitMicro ? toFa(row.dailyLimitMicro.toLocaleString("fa-IR")) : "بدون سقف"}</Cell>
-                <Cell className="text-[11px]">{row.monthlyLimitMicro ? toFa(row.monthlyLimitMicro.toLocaleString("fa-IR")) : "بدون سقف"}</Cell>
-                <Cell className="text-[11px]">{row.perRunLimitMicro ? toFa(row.perRunLimitMicro.toLocaleString("fa-IR")) : "بدون سقف"}</Cell>
-                <Cell className="text-[11px]">{row.maxRunsPerDay ? toFa(row.maxRunsPerDay) : "بدون سقف"}</Cell>
+                <Cell className="text-2xs"><span dir="ltr">{row.scopeKey ?? "—"}</span></Cell>
+                <Cell className="text-2xs">{row.dailyLimitMicro ? toFa(row.dailyLimitMicro.toLocaleString("fa-IR")) : "بدون سقف"}</Cell>
+                <Cell className="text-2xs">{row.monthlyLimitMicro ? toFa(row.monthlyLimitMicro.toLocaleString("fa-IR")) : "بدون سقف"}</Cell>
+                <Cell className="text-2xs">{row.perRunLimitMicro ? toFa(row.perRunLimitMicro.toLocaleString("fa-IR")) : "بدون سقف"}</Cell>
+                <Cell className="text-2xs">{row.maxRunsPerDay ? toFa(row.maxRunsPerDay) : "بدون سقف"}</Cell>
                 <Cell>{row.isActive ? <Badge tone="success">فعال</Badge> : <Badge>غیرفعال</Badge>}</Cell>
               </Row>
             ))}

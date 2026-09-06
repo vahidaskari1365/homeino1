@@ -139,10 +139,10 @@ export default function SecondHandPage() {
             <div className="relative aspect-[3/4] overflow-hidden">
               <SmartImage src={p.image} alt={p.title} className="absolute inset-0 h-full w-full" />
               <div className="absolute right-2 top-2 flex flex-col gap-1">
-                <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold", CONDITIONS[p.condition])}>{p.condition}</span>
-                <span className="flex items-center gap-0.5 rounded-full bg-gold/90 px-2 py-0.5 text-[10px] font-bold text-ink"><TrendingDown size={10} /> دسته دوم</span>
-                {p.mine && <span className="flex items-center gap-0.5 rounded-full bg-sage px-2 py-0.5 text-[10px] font-bold text-cream"><Tag size={10} /> آگهی تو</span>}
-                {p.status === "sold" && <span className="rounded-full bg-ink/80 px-2 py-0.5 text-[10px] font-bold text-cream">فروخته شد</span>}
+                <span className={cn("rounded-full border px-2 py-0.5 text-2xs font-bold", CONDITIONS[p.condition])}>{p.condition}</span>
+                <span className="flex items-center gap-0.5 rounded-full bg-gold/90 px-2 py-0.5 text-2xs font-bold text-ink"><TrendingDown size={10} /> دسته دوم</span>
+                {p.mine && <span className="flex items-center gap-0.5 rounded-full bg-sage px-2 py-0.5 text-2xs font-bold text-cream"><Tag size={10} /> آگهی تو</span>}
+                {p.status === "sold" && <span className="rounded-full bg-ink/80 px-2 py-0.5 text-2xs font-bold text-cream">فروخته شد</span>}
               </div>
               <button
                 aria-label="افزودن به علاقه‌مندی"
@@ -154,13 +154,13 @@ export default function SecondHandPage() {
             </div>
             {/* overlay info */}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/95 via-ink/75 to-transparent p-3">
-              <div className="flex items-center gap-1 text-[10px] text-cream/60"><MapPin size={10} /> {p.city} · {p.categoryLabel}</div>
+              <div className="flex items-center gap-1 text-2xs text-cream/60"><MapPin size={10} /> {p.city} · {p.categoryLabel}</div>
               <p className="mt-0.5 line-clamp-1 text-sm font-bold text-cream">{p.title}</p>
               <div className="mt-1 flex items-center gap-2">
                 <span className={cn("text-sm font-black text-gold-soft", p.status === "sold" && "line-through opacity-60")}>{toFa(formatPrice(p.price))} ت</span>
-                {p.originalPrice && <span className="text-[11px] text-cream/40 line-through">{toFa(formatPrice(p.originalPrice))}</span>}
+                {p.originalPrice && <span className="text-2xs text-cream/40 line-through">{toFa(formatPrice(p.originalPrice))}</span>}
               </div>
-              <p className="mt-0.5 text-[10px] text-cream/50">مدت استفاده: {p.age}</p>
+              <p className="mt-0.5 text-2xs text-cream/50">مدت استفاده: {p.age}</p>
             </div>
           </div>
         ))}

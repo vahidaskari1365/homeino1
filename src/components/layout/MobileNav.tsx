@@ -143,7 +143,7 @@ export function MobileNav() {
                 animate="show"
                 className="relative flex-1 overflow-y-auto px-4 py-5"
               >
-                <motion.div variants={row} className="mb-3 px-2 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+                <motion.div variants={row} className="mb-3 px-2 text-2xs font-bold uppercase tracking-wider text-ink-muted">
                   کاوش خانه‌نو
                 </motion.div>
 
@@ -174,7 +174,7 @@ export function MobileNav() {
                           </span>
                           <span className="flex-1">{item.label}</span>
                           {badge > 0 && (
-                            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[10px] font-black text-ink">
+                            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-2xs font-black text-ink">
                               {toFa(badge)}
                             </span>
                           )}
@@ -224,7 +224,7 @@ export function MobileNav() {
                       سبد خرید
                     </span>
                     {cart > 0 && (
-                      <span className="grid h-6 min-w-6 place-items-center rounded-full bg-terracotta px-1.5 text-[11px] font-black text-white">
+                      <span className="grid h-6 min-w-6 place-items-center rounded-full bg-terracotta px-1.5 text-2xs font-black text-white">
                         {toFa(cart)}
                       </span>
                     )}
@@ -246,7 +246,7 @@ export function MobileNav() {
               active ? "bg-ink text-cream shadow-[var(--shadow-soft)]" : "text-ink/70"
             );
             const labelCls = cn(
-              "text-[10px] transition-colors",
+              "text-2xs transition-colors",
               active ? "font-black text-ink" : "text-ink-muted"
             );
 
@@ -262,7 +262,7 @@ export function MobileNav() {
                   <span className="-mt-6 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-gold-soft to-gold text-ink shadow-[var(--shadow-gold)] transition-transform active:scale-90">
                     <Sparkles size={23} />
                   </span>
-                  <span className="-mt-0.5 text-[10px] font-bold text-ink">{it.label}</span>
+                  <span className="-mt-0.5 text-2xs font-bold text-ink">{it.label}</span>
                 </button>
               );
             }
@@ -295,7 +295,7 @@ export function MobileNav() {
                 <span className={iconCls}>
                   <it.icon size={19} />
                   {it.href === "/wishlist" && wish > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[9px] font-black text-ink">
+                    <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-2xs font-black text-ink">
                       {toFa(wish)}
                     </span>
                   )}

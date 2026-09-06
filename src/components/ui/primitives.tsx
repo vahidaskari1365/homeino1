@@ -62,7 +62,7 @@ export function Badge({ children, className, tone = "neutral" }: { children: Rea
     gold: "bg-gold/15 text-gold border-gold/30",
   };
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium", tones[tone], className)}>
+    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-2xs font-medium", tones[tone], className)}>
       {children}
     </span>
   );
@@ -101,12 +101,12 @@ export function Price({ price, oldPrice, className }: { price: number; oldPrice?
     <div className={cn("flex flex-col", className)}>
       <div className="flex items-baseline gap-2">
         <span className="font-display text-lg font-bold text-ink">{toFa(formatPrice(price))}</span>
-        <span className="text-[11px] text-ink-muted">تومان</span>
+        <span className="text-2xs text-ink-muted">تومان</span>
       </div>
       {oldPrice && oldPrice > price && (
         <div className="flex items-center gap-2">
           <span className="text-xs text-ink-muted line-through">{toFa(formatPrice(oldPrice))}</span>
-          {disc > 0 && <span className="text-[11px] font-bold text-terracotta-deep">{toFa(disc)}٪ تخفیف</span>}
+          {disc > 0 && <span className="text-2xs font-bold text-terracotta-deep">{toFa(disc)}٪ تخفیف</span>}
         </div>
       )}
     </div>

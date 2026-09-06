@@ -55,10 +55,10 @@ export function ToolsPanel() {
                       <Wrench size={15} className="text-ink-muted" />
                       <span>
                         <span className="font-medium text-ink">{tool.name}</span>
-                        <span dir="ltr" className="ml-2 text-[11px] text-ink-muted">{tool.key}</span>
+                        <span dir="ltr" className="ml-2 text-2xs text-ink-muted">{tool.key}</span>
                       </span>
                     </div>
-                    <div className="mt-1 max-w-md text-[11px] text-ink-muted">{tool.description}</div>
+                    <div className="mt-1 max-w-md text-2xs text-ink-muted">{tool.description}</div>
                   </Cell>
                   <Cell className="text-xs">{CATEGORY_LABEL[category] ?? category}</Cell>
                   <Cell>

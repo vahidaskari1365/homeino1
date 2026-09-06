@@ -123,7 +123,7 @@ export default function RegisterPage() {
           <span>قوانین و مقررات Homeino را می‌پذیرم. (<Link href="/terms" className="text-terracotta-deep underline" target="_blank">مشاهده</Link>)</span>
         </label>
 
-        {err && <p className="text-sm text-danger">{err}</p>}
+        {err && <p role="alert" className="text-sm text-danger">{err}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={loading}>{loading ? <><Spinner /> در حال ثبت…</> : <>{isProducer ? <><Store size={16} /> ثبت‌نام تولیدکننده</> : "ثبت‌نام"}</>}</Button>
         {isProducer && <p className="flex items-center justify-center gap-1 text-center text-xs text-gold"><Sparkles size={12} /> بعد از ثبت‌نام، مستقیم وارد پنل فروشنده می‌شوی</p>}
       </form>
@@ -138,7 +138,7 @@ function Labeled({ icon: Icon, label, type = "text", value, onChange, placeholde
       <div className="flex items-center rounded-xl border border-clay/60 bg-cream px-3 focus-within:border-ink">
         <Icon size={17} className="text-ink-muted" />
         <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 bg-transparent px-2.5 py-2.5 text-sm outline-none" />
-        {hint && <span className="text-[11px] text-ink-muted">{hint}</span>}
+        {hint && <span className="text-2xs text-ink-muted">{hint}</span>}
       </div>
     </div>
   );

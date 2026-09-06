@@ -64,7 +64,7 @@ function readEvent(raw: unknown, identity: { userId: string | null }, req: Reque
 }
 
 export const POST = guard(async (req) => {
-  rateLimit(`analytics:${getClientIp(req)}`, { windowMs: 60_000, max: 240 });
+  await rateLimit(`analytics:${getClientIp(req)}`, { windowMs: 60_000, max: 240 });
   const identity = await optionalUser(req);
   const body = await readBody(req, 200_000);
   const payload = body as Record<string, unknown>;

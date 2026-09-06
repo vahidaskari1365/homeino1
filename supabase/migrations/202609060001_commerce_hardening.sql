@@ -8,9 +8,10 @@
 
 -- 1) trigram search ----------------------------------------------------
 create extension if not exists pg_trgm;
-drop index if exists products_title_trgm_idx on public.products;
-drop index if exists products_description_trgm_idx on public.products;
-drop index if exists products_brand_trgm_idx on public.products;
+-- PostgreSQL: DROP INDEX takes no ON clause (MySQL-style syntax fails).
+drop index if exists public.products_title_trgm_idx;
+drop index if exists public.products_description_trgm_idx;
+drop index if exists public.products_brand_trgm_idx;
 create index if not exists products_title_trgm_idx on public.products using gin (title gin_trgm_ops);
 create index if not exists products_description_trgm_idx on public.products using gin (description gin_trgm_ops);
 create index if not exists products_brand_trgm_idx on public.products using gin (brand gin_trgm_ops);

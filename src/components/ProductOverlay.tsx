@@ -162,7 +162,7 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
 
               {/* selected label */}
               {isSel && (
-                <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink/85 px-2 py-0.5 text-[10px] text-cream">
+                <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink/85 px-2 py-0.5 text-2xs text-cream">
                   {p.name} · {toFa(formatPrice(p.price))} ت
                 </div>
               )}
@@ -174,11 +174,11 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
           <>
             {/* HONEST MODE BADGE */}
             {mode === "interactive" && (
-              <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-gold/20 px-2 py-1 text-[9px] font-medium text-gold-soft backdrop-blur">
+              <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-gold/20 px-2 py-1 text-2xs font-medium text-gold-soft backdrop-blur">
                 پیش‌نمایش چیدمان — عکس اصلی حفظ شده
               </div>
             )}
-            <div className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-ink/60 px-2 py-1 text-[10px] text-cream backdrop-blur">
+            <div className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-ink/60 px-2 py-1 text-2xs text-cream backdrop-blur">
               <Move size={11} className="ml-1 inline" /> بکش تا جابه‌جا شود · کلیک کن برای عملیات
             </div>
           </>

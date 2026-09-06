@@ -7,6 +7,12 @@
    ============================================================ */
 
 @theme {
+  /* ---- TYPE SCALE ---- */
+  /* 12px floor for readable text; `text-2xs` replaces all former 10/11px
+     micro-type (a11y: nothing below the 12px readability floor). */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1.5;
+
   /* ---- DEPTH (dark / espresso-green) ---- */
   --color-ink: #10201A;          /* deep espresso-green — text + dark sections */
   --color-ink-soft: #173428;     /* deep forest green */

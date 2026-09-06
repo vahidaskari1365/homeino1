@@ -43,7 +43,7 @@ export function CollectionPicker({ productId, compact = false }: { productId: st
                 <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", selected ? "bg-success text-white" : "bg-ivory-2 text-ink-muted")}>
                   {selected ? <Check size={17} /> : <FolderPlus size={17} />}
                 </span>
-                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-ink">{collection.title}</span><span className="text-[11px] text-ink-muted">{toFa(collection.productIds.length)} محصول</span></span>
+                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-ink">{collection.title}</span><span className="text-2xs text-ink-muted">{toFa(collection.productIds.length)} محصول</span></span>
               </button>
             );
           })}

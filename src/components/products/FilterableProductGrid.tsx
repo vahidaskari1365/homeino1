@@ -84,7 +84,7 @@ function FacetGroup({
                 className="h-4 w-4 shrink-0 rounded border-clay accent-terracotta"
               />
               <span className="truncate">{option.label}</span>
-              {option.count != null && <span className="mr-auto text-[10px] text-ink-muted/70">{toFa(option.count)}</span>}
+              {option.count != null && <span className="mr-auto text-2xs text-ink-muted/70">{toFa(option.count)}</span>}
             </label>
             {option.href && (
               <Link
@@ -266,7 +266,7 @@ function FilterableProductGridInner({
         options={styleOptions}
         selected={filters.styles}
         onToggle={(value) => toggleCsv("style", filters.styles, value)}
-        action={<Link href="/styles" className="inline-flex items-center gap-1 text-[11px] font-bold text-terracotta-deep hover:underline"><BookOpen size={12} /> معرفی سبک‌ها</Link>}
+        action={<Link href="/styles" className="inline-flex items-center gap-1 text-2xs font-bold text-terracotta-deep hover:underline"><BookOpen size={12} /> معرفی سبک‌ها</Link>}
       />
       {categoryOptions.length > 1 || filters.categories.length ? (
         <FacetGroup title="دسته‌بندی" options={categoryOptions} selected={filters.categories} onToggle={(value) => toggleCsv("category", filters.categories, value)} />
@@ -285,7 +285,7 @@ function FilterableProductGridInner({
       <div className="border-b border-clay/40 py-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h4 className="text-sm font-bold text-ink">بازه قیمت</h4>
-          {filters.priceMax != null && <button type="button" onClick={() => setSingle("priceMax")} className="text-[11px] text-terracotta-deep hover:underline">بدون محدودیت</button>}
+          {filters.priceMax != null && <button type="button" onClick={() => setSingle("priceMax")} className="text-2xs text-terracotta-deep hover:underline">بدون محدودیت</button>}
         </div>
         <input
           aria-label="حداکثر قیمت"
@@ -357,7 +357,7 @@ function FilterableProductGridInner({
           aria-expanded={showFilters}
         >
           <SlidersHorizontal size={16} /> فیلترها
-          {activeChips.length > 0 && <span className="rounded-full bg-terracotta px-1.5 text-[10px] text-white">{toFa(activeChips.length)}</span>}
+          {activeChips.length > 0 && <span className="rounded-full bg-terracotta px-1.5 text-2xs text-white">{toFa(activeChips.length)}</span>}
         </button>
         <p className={cn("text-sm text-ink-muted", mobileOnlyButton && "hidden lg:block")} aria-live="polite">{toFa(filtered.length)} محصول</p>
       </div>

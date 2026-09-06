@@ -73,7 +73,7 @@ function IconBadge({ count, children }: { count: number; children: React.ReactNo
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.4, opacity: 0 }}
             transition={{ type: "spring", stiffness: 500, damping: 22 }}
-            className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-gradient-to-br from-gold-soft to-gold px-1 text-[10px] font-black text-ink shadow-[0_2px_8px_rgba(190,154,79,0.5)]"
+            className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-gradient-to-br from-gold-soft to-gold px-1 text-2xs font-black text-ink shadow-[0_2px_8px_rgba(190,154,79,0.5)]"
           >
             {toFa(count)}
           </motion.span>
@@ -128,7 +128,7 @@ function AiFeatureCard() {
       <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-terracotta-soft/30 blur-3xl" />
 
       <div className="relative">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/15 px-3 py-1 text-[11px] font-bold text-gold-soft">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/15 px-3 py-1 text-2xs font-bold text-gold-soft">
           <Sparkles size={12} />
           هومینو استودیو
         </span>
@@ -370,7 +370,7 @@ export function Header() {
                 initial="hidden"
                 animate="show"
                 variants={{ show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}
-                className="flex h-9 items-center justify-center gap-5 text-[11px] font-medium sm:justify-between"
+                className="flex h-9 items-center justify-center gap-5 text-2xs font-medium sm:justify-between"
               >
                 <motion.span variants={trustItem} className="hidden items-center gap-1.5 sm:flex">
                   <ShieldCheck size={13} className="text-sage-soft" /> تضمین اصالت کالا
@@ -498,7 +498,7 @@ export function Header() {
             >
               <Search size={16} className="transition-transform duration-300 group-hover:scale-110" />
               <span className="hidden text-[12px] xl:inline">جستجو در خانه‌نو…</span>
-              <kbd className="hidden place-items-center rounded-md border border-clay/60 bg-ivory-2 px-1.5 py-0.5 text-[10px] font-bold text-ink-muted xl:grid">
+              <kbd className="hidden place-items-center rounded-md border border-clay/60 bg-ivory-2 px-1.5 py-0.5 text-2xs font-bold text-ink-muted xl:grid">
                 ⌘K
               </kbd>
             </button>

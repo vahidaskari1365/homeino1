@@ -94,7 +94,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                   <div key={a.key} className="rounded-lg border border-clay/30 bg-ivory-2 p-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-ink">{a.name}</span>
-                      <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-bold", AGENT_STATUS_STYLE[a.status] ?? "bg-clay/20 text-ink-muted")}>
+                      <span className={cn("rounded px-1.5 py-0.5 text-2xs font-bold", AGENT_STATUS_STYLE[a.status] ?? "bg-clay/20 text-ink-muted")}>
                         {a.status === "ok" ? "انجام شد" : a.status === "error" ? "خطا" : a.status === "skipped" ? "غیرفعال" : "بدون نتیجه"}
                       </span>
                     </div>
@@ -118,8 +118,8 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                         <Link key={c.id} href={href} className="flex items-center gap-2 rounded-lg border border-clay/30 bg-ivory-2 p-1.5 transition hover:border-terracotta/50">
                           {(real?.images[0] ?? c.image) && <img src={real?.images[0] ?? c.image} alt="" className="h-9 w-9 rounded-md object-cover" />}
                           <span className="min-w-0 flex-1">
-                            <span className="line-clamp-1 block text-[11px] font-bold text-ink">{real?.name ?? c.name ?? "محصول"}</span>
-                            {typeof (real?.price ?? c.price) === "number" && <span className="block text-[11px] font-black text-terracotta-deep">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}
+                            <span className="line-clamp-1 block text-2xs font-bold text-ink">{real?.name ?? c.name ?? "محصول"}</span>
+                            {typeof (real?.price ?? c.price) === "number" && <span className="block text-2xs font-black text-terracotta-deep">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}
                           </span>
                         </Link>
                       );
@@ -136,7 +136,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
         <div className="rounded-xl border border-gold/25 bg-gold/5 p-3.5">
           <div className="flex items-center gap-1.5 text-xs font-bold text-gold"><Lightbulb size={14} /> محدوده تغییر</div>
           <p className="mt-1 text-xs leading-6 text-ink-muted">{lastScope.summary}</p>
-          {lastScope.lockedElements.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{lastScope.lockedElements.slice(0, 6).map((el) => <span key={el} className="flex items-center gap-1 rounded bg-ivory-2 px-1.5 py-0.5 text-[11px] text-ink-muted"><LockIcon size={10} /> {el}</span>)}</div>}
+          {lastScope.lockedElements.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{lastScope.lockedElements.slice(0, 6).map((el) => <span key={el} className="flex items-center gap-1 rounded bg-ivory-2 px-1.5 py-0.5 text-2xs text-ink-muted"><LockIcon size={10} /> {el}</span>)}</div>}
         </div>
       )}
 
@@ -198,7 +198,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                       <span>{item.storeName}</span>
                       {item.storeVerified && <Check size={11} className="text-success" />}
                     </p>
-                    {item.sku && <p className="font-mono text-[11px] text-ink-muted">SKU: {item.sku}</p>}
+                    {item.sku && <p className="font-mono text-2xs text-ink-muted">SKU: {item.sku}</p>}
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between border-t border-clay/20 pt-2">

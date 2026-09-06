@@ -47,7 +47,7 @@ export default function CreditsPage() {
               <div key={m.id} className={cn("rounded-xl border p-3", enough ? "border-clay/40" : "border-danger/40 bg-danger/5")}>
                 <div className="text-sm font-medium text-ink">{m.title}</div>
                 <div className="mt-1 flex items-center gap-1 text-xs text-ink-muted"><Sparkles size={12} className="text-gold" /> {toFa(m.cost)} اعتبار</div>
-                {!enough && <div className="mt-1 text-[11px] text-danger">اعتبار ناکافی</div>}
+                {!enough && <div className="mt-1 text-2xs text-danger">اعتبار ناکافی</div>}
               </div>
             );
           })}
@@ -60,7 +60,7 @@ export default function CreditsPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {CREDIT_DISPLAY.buyPackages.map((pk) => (
             <div key={pk.id} className={cn("relative rounded-2xl border p-5 text-center transition hover:-translate-y-1", pk.popular ? "border-terracotta bg-terracotta/5 shadow-[var(--shadow-soft)]" : "border-clay/50")}>
-              {pk.popular && <span className="absolute -top-2.5 right-1/2 translate-x-1/2 rounded-full bg-terracotta px-3 py-0.5 text-[10px] font-bold text-white">محبوب‌ترین</span>}
+              {pk.popular && <span className="absolute -top-2.5 right-1/2 translate-x-1/2 rounded-full bg-terracotta px-3 py-0.5 text-2xs font-bold text-white">محبوب‌ترین</span>}
               <Sparkles size={24} className="mx-auto text-gold" />
               <div className="mt-2 font-display text-2xl font-black text-ink">{toFa(pk.credits)}</div>
               <div className="text-xs text-ink-muted">اعتبار</div>

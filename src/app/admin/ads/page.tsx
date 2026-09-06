@@ -69,7 +69,7 @@ export default function AdminAdsPage() {
                       <span className="text-ink">{ad.sellerName}</span>
                     </div>
                   </td>
-                  <td className="p-3 text-ink">{formatPrice(ad.price)}</td>
+                  <td className="p-3 text-ink">{toFa(formatPrice(ad.price))}</td>
                   <td className="p-3"><Badge tone={STATUS_TONE[ad.status]}>{STATUS_LABEL[ad.status]}</Badge></td>
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-2">

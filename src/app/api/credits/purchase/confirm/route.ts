@@ -5,7 +5,6 @@ import { guard, readBody } from "@/lib/api/http";
 import { validate, isString } from "@/lib/api/validate";
 import { DevPaymentProvider, paymentGateway } from "@/services/payments";
 import { fulfillPaymentEvent } from "@/services/paymentFulfillment";
-import { PACKS } from "../route";
 
 export const runtime = "nodejs";
 /**
@@ -28,25 +27,31 @@ export const POST = guard(async (req) => {
   if (!(gateway instanceof DevPaymentProvider)) {
     throw ApiError.badRequest("با درگاه واقعی، تأیید پرداخت توسط وب‌هوک انجام می‌شود");
   }
-  const pack = PACKS[input.pack];
-  if (!pack) throw ApiError.badRequest("بستهٔ اعتباری نامعتبر است");
-  if (!gateway.wasIssued(input.paymentId, { userId: user.id, kind: "credits", credits: pack.credits })) {
+  // Fulfill from the SERVER-ISSUED intent metadata (userId + kind only are
+  // matched) — pack prices/credits may come from the DB and are NOT re-checked
+  // against a fallback list here. Client echoes never decide the amount.
+  const meta = gateway.consumeIntent(input.paymentId, { userId: user.id, kind: "credits" });
+  if (!meta) {
     throw new ApiError("UNAUTHORIZED", "پرداخت یافت نشد یا متعلق به شما نیست", 403);
+  }
+  const credits = Number(meta.credits ?? 0);
+  if (!Number.isInteger(credits) || credits <= 0) {
+    throw ApiError.badRequest("بستهٔ اعتباری نامعتبر است");
   }
 
   const result = await fulfillPaymentEvent({
     provider: "dev",
     providerPaymentId: input.paymentId,
     eventType: "payment.succeeded",
-    amount: pack.amount * 10,
+    amount: 0, // ledger math uses credits, not the dev amount
     currency: "IRR",
-    metadata: { kind: "credits", userId: user.id, credits: pack.credits },
+    metadata: { kind: "credits", userId: user.id, credits },
     raw: { paymentId: input.paymentId },
   });
   if (!result.ok) throw ApiError.badRequest("تأیید پرداخت ناموفق بود");
   return ok({
     ok: true,
     duplicate: result.kind === "credits" && result.duplicate,
-    credits: pack.credits,
+    credits,
   });
 });

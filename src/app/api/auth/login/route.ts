@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 export const POST = guard(async (req) => {
   const input = validate(await readBody(req), { email: isEmail, password: isPassword });
-  rateLimit(`login:${input.email}`, { windowMs: 60_000, max: 10 });
+  await rateLimit(`login:${input.email}`, { windowMs: 60_000, max: 10 });
   const { data, error } = await createSupabaseServerClient().auth.signInWithPassword({
     email: input.email,
     password: input.password,

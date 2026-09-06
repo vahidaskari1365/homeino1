@@ -287,15 +287,15 @@ export function WorkflowsPanel() {
               <Row key={workflow.key}>
                 <Cell>
                   <div className="font-medium text-ink">{workflow.name}</div>
-                  <div dir="ltr" className="text-[11px] text-ink-muted">{workflow.key}{workflow.isBuiltin ? " · builtin" : ""} · v{toFa(workflow.version ?? 1)}</div>
-                  {workflow.description && <div className="mt-1 line-clamp-2 max-w-md text-[11px] text-ink-muted">{workflow.description}</div>}
+                  <div dir="ltr" className="text-2xs text-ink-muted">{workflow.key}{workflow.isBuiltin ? " · builtin" : ""} · v{toFa(workflow.version ?? 1)}</div>
+                  {workflow.description && <div className="mt-1 line-clamp-2 max-w-md text-2xs text-ink-muted">{workflow.description}</div>}
                 </Cell>
                 <Cell className="text-xs">
                   <Badge tone={workflow.triggerKind === "event" ? "accent" : workflow.triggerKind === "schedule" ? "gold" : "neutral"}>{workflow.triggerKind}</Badge>
                   {Array.isArray((workflow.trigger as { eventTypes?: string[] })?.eventTypes) && (
-                    <div className="mt-1 text-[11px] text-ink-muted" dir="ltr">{((workflow.trigger as { eventTypes?: string[] }).eventTypes ?? []).join(", ")}</div>
+                    <div className="mt-1 text-2xs text-ink-muted" dir="ltr">{((workflow.trigger as { eventTypes?: string[] }).eventTypes ?? []).join(", ")}</div>
                   )}
-                  {workflow.nextRunAt && <div className="mt-1 text-[11px] text-ink-muted">اجرای بعدی: {toFa(new Date(workflow.nextRunAt).toLocaleString("fa-IR"))}</div>}
+                  {workflow.nextRunAt && <div className="mt-1 text-2xs text-ink-muted">اجرای بعدی: {toFa(new Date(workflow.nextRunAt).toLocaleString("fa-IR"))}</div>}
                 </Cell>
                 <Cell className="text-xs">
                   <div className="flex items-center gap-1 text-ink-muted"><GitBranch size={14} /> {toFa(workflow.nodes.length)} گره · {toFa(workflow.edges.length)} یال</div>
@@ -305,7 +305,7 @@ export function WorkflowsPanel() {
                   </div>
                 </Cell>
                 <Cell><StatusBadge status={workflow.status} /></Cell>
-                <Cell className="text-[11px] text-ink-muted">{workflow.lastRunAt ? toFa(new Date(workflow.lastRunAt).toLocaleString("fa-IR")) : "اجرا نشده"}</Cell>
+                <Cell className="text-2xs text-ink-muted">{workflow.lastRunAt ? toFa(new Date(workflow.lastRunAt).toLocaleString("fa-IR")) : "اجرا نشده"}</Cell>
                 <Cell>
                   <div className="flex flex-wrap gap-1.5">
                     <Button size="sm" variant="outline" onClick={() => setRunState({ workflow, busy: false, input: "{}", result: null })}><Play size={14} /> اجرا</Button>
@@ -412,7 +412,7 @@ export function WorkflowsPanel() {
                     </div>
                     <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
                       <Field label="config (JSON)">
-                        <textarea dir="ltr" rows={3} className={`${inputClass} font-mono text-[11px]`} value={configText(node)} onChange={(e) => setNodeConfig(node.key, e.target.value)} />
+                        <textarea dir="ltr" rows={3} className={`${inputClass} font-mono text-2xs`} value={configText(node)} onChange={(e) => setNodeConfig(node.key, e.target.value)} />
                       </Field>
                       <div className="flex items-end">
                         <Button size="sm" variant="danger" onClick={() => setDraft({ ...draft, nodes: draft.nodes.filter((_, i) => i !== index), edges: draft.edges.filter((edge) => edge.from !== node.key && edge.to !== node.key) })}><Trash2 size={14} /></Button>
@@ -486,11 +486,11 @@ export function WorkflowsPanel() {
                   <TableShell head={["گره", "وضعیت", "زمان", "توکن", "خطا"]} minWidth={520}>
                     {runState.result.steps.map((step, index) => (
                       <Row key={`${step.nodeKey}-${index}`}>
-                        <Cell className="text-xs"><span className="font-medium">{step.label ?? step.nodeKey}</span><div className="text-[11px] text-ink-muted">{NODE_LABEL_FA[step.nodeType] ?? step.nodeType}{step.agentKey ? ` · ${step.agentKey}` : ""}</div></Cell>
+                        <Cell className="text-xs"><span className="font-medium">{step.label ?? step.nodeKey}</span><div className="text-2xs text-ink-muted">{NODE_LABEL_FA[step.nodeType] ?? step.nodeType}{step.agentKey ? ` · ${step.agentKey}` : ""}</div></Cell>
                         <Cell><StatusBadge status={step.status} /></Cell>
-                        <Cell className="text-[11px] text-ink-muted">{toFa(step.durationMs ?? 0)}ms</Cell>
-                        <Cell className="text-[11px] text-ink-muted">{toFa(step.tokensIn + step.tokensOut)}</Cell>
-                        <Cell className="text-[11px] text-danger">{step.error ?? "—"}</Cell>
+                        <Cell className="text-2xs text-ink-muted">{toFa(step.durationMs ?? 0)}ms</Cell>
+                        <Cell className="text-2xs text-ink-muted">{toFa(step.tokensIn + step.tokensOut)}</Cell>
+                        <Cell className="text-2xs text-danger">{step.error ?? "—"}</Cell>
                       </Row>
                     ))}
                   </TableShell>

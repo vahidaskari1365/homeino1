@@ -98,7 +98,10 @@ export async function addToCart(
     )
     .limit(1);
   const available = inv ? inv.quantity - inv.reservedQuantity : 0;
-  if (inv && available <= 0 && product.status === "active") {
+  // A purchasable product MUST have an inventory record: without one the
+  // order creation would fail later (or worse, oversell). Missing row =
+  // unavailable, with the same honest message.
+  if (!inv || (available <= 0 && product.status === "active")) {
     throw new ApiError("OUT_OF_STOCK", "محصول در انبار موجود نیست", 422);
   }
 

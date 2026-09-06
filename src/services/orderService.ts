@@ -12,6 +12,7 @@ import {
   vendors,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { isShippingMethod, shippingTotal, type ShippingMethod } from "@/lib/shipping";
 
 /**
  * Order creation is transactional:
@@ -28,9 +29,15 @@ export async function createOrderFromCart(
     shippingAddress: Record<string, unknown>;
     billingAddress?: Record<string, unknown>;
     customerNote?: string;
+    shippingMethod?: ShippingMethod | string;
   },
 ) {
   const db = getDb();
+  // Shipping method flows from cart/sync → order creation so the stored total
+  // equals exactly what the checkout UI showed and the gateway charges.
+  const shippingMethod: ShippingMethod = isShippingMethod(input.shippingMethod)
+    ? input.shippingMethod
+    : "post";
   return db.transaction(async (tx) => {
     const [cart] = await tx
       .select()
@@ -100,6 +107,9 @@ export async function createOrderFromCart(
       .toString()
       .padStart(3, "0")}`;
 
+    const vendorCount = new Set(prepared.map((p) => p.vendorId)).size;
+    const shippingCost = shippingTotal(vendorCount, subtotal, shippingMethod);
+
     const [order] = await tx
       .insert(orders)
       .values({
@@ -107,11 +117,12 @@ export async function createOrderFromCart(
         orderNumber,
         status: "pending",
         subtotal,
-        shippingTotal: 0,
+        shippingTotal: shippingCost,
         discountTotal: 0,
         taxTotal: 0,
-        total: subtotal,
-        currency: "IRR",
+        total: subtotal + shippingCost,
+        // amounts are TOMAN — IRR here would make the gateway charge 1/10th
+        currency: "IRT",
         shippingAddress: input.shippingAddress,
         billingAddress: input.billingAddress ?? input.shippingAddress,
         customerNote: input.customerNote,
@@ -169,6 +180,31 @@ export async function getOrderByNumber(orderNumber: string) {
     .limit(1);
   if (!order) throw ApiError.notFound("سفارش یافت نشد");
   return order;
+}
+
+/**
+ * Owner-initiated cancel: pending → cancelled only (after confirmation the
+ * fulfilment pipeline owns the order). Releases reserved stock inside the
+ * same transaction as the status change. `actorId` is the user's id —
+ * order_status_history.actor_id is text, so this is safe.
+ */
+export async function cancelOwnOrder(userId: string, orderId: string) {
+  const db = getDb();
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.id, orderId), eq(orders.userId, userId)))
+    .limit(1);
+  if (!order) throw ApiError.notFound("سفارش یافت نشد");
+  if (order.status !== "pending") {
+    throw new ApiError(
+      "INVALID_TRANSITION",
+      "فقط سفارش‌های در انتظار تأیید قابل لغو هستند — برای بقیه با پشتیبانی تماس بگیرید",
+      422,
+    );
+  }
+  await updateOrderStatus(orderId, "cancelled", userId, "لغو توسط خریدار");
+  return getOrderForUser(userId, orderId);
 }
 
 /** Vendor-facing: orders that contain this vendor's items. */

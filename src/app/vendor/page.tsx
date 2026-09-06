@@ -84,7 +84,7 @@ export default function VendorDashboard() {
           </div>
         </div>
       </div>
-      <p className="text-[11px] text-ink-muted">محصولات ثبت‌شده: {toFa(vendorProductCount())} — این پنل از منبع دادهٔ یکسان پنل فروشنده (vendorSession) تغذیه می‌شود.</p>
+      <p className="text-2xs text-ink-muted">محصولات ثبت‌شده: {toFa(vendorProductCount())} — این پنل از منبع دادهٔ یکسان پنل فروشنده (vendorSession) تغذیه می‌شود.</p>
     </div>
   );
 }

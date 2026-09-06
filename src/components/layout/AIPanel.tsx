@@ -188,8 +188,8 @@ export function AIPanel() {
           <div className="flex items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-terracotta"><Sparkles size={18} /></span>
             <div>
-              <div className="font-display font-bold">دستیار هوشمند Homeino</div>
-              <div className="text-[11px] opacity-70">هر سؤالی درباره‌ی دکوراسیون داری بپرس</div>
+              <div className="font-display font-bold">هومینو استودیو</div>
+              <div className="text-2xs opacity-70">هر سؤالی درباره‌ی دکوراسیون داری بپرس</div>
             </div>
           </div>
           <button onClick={() => setAiPanel(false)} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-white/10" aria-label="بستن"><X size={20} /></button>
@@ -218,12 +218,12 @@ export function AIPanel() {
                         )}
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-bold text-ink">{p.name}</span>
-                          <span className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-terracotta-deep">
+                          <span className="mt-0.5 flex items-center gap-1 text-2xs font-bold text-terracotta-deep">
                             <span>{toFa(formatPrice(p.price))} {p.currency || "تومان"}</span>
                             {p.storeName ? <span className="truncate font-normal text-ink-muted">· {p.storeName}</span> : null}
                           </span>
                         </span>
-                        <span className="shrink-0 text-[11px] text-ink-muted">مشاهده ←</span>
+                        <span className="shrink-0 text-2xs text-ink-muted">مشاهده ←</span>
                       </button>
                     ))}
                   </div>

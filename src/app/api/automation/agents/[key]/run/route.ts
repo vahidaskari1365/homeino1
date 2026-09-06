@@ -16,7 +16,7 @@ const KEY_RE = /^[a-z0-9][a-z0-9-_]{1,79}$/i;
 
 export const POST = guard(async (req, { params }: { params: Promise<{ key: string }> }) => {
   const { user } = await requireAdminUser(req);
-  rateLimit(`agents:run:${user.id}`, { windowMs: 60_000, max: 30 });
+  await rateLimit(`agents:run:${user.id}`, { windowMs: 60_000, max: 30 });
 
   const { key } = await params;
   const agentKey = decodeURIComponent(key).trim();

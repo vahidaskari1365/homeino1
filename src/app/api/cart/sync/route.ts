@@ -4,16 +4,12 @@ import { ApiError } from "@/lib/api/errors";
 import { demoUnavailable, ok } from "@/lib/api/response";
 import { guard, readBody } from "@/lib/api/http";
 import { validate, isObject, isOptionalString } from "@/lib/api/validate";
-import { PLATFORM } from "@/config/platform";
+import { isShippingMethod, shippingTotal } from "@/lib/shipping";
 import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cartItems, products, vendors } from "@/db/schema";
 
 export const runtime = "nodejs";
-
-const FREE_SHIPPING_THRESHOLD = PLATFORM.policies.freeShippingThreshold; // Toman
-const SHIPPING_POST = 120_000; // per vendor parcel
-const SHIPPING_EXPRESS = 250_000;
 
 /**
  * Mirror the client cart into the DB cart in ONE call:
@@ -37,7 +33,7 @@ export const POST = guard(async (req) => {
     ? (input.items as Array<Record<string, unknown>>).slice(0, 50)
     : [];
   if (rawItems.length === 0) throw ApiError.badRequest("سبد خرید خالی است");
-  const express = input.shippingMethod === "express";
+  const express = isShippingMethod(input.shippingMethod) ? input.shippingMethod === "express" : false;
 
   const slugs = [...new Set(rawItems.map((it) => String(it.slug ?? "").trim()).filter(Boolean))];
   if (slugs.length === 0) throw ApiError.badRequest("سبد خرید خالی است");
@@ -89,8 +85,13 @@ export const POST = guard(async (req) => {
     try {
       await addToCart(user.id, { productId: r.productId, quantity: r.quantity });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "خطای نامشخص";
-      warnings.push(`${r.slug}: ${msg}`);
+      // Never leak raw DB/provider errors to the client — map known cases.
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("موجودی") || msg.includes("OUT_OF_STOCK")) {
+        warnings.push(`موجودی «${r.slug}» کافی نیست`);
+      } else {
+        warnings.push(`«${r.slug}» اضافه نشد — دوباره تلاش کنید`);
+      }
     }
   }
 
@@ -105,15 +106,18 @@ export const POST = guard(async (req) => {
   }
   const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
   const vendorCount = new Set(lines.map((l) => l.vendorId)).size;
-  const shippingTotal =
-    vendorCount * (express ? SHIPPING_EXPRESS : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_POST);
+  const shippingCost = shippingTotal(
+    vendorCount,
+    subtotal,
+    express ? "express" : "post",
+  );
 
   return ok({
     ok: true,
     itemCount: lines.reduce((n, l) => n + l.quantity, 0),
     subtotal,
-    shippingTotal,
-    total: subtotal + shippingTotal,
+    shippingTotal: shippingCost,
+    total: subtotal + shippingCost,
     warnings,
   });
 });

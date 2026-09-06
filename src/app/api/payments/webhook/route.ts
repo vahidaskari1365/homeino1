@@ -13,17 +13,14 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
     const raw = await req.text();
-    let body: unknown;
-    try {
-      body = JSON.parse(raw);
-    } catch {
-      return NextResponse.json({ ok: false, error: { code: "INVALID_INPUT", message: "JSON نامعتبر" } }, { status: 400 });
-    }
     const signature =
       req.headers.get("x-homeino-signature") ??
       req.headers.get("stripe-signature") ??
       undefined;
-    const event = await paymentGateway().parseWebhook(body, signature);
+    // Signature verification sees the EXACT raw bytes (JSON.parse here would
+    // re-serialize differently) — parse only after verification inside
+    // parseWebhook. A body with no signature at all is rejected there.
+    const event = await paymentGateway().parseWebhook(raw, signature);
     const result = await fulfillPaymentEvent(event);
     if (!result.ok) {
       // 200 with ok:false — providers retry on 5xx; a deterministic refusal

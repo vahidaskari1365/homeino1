@@ -92,7 +92,8 @@ export const PATCH = guard(async (req, { params }: { params: Promise<{ key: stri
     return ok({ workflow });
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    throw ApiError.badRequest(error instanceof Error ? error.message : "بروزرسانی ورک‌فلو ناموفق بود");
+    console.error("[automation]", error);
+    throw ApiError.badRequest("بروزرسانی ورک‌فلو ناموفق بود");
   }
 });
 

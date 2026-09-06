@@ -53,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
           <p className="line-clamp-1 text-sm font-bold text-cream">{product.name}</p>
           <div className="mt-0.5 flex items-center gap-2">
             <span className="text-sm font-black text-gold-soft">{toFa(formatPrice(product.price))}</span>
-            {product.oldPrice && <span className="text-[11px] text-cream/50 line-through">{toFa(formatPrice(product.oldPrice))}</span>}
+            {product.oldPrice && <span className="text-2xs text-cream/50 line-through">{toFa(formatPrice(product.oldPrice))}</span>}
           </div>
         </div>
       </Link>
@@ -75,7 +75,7 @@ export function ProductCard({ product }: { product: Product }) {
             {product.colors.slice(0, 4).map((c) => (
               <span key={c.name} className="h-4 w-4 rounded-full border border-cream/40" style={{ background: c.hex }} title={c.name} />
             ))}
-            <span className="text-[10px] text-cream/80">{product.colors[0]?.name}</span>
+            <span className="text-2xs text-cream/80">{product.colors[0]?.name}</span>
           </div>
           <div className="pt-1.5">
             <span className="text-lg font-black text-gold-soft">{toFa(formatPrice(product.price))} </span>
@@ -123,7 +123,7 @@ export function StoreCard({ store }: { store: Store }) {
         <SmartImage src={store.cover} alt={store.name} className="absolute inset-0 h-full w-full" />
         <div className="absolute inset-0 bg-ink/35" />
         {store.verified && (
-          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-cream/90 px-2 py-0.5 text-[11px] font-medium text-ink">
+          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-cream/90 px-2 py-0.5 text-2xs font-medium text-ink">
             <BadgeCheck size={13} className="text-sage" /> تأیید شده
           </span>
         )}
@@ -168,11 +168,11 @@ export function InspirationCard({ insp, index = 0 }: { insp: InspirationImage; i
         <Heart size={16} className={cn(wished && "fill-terracotta")} />
       </button>
       <div className="absolute bottom-0 right-0 p-4 text-cream">
-        <span className="text-[11px] opacity-80">{insp.room}</span>
+        <span className="text-2xs opacity-80">{insp.room}</span>
         <h3 className="font-display text-base font-bold leading-tight">{insp.title}</h3>
         <div className="mt-1.5 flex flex-wrap gap-1">
           {insp.tags.slice(0, 2).map((t) => (
-            <span key={t} className="rounded-full bg-cream/15 px-2 py-0.5 text-[10px] backdrop-blur">#{t}</span>
+            <span key={t} className="rounded-full bg-cream/15 px-2 py-0.5 text-2xs backdrop-blur">#{t}</span>
           ))}
         </div>
       </div>

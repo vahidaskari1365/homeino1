@@ -44,7 +44,7 @@ function NewsletterForm() {
         <button type="submit" disabled={busy} className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90 disabled:opacity-50">{busy ? "..." : "دریافت هدیه"}</button>
       </div>
       <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" dir="ltr" placeholder="یا شماره موبایل 09xxxxxxxxx" className="w-full rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
-      {err && <p className="text-[11px] text-red-300">{err}</p>}
+      {err && <p className="text-2xs text-red-300">{err}</p>}
     </form>
   );
 }
@@ -89,7 +89,7 @@ export function Footer() {
                 </a>
               ))}
               {(process.env.NEXT_PUBLIC_SUPPORT_PHONE || process.env.NEXT_PUBLIC_SUPPORT_EMAIL) && (
-                <div className="ms-2 flex flex-col justify-center text-[11px] leading-4 text-cream/60">
+                <div className="ms-2 flex flex-col justify-center text-2xs leading-4 text-cream/60">
                   {process.env.NEXT_PUBLIC_SUPPORT_PHONE && <span className="flex items-center gap-1" dir="ltr"><Phone size={11} /> {process.env.NEXT_PUBLIC_SUPPORT_PHONE}</span>}
                   {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && <span className="flex items-center gap-1" dir="ltr"><Mail size={11} /> {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</span>}
                 </div>

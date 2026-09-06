@@ -170,7 +170,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
                   <div className="line-clamp-1 font-medium text-ink">{prod.name}</div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-sm font-black text-terracotta-deep">{toFa(formatPrice(prod.price))} ت</span>
-                    <span className="text-[10px] text-ink-muted">{getStoreById(prod.storeId)?.name}</span>
+                    <span className="text-2xs text-ink-muted">{getStoreById(prod.storeId)?.name}</span>
                   </div>
                   <button onClick={(e) => { e.preventDefault(); addToCart(prod.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm"><ShoppingBag size={15} /> افزودن به سبد</button>
                 </div>

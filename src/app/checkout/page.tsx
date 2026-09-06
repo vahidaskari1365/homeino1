@@ -34,6 +34,7 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState<{
     fullName: string; phone: string; city: string; line: string; postalCode: string;
   } | null>(null);
+  const [formErrors, setFormErrors] = useState<{ phone?: string; postalCode?: string }>({});
   const [submitting, setSubmitting] = useState(false);
 
   const lines = resolveCartLines(items);
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
       if (sync.ok) {
         const order = await createServerOrder({
           shippingAddress: { ...address, method: shipping, payMethod: pay },
+          shippingMethod: shipping === "express" ? "express" : "post",
         });
         if (order.ok) {
           clear();
@@ -61,7 +63,14 @@ export default function CheckoutPage() {
           router.push(`/checkout/success?order=${order.data.orderNumber}`);
           return;
         }
-        if (order.status !== 0 && order.status !== 401 && order.status !== 403 && order.status !== 503) {
+        if (order.status === 401 || order.status === 403) {
+          // Server is reachable but REJECTED the order — never silently swap
+          // it for a local demo order; the user must know and re-login.
+          toast(order.status === 401 ? "برای ثبت سفارش باید وارد حساب شوید" : "اجازهٔ ثبت این سفارش را ندارید", "error");
+          setSubmitting(false);
+          return;
+        }
+        if (order.status !== 0 && order.status !== 503) {
           // Real server rejection (e.g. out of stock) — surface it honestly.
           toast(order.message ?? "ثبت سفارش ناموفق بود", "error");
           setSubmitting(false);
@@ -116,8 +125,9 @@ export default function CheckoutPage() {
                   line: String(fd.get("line") ?? "").trim(),
                   postalCode: digits("postalCode"),
                 };
-                if (!/^09\d{9}$/.test(data.phone)) { toast("شماره موبایل باید ۱۱ رقم و با 09 شروع شود", "error"); return; }
-                if (!/^\d{10}$/.test(data.postalCode)) { toast("کد پستی باید ۱۰ رقم باشد", "error"); return; }
+                if (!/^09\d{9}$/.test(data.phone)) { setFormErrors({ phone: "شماره موبایل باید ۱۱ رقم و با 09 شروع شود" }); return; }
+                if (!/^\d{10}$/.test(data.postalCode)) { setFormErrors({ postalCode: "کد پستی باید ۱۰ رقم باشد" }); return; }
+                setFormErrors({});
                 setAddress(data);
                 // «ذخیره در دفترچهٔ آدرس» — idempotent: the same address never
                 // lands twice in the book.
@@ -159,9 +169,9 @@ export default function CheckoutPage() {
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div><label htmlFor="fullName" className="mb-1 block text-sm text-ink-muted">نام و نام خانوادگی</label><input id="fullName" name="fullName" required placeholder="نام کامل" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
-                <div><label htmlFor="phone" className="mb-1 block text-sm text-ink-muted">شماره موبایل</label><input id="phone" name="phone" required inputMode="tel" dir="ltr" placeholder="09xxxxxxxxx" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+                <div><label htmlFor="phone" className="mb-1 block text-sm text-ink-muted">شماره موبایل</label><input id="phone" name="phone" required inputMode="tel" dir="ltr" placeholder="09xxxxxxxxx" aria-invalid={Boolean(formErrors.phone)} aria-describedby={formErrors.phone ? "phone-error" : undefined} className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" />{formErrors.phone && <p id="phone-error" role="alert" className="mt-1 text-xs font-medium text-error">{formErrors.phone}</p>}</div>
                 <div><label htmlFor="city" className="mb-1 block text-sm text-ink-muted">شهر</label><input id="city" name="city" required placeholder="شهر" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
-                <div><label htmlFor="postalCode" className="mb-1 block text-sm text-ink-muted">کد پستی</label><input id="postalCode" name="postalCode" required inputMode="numeric" dir="ltr" placeholder="کد پستی" className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
+                <div><label htmlFor="postalCode" className="mb-1 block text-sm text-ink-muted">کد پستی</label><input id="postalCode" name="postalCode" required inputMode="numeric" dir="ltr" placeholder="کد پستی" aria-invalid={Boolean(formErrors.postalCode)} aria-describedby={formErrors.postalCode ? "postal-error" : undefined} className="w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" />{formErrors.postalCode && <p id="postal-error" role="alert" className="mt-1 text-xs font-medium text-error">{formErrors.postalCode}</p>}</div>
               </div>
               <div><label htmlFor="address" className="mb-1 block text-sm text-ink-muted">نشانی کامل</label><textarea id="address" name="address" required rows={2} placeholder="استان، شهر، خیابان، پلاک…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" /></div>
               <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-ink-muted">
@@ -176,7 +186,7 @@ export default function CheckoutPage() {
             <div className="space-y-4">
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><Truck size={18} /> روش ارسال</h2>
               {[["post", "پست عادی", "۳ تا ۵ روز کاری — هر مرسوله", 120000], ["express", "پیک سریع", "۲۴ ساعت — هر مرسوله", 250000]].map(([id, t, d, c]) => (
-                <button key={id} onClick={() => setShipping(id as string)} className={cn("flex w-full items-center justify-between rounded-xl border p-4 text-right transition", shipping === id ? "border-ink bg-ivory-2" : "border-clay/60")}>
+                <button key={id} onClick={() => setShipping(id as string)} aria-pressed={shipping === id} className={cn("flex w-full items-center justify-between rounded-xl border p-4 text-right transition", shipping === id ? "border-ink bg-ivory-2" : "border-clay/60")}>
                   <div><div className="font-medium text-ink">{t}</div><div className="text-xs text-ink-muted">{d} · {toFa(formatPrice(c as number))} ت برای هر فروشنده (رایگان با رسیدن به سقف)</div></div>
                   <div className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full border" style={{ borderColor: shipping === id ? "var(--color-ink)" : "var(--color-clay)" }}>{shipping === id && <Check size={12} />}</span></div>
                 </button>
@@ -188,7 +198,7 @@ export default function CheckoutPage() {
             <div className="space-y-4">
               <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><CreditCard size={18} /> روش پرداخت</h2>
               {[["online", "پرداخت آنلاین (درگاه)"], ["wallet", "کیف پول Homeino"], ["cod", "پرداخت در محل"]].map(([id, t]) => (
-                <button key={id} onClick={() => setPay(id as string)} className={cn("flex w-full items-center justify-between rounded-xl border p-4 transition", pay === id ? "border-ink bg-ivory-2" : "border-clay/60")}>
+                <button key={id} onClick={() => setPay(id as string)} aria-pressed={pay === id} className={cn("flex w-full items-center justify-between rounded-xl border p-4 transition", pay === id ? "border-ink bg-ivory-2" : "border-clay/60")}>
                   <span className="font-medium text-ink">{t}</span>
                   <span className="grid h-5 w-5 place-items-center rounded-full border" style={{ borderColor: pay === id ? "var(--color-ink)" : "var(--color-clay)" }}>{pay === id && <Check size={12} />}</span>
                 </button>
@@ -221,16 +231,16 @@ export default function CheckoutPage() {
           <div className="max-h-72 space-y-3 overflow-y-auto pl-1">
             {parcels.map((parcel) => (
               <div key={parcel.storeId} className="rounded-xl border border-clay/30 p-3">
-                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-ink"><Store size={12} className="text-ink-muted" /> مرسوله از {parcel.storeName}</div>
+                <div className="mb-1.5 flex items-center gap-1.5 text-2xs font-bold text-ink"><Store size={12} className="text-ink-muted" /> مرسوله از {parcel.storeName}</div>
                 <div className="space-y-2">
                   {parcel.lines.map(({ item, product, unitPrice }) => (
                     <div key={`${product.id}-${item.offerId ?? ""}`} className="flex items-center gap-2">
                       <img src={product.images[0]} alt="" className="h-11 w-11 rounded-lg object-cover" />
-                      <div className="min-w-0 flex-1"><div className="truncate text-xs font-medium text-ink">{product.name}</div><div className="text-[11px] text-ink-muted">{toFa(item.qty)} عدد × {toFa(formatPrice(unitPrice))} ت</div></div>
+                      <div className="min-w-0 flex-1"><div className="truncate text-xs font-medium text-ink">{product.name}</div><div className="text-2xs text-ink-muted">{toFa(item.qty)} عدد × {toFa(formatPrice(unitPrice))} ت</div></div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 flex justify-between border-t border-clay/30 pt-1.5 text-[11px] text-ink-muted">
+                <div className="mt-2 flex justify-between border-t border-clay/30 pt-1.5 text-2xs text-ink-muted">
                   <span className="flex items-center gap-1"><Truck size={11} /> ارسال</span>
                   <span className={cn("font-bold", parcel.shippingCost === 0 ? "text-success" : "text-ink")}>{parcel.shippingCost === 0 ? "رایگان" : `${toFa(formatPrice(parcel.shippingCost))} ت`}</span>
                 </div>

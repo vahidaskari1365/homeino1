@@ -15,7 +15,7 @@ const PHONE_RE = /^09\d{9}$/;
  */
 export async function POST(req: Request) {
   try {
-    rateLimit(`newsletter:${getClientIp(req)}`, { windowMs: 60_000, max: 5 });
+    await rateLimit(`newsletter:${getClientIp(req)}`, { windowMs: 60_000, max: 5 });
   } catch {
     return NextResponse.json({ ok: false, code: "RATE_LIMITED", message: "درخواست‌ها زیاد است — کمی بعد تلاش کن" }, { status: 429 });
   }

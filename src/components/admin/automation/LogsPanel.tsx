@@ -80,14 +80,14 @@ export function LogsPanel() {
               <TableShell head={["ایجنت", "وضعیت", "ابزارها", "توکن", "هزینه", "زمان", "شروع", "خطا"]} minWidth={980}>
                 {agentLogs.data.items.map((run) => (
                   <Row key={run.id}>
-                    <Cell className="text-[11px]"><span dir="ltr" className="font-medium">{run.agentKey}</span><div className="text-ink-muted">{run.provider ?? "—"} · {run.model ?? "—"}</div></Cell>
+                    <Cell className="text-2xs"><span dir="ltr" className="font-medium">{run.agentKey}</span><div className="text-ink-muted">{run.provider ?? "—"} · {run.model ?? "—"}</div></Cell>
                     <Cell><StatusBadge status={run.status} /></Cell>
-                    <Cell><div className="flex flex-wrap gap-1">{run.toolsUsed.slice(0, 3).map((tool) => <Badge key={tool}>{tool}</Badge>)}{run.toolsUsed.length > 3 && <Badge>+{toFa(run.toolsUsed.length - 3)}</Badge>}{!run.toolsUsed.length && <span className="text-[11px] text-ink-muted">—</span>}</div></Cell>
-                    <Cell className="text-[11px] text-ink-muted">{toFa((run.tokensIn + run.tokensOut).toLocaleString("fa-IR"))}</Cell>
-                    <Cell className="text-[11px] text-ink-muted">{toFa(run.costMicro.toLocaleString("fa-IR"))}</Cell>
-                    <Cell className="text-[11px] text-ink-muted">{toFa(run.durationMs ?? 0)}ms · تلاش {toFa(run.attempt)}</Cell>
-                    <Cell className="text-[11px] text-ink-muted">{faDate(run.startedAt)}</Cell>
-                    <Cell className="text-[11px] text-danger">{run.error ? `${run.errorCode ?? ""} ${run.error}`.slice(0, 90) : "—"}</Cell>
+                    <Cell><div className="flex flex-wrap gap-1">{run.toolsUsed.slice(0, 3).map((tool) => <Badge key={tool}>{tool}</Badge>)}{run.toolsUsed.length > 3 && <Badge>+{toFa(run.toolsUsed.length - 3)}</Badge>}{!run.toolsUsed.length && <span className="text-2xs text-ink-muted">—</span>}</div></Cell>
+                    <Cell className="text-2xs text-ink-muted">{toFa((run.tokensIn + run.tokensOut).toLocaleString("fa-IR"))}</Cell>
+                    <Cell className="text-2xs text-ink-muted">{toFa(run.costMicro.toLocaleString("fa-IR"))}</Cell>
+                    <Cell className="text-2xs text-ink-muted">{toFa(run.durationMs ?? 0)}ms · تلاش {toFa(run.attempt)}</Cell>
+                    <Cell className="text-2xs text-ink-muted">{faDate(run.startedAt)}</Cell>
+                    <Cell className="text-2xs text-danger">{run.error ? `${run.errorCode ?? ""} ${run.error}`.slice(0, 90) : "—"}</Cell>
                   </Row>
                 ))}
               </TableShell>
@@ -111,12 +111,12 @@ export function LogsPanel() {
           <TableShell head={["ورک‌فلو", "تریگر", "وضعیت", "ابزارها", "هزینه", "شروع", "گام‌ها"]} minWidth={880}>
             {workflowRuns.data.items.map((run) => (
               <Row key={run.id}>
-                <Cell className="text-[11px]"><span dir="ltr" className="font-medium">{run.workflowKey ?? "—"}</span></Cell>
+                <Cell className="text-2xs"><span dir="ltr" className="font-medium">{run.workflowKey ?? "—"}</span></Cell>
                 <Cell className="text-xs">{run.triggerKind}</Cell>
                 <Cell><StatusBadge status={run.status} /></Cell>
-                <Cell><div className="flex flex-wrap gap-1">{run.toolsUsed.slice(0, 3).map((tool) => <Badge key={tool}>{tool}</Badge>)}{!run.toolsUsed.length && <span className="text-[11px] text-ink-muted">—</span>}</div></Cell>
-                <Cell className="text-[11px] text-ink-muted">{toFa(run.costMicro.toLocaleString("fa-IR"))} میکرو · {toFa(run.durationMs ?? 0)}ms</Cell>
-                <Cell className="text-[11px] text-ink-muted">{faDate(run.startedAt)}</Cell>
+                <Cell><div className="flex flex-wrap gap-1">{run.toolsUsed.slice(0, 3).map((tool) => <Badge key={tool}>{tool}</Badge>)}{!run.toolsUsed.length && <span className="text-2xs text-ink-muted">—</span>}</div></Cell>
+                <Cell className="text-2xs text-ink-muted">{toFa(run.costMicro.toLocaleString("fa-IR"))} میکرو · {toFa(run.durationMs ?? 0)}ms</Cell>
+                <Cell className="text-2xs text-ink-muted">{faDate(run.startedAt)}</Cell>
                 <Cell><Button size="sm" variant="ghost" onClick={() => openSteps(run.id)}><FileSearch size={14} /> گام‌ها</Button></Cell>
               </Row>
             ))}
@@ -139,10 +139,10 @@ export function LogsPanel() {
                     {step.agentKey && <Badge><span dir="ltr">{step.agentKey}</span></Badge>}
                     <span className="text-ink-muted">{toFa(step.durationMs ?? 0)}ms · توکن {toFa(step.tokensIn + step.tokensOut)} · هزینه {toFa(step.costMicro)}</span>
                   </div>
-                  {step.error && <div className="mb-2 text-[11px] text-danger">{step.error}</div>}
+                  {step.error && <div className="mb-2 text-2xs text-danger">{step.error}</div>}
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <div><div className="mb-1 text-[11px] font-medium text-ink-muted">ورودی</div><JsonBox value={step.input ?? {}} max={8} /></div>
-                    <div><div className="mb-1 text-[11px] font-medium text-ink-muted">خروجی</div><JsonBox value={step.output ?? {}} max={8} /></div>
+                    <div><div className="mb-1 text-2xs font-medium text-ink-muted">ورودی</div><JsonBox value={step.input ?? {}} max={8} /></div>
+                    <div><div className="mb-1 text-2xs font-medium text-ink-muted">خروجی</div><JsonBox value={step.output ?? {}} max={8} /></div>
                   </div>
                 </div>
               ))}

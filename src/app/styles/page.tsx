@@ -44,7 +44,7 @@ function StyleGuideSection({ style, index, total }: { style: Style; index: numbe
                 {style.colorPalette.map((color) => (
                   <div key={color.hex} className="min-w-0 text-center">
                     <span className="block aspect-square w-full rounded-lg border border-ink/10 shadow-sm" style={{ backgroundColor: color.hex }} title={`${color.name} ${color.hex}`} />
-                    <span className="mt-1 block truncate text-[9px] text-ink-muted">{color.name}</span>
+                    <span className="mt-1 block truncate text-2xs text-ink-muted">{color.name}</span>
                   </div>
                 ))}
               </div>
@@ -53,7 +53,7 @@ function StyleGuideSection({ style, index, total }: { style: Style; index: numbe
             <section className="rounded-2xl border border-clay/35 bg-ivory/55 p-4">
               <h3 className="flex items-center gap-2 text-sm font-black text-ink"><Layers3 size={16} className="text-terracotta-deep" /> متریال‌های رایج</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {style.materials.map((material) => <span key={material} className="rounded-lg bg-cream px-2.5 py-1.5 text-[11px] text-ink-muted shadow-sm">{material}</span>)}
+                {style.materials.map((material) => <span key={material} className="rounded-lg bg-cream px-2.5 py-1.5 text-2xs text-ink-muted shadow-sm">{material}</span>)}
               </div>
             </section>
           </div>
@@ -82,7 +82,7 @@ function StyleGuideSection({ style, index, total }: { style: Style; index: numbe
             <p className="mt-2 text-xs leading-6 text-cream/70">{style.suitableFor}</p>
             <div className="mt-3 border-t border-cream/10 pt-3">
               <p className="mb-2 flex items-center gap-2 text-xs font-bold"><Home size={14} className="text-sage-soft" /> فضاهای مناسب</p>
-              <div className="flex flex-wrap gap-1.5">{style.suitableRooms.map((room) => <span key={room} className="rounded-full bg-cream/10 px-2.5 py-1 text-[10px] text-cream/85">{room}</span>)}</div>
+              <div className="flex flex-wrap gap-1.5">{style.suitableRooms.map((room) => <span key={room} className="rounded-full bg-cream/10 px-2.5 py-1 text-2xs text-cream/85">{room}</span>)}</div>
             </div>
           </section>
 
@@ -101,7 +101,7 @@ function StyleGuideSection({ style, index, total }: { style: Style; index: numbe
               <BookOpen size={16} /> راهنمای کامل {style.name}
             </Link>
           </div>
-          <p className="mt-2 text-center text-[10px] text-ink-muted">{toFa(productCount)} محصول هماهنگ در Homeino</p>
+          <p className="mt-2 text-center text-2xs text-ink-muted">{toFa(productCount)} محصول هماهنگ در Homeino</p>
         </div>
       </div>
     </article>

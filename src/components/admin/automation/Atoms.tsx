@@ -118,7 +118,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-ink-muted">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-[11px] text-ink-muted">{hint}</span>}
+      {hint && <span className="mt-1 block text-2xs text-ink-muted">{hint}</span>}
     </label>
   );
 }
@@ -142,11 +142,11 @@ export function JsonBox({ value, max = 12 }: { value: unknown; max?: number }) {
   }
   return (
     <div className="space-y-1">
-      <pre dir="ltr" className="max-w-full overflow-x-auto whitespace-pre rounded-lg bg-ivory-2 p-2 text-left text-[11px] leading-5 text-ink-muted">
+      <pre dir="ltr" className="max-w-full overflow-x-auto whitespace-pre rounded-lg bg-ivory-2 p-2 text-left text-2xs leading-5 text-ink-muted">
         {clipped ? lines.slice(0, max).join("\n") + "\n…" : text}
       </pre>
       {lines.length > max && (
-        <button type="button" onClick={() => setOpen((v) => !v)} className="text-[11px] text-terracotta-deep">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="text-2xs text-terracotta-deep">
           {open ? "بستن" : `نمایش همه (${toFa(lines.length)} خط)`}
         </button>
       )}

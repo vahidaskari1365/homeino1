@@ -18,7 +18,7 @@ export function DashboardLayout({ items, title, badge, children }: { items: NavI
             <div className="px-3 py-2">
               <div className="flex items-center gap-2">
                 <h2 className="font-display font-black text-ink">{title}</h2>
-                {badge && <span className="rounded-full bg-terracotta/15 px-2 py-0.5 text-[10px] font-bold text-terracotta-deep">{badge}</span>}
+                {badge && <span className="rounded-full bg-terracotta/15 px-2 py-0.5 text-2xs font-bold text-terracotta-deep">{badge}</span>}
               </div>
             </div>
             <nav className="mt-1 space-y-0.5">

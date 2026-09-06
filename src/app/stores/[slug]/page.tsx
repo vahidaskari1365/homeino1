@@ -100,7 +100,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
                     <Rating value={review.rating} size={13} />
                   </div>
                   <p className="mt-2 text-sm leading-7 text-ink-muted">{review.comment}</p>
-                  {review.verifiedPurchase && <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-sage"><BadgeCheck size={12} /> خرید تأییدشده</span>}
+                  {review.verifiedPurchase && <span className="mt-2 inline-flex items-center gap-1 text-2xs text-sage"><BadgeCheck size={12} /> خرید تأییدشده</span>}
                 </div>
               ))}
             </div>

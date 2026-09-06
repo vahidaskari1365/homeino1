@@ -76,7 +76,7 @@ export default function LoginPage() {
           <label className="flex items-center gap-2 text-ink-muted"><input type="checkbox" checked={remember} onChange={(e) => { setRememberOverride(e.target.checked); try { window.localStorage.setItem("homeino-remember", e.target.checked ? "1" : "0"); } catch { /* private mode */ } }} className="accent-terracotta" /> مرا به خاطر بسپار</label>
           <Link href="/forgot-password" className="text-terracotta-deep hover:underline">رمز را فراموش کرده‌ای؟</Link>
         </div>
-        {err && <p className="text-sm text-danger">{err}</p>}
+        {err && <p role="alert" className="text-sm text-danger">{err}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={loading}>{loading ? <><Spinner /> در حال ورود…</> : "ورود"}</Button>
         <div className="flex items-center gap-3 py-1 text-xs text-ink-muted"><span className="h-px flex-1 bg-clay/50" /> یا <span className="h-px flex-1 bg-clay/50" /></div>
         <div className="grid grid-cols-2 gap-3">

@@ -20,7 +20,7 @@ const ID_RE = /^[0-9a-fA-F-]{1,64}$/;
 
 export const POST = guard(async (req, { params }: { params: Promise<{ id: string }> }) => {
   const { user } = await requireAdminUser(req);
-  rateLimit(`approvals:${user.id}`, { windowMs: 60_000, max: 60 });
+  await rateLimit(`approvals:${user.id}`, { windowMs: 60_000, max: 60 });
 
   const { id } = await params;
   const approvalId = decodeURIComponent(id).trim();

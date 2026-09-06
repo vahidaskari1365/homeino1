@@ -23,7 +23,7 @@ function sessionIdOf(req: NextRequest, explicit?: unknown): string | null {
 
 export const POST = guard(async (req: NextRequest) => {
   const ip = getClientIp(req);
-  rateLimit(`studio-agents:${ip}`, { windowMs: 60_000, max: 20 });
+  await rateLimit(`studio-agents:${ip}`, { windowMs: 60_000, max: 20 });
 
   const body = (await readBody(req, 100_000)) as Record<string, unknown>;
   const { userId } = await optionalUser(req);

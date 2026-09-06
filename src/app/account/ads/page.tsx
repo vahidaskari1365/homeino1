@@ -70,7 +70,7 @@ export default function MyAdsPage() {
       )}
 
       {ads.length > 0 && (
-        <p className="flex items-center gap-2 text-[11px] text-ink-muted"><RefreshCcw size={12} /> آگهی‌ها در همین مرورگر ذخیره می‌شوند و در صفحهٔ عمومی «دسته دوم» با برچسب «آگهی تو» نمایش داده می‌شوند.</p>
+        <p className="flex items-center gap-2 text-2xs text-ink-muted"><RefreshCcw size={12} /> آگهی‌ها در همین مرورگر ذخیره می‌شوند و در صفحهٔ عمومی «دسته دوم» با برچسب «آگهی تو» نمایش داده می‌شوند.</p>
       )}
 
       <ConfirmDialog

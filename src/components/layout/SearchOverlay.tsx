@@ -112,7 +112,7 @@ export function SearchOverlay() {
                           <SmartImage src={p.images[0]} alt={p.name} className="h-12 w-12 shrink-0 rounded-lg" />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-medium text-ink">{p.name}</div>
-                            <div className="flex items-center gap-2 text-xs text-ink-muted"><Rating value={p.rating} size={11} /> · {formatPrice(p.price)} تومان</div>
+                            <div className="flex items-center gap-2 text-xs text-ink-muted"><Rating value={p.rating} size={11} /> · {toFa(formatPrice(p.price))} تومان</div>
                           </div>
                         </button>
                       ))}

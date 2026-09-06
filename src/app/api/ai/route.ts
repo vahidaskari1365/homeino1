@@ -48,7 +48,9 @@ function dedupeKey(action: string, payload: Record<string, unknown>): string {
   const prompt = typeof payload.prompt === "string" ? payload.prompt : "";
   const img = typeof payload.referenceImage === "string" ? payload.referenceImage.slice(0, 80) : "";
   const mask = typeof payload.mask === "string" ? payload.mask.slice(0, 80) : "";
-  return `${action}:${hashString(prompt)}:${hashString(img)}:${hashString(mask)}`;
+  // Per-user: user B must never join (or be joined by) user A's generation.
+  const owner = typeof payload.userId === "string" ? payload.userId : "guest";
+  return `${action}:${owner}:${hashString(prompt)}:${hashString(img)}:${hashString(mask)}`;
 }
 
 function json(data: Record<string, unknown>, status: number, requestId: string): NextResponse {
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
   try {
     // ---- Rate limiting (shared in-memory limiter) ----
     try {
-      rateLimit(`ai:${getClientIp(req)}`, { windowMs: 60_000, max: 30 });
+      await rateLimit(`ai:${getClientIp(req)}`, { windowMs: 60_000, max: 30 });
     } catch (err) {
       if (err instanceof ApiError && err.code === "RATE_LIMITED") {
         finish("error", { errorCode: "RATE_LIMIT" });
@@ -129,8 +131,10 @@ export async function POST(req: NextRequest) {
     // Never trust a client-supplied userId. When server-side credits are on,
     // identity comes only from the authenticated session.
     delete p.userId;
-    // Real (paid) providers configured → generative actions MUST be
-    // authenticated. Sample/demo mode (no keys) stays open and free.
+    // Real (paid) providers configured → ALL cost-bearing actions MUST be
+    // authenticated (chat/agent/recommend burn LLM tokens just like
+    // generation — an open door would be a cost-abuse vector).
+    // Sample/demo mode (no keys) stays open and free.
     const hasRealProvider = Boolean(
       process.env.GEMINI_API_KEY ||
         process.env.OPENAI_API_KEY ||
@@ -138,14 +142,16 @@ export async function POST(req: NextRequest) {
         process.env.FREELLM_API_URL ||
         process.env.ORALI_API_URL,
     );
-    const AUTH_REQUIRED_ACTIONS = new Set(["generate", "edit", "inpaint", "pipeline"]);
+    const AUTH_REQUIRED_ACTIONS = new Set([
+      "generate", "edit", "inpaint", "pipeline", "chat", "agent", "understand", "recommend",
+    ]);
     if (process.env.AI_SERVER_CREDITS === "1" || (hasRealProvider && AUTH_REQUIRED_ACTIONS.has(action))) {
       try {
         const ctx = await requireUser(req);
         p.userId = ctx.user.id;
         // Authenticated identity is a far better limiter key than a
         // spoofable X-Forwarded-For header.
-        rateLimit(`ai:user:${ctx.user.id}`, { windowMs: 60_000, max: 20 });
+        await rateLimit(`ai:user:${ctx.user.id}`, { windowMs: 60_000, max: 20 });
       } catch (err) {
         const status = err instanceof ApiError ? err.status : 401;
         finish("error", { errorCode: "UNAUTHORIZED", action });

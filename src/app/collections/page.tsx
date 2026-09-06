@@ -65,7 +65,7 @@ export default function CollectionsPage() {
                   <span className={`grid h-14 w-14 shrink-0 grid-cols-2 overflow-hidden rounded-xl ${selected ? "bg-white/10" : "bg-ivory-2"}`}>
                     {covers.length ? covers.map((product) => product && <SmartImage key={product.id} src={product.images[0]} alt="" className="h-full min-h-0 w-full" />) : <FolderHeart size={21} className="col-span-2 m-auto opacity-55" />}
                   </span>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-black">{collection.title}</span><span className={`text-[11px] ${selected ? "text-cream/60" : "text-ink-muted"}`}>{toFa(collection.productIds.length)} محصول</span></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-black">{collection.title}</span><span className={`text-2xs ${selected ? "text-cream/60" : "text-ink-muted"}`}>{toFa(collection.productIds.length)} محصول</span></span>
                 </button>
               );
             })}
@@ -98,7 +98,7 @@ export default function CollectionsPage() {
                 <div className="mt-10 border-t border-clay/35 pt-7">
                   <div className="mb-4 flex items-end justify-between gap-3"><div><h3 className="text-lg font-black text-ink">افزودن محصول</h3><p className="text-xs text-ink-muted">{wishlistCandidates.length ? "از علاقه‌مندی‌های تو" : "پیشنهادهای محبوب Homeino"}</p></div><ButtonLink href="/products" variant="ghost" size="sm">کاوش بیشتر</ButtonLink></div>
                   <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
-                    {addCandidates.slice(0, 8).map((product) => <article key={product.id} className="w-36 shrink-0 rounded-xl border border-clay/40 bg-cream p-2"><Link href={`/products/${product.slug}`}><SmartImage src={product.images[0]} alt={product.name} className="aspect-square w-full rounded-lg" /></Link><p className="mt-2 line-clamp-2 min-h-9 text-[11px] font-bold leading-5 text-ink">{product.name}</p><button onClick={() => { addProduct(active.id, product.id); toast("به کالکشن اضافه شد"); }} className="btn-primary mt-2 flex min-h-9 w-full items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-bold"><Plus size={12} /> افزودن</button></article>)}
+                    {addCandidates.slice(0, 8).map((product) => <article key={product.id} className="w-36 shrink-0 rounded-xl border border-clay/40 bg-cream p-2"><Link href={`/products/${product.slug}`}><SmartImage src={product.images[0]} alt={product.name} className="aspect-square w-full rounded-lg" /></Link><p className="mt-2 line-clamp-2 min-h-9 text-2xs font-bold leading-5 text-ink">{product.name}</p><button onClick={() => { addProduct(active.id, product.id); toast("به کالکشن اضافه شد"); }} className="btn-primary mt-2 flex min-h-9 w-full items-center justify-center gap-1 rounded-lg px-2 text-2xs font-bold"><Plus size={12} /> افزودن</button></article>)}
                   </div>
                 </div>
               )}

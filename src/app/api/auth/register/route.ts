@@ -12,7 +12,7 @@ export const POST = guard(async (req) => {
   const input = validate(await readBody(req), {
     email: isEmail, password: isPassword, name: isOptionalString(120), phone: isOptionalString(32),
   });
-  rateLimit(`register:${input.email}`, { windowMs: 60_000, max: 8 });
+  await rateLimit(`register:${input.email}`, { windowMs: 60_000, max: 8 });
   const { data, error } = await createSupabaseServerClient().auth.signUp({
     email: input.email,
     password: input.password,
@@ -21,7 +21,9 @@ export const POST = guard(async (req) => {
   });
   if (error) {
     if (/already|registered|exists/i.test(error.message)) throw ApiError.conflict("این ایمیل قبلاً ثبت شده است");
-    throw ApiError.badRequest(error.message);
+    // Never surface raw provider error text (English internals, config details).
+    console.error("[auth:register]", error.message);
+    throw ApiError.badRequest("ثبت‌نام انجام نشد — اطلاعات را بررسی کنید یا بعداً تلاش کنید");
   }
   if (!data.user) throw ApiError.badRequest("ثبت‌نام انجام نشد");
 

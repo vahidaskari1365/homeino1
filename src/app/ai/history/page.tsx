@@ -54,8 +54,8 @@ export default function AIHistoryPage() {
               </div>
               {/* CONTINUE — not a dead-end */}
               <div className="flex border-t border-clay/30">
-                <Link href={`/ai/design?session=${d.id}`} className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold text-terracotta-deep transition hover:bg-ivory-2"><Wand2 size={13} /> ادامه طراحی</Link>
-                <Link href={`/ai/result/${d.id}`} className="flex flex-1 items-center justify-center gap-1.5 border-r border-clay/30 py-2.5 text-[11px] font-bold text-ink-muted transition hover:bg-ivory-2"><ShoppingBag size={13} /> مشاهده محصولات</Link>
+                <Link href={`/ai/design?session=${d.id}`} className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-2xs font-bold text-terracotta-deep transition hover:bg-ivory-2"><Wand2 size={13} /> ادامه طراحی</Link>
+                <Link href={`/ai/result/${d.id}`} className="flex flex-1 items-center justify-center gap-1.5 border-r border-clay/30 py-2.5 text-2xs font-bold text-ink-muted transition hover:bg-ivory-2"><ShoppingBag size={13} /> مشاهده محصولات</Link>
               </div>
             </div>
           )) : (

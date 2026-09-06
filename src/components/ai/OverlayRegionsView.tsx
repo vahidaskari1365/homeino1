@@ -47,7 +47,7 @@ export function OverlayRegionsView({ image, regions, className }: { image: strin
               aria-label={`ناحیه تغییر: ${r.label}`}
             >
               <span className={cn(
-                "absolute -top-0.5 right-1 -translate-y-full whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-bold text-ink shadow",
+                "absolute -top-0.5 right-1 -translate-y-full whitespace-nowrap rounded-md px-1.5 py-0.5 text-2xs font-bold text-ink shadow",
                 r.status === "failed" ? "bg-danger text-white" : "bg-gold text-ink",
               )}>
                 <Layers size={9} className="ml-0.5 inline" /> {r.label}
@@ -56,13 +56,13 @@ export function OverlayRegionsView({ image, regions, className }: { image: strin
           );
         })
       ) : (
-        <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-lg bg-ink/70 px-2 py-1 text-[10px] font-medium text-cream backdrop-blur">
+        <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-lg bg-ink/70 px-2 py-1 text-2xs font-medium text-cream backdrop-blur">
           <Scan size={11} className="text-gold-soft" />
           نواحی تغییر: بدون متادیتای overlay — موتور واقعی Orali متصل نیست
         </div>
       )}
       {regions.length > 0 && (
-        <div className="absolute bottom-2 right-2 rounded-lg bg-ink/70 px-2 py-1 text-[10px] font-medium text-cream backdrop-blur">
+        <div className="absolute bottom-2 right-2 rounded-lg bg-ink/70 px-2 py-1 text-2xs font-medium text-cream backdrop-blur">
           {toFa(regions.length)} ناحیه تغییر یافت شد — روی هر کادر برو تا برجسته شود
         </div>
       )}

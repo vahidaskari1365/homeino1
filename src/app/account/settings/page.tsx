@@ -174,7 +174,7 @@ export default function SettingsPage() {
               <label key={type} className="flex cursor-pointer items-center justify-between rounded-xl border border-clay/40 bg-ivory-2 p-3 transition hover:border-clay">
                 <div>
                   <div className="text-sm font-medium text-ink">{info.title}</div>
-                  <div className="text-[11px] text-ink-muted">{info.desc}</div>
+                  <div className="text-2xs text-ink-muted">{info.desc}</div>
                 </div>
                 <button
                   type="button"

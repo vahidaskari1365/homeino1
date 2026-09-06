@@ -130,14 +130,14 @@ function GuardRemovals({ guard }: { guard: GuardShape }) {
     <div className="space-y-1.5 rounded-lg border border-clay/40 bg-ivory-2 p-2.5">
       {removals.length > 0 && (
         <div>
-          <div className="mb-1 flex items-center gap-1 text-[11px] font-bold text-terracotta-deep"><ShieldAlert size={12} /> {toFa(removals.length)} مقدار نامعتبر حذف شد</div>
+          <div className="mb-1 flex items-center gap-1 text-2xs font-bold text-terracotta-deep"><ShieldAlert size={12} /> {toFa(removals.length)} مقدار نامعتبر حذف شد</div>
           {removals.slice(0, 8).map((removal, index) => (
-            <div key={index} className="flex items-start gap-1.5 border-t border-clay/30 py-1 text-[11px] leading-5">
-              <code dir="ltr" className="shrink-0 rounded bg-cream px-1.5 font-mono text-[10px] text-ink">{removal.path ?? "?"}</code>
+            <div key={index} className="flex items-start gap-1.5 border-t border-clay/30 py-1 text-2xs leading-5">
+              <code dir="ltr" className="shrink-0 rounded bg-cream px-1.5 font-mono text-2xs text-ink">{removal.path ?? "?"}</code>
               <span className="text-ink-muted">{removal.reason ?? "حذف شد"}</span>
             </div>
           ))}
-          {removals.length > 8 && <div className="text-[11px] text-ink-muted">… و {toFa(removals.length - 8)} مورد دیگر</div>}
+          {removals.length > 8 && <div className="text-2xs text-ink-muted">… و {toFa(removals.length - 8)} مورد دیگر</div>}
         </div>
       )}
       {corrected > 0 && <Badge tone="gold">{toFa(corrected)} قیمت با کاتالوگ واقعی اصلاح شد</Badge>}
@@ -147,7 +147,7 @@ function GuardRemovals({ guard }: { guard: GuardShape }) {
           {warnings.slice(0, 4).map((warning, index) => <Badge key={index} tone="neutral">{warning}</Badge>)}
         </div>
       )}
-      {!removals.length && !corrected && !warnings.length && !guard.emptyProductList && <div className="text-[11px] text-ink-muted">هیچ مقدار نامعتبری در خروجی نبود ✓</div>}
+      {!removals.length && !corrected && !warnings.length && !guard.emptyProductList && <div className="text-2xs text-ink-muted">هیچ مقدار نامعتبری در خروجی نبود ✓</div>}
     </div>
   );
 }
@@ -165,7 +165,7 @@ function RunSummary({ result }: { result: Record<string, unknown> }) {
         {typeof result.error === "string" && result.error ? <Badge tone="dark">{String(result.error)}</Badge> : null}
       </div>
       {facts.guard ? <GuardRemovals guard={facts.guard} /> : null}
-      <details className="text-[11px] text-ink-muted">
+      <details className="text-2xs text-ink-muted">
         <summary className="cursor-pointer select-none">مشاهدهٔ خروجی خام</summary>
         <div className="mt-1.5"><JsonBox value={result} max={10} /></div>
       </details>
@@ -324,7 +324,7 @@ export function AgentsPanel() {
         desc="ایجنت‌ها داده هستند نه کد — ابزار و مجوز هرکدام همین‌جا تعیین می‌شود"
         action={<Button size="sm" onClick={() => { setIsNew(true); setEditing({ ...EMPTY_FORM }); }}><Bot size={16} /> ایجنت جدید</Button>}
       >
-        <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-ink-muted">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-2xs text-ink-muted">
           <Badge tone={data.meta.storeMode === "database" ? "success" : "gold"}>ذخیره‌سازی: {data.meta.storeMode === "database" ? "پایگاه‌داده" : "حافظه فرآیند"}</Badge>
           <Badge tone={data.meta.llm.configured ? "success" : "neutral"}>LLM: {data.meta.llm.configured ? data.meta.llm.provider : data.meta.llm.reason ?? "پیکربندی نشده"}</Badge>
           <span>{data.meta.storeReason}</span>
@@ -338,20 +338,20 @@ export function AgentsPanel() {
                   <button type="button" onClick={() => openDetails(agent)} className="text-right">
                     <span className="font-medium text-ink hover:text-terracotta-deep">{agent.name}</span>
                   </button>
-                  <div dir="ltr" className="text-[11px] text-ink-muted">{agent.key}{agent.isBuiltin ? " · builtin" : ""}</div>
-                  {agent.description && <div className="mt-1 line-clamp-2 max-w-md text-[11px] text-ink-muted">{agent.description}</div>}
+                  <div dir="ltr" className="text-2xs text-ink-muted">{agent.key}{agent.isBuiltin ? " · builtin" : ""}</div>
+                  {agent.description && <div className="mt-1 line-clamp-2 max-w-md text-2xs text-ink-muted">{agent.description}</div>}
                 </Cell>
-                <Cell className="text-xs">{agent.type}<div className="text-[11px] text-ink-muted">{agent.handler ?? "declarative"} · {agent.runtime ?? "local"}</div></Cell>
+                <Cell className="text-xs">{agent.type}<div className="text-2xs text-ink-muted">{agent.handler ?? "declarative"} · {agent.runtime ?? "local"}</div></Cell>
                 <Cell>
                   <div className="flex flex-wrap gap-1">
                     {agent.tools.slice(0, 4).map((t) => <Badge key={t}>{t}</Badge>)}
                     {agent.tools.length > 4 && <Badge>+{toFa(agent.tools.length - 4)}</Badge>}
-                    {!agent.tools.length && <span className="text-[11px] text-ink-muted">بدون ابزار</span>}
+                    {!agent.tools.length && <span className="text-2xs text-ink-muted">بدون ابزار</span>}
                   </div>
                 </Cell>
                 <Cell><div className="flex flex-wrap gap-1">{agent.permissions.slice(0, 3).map((p) => <Badge key={p}>{p}</Badge>)}{agent.permissions.length > 3 && <Badge>+{toFa(agent.permissions.length - 3)}</Badge>}</div></Cell>
                 <Cell>
-                  <div className="space-y-1 text-[11px]">
+                  <div className="space-y-1 text-2xs">
                     {agent.schedule && Object.keys(agent.schedule).length ? (
                       <div className="flex items-center gap-1.5 font-medium text-ink">
                         <Clock3 size={12} className="shrink-0 text-terracotta-deep" />
@@ -443,7 +443,7 @@ export function AgentsPanel() {
                     />
                     <span>
                       <span dir="ltr" className="font-medium text-ink">{tool.key}</span>
-                      <span className="block text-[11px] text-ink-muted">{tool.name}{tool.requiresApproval ? " · نیازمند تأیید انسانی" : ""}</span>
+                      <span className="block text-2xs text-ink-muted">{tool.name}{tool.requiresApproval ? " · نیازمند تأیید انسانی" : ""}</span>
                     </span>
                   </label>
                 ))}
@@ -463,7 +463,7 @@ export function AgentsPanel() {
                     />
                     <span>
                       <span dir="ltr" className="font-medium text-ink">{permission.key}</span>
-                      <span className="block text-[11px] text-ink-muted">{permission.label} · ریسک {permission.risk}</span>
+                      <span className="block text-2xs text-ink-muted">{permission.label} · ریسک {permission.risk}</span>
                     </span>
                   </label>
                 ))}
@@ -523,7 +523,7 @@ export function AgentsPanel() {
                   const record = run as Record<string, unknown>;
                   return (
                     <div key={String(record.id ?? JSON.stringify(record))} className="rounded-lg border border-clay/40 bg-ivory-2 p-2.5">
-                      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                      <div className="flex flex-wrap items-center gap-1.5 text-2xs">
                         <StatusBadge status={String(record.status ?? "")} />
                         {typeof record.startedAt === "string" && <span className="text-ink-muted">{formatWhen(record.startedAt)}</span>}
                         {typeof record.durationMs === "number" && <span className="text-ink-muted">زمان: {toFa(record.durationMs)}ms</span>}
@@ -532,11 +532,11 @@ export function AgentsPanel() {
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {Array.isArray(record.toolsUsed) ? (record.toolsUsed as string[]).slice(0, 5).map((tool) => <Badge key={tool}>{tool}</Badge>) : null}
                       </div>
-                      {typeof record.error === "string" && record.error ? <div className="mt-1 text-[11px] leading-5 text-ink-muted">{record.error}</div> : null}
+                      {typeof record.error === "string" && record.error ? <div className="mt-1 text-2xs leading-5 text-ink-muted">{record.error}</div> : null}
                     </div>
                   );
                 })}
-                {details.runs.length > 10 && <div className="text-[11px] text-ink-muted">… و {toFa(details.runs.length - 10)} اجرای دیگر</div>}
+                {details.runs.length > 10 && <div className="text-2xs text-ink-muted">… و {toFa(details.runs.length - 10)} اجرای دیگر</div>}
               </div>
             ) : (
               <NoData title="هنوز اجرایی ثبت نشده" desc="با دکمهٔ «اجرا» اولین اجرای این ایجنت را ببین." />

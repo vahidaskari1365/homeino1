@@ -8,7 +8,7 @@ import { toFa, formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useDataVersion } from "@/lib/useDataVersion";
 import { listLocalOrders, cancelLocalOrder, orderDisplayStatus, STATUS_LABEL, PAY_LABEL, SHIPPING_LABEL, type LocalOrder, type OrderParcel } from "@/data/localOrders";
-import { fetchServerOrders, type ServerOrder } from "@/lib/commerceClient";
+import { fetchServerOrders, cancelServerOrder, type ServerOrder } from "@/lib/commerceClient";
 import { parcelTimeline, destinationLine } from "@/lib/orderTracking";
 
 const STATUS_TONE: Record<string, "success" | "accent" | "gold" | "dark"> = {
@@ -32,6 +32,21 @@ export default function OrdersPage() {
   const orders = hydrated ? listLocalOrders() : [];
   // Server orders (when the real backend is up) — shown above local demo ones.
   const [serverOrders, setServerOrders] = useState<ServerOrder[]>([]);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  // Owner-initiated cancel for PENDING server orders (stock is released
+  // server-side in the same transaction as the status change).
+  async function cancelServer(o: ServerOrder) {
+    setCancellingId(o.id);
+    const res = await cancelServerOrder(o.id);
+    setCancellingId(null);
+    if (res.ok) {
+      setServerOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, status: "cancelled" } : x)));
+      toast(`سفارش #${toFa(o.orderNumber)} لغو شد`);
+    } else {
+      toast(res.message ?? "لغو سفارش ناموفق بود", "error");
+    }
+  }
   useEffect(() => {
     if (!hydrated) return;
     let alive = true;
@@ -68,6 +83,11 @@ export default function OrdersPage() {
                 <span className="font-bold text-ink">#{toFa(o.orderNumber)}</span>
                 <span className="text-xs text-ink-muted">{o.status === "pending" ? "در انتظار پرداخت" : o.status === "confirmed" ? "تأیید شده" : o.status}</span>
                 <span className="font-bold text-ink">{toFa(formatPrice(o.total))} تومان</span>
+                {o.status === "pending" && (
+                  <Button variant="ghost" size="sm" disabled={cancellingId === o.id} onClick={() => void cancelServer(o)}>
+                    {cancellingId === o.id ? "در حال لغو…" : "لغو"}
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -140,7 +160,7 @@ export default function OrdersPage() {
                   <span>تحویل به: {destination}{tracking.address?.fullName ? ` — ${tracking.address.fullName}` : ""}</span>
                 </div>
               )}
-              <div className="flex flex-wrap gap-2 text-[11px] text-ink-muted">
+              <div className="flex flex-wrap gap-2 text-2xs text-ink-muted">
                 {tracking.shippingMethod && <span className="rounded-full bg-ivory-2 px-2 py-1">ارسال: {SHIPPING_LABEL[tracking.shippingMethod] ?? tracking.shippingMethod}</span>}
                 {tracking.payMethod && <span className="flex items-center gap-1 rounded-full bg-ivory-2 px-2 py-1"><CreditCard size={11} /> {PAY_LABEL[tracking.payMethod] ?? tracking.payMethod}</span>}
               </div>
@@ -153,7 +173,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
               ))}
-              <div className="flex items-start gap-2 rounded-lg bg-ivory-2 p-3 text-[11px] leading-6 text-ink-muted">
+              <div className="flex items-start gap-2 rounded-lg bg-ivory-2 p-3 text-2xs leading-6 text-ink-muted">
                 <X size={13} className="mt-0.5 shrink-0" />
                 <span>در دمو بدون دیتابیس: مرسولهٔ «{active.storeName}» را همان فروشگاه از پنل فروشنده جلو می‌برد و بقیه مرسوله‌ها طبق زمان‌بندی دمو (۶/۲۶/۷۴ ساعت) دقیق جلو می‌روند. هر تغییر همان لحظه در همین صفحه اعمال می‌شود.</span>
               </div>

@@ -1,11 +1,19 @@
 import { ApiError } from "./errors";
+import { sql } from "drizzle-orm";
 
 /**
- * Simple in-memory sliding-window rate limiter.
- * Suitable for per-process protection (per route + identity key). For
- * multi-instance deployments swap for a shared store (Redis), keeping the
- * same interface.
+ * Two-tier rate limiter.
+ *
+ * Tier 1 (shared, authoritative when DATABASE_URL is set): the `rate_limits`
+ * table — one atomic UPSERT advances the counter for the current window, so
+ * ALL serverless instances share the same buckets. One extra indexed query
+ * only on rate-limited surfaces (AI, auth) — acceptable and correct.
+ *
+ * Tier 2 (fallback): per-process sliding window, used when the DB is absent
+ * (demo mode) or briefly unreachable — fail-open to local, never break the
+ * route because the limiter store hiccuped.
  */
+
 type Bucket = { timestamps: number[] };
 
 const buckets = new Map<string, Bucket>();
@@ -63,8 +71,7 @@ function cleanupExpiredBuckets(now: number) {
   }
 }
 
-export function rateLimit(key: string, opts: RateLimitOptions = {}) {
-  const { windowMs = 60_000, max = 120 } = opts;
+function memoryLimit(key: string, windowMs: number, max: number): number {
   const now = Date.now();
   cleanupExpiredBuckets(now);
   const bucket = buckets.get(key) ?? { timestamps: [] };
@@ -75,6 +82,50 @@ export function rateLimit(key: string, opts: RateLimitOptions = {}) {
   bucket.timestamps.push(now);
   buckets.set(key, bucket);
   return bucket.timestamps.length;
+}
+
+type Sql = {
+  execute: (query: unknown) => Promise<{ rows: Array<{ count: number }> }>;
+};
+
+/** Atomic shared-window hit. Returns the new count, or null when unavailable. */
+async function sharedLimit(key: string, windowMs: number, max: number): Promise<number | null> {
+  if (!process.env.DATABASE_URL) return null;
+  try {
+    // Lazy import so edge/demo bundles never pull the driver.
+    const { getDb } = await import("@/db");
+    const db = getDb() as unknown as Sql;
+    // Reset the counter when the last hit started BEFORE the current window;
+    // otherwise increment. One statement = race-free across instances.
+    const res = await db.execute(sql`
+      insert into rate_limits (key, count, window_start, updated_at)
+      values (${key}, 1, now(), now())
+      on conflict (key) do update set
+        count = case
+          when rate_limits.window_start < now() - (${`${Math.max(1, windowMs)} milliseconds`})::interval
+            then 1 else rate_limits.count + 1 end,
+        window_start = case
+          when rate_limits.window_start < now() - (${`${Math.max(1, windowMs)} milliseconds`})::interval
+            then now() else rate_limits.window_start end,
+        updated_at = now()
+      returning count
+    `);
+    const count = Number(res.rows?.[0]?.count ?? 0);
+    if (count > max) throw ApiError.rateLimited();
+    return count;
+  } catch (err) {
+    // A limiter outage must never take the route down — but a genuine
+    // rate-limit rejection (ApiError) still propagates.
+    if (err instanceof ApiError) throw err;
+    return null;
+  }
+}
+
+export async function rateLimit(key: string, opts: RateLimitOptions = {}): Promise<number> {
+  const { windowMs = 60_000, max = 120 } = opts;
+  const shared = await sharedLimit(key, windowMs, max);
+  if (shared !== null) return shared;
+  return memoryLimit(key, windowMs, max);
 }
 
 /** Tidy: drop stale buckets periodically so the map never grows unbounded. */

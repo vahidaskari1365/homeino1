@@ -41,10 +41,10 @@ export function AiPhaseLoader({ phase, note }: { phase: AiPhase; note?: string }
             </span>
             <div>
               <p className="font-display text-base font-black text-ink">طراحی‌ات ساخته می‌شود</p>
-              <p className="text-[11px] text-ink-muted">{note ?? "چند لحظه صبر کن — هیچ‌چیز بدون اجازه‌ی تو تغییر نمی‌کند."}</p>
+              <p className="text-2xs text-ink-muted">{note ?? "چند لحظه صبر کن — هیچ‌چیز بدون اجازه‌ی تو تغییر نمی‌کند."}</p>
             </div>
           </div>
-          <span className="shrink-0 rounded-full bg-ivory-2 px-2.5 py-1 text-[11px] font-bold tabular-nums text-ink-muted" dir="ltr">
+          <span className="shrink-0 rounded-full bg-ivory-2 px-2.5 py-1 text-2xs font-bold tabular-nums text-ink-muted" dir="ltr">
             {toFa(String(Math.floor(elapsed / 60)).padStart(2, "0"))}:{toFa(String(elapsed % 60).padStart(2, "0"))}
           </span>
         </div>
@@ -57,7 +57,7 @@ export function AiPhaseLoader({ phase, note }: { phase: AiPhase; note?: string }
             return (
               <li key={step.key} className={cn("flex items-center gap-2.5 transition", done ? "opacity-70" : active ? "opacity-100" : "opacity-40")}>
                 <span className={cn(
-                  "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[10px] font-bold transition",
+                  "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-2xs font-bold transition",
                   done ? "border-success bg-success text-white" : active ? "border-ink bg-ink text-cream" : "border-clay bg-ivory-2 text-ink-muted",
                 )}>
                   {done ? <Check size={12} /> : active ? <Loader2 size={11} className="animate-spin" /> : toFa(i + 1)}
@@ -76,7 +76,7 @@ export function AiPhaseLoader({ phase, note }: { phase: AiPhase; note?: string }
         </ol>
 
         {/* rotating tip */}
-        <div className="mt-5 rounded-xl border border-gold/25 bg-gold/5 px-3.5 py-2.5 text-[11px] leading-6 text-ink-muted">
+        <div className="mt-5 rounded-xl border border-gold/25 bg-gold/5 px-3.5 py-2.5 text-2xs leading-6 text-ink-muted">
           <span key={tipIndex} className="animate-[fadeUp_0.5s_ease]">💡 {AI_WAIT_TIPS[tipIndex]}</span>
         </div>
       </div>

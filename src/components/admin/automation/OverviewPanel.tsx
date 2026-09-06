@@ -48,7 +48,7 @@ export function OverviewPanel() {
             <li className="flex items-center justify-between gap-3"><span className="flex items-center gap-2"><Radar size={16} className="text-ink-muted" />مرورگر (Browser Use / Stagehand)</span><Badge tone={data.browser.configured ? "success" : "neutral"}>{data.browser.configured ? data.browser.provider : data.browser.reason ?? "پیکربندی نشده"}</Badge></li>
             <li className="flex items-center justify-between gap-3"><span className="flex items-center gap-2"><ShieldCheck size={16} className="text-ink-muted" />حافظه مشتری</span><span className="text-xs text-ink-muted">{data.memory.primary} · Mem0: {data.memory.mem0}</span></li>
           </ul>
-          <p className="mt-3 text-[11px] text-ink-muted">{data.store.reason}</p>
+          <p className="mt-3 text-2xs text-ink-muted">{data.store.reason}</p>
         </PanelCard>
 
         <PanelCard title="اتصال‌های بیرونی" desc="Dify / Langflow فقط پشت رابط قابل تعویض — هسته همیشه محلی است">
@@ -60,7 +60,7 @@ export function OverviewPanel() {
               </li>
             ))}
           </ul>
-          <div className="mt-3 text-[11px] text-ink-muted">
+          <div className="mt-3 text-2xs text-ink-muted">
             دامنه‌های مجاز HTTP: <span dir="ltr">{data.httpAllowlist.join("، ") || "—"}</span>
           </div>
         </PanelCard>
@@ -130,7 +130,7 @@ export function OverviewPanel() {
             ) : (
               <p className="text-xs text-ink-muted">ورک‌فلوی زمان‌بندی‌شده‌ای وجود ندارد.</p>
             )}
-            <p className="mt-2 text-[11px] text-ink-muted">
+            <p className="mt-2 text-2xs text-ink-muted">
               زمان‌بند درون‌فرآیندی: {data.schedule.running ? "در حال اجرا" : data.schedule.disabled ? "غیرفعال (محیط سرورلس — از کرون استفاده کن)" : "خاموش"}
             </p>
           </div>

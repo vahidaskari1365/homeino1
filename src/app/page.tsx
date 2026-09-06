@@ -31,6 +31,13 @@ export default function HomePage() {
     const v = videoRef.current;
     if (!v) return;
 
+    // Respect the user's data-saver preference: the hero works perfectly with
+    // its static poster (gradient overlays animate on top) — on metered
+    // connections we simply never start the video stream.
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-data: reduce)").matches) {
+      return;
+    }
+
     // Ensure attributes are set for maximum autoplay compatibility on mobile
     try {
       v.defaultMuted = true;
@@ -131,7 +138,10 @@ export default function HomePage() {
             muted
             playsInline
             webkit-playsinline="true"
-            preload="auto"
+            // poster + metadata-only preload: LCP comes from the 68KB poster,
+            // the 311KB video streams in afterwards (was 3.6MB preload=auto
+            // which starved the hero headline on mobile).
+            preload="metadata"
             disablePictureInPicture
             aria-hidden="true"
             poster={HERO_POSTER}
@@ -184,7 +194,7 @@ export default function HomePage() {
         {/* scroll indicator */}
         <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center">
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity }} className="flex flex-col items-center gap-1 text-cream/50">
-            <span className="text-[11px] tracking-widest">اسکرول کن</span>
+            <span className="text-2xs tracking-widest">اسکرول کن</span>
             <ChevronDown size={18} />
           </motion.div>
         </div>
@@ -209,8 +219,8 @@ export default function HomePage() {
             {categories.slice(0, 6).map((category) => (
               <RevealItem key={category.id}>
                 <Link href={`/category/${category.slug}`} className="group card-surface card-interactive block h-full overflow-hidden">
-                  <div className="relative aspect-[4/3] overflow-hidden"><SmartImage src={category.image} alt={category.name} className="h-full w-full" /><div className="absolute inset-0 bg-gradient-to-t from-ink/55 to-transparent" /><span className="absolute bottom-2 right-2 rounded-full bg-cream/90 px-2 py-1 text-[10px] font-bold text-ink backdrop-blur">{toFa(category.productCount)} محصول</span></div>
-                  <div className="p-3"><h3 className="text-sm font-black text-ink transition group-hover:text-terracotta-deep sm:text-base">{category.name}</h3><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-ink-muted sm:text-xs">{category.description}</p></div>
+                  <div className="relative aspect-[4/3] overflow-hidden"><SmartImage src={category.image} alt={category.name} className="h-full w-full" /><div className="absolute inset-0 bg-gradient-to-t from-ink/55 to-transparent" /><span className="absolute bottom-2 right-2 rounded-full bg-cream/90 px-2 py-1 text-2xs font-bold text-ink backdrop-blur">{toFa(category.productCount)} محصول</span></div>
+                  <div className="p-3"><h3 className="text-sm font-black text-ink transition group-hover:text-terracotta-deep sm:text-base">{category.name}</h3><p className="mt-1 line-clamp-2 text-2xs leading-5 text-ink-muted sm:text-xs">{category.description}</p></div>
                 </Link>
               </RevealItem>
             ))}
@@ -229,11 +239,11 @@ export default function HomePage() {
                   <div className="relative aspect-square overflow-hidden">
                     <SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
-                    <span className="absolute left-2 top-2 rounded-full bg-cream/90 px-2 py-1 text-[10px] font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
+                    <span className="absolute left-2 top-2 rounded-full bg-cream/90 px-2 py-1 text-2xs font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
                     <div className="absolute inset-x-0 bottom-0 p-3 text-cream sm:p-4">
-                      <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold-soft">{style.nameEn}</div>
+                      <div className="text-2xs font-bold uppercase tracking-[0.18em] text-gold-soft">{style.nameEn}</div>
                       <h3 className="mt-0.5 text-base font-black text-cream transition group-hover:text-gold-soft sm:text-lg">{style.name}</h3>
-                      <p className="mt-0.5 line-clamp-1 text-[10px] text-cream/70 sm:text-xs">{style.tagline}</p>
+                      <p className="mt-0.5 line-clamp-1 text-2xs text-cream/70 sm:text-xs">{style.tagline}</p>
                     </div>
                   </div>
                 </Link>
@@ -249,7 +259,7 @@ export default function HomePage() {
           <Reveal>
             <div className="relative overflow-hidden rounded-[var(--radius-xl)] surface-emerald text-cream shadow-[var(--shadow-lift)]">
               <div className="grid min-h-[560px] lg:grid-cols-[.9fr_1.1fr] lg:min-h-[510px]">
-                <div className="relative min-h-64 overflow-hidden lg:order-2 lg:min-h-full"><SmartImage src={IMG.living2} alt="طراحی فضای نشیمن با Homeino Studio" className="absolute inset-0 h-full w-full" /><div className="absolute inset-0 bg-gradient-to-t from-ink/72 via-transparent to-transparent lg:bg-gradient-to-r lg:from-ink/30 lg:to-transparent" /><button className="absolute left-4 top-4 flex min-h-10 items-center gap-2 rounded-full border border-white/20 bg-ink/45 px-3 text-xs font-bold text-cream backdrop-blur"><Play size={14} className="fill-current" /> دموی طراحی</button><div className="absolute bottom-4 right-4 rounded-xl border border-white/15 bg-cream/92 p-3 text-ink shadow-lg backdrop-blur"><div className="text-[10px] font-bold text-terracotta-deep">پیشنهاد هوشمند</div><div className="mt-1 flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-[#c4a47d]" /><span className="text-xs font-bold">پالت گرم و طبیعی</span></div></div></div>
+                <div className="relative min-h-64 overflow-hidden lg:order-2 lg:min-h-full"><SmartImage src={IMG.living2} alt="طراحی فضای نشیمن با Homeino Studio" className="absolute inset-0 h-full w-full" /><div className="absolute inset-0 bg-gradient-to-t from-ink/72 via-transparent to-transparent lg:bg-gradient-to-r lg:from-ink/30 lg:to-transparent" /><button className="absolute left-4 top-4 flex min-h-10 items-center gap-2 rounded-full border border-white/20 bg-ink/45 px-3 text-xs font-bold text-cream backdrop-blur"><Play size={14} className="fill-current" /> دموی طراحی</button><div className="absolute bottom-4 right-4 rounded-xl border border-white/15 bg-cream/92 p-3 text-ink shadow-lg backdrop-blur"><div className="text-2xs font-bold text-terracotta-deep">پیشنهاد هوشمند</div><div className="mt-1 flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-[#c4a47d]" /><span className="text-xs font-bold">پالت گرم و طبیعی</span></div></div></div>
                 <div className="relative flex flex-col justify-center p-6 sm:p-9 lg:p-12"><div className="absolute inset-0 grain opacity-50" /><div className="relative"><Badge tone="gold" className="border-gold/35 bg-gold/10 text-gold-soft"><Sparkles size={12} /> هومینو استودیو</Badge><h2 className="mt-5 text-balance text-3xl font-black text-cream sm:text-4xl">قبل از خرید، نتیجه را در خانه‌ات ببین.</h2><p className="mt-4 text-pretty text-sm leading-8 text-cream/68 sm:text-base">عکس فضای خودت را بارگذاری کن، سبک و وسایل را انتخاب کن و یک پیش‌نمایش هوشمند بساز. سپس محصولات همان چیدمان را مستقیم بخر.</p><div className="mt-6 grid gap-2 text-sm text-cream/78 sm:grid-cols-2">{["آپلود امن تصویر", "انتخاب سبک و بودجه", "محصولات واقعی بازارگاه", "خرید کامل چیدمان"].map((item) => <div key={item} className="flex items-center gap-2"><BadgeCheck size={15} className="text-sage-soft" /> {item}</div>)}</div><div className="mt-7 flex flex-col gap-3 sm:flex-row"><ButtonLink href="/ai/design" variant="gold" size="lg"><Wand2 size={18} /> طراحی فضای من</ButtonLink><ButtonLink href="/inspiration" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream">دنبال الهام بگرد</ButtonLink></div></div></div>
               </div>
             </div>
@@ -264,7 +274,7 @@ export default function HomePage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {collections.slice(0, 6).map((collection, index) => (
               <Link key={collection.id} href="/inspiration" className={index === 0 ? "group relative min-h-72 overflow-hidden rounded-[var(--radius-lg)] sm:col-span-2 lg:row-span-2 lg:min-h-full" : "group relative min-h-56 overflow-hidden rounded-[var(--radius-lg)]"}>
-                <SmartImage src={collection.image} alt={collection.title} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5"><span className="text-[11px] text-gold-soft">{toFa(collection.count)} انتخاب</span><h3 className="mt-1 text-xl font-black text-cream">{collection.title}</h3><p className="mt-1 text-xs text-cream/65">{collection.subtitle}</p></div>
+                <SmartImage src={collection.image} alt={collection.title} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5"><span className="text-2xs text-gold-soft">{toFa(collection.count)} انتخاب</span><h3 className="mt-1 text-xl font-black text-cream">{collection.title}</h3><p className="mt-1 text-xs text-cream/65">{collection.subtitle}</p></div>
               </Link>
             ))}
           </div>
@@ -293,7 +303,7 @@ export default function HomePage() {
         <Container>
           <Reveal><SectionHeading eyebrow="زبان طراحی تو" title="سبکت را پیدا کن" desc="از مینیمال تا کلاسیک؛ راهنمای هر سبک، پالت و محصولات هماهنگ را یک‌جا ببین." /></Reveal>
           <div className="hide-scrollbar scroll-fade -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
-            {styles.slice(0, 5).map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="group card-surface card-interactive w-[72vw] max-w-64 shrink-0 snap-start overflow-hidden lg:w-auto"><div className="relative aspect-[4/5] overflow-hidden"><SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-ink/88 via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-4 text-cream"><div className="text-[10px] tracking-wider text-gold-soft">{style.nameEn}</div><h3 className="mt-1 text-xl font-black text-cream">{style.name}</h3><p className="mt-1 text-xs text-cream/68">{style.tagline}</p></div></div></Link>)}
+            {styles.slice(0, 5).map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="group card-surface card-interactive w-[72vw] max-w-64 shrink-0 snap-start overflow-hidden lg:w-auto"><div className="relative aspect-[4/5] overflow-hidden"><SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-ink/88 via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-4 text-cream"><div className="text-2xs tracking-wider text-gold-soft">{style.nameEn}</div><h3 className="mt-1 text-xl font-black text-cream">{style.name}</h3><p className="mt-1 text-xs text-cream/68">{style.tagline}</p></div></div></Link>)}
           </div>
         </Container>
       </section>

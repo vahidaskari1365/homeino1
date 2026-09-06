@@ -47,7 +47,7 @@ export default function CartPage() {
                       <Badge>مرسوله</Badge>
                     </div>
                     {parcel.shippingCost > 0 && (
-                      <p className="flex items-center gap-1 text-[11px] text-ink-muted"><Truck size={12} /> {toFa(formatPrice(parcel.shippingCost))} ت هزینه ارسال این مرسوله</p>
+                      <p className="flex items-center gap-1 text-2xs text-ink-muted"><Truck size={12} /> {toFa(formatPrice(parcel.shippingCost))} ت هزینه ارسال این مرسوله</p>
                     )}
                   </div>
                 </div>
@@ -56,7 +56,7 @@ export default function CartPage() {
 
               {parcel.shippingCost > 0 && parcel.subtotal < PLATFORM.policies.freeShippingThreshold && (
                 <div className="mx-4 mt-3 rounded-xl border border-terracotta/30 bg-terracotta/5 p-2.5">
-                  <p className="mb-1.5 text-[11px] text-ink"><b>{toFa(formatPrice(PLATFORM.policies.freeShippingThreshold - parcel.subtotal))} تومان</b> دیگه تا ارسال رایگان این مرسوله!</p>
+                  <p className="mb-1.5 text-2xs text-ink"><b>{toFa(formatPrice(PLATFORM.policies.freeShippingThreshold - parcel.subtotal))} تومان</b> دیگه تا ارسال رایگان این مرسوله!</p>
                   <div className="h-1.5 overflow-hidden rounded-full bg-sand/60"><div className="h-full rounded-full bg-gradient-to-l from-terracotta-soft to-terracotta transition-all" style={{ width: `${Math.min(100, (parcel.subtotal / PLATFORM.policies.freeShippingThreshold) * 100)}%` }} /></div>
                 </div>
               )}
@@ -78,7 +78,7 @@ export default function CartPage() {
                         <button onClick={() => setQty(product.id, item.qty + 1, item.offerId)} aria-label="افزایش تعداد" className="grid h-9 w-9 place-items-center rounded-md transition hover:bg-ivory-2"><Plus size={15} /></button>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-ink">{toFa(formatPrice(unitPrice * item.qty))} <span className="text-[10px] text-ink-muted">تومان</span></span>
+                        <span className="font-bold text-ink">{toFa(formatPrice(unitPrice * item.qty))} <span className="text-2xs text-ink-muted">تومان</span></span>
                         <button onClick={() => remove(product.id, item.offerId)} aria-label="حذف از سبد" className="text-ink-muted transition hover:text-danger"><Trash2 size={17} /></button>
                       </div>
                     </div>
@@ -100,9 +100,9 @@ export default function CartPage() {
                 .map((p) => (
                   <div key={p.id} className="flex w-32 shrink-0 flex-col rounded-xl border border-clay/40 bg-ivory-2 p-2">
                     <img src={p.images[0]} alt={p.name} className="mb-1.5 aspect-square w-full rounded-lg object-cover" />
-                    <p className="line-clamp-1 text-[10px] font-bold text-ink">{p.name}</p>
-                    <p className="text-[10px] text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
-                    <button onClick={() => { addToCart(p.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-1.5 flex items-center justify-center gap-1 rounded-md py-1 text-[9px] font-bold"><PlusIcon size={10} /> افزودن</button>
+                    <p className="line-clamp-1 text-2xs font-bold text-ink">{p.name}</p>
+                    <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
+                    <button onClick={() => { addToCart(p.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-1.5 flex items-center justify-center gap-1 rounded-md py-1 text-2xs font-bold"><PlusIcon size={10} /> افزودن</button>
                   </div>
                 ))}
             </div>
@@ -131,11 +131,11 @@ export default function CartPage() {
             <span className="font-display text-lg font-black text-ink">{toFa(formatPrice(subtotal + shipping))}</span>
           </div>
           <Link href="/checkout"><Button size="lg" className="mt-5 w-full">ادامه و پرداخت امن <ArrowLeft size={16} /></Button></Link>
-          <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-muted"><ShieldCheck size={13} className="text-sage" /> پرداخت رمزنگاری‌شده · ضمانت بازگشت ۷ روزه</div>
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-2xs text-ink-muted"><ShieldCheck size={13} className="text-sage" /> پرداخت رمزنگاری‌شده · ضمانت بازگشت ۷ روزه</div>
           <Link href="/products" className="mt-2 block text-center text-sm text-terracotta-deep hover:underline">ادامه خرید</Link>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link href="/ai/design" className="flex items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/5 py-2.5 text-[11px] font-bold text-gold transition hover:bg-gold/10"><Sparkles size={13} /> طراحی با هومینو استودیو</Link>
-            <Link href="/inspiration" className="flex items-center justify-center gap-1.5 rounded-xl border border-clay/50 bg-ivory-2 py-2.5 text-[11px] font-bold text-ink-muted transition hover:text-ink"><Lightbulb size={13} /> الهام بگیر</Link>
+            <Link href="/ai/design" className="flex items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/5 py-2.5 text-2xs font-bold text-gold transition hover:bg-gold/10"><Sparkles size={13} /> طراحی با هومینو استودیو</Link>
+            <Link href="/inspiration" className="flex items-center justify-center gap-1.5 rounded-xl border border-clay/50 bg-ivory-2 py-2.5 text-2xs font-bold text-ink-muted transition hover:text-ink"><Lightbulb size={13} /> الهام بگیر</Link>
           </div>
         </aside>
       </div>

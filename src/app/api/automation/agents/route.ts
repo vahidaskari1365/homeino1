@@ -27,7 +27,7 @@ export const GET = guard(async (req) => {
 
 export const POST = guard(async (req) => {
   const { user } = await requireAdminUser(req);
-  rateLimit(`agents:create:${user.id}`, { windowMs: 60_000, max: 20 });
+  await rateLimit(`agents:create:${user.id}`, { windowMs: 60_000, max: 20 });
   const body = (await readBody(req, 100_000)) as Record<string, unknown>;
 
   const key = String(body.key ?? "").trim().toLowerCase();
@@ -78,6 +78,7 @@ export const POST = guard(async (req) => {
     );
     return ok({ agent, warnings: validation.warnings }, { status: 201 });
   } catch (error) {
-    throw ApiError.conflict(error instanceof Error ? error.message : "ساخت ایجنت ناموفق بود");
+    console.error("[automation]", error);
+    throw ApiError.conflict("ساخت ایجنت ناموفق بود");
   }
 });

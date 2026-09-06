@@ -92,7 +92,7 @@ export default function VendorProductsPage() {
             <tbody>
               {list.map((p) => (
                 <tr key={p.id} className="border-b border-clay/30 hover:bg-ivory-2/50">
-                  <td className="p-3"><div className="flex items-center gap-2"><img src={p.images[0]} alt="" className="h-10 w-10 rounded-lg object-cover" /><span className="line-clamp-1 font-medium text-ink">{p.name}<span dir="ltr" className="mr-2 text-[10px] text-ink-muted">{p.sku}</span></span></div></td>
+                  <td className="p-3"><div className="flex items-center gap-2"><img src={p.images[0]} alt="" className="h-10 w-10 rounded-lg object-cover" /><span className="line-clamp-1 font-medium text-ink">{p.name}<span dir="ltr" className="mr-2 text-2xs text-ink-muted">{p.sku}</span></span></div></td>
                   <td className="p-3 whitespace-nowrap text-ink">{toFa(formatPrice(p.price))} ت</td>
                   <td className="p-3 whitespace-nowrap">
                     <span className="ml-1 text-ink">{toFa(p.stockCount)}</span>

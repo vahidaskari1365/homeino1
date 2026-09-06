@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { breadcrumbJsonLd, productJsonLd, jsonLdScript } from "@/lib/seo";
-import { getCategory } from "@/data/categories";
-import { getProduct } from "@/data/products";
+import { productsRepository } from "@/repositories/products";
+import { categoriesRepository } from "@/repositories/categories";
 export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
-  if (!product) return { title: "محصول یافت نشد" };
+  // DB-backed (with mock fallback) — a product created in the vendor/admin
+  // panel gets real metadata instead of "محصول یافت نشد".
+  const product = await productsRepository.bySlug(slug);
+  if (!product) return { title: "محصول یافت نشد", robots: { index: false } };
 
   const title = `${product.name} — ${product.brand}`;
   const description = product.description.slice(0, 155);
@@ -36,10 +38,12 @@ export default async function ProductLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  // Vendor-session demo products (vp-*) live only in the browser — no SSR
+  // JSON-LD for them (the client renders the page shell instead).
+  const product = slug.startsWith("vp-") ? undefined : await productsRepository.bySlug(slug);
   if (!product) return children;
 
-  const category = getCategory(product.categorySlug);
+  const category = await categoriesRepository.bySlug(product.categorySlug);
   const structuredData = [
     breadcrumbJsonLd([
       { name: "خانه", url: "/" },

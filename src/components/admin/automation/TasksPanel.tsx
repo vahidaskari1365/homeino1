@@ -103,14 +103,14 @@ export function TasksPanel() {
                   <button type="button" onClick={() => inspect(task)} className="text-right">
                     <span className="font-medium text-ink hover:text-terracotta-deep">{task.title}</span>
                   </button>
-                  <div className="mt-1 text-[11px] text-ink-muted">
+                  <div className="mt-1 text-2xs text-ink-muted">
                     اولویت {toFa(task.priority)} · مسئول: {task.assigneeRole || "—"}
                     {task.dueAt ? ` · سررسید: ${toFa(new Date(task.dueAt).toLocaleString("fa-IR"))}` : ""}
                   </div>
-                  {task.error && <div className="mt-1 text-[11px] text-danger">{task.error}</div>}
+                  {task.error && <div className="mt-1 text-2xs text-danger">{task.error}</div>}
                 </Cell>
                 <Cell className="text-xs">{task.type}</Cell>
-                <Cell className="text-[11px]" ><span dir="ltr">{task.agentKey ?? "—"}</span></Cell>
+                <Cell className="text-2xs" ><span dir="ltr">{task.agentKey ?? "—"}</span></Cell>
                 <Cell className="text-xs">{toFa(task.attempt)} / {toFa(task.maxAttempts)}</Cell>
                 <Cell><StatusBadge status={task.status} /></Cell>
                 <Cell>

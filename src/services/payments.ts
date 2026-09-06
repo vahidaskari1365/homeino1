@@ -35,7 +35,8 @@ export interface PaymentWebhookEvent {
 export interface PaymentProvider {
   readonly name: string;
   createIntent(input: PaymentIntentInput): Promise<PaymentResult>;
-  parseWebhook(body: unknown, signature?: string): Promise<PaymentWebhookEvent>;
+  /** Verify over the RAW request body (exact bytes the sender signed). */
+  parseWebhook(rawBody: string, signature?: string): Promise<PaymentWebhookEvent>;
 }
 
 export class StripeProvider implements PaymentProvider {
@@ -81,9 +82,58 @@ export class StripeProvider implements PaymentProvider {
     };
   }
 
-  async parseWebhook(_body: unknown, _signature?: string): Promise<PaymentWebhookEvent> {
-    // In production verify the Stripe-Signature header with the webhook secret.
-    throw new Error("Stripe webhook signing not configured");
+  /** Real Stripe signature verification (no SDK needed):
+   *  `Stripe-Signature: t=<ts>,v1=<hmac_sha256(ts + "." + rawBody)>` with a
+   *  5-minute replay window. Requires STRIPE_WEBHOOK_SECRET — fail-closed. */
+  async parseWebhook(rawBody: string, signature?: string): Promise<PaymentWebhookEvent> {
+    const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!whSecret) throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
+    if (!signature) throw new Error("missing webhook signature");
+    const { createHmac, timingSafeEqual } = await import("node:crypto");
+    const parts = signature.split(",").reduce<Record<string, string>>((acc, part) => {
+      const [k, v] = part.split("=");
+      if (k && v) acc[k.trim()] = v.trim();
+      return acc;
+    }, {});
+    const ts = parts["t"];
+    const v1 = parts["v1"];
+    if (!ts || !v1) throw new Error("invalid Stripe-Signature header");
+    if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) {
+      throw new Error("webhook timestamp outside replay window");
+    }
+    const expected = createHmac("sha256", whSecret).update(`${ts}.${rawBody}`).digest("hex");
+    const a = Buffer.from(expected);
+    const b = Buffer.from(v1);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+      throw new Error("invalid webhook signature");
+    }
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      throw new Error("invalid webhook payload");
+    }
+    const evt = body as {
+      type?: string;
+      data?: { object?: { id?: string; amount?: number; currency?: string; metadata?: Record<string, unknown>; refund?: { payment_intent?: string } } };
+    };
+    const obj = evt.data?.object ?? {};
+    const map: Record<string, PaymentWebhookEvent["eventType"]> = {
+      "payment_intent.succeeded": "payment.succeeded",
+      "payment_intent.payment_failed": "payment.failed",
+      "charge.refunded": "refund.succeeded",
+    };
+    const eventType = map[evt.type ?? ""];
+    if (!eventType) throw new Error(`unhandled stripe event: ${evt.type}`);
+    return {
+      provider: this.name,
+      providerPaymentId: obj.id ?? "unknown",
+      eventType,
+      amount: obj.amount ?? 0,
+      currency: (obj.currency ?? "irr").toUpperCase(),
+      metadata: obj.metadata,
+      raw: body,
+    };
   }
 }
 
@@ -116,27 +166,53 @@ export class DevPaymentProvider implements PaymentProvider {
     });
   }
 
+  /** Proves a paymentId exists AND carries the expected metadata (per user).
+   *  Returns the stored metadata on success (single-use) — callers fulfill
+   *  from SERVER-ISSUED values, never client echoes. */
+  consumeIntent(
+    paymentId: string,
+    expectedMetadata: Record<string, unknown>,
+  ): Record<string, unknown> | null {
+    const entry = DevPaymentProvider.intents.get(paymentId);
+    if (!entry) return null;
+    for (const [k, v] of Object.entries(expectedMetadata)) {
+      if (entry.metadata[k] !== v) return null;
+    }
+    DevPaymentProvider.intents.delete(paymentId); // single-use
+    return entry.metadata;
+  }
+
   /** Proves a paymentId exists AND carries the expected metadata (per user). */
   wasIssued(paymentId: string, expectedMetadata: Record<string, unknown>): boolean {
     const entry = DevPaymentProvider.intents.get(paymentId);
     if (!entry) return false;
-    DevPaymentProvider.intents.delete(paymentId); // single-use
     for (const [k, v] of Object.entries(expectedMetadata)) {
       if (entry.metadata[k] !== v) return false;
     }
     return true;
   }
 
-  /** Dev webhooks are HMAC-signed with PAYMENTS_WEBHOOK_SECRET. */
-  async parseWebhook(body: unknown, signature?: string): Promise<PaymentWebhookEvent> {
-    const secret = process.env.PAYMENTS_WEBHOOK_SECRET ?? "homeino-dev-webhook-secret";
+  /** Dev webhooks are HMAC-signed with PAYMENTS_WEBHOOK_SECRET (raw body bytes).
+   *  FAIL-CLOSED: without an explicitly configured secret nothing verifies —
+   *  a publicly-known default would let anyone mint credits. */
+  async parseWebhook(rawBody: string, signature?: string): Promise<PaymentWebhookEvent> {
+    const secret = process.env.PAYMENTS_WEBHOOK_SECRET;
+    if (!secret) throw new Error("PAYMENTS_WEBHOOK_SECRET is not configured");
     if (!signature) throw new Error("missing webhook signature");
     const { createHmac, timingSafeEqual } = await import("node:crypto");
-    const expected = createHmac("sha256", secret).update(JSON.stringify(body)).digest("hex");
+    // Verify over the EXACT raw bytes the sender signed — never a
+    // re-serialization (whitespace/key order would falsify the signature).
+    const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
     const a = Buffer.from(expected);
     const b = Buffer.from(signature);
     if (a.length !== b.length || !timingSafeEqual(a, b)) {
       throw new Error("invalid webhook signature");
+    }
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      throw new Error("invalid dev webhook payload");
     }
     const payload = body as {
       providerPaymentId?: string;
