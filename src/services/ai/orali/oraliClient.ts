@@ -24,6 +24,23 @@ import { OraliNotConfiguredError, OraliRequestError } from "./types";
 import { engineConfig, type EngineConfig } from "../engineConfig";
 import { toEngineEnglish } from "../engineTranslate";
 
+/** Default chat models per dialect (overridable via ZAI_CHAT_MODEL / GLM_CHAT_MODEL). */
+function chatModelFor(cfg: EngineConfig): string {
+  return cfg.chatModel || (cfg.flavor === "zai-public" ? "glm-4.7-flash" : "glm-4.5");
+}
+
+/**
+ * glm-image (public API) only accepts 1024–2048px, divisible by 32.
+ * Snap the engine-style size into that window, keeping the aspect ratio
+ * as close as the grid allows. cogview-4 sizes pass through untouched.
+ */
+function sizeForPublicModel(size: string, imageModel: string): string {
+  if (!imageModel.startsWith("glm-image")) return size;
+  const [w, h] = size.split("x").map(Number);
+  const snap = (n: number) => Math.min(2048, Math.max(1024, Math.round(n / 32) * 32));
+  return `${snap(w)}x${snap(h)}`;
+}
+
 /** Sizes the edit/generation endpoint actually supports (tested 2025). */
 const SUPPORTED_SIZES = [
   "1024x1024", "768x1344", "864x1152", "1344x768", "1152x864", "1440x720", "720x1440",
@@ -133,6 +150,18 @@ export const oraliClient: OraliClient = {
     const cfg = engineConfig();
     if (!cfg) throw new OraliNotConfiguredError();
 
+    // The OFFICIAL z.ai GLM API is generation-only (documented 2026-09:
+    // /paas/v4/images/generations has no edit companion). Editing stays a
+    // capability of the self-hosted/sandbox engine — fail honestly instead
+    // of pretending. The pipeline falls back (Gemini key → honest error).
+    if (cfg.flavor === "zai-public") {
+      throw new OraliRequestError(
+        "ORALI_NO_EDIT_PUBLIC: the official GLM API does not support image editing — "
+        + "configure the self-hosted engine or a Gemini key for edits",
+        501,
+      );
+    }
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 180_000); // image edits can be slow
     const started = Date.now();
@@ -175,7 +204,15 @@ export async function engineGenerate(prompt: string, size = "1344x768"): Promise
   const cfg = engineConfig();
   if (!cfg) throw new OraliNotConfiguredError();
   const enginePrompt = await toEngineEnglish(prompt); // Persian → English (filter-safe)
-  const res = await postWithRetry(cfg, "/images/generations", { prompt: enginePrompt, size }, AbortSignal.timeout(180_000));
+  // Public API requires an explicit model; the self-hosted engine infers it.
+  const body = cfg.flavor === "zai-public"
+    ? {
+        model: cfg.imageModel || "cogview-4-250304", // ≈$0.01/image; glm-image possible via GLM_IMAGE_MODEL
+        prompt: enginePrompt,
+        size: sizeForPublicModel(size, cfg.imageModel || "cogview-4-250304"),
+      }
+    : { prompt: enginePrompt, size };
+  const res = await postWithRetry(cfg, "/images/generations", body, AbortSignal.timeout(180_000));
   if (!res.ok) throw new OraliRequestError(`ORALI_HTTP_${res.status}`);
   const data = (await res.json()) as { data?: { url?: string; base64?: string }[] };
   const raw = data?.data?.[0]?.url ?? data?.data?.[0]?.base64;
@@ -190,7 +227,7 @@ export async function engineChat(messages: { role: "system" | "user" | "assistan
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: "POST",
     headers: authHeaders(cfg),
-    body: JSON.stringify({ model: "glm-4.5", messages, temperature: opts?.temperature ?? 0.7, max_tokens: 1200 }),
+    body: JSON.stringify({ model: chatModelFor(cfg), messages, temperature: opts?.temperature ?? 0.7, max_tokens: 1200 }),
     signal: AbortSignal.timeout(90_000),
   });
   if (!res.ok) throw new OraliRequestError(`ORALI_HTTP_${res.status}`);
