@@ -1,5 +1,19 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": null,
-  "runs": []
+  "updatedAt": "2026-09-06T12:40:07.081Z",
+  "runs": [
+    {
+      "id": "run-1788698407081-odfa3",
+      "at": "2026-09-06T12:40:07.081Z",
+      "agentKey": "magazine-editor",
+      "ok": false,
+      "durationMs": 9122,
+      "summary": "بدون کلید LLM اجرا شد؛ بازنویسی فارسی بریف‌ها بدون LLM ممکن نیست — برای فعال‌سازی، Secretهای LLM_API_KEY و LLM_BASE_URL را در مخزن ست کنید",
+      "detail": {
+        "added": 0,
+        "total": 8,
+        "reason": "no_llm_key"
+      }
+    }
+  ]
 }
