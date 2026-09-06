@@ -57,6 +57,8 @@ const COVER_BY_CATEGORY = {
   "سبک زندگی": "/images/trends/trends-zoning.png",
   "سبک‌ها": "/images/trends/trends-guide-2026.png",
   "هوشمند": "/images/trends/trends-zoning.png",
+  "تزئین": "/images/trends/trends-gem-maxxing.png",
+  "نقش": "/images/trends/trends-patterns-story.png",
 };
 const DEFAULT_COVER = "/images/trends/trends-guide-2026.png";
 
