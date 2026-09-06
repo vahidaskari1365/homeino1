@@ -1,0 +1,84 @@
+{
+  "updatedAt": "2026-09-06T09:14:49.943Z",
+  "runs": [
+    {
+      "id": "run-1788686089943-ml9e0",
+      "at": "2026-09-06T09:14:49.943Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "durationMs": 581,
+      "summary": "بازبینی چشمی تک‌تک پین‌ها: 17 پین نامرتبط/تکراری حذف، 10 پین سبک/فضایشان اصلاح و متن‌شان بازنویسی شد",
+      "detail": {
+        "deleted": 17,
+        "fixed": 10,
+        "total": 36,
+        "coverage": "30/60",
+        "via": "visual-qa"
+      }
+    },
+    {
+      "id": "run-1788685555809-matxb",
+      "at": "2026-09-06T09:05:55.809Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 282289,
+      "summary": "بک‌فیل ماتریس الهام: 0 پین جدید، 0 پین پاکسازی‌شده — پوشش 53/۶۰ ترکیب (6 بار محدودیت نرخ)",
+      "detail": {
+        "added": 0,
+        "cleaned": 0,
+        "coverage": "53/60",
+        "total": 53,
+        "via": "backfill"
+      }
+    },
+    {
+      "id": "run-1788685159529-9c5ws",
+      "at": "2026-09-06T08:59:19.529Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 282250,
+      "summary": "بک‌فیل ماتریس الهام: 31 پین جدید، 0 پین پاکسازی‌شده — پوشش 53/۶۰ ترکیب (6 بار محدودیت نرخ)",
+      "detail": {
+        "added": 31,
+        "cleaned": 0,
+        "coverage": "53/60",
+        "total": 53,
+        "via": "backfill"
+      }
+    },
+    {
+      "id": "run-1788684314287-4yew9",
+      "at": "2026-09-06T08:45:14.287Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 71,
+      "summary": "بک‌فیل ماتریس الهام: 0 پین جدید، 0 پین پاکسازی‌شده — پوشش 22/۶۰ ترکیب (1 بار محدودیت نرخ)",
+      "detail": {
+        "added": 0,
+        "cleaned": 0,
+        "coverage": "22/60",
+        "total": 22,
+        "via": "backfill"
+      }
+    },
+    {
+      "id": "run-1788684164309-yenne",
+      "at": "2026-09-06T08:42:44.309Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 168558,
+      "summary": "بک‌فیل ماتریس الهام: 14 پین جدید، 1 پین پاکسازی‌شده — پوشش 22/۶۰ ترکیب",
+      "detail": {
+        "added": 14,
+        "cleaned": 1,
+        "coverage": "22/60",
+        "total": 22,
+        "via": "backfill"
+      }
+    }
+  ]
+}

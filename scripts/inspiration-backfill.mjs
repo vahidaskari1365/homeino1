@@ -74,8 +74,16 @@ async function llmJson(prompt) {
 
 let lastSearchAt = 0;
 let search429 = 0;
+let searchDisabled = false; // بعد از 429 پایدار، بقیه اجرا از استخر/تولید می‌رود
 async function searchImage(query) {
-  if (!HAS_ZAI) return [];
+  if (!HAS_ZAI || searchDisabled) return [];
+  if (search429 >= 3) {
+    if (!searchDisabled) {
+      searchDisabled = true;
+      console.log("⏸ جستجو موقتاً محدود است (429) — بقیه پین‌ها از استخر/تولید تصویر");
+    }
+    return [];
+  }
   // فاصله‌گذاری سراسری بین جستجوها — غیربلاک‌کننده (async)
   const wait = Math.max(0, lastSearchAt + SEARCH_GAP_MS - Date.now());
   lastSearchAt = Date.now() + wait;
@@ -100,6 +108,34 @@ async function searchImage(query) {
   return [];
 }
 
+
+// ---------- فال‌بک: استخر عکس کامیت‌شده ----------
+const POOL_FILE = join(ROOT, "scripts/inspiration-pool.json");
+let POOL = null;
+try { POOL = JSON.parse(readFileSync(POOL_FILE, "utf8")).pool; } catch { POOL = null; }
+
+function poolImage(styleSlug, spaceSlug) {
+  if (!POOL) return null;
+  const direct = POOL[styleSlug]?.[spaceSlug] || [];
+  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([r]) => r !== spaceSlug).flatMap(([, v]) => v);
+  const cands = [...direct, ...siblings];
+  return cands.find((c) => !seenImgs.has(c.url)) || null;
+}
+
+// ---------- فال‌بک آخر: تولید عکس با موتور رایگان (لیبل صادقانه) ----------
+async function generatedImage(style, space, k) {
+  if (!HAS_ZAI) return null;
+  const dir = join(ROOT, "public/images/inspirations");
+  if (!existsSync(dir)) (await import("node:fs")).mkdirSync(dir, { recursive: true });
+  const out = join(dir, `gen-${style.slug}-${space.slug.replace(/\s+/g, "-")}-${k}.png`);
+  if (existsSync(out)) return { url: `/images/inspirations/${out.split("/").pop()}`, source: "تولید با هوش مصنوعی" };
+  const prompt = `Photorealistic interior design photograph of a ${space.en} in ${style.en} style, professional editorial quality, natural soft lighting, realistic materials, balanced composition, high detail, no text`;
+  try {
+    execFileSync("z-ai", ["image", "-p", prompt, "-o", out, "-s", "1024x1024"], { timeout: 240000 });
+    if (!existsSync(out)) return null;
+    return { url: `/images/inspirations/${out.split("/").pop()}`, source: "تولید با هوش مصنوعی" };
+  } catch { return null; }
+}
 
 // فقط نویسه‌های فارسی/لاتین/عدد/سجلاّنش نگه داشته می‌شوند — بقایای چینی/روسی و … پاک می‌شوند
 const BAD_CHARS = /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0400-\u04ff]/;
@@ -171,10 +207,13 @@ const today = new Date().toISOString().slice(0, 10);
 let seq = gen.length;
 const added = [];
 
-async function buildPin({ style, space }, idx) {
+async function buildPin({ style, space, k }, idx) {
   const imgs = await searchImage(`pinterest ${style.en} ${space.en} interior layout`);
-  const pick = imgs.find((p) => !seenImgs.has(p.url) && p.w >= 500 && p.h >= 350)
+  let pick = imgs.find((p) => !seenImgs.has(p.url) && p.w >= 500 && p.h >= 350)
     ?? imgs.find((p) => !seenImgs.has(p.url));
+  let via = "جستجوی وب";
+  if (!pick) { pick = poolImage(style.slug, space.slug); via = "استخر منابع"; }
+  if (!pick) { pick = await generatedImage(style, space, k); via = "تولید با هوش مصنوعی"; }
   if (!pick) return null;
   const topic = `${space.en} in ${style.en} style — Pinterest layout photo (source: ${pick.source})`;
   const meta = (await llmJson(topic)) ?? templatePin(style, space, pick);
@@ -189,7 +228,7 @@ async function buildPin({ style, space }, idx) {
     description: cleanText(meta.description).slice(0, 900),
     items: (meta.items ?? []).map(cleanText).filter(Boolean).slice(0, 7),
     styleNote: cleanText(meta.styleNote).slice(0, 500),
-    source: { label: pick.source },
+    source: { label: via },
     author: { name: "ایجنت هومینو", type: "agent" },
     createdAt: new Date().toISOString(),
     _via: meta === templatePin ? "قالب" : (fixedFlag(meta) ? "llm" : "llm"),
