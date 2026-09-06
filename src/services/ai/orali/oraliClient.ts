@@ -41,6 +41,20 @@ function authHeaders(cfg: EngineConfig): Record<string, string> {
   return headers;
 }
 
+/** POST with a single 429-retry (quota blips) — bounded, never infinite. */
+async function postWithRetry(cfg: EngineConfig, path: string, body: unknown, signal: AbortSignal): Promise<Response> {
+  let res = await fetch(`${cfg.baseUrl}${path}`, {
+    method: "POST", signal, headers: authHeaders(cfg), body: JSON.stringify(body),
+  });
+  if (res.status === 429) {
+    await new Promise((r) => setTimeout(r, 9_000));
+    res = await fetch(`${cfg.baseUrl}${path}`, {
+      method: "POST", signal, headers: authHeaders(cfg), body: JSON.stringify(body),
+    });
+  }
+  return res;
+}
+
 /* ---- image size helpers: match the engine's supported canvas ---- */
 
 /** Decode intrinsic pixel size of a PNG/JPEG data URL (no deps). */
@@ -126,16 +140,11 @@ export const oraliClient: OraliClient = {
       // The engine's content filter false-positives on Persian script —
       // image prompts must go out in English (chat endpoint is Persian-safe).
       const enginePrompt = await toEngineEnglish(buildEditPrompt(req));
-      const res = await fetch(`${cfg.baseUrl}/images/generations/edit`, {
-        method: "POST",
-        signal: controller.signal,
-        headers: authHeaders(cfg),
-        body: JSON.stringify({
-          prompt: enginePrompt,
-          images: [{ url: req.image }], // engine contract: array of {url} (data URL accepted)
-          size: pickSize(req.image),
-        }),
-      });
+      const res = await postWithRetry(cfg, "/images/generations/edit", {
+        prompt: enginePrompt,
+        images: [{ url: req.image }], // engine contract: array of {url} (data URL accepted)
+        size: pickSize(req.image),
+      }, controller.signal);
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new OraliRequestError(`ORALI_HTTP_${res.status}${body ? `: ${body.slice(0, 180)}` : ""}`, res.status);
@@ -166,12 +175,7 @@ export async function engineGenerate(prompt: string, size = "1344x768"): Promise
   const cfg = engineConfig();
   if (!cfg) throw new OraliNotConfiguredError();
   const enginePrompt = await toEngineEnglish(prompt); // Persian → English (filter-safe)
-  const res = await fetch(`${cfg.baseUrl}/images/generations`, {
-    method: "POST",
-    headers: authHeaders(cfg),
-    body: JSON.stringify({ prompt: enginePrompt, size }),
-    signal: AbortSignal.timeout(180_000),
-  });
+  const res = await postWithRetry(cfg, "/images/generations", { prompt: enginePrompt, size }, AbortSignal.timeout(180_000));
   if (!res.ok) throw new OraliRequestError(`ORALI_HTTP_${res.status}`);
   const data = (await res.json()) as { data?: { url?: string; base64?: string }[] };
   const raw = data?.data?.[0]?.url ?? data?.data?.[0]?.base64;
