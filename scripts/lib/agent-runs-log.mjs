@@ -2,9 +2,14 @@
 // HOMEINO — agent execution log (content agents, file-based).
 //
 // The content agents run on GitHub Actions — outside the app's
-// runtime and its agent store. So their runs are appended to
-// src/data/agent-runs.json (committed by the same workflow) and
-// surfaced in /admin/automation via /api/automation/content-runs.
+// runtime and its agent store. Their runs are appended to a
+// PER-AGENT file: src/data/agent-runs/<agentKey>.json (committed
+// by the same workflow) and surfaced in /admin/automation via
+// /api/automation/content-runs plus the public trust strip.
+//
+// Why per-agent files: two agents can commit around the same
+// time; a single shared JSON made every overlapping push a
+// rebase conflict. Distinct files never conflict.
 //
 // Usage (in a daily script):
 //   await logContentAgentRun(ROOT, {
@@ -15,22 +20,25 @@
 //     detail: { added: 6, via: "llm" },
 //   });
 // ============================================================
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const FILE = (ROOT) => join(ROOT, "src/data/agent-runs.json");
+const DIR = (ROOT) => join(ROOT, "src", "data", "agent-runs");
+const LEGACY_FILE = (ROOT) => join(ROOT, "src", "data", "agent-runs.json");
 const MAX_RUNS = 200;
 
 /**
- * Append one run record (newest first) and cap the history.
+ * Append one run record (newest first) to the agent's own file.
  * Never throws — a logging failure must not fail the agent run.
  */
 export async function logContentAgentRun(ROOT, entry) {
   try {
-    const file = FILE(ROOT);
+    const key = String(entry?.agentKey ?? "").trim();
+    if (!key || /[\\/.]/.test(key)) throw new Error(`bad agentKey: ${key}`);
+    const file = join(DIR(ROOT), `${key}.json`);
     const current = existsSync(file)
       ? JSON.parse(readFileSync(file, "utf8"))
-      : { updatedAt: null, runs: [] };
+      : { agentKey: key, updatedAt: null, runs: [] };
     const runs = Array.isArray(current.runs) ? current.runs : [];
     runs.unshift({
       id: `run-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -38,20 +46,37 @@ export async function logContentAgentRun(ROOT, entry) {
       ...entry,
     });
     const capped = runs.slice(0, MAX_RUNS);
-    writeFileSync(file, JSON.stringify({ updatedAt: new Date().toISOString(), runs: capped }, null, 2) + "\n");
+    writeFileSync(
+      file,
+      JSON.stringify({ agentKey: key, updatedAt: new Date().toISOString(), runs: capped }, null, 2) + "\n",
+    );
   } catch (err) {
     console.warn("[agent-runs] log write skipped:", err?.message ?? err);
   }
 }
 
-/** Read the run history (server-side helper for the API route). */
+/**
+ * Read the merged run history across all per-agent files
+ * (server-side helper; keeps legacy single-file fallback).
+ */
 export function readContentAgentRuns(ROOT) {
-  const file = FILE(ROOT);
-  if (!existsSync(file)) return { updatedAt: null, runs: [] };
+  const runs = [];
   try {
-    const parsed = JSON.parse(readFileSync(file, "utf8"));
-    return { updatedAt: parsed.updatedAt ?? null, runs: Array.isArray(parsed.runs) ? parsed.runs : [] };
-  } catch {
-    return { updatedAt: null, runs: [] };
-  }
+    const dir = DIR(ROOT);
+    if (existsSync(dir)) {
+      for (const name of readdirSync(dir).filter((n) => n.endsWith(".json"))) {
+        try {
+          const parsed = JSON.parse(readFileSync(join(dir, name), "utf8"));
+          if (Array.isArray(parsed.runs)) runs.push(...parsed.runs);
+        } catch { /* skip malformed file */ }
+      }
+    }
+    const legacy = LEGACY_FILE(ROOT);
+    if (existsSync(legacy)) {
+      const parsed = JSON.parse(readFileSync(legacy, "utf8"));
+      if (Array.isArray(parsed.runs)) runs.push(...parsed.runs);
+    }
+  } catch { /* fall through */ }
+  runs.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  return { updatedAt: runs[0]?.at ?? null, runs };
 }

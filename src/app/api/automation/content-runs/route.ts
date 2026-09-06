@@ -7,7 +7,7 @@
 // This route merges that history with the live registry definitions
 // (schedule + config) so the admin panel shows REAL agent work.
 // ============================================================
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { guard } from "@/lib/api/http";
 import { ok } from "@/lib/api/response";
@@ -31,19 +31,34 @@ interface FileRun {
 }
 
 async function readRunsFile(): Promise<{ updatedAt: string | null; runs: FileRun[] }> {
-  // src/data/agent-runs.json — committed by the agents' workflows
-  const candidates = [
-    path.join(process.cwd(), "src/data/agent-runs.json"),
-    path.join(process.cwd(), "../src/data/agent-runs.json"),
-  ];
-  for (const file of candidates) {
+  // Per-agent run files — committed by the agents' workflows.
+  // (One file per agent so overlapping runs never merge-conflict.)
+  const dirs = [path.join(process.cwd(), "src/data/agent-runs"), path.join(process.cwd(), "../src/data/agent-runs")];
+  const legacy = [path.join(process.cwd(), "src/data/agent-runs.json"), path.join(process.cwd(), "../src/data/agent-runs.json")];
+  const runs: FileRun[] = [];
+  for (const dir of dirs) {
     try {
-      const raw = await readFile(file, "utf8");
-      const parsed = JSON.parse(raw) as { updatedAt?: string; runs?: FileRun[] };
-      return { updatedAt: parsed.updatedAt ?? null, runs: Array.isArray(parsed.runs) ? parsed.runs : [] };
+      const names = (await readdir(dir)).filter((n) => n.endsWith(".json"));
+      for (const name of names) {
+        try {
+          const parsed = JSON.parse(await readFile(path.join(dir, name), "utf8")) as { runs?: FileRun[] };
+          if (Array.isArray(parsed.runs)) runs.push(...parsed.runs);
+        } catch { /* skip malformed file */ }
+      }
+      if (runs.length) break;
     } catch { /* next candidate */ }
   }
-  return { updatedAt: null, runs: [] };
+  if (!runs.length) {
+    // Legacy single-file fallback (older deploys)
+    for (const file of legacy) {
+      try {
+        const parsed = JSON.parse(await readFile(file, "utf8")) as { updatedAt?: string; runs?: FileRun[] };
+        if (Array.isArray(parsed.runs)) { runs.push(...parsed.runs); break; }
+      } catch { /* next candidate */ }
+    }
+  }
+  runs.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  return { updatedAt: runs[0]?.at ?? null, runs };
 }
 
 export const GET = guard(async (req) => {

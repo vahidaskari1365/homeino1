@@ -347,13 +347,17 @@ async function main() {
   }
 
   if (created.length === 0) {
-    console.log("[magazine-daily] no briefs produced — file unchanged");
+    const llmConfigured = Boolean(process.env.LLM_API_KEY && process.env.LLM_BASE_URL);
+    const summary = llmConfigured
+      ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود یا همه تکراری بودند"
+      : "بدون کلید LLM اجرا شد؛ بازنویسی فارسی بریف‌ها بدون LLM ممکن نیست — برای فعال‌سازی، Secretهای LLM_API_KEY و LLM_BASE_URL را در مخزن ست کنید";
+    console.log(`[magazine-daily] no briefs produced — file unchanged (${llmConfigured ? "no candidates" : "no LLM key"})`);
     await logContentAgentRun(REPO, {
       agentKey: "magazine-editor",
       ok: false,
       durationMs: Date.now() - RUN_STARTED,
-      summary: "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود یا همه تکراری بودند",
-      detail: { added: 0, total: existing.length },
+      summary,
+      detail: { added: 0, total: existing.length, reason: llmConfigured ? "no_candidates" : "no_llm_key" },
     });
     return;
   }

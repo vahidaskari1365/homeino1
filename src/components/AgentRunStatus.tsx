@@ -1,14 +1,16 @@
 // ============================================================
 // AgentRunStatus — PUBLIC trust strip for content agents.
 //
-// Reads src/data/agent-runs.json (committed to the repo by the
-// daily GitHub Actions workflows themselves) and renders the REAL
-// last execution per content agent. No admin login needed — the
-// evidence ships inside the bundle, exactly as the bot wrote it.
-// Honest by construction: if no run was ever recorded, the strip
-// says so instead of pretending.
+// Reads src/data/agent-runs/<agentKey>.json (committed to the
+// repo by the daily GitHub Actions workflows themselves — one
+// file per agent so concurrent agents never merge-conflict) and
+// renders the REAL last execution per content agent. No admin
+// login needed — the evidence ships inside the bundle, exactly
+// as the bot wrote it. Honest by construction: if no run was
+// ever recorded, the strip says so instead of pretending.
 // ============================================================
-import raw from "@/data/agent-runs.json";
+import inspirationRuns from "@/data/agent-runs/inspiration-curator.json";
+import magazineRuns from "@/data/agent-runs/magazine-editor.json";
 
 export interface AgentRun {
   id: string;
@@ -20,7 +22,11 @@ export interface AgentRun {
   summary?: string;
 }
 
-const runs: AgentRun[] = (raw as { updatedAt?: string; runs?: AgentRun[] }).runs ?? [];
+type RunFile = { agentKey?: string; updatedAt?: string | null; runs?: AgentRun[] };
+
+const runs: AgentRun[] = [inspirationRuns, magazineRuns]
+  .flatMap((f) => ((f as RunFile)?.runs ?? []) as AgentRun[])
+  .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
 
 export function lastRunFor(agentKey: string): AgentRun | null {
   return runs.find((r) => r.agentKey === agentKey) ?? null;

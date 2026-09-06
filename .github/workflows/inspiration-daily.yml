@@ -45,10 +45,15 @@ jobs:
         run: |
           git config user.name "homeino-inspiration-bot"
           git config user.email "bot@homeino.ir"
-          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json src/data/agent-runs.json)" ]]; then
-            git add src/data/inspirations.generated.json src/data/agent-runs.json
+          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json src/data/agent-runs)" ]]; then
+            git add src/data/inspirations.generated.json src/data/agent-runs
             git commit -m "inspiration: daily agent pins (auto)"
-            git push
+            # ایجنت مجله ممکن است هم‌زمان کامیت زده باشد → ری‌بیس و تلاش مجدد
+            for i in 1 2 3; do
+              if git pull --rebase origin main; then git push && break; fi
+              git rebase --abort 2>/dev/null || true
+              echo "push retry $i failed — re-pulling"; sleep 15
+            done
           else
             echo "No new pins this run — nothing to commit."
           fi

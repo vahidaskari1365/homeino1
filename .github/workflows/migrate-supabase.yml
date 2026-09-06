@@ -44,19 +44,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Guard — skip gracefully without SUPABASE_DATABASE_URL
+        id: dbcheck
+        env:
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          if [ -z "${SUPABASE_DATABASE_URL:-}" ]; then
+            echo "::notice::Secret SUPABASE_DATABASE_URL ست نشده — مایگریشن رد شد (خودکار). برای فعال‌سازی، Secret را در Settings → Secrets اضافه کنید."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Apply migrations
+        if: steps.dbcheck.outputs.skip != 'true'
         run: npm run db:migrate
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
 
       - name: Seed catalog (manual dispatch only)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.seed }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.seed && steps.dbcheck.outputs.skip != 'true' }}
         run: npm run db:seed
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
 
       - name: Verify agents run in database mode
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.dbcheck.outputs.skip != 'true' }}
         run: npm run agents:verify
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
