@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Clock} from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
+import { AgentRunStatus } from "@/components/AgentRunStatus";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Chip } from "@/components/ui/primitives";
 import { RevealGroup, RevealItem, Reveal } from "@/components/motion/Reveal";
@@ -18,6 +19,7 @@ export default function MagazinePage() {
   return (
     <Container className="py-10">
       <PageHeader eyebrow="مجله Homeino" title="الهام و راهنمای خانه" desc="راهنمای خرید، سبک‌ها، نورپردازی و ترندهای دکوراسیون — برای ساختن خانه‌ای بهتر." />
+      <AgentRunStatus />
       <div className="mb-8 flex flex-wrap gap-2">{cats.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>)}</div>
 
       {feature && (

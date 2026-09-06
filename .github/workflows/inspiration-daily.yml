@@ -45,8 +45,8 @@ jobs:
         run: |
           git config user.name "homeino-inspiration-bot"
           git config user.email "bot@homeino.ir"
-          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json)" ]]; then
-            git add src/data/inspirations.generated.json
+          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json src/data/agent-runs.json)" ]]; then
+            git add src/data/inspirations.generated.json src/data/agent-runs.json
             git commit -m "inspiration: daily agent pins (auto)"
             git push
           else

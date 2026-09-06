@@ -41,8 +41,8 @@ jobs:
         run: |
           git config user.name "homeino-magazine-bot"
           git config user.email "bot@homeino.ir"
-          if [[ -n "$(git status --porcelain src/content/trends)" ]]; then
-            git add src/content/trends/trends.json
+          if [[ -n "$(git status --porcelain src/content/trends src/data/agent-runs.json)" ]]; then
+            git add src/content/trends/trends.json src/data/agent-runs.json
             git commit -m "magazine: daily trend briefs (auto)"
             git push
           else

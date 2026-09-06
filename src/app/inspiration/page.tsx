@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Camera, ImagePlus, RotateCcw } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
+import { AgentRunStatus } from "@/components/AgentRunStatus";
 import { Chip, Button, EmptyState } from "@/components/ui/primitives";
 import { InspirationCard } from "@/components/cards";
 import { UploadModal } from "@/components/inspiration/UploadModal";
@@ -30,6 +31,7 @@ export default function InspirationPage() {
         title="پین‌های الهام‌بخش چیدمان"
         desc="هر روز پین‌های تازه از سردبیر هومینو و کاربران؛ بگرد، ذخیره کن و عکس خانه‌ات را هم با بقیه به اشتراک بگذار."
       />
+      <AgentRunStatus />
 
       <div className="mb-4 space-y-3">
         <div className="flex flex-wrap items-center gap-2">

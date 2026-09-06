@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Lightbulb } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
+import { AgentRunStatus } from "@/components/AgentRunStatus";
 import { SectionHeading, Chip } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
@@ -42,6 +43,7 @@ export default function TrendsPage() {
         title="ترندهای روز دیزاین خانه"
         desc="هر روز، مهم‌ترین اتفاق‌های دنیای دیزاین داخلی را از معتبرترین منابع جهانی جمع می‌کنیم، به فارسیِ روان و مستقل بازنویسی می‌کنیم و نسخه‌ی کاربردی‌اش برای خانه‌های ایرانی را کنارش می‌گذاریم."
       />
+      <AgentRunStatus />
       {today && lead ? (
         <>
           <Reveal>
