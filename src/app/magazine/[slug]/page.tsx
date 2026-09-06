@@ -32,6 +32,21 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
           <p className="text-xl font-medium text-ink">{article!.excerpt}</p>
           {article!.content.map((p, i) => <p key={i}>{p}</p>)}
         </div>
+        {article!.sources && article!.sources.length > 0 && (
+          <aside className="mt-8 rounded-2xl border border-clay/35 bg-cream/60 p-5">
+            <div className="text-sm font-black text-ink">منابع و مآخذ</div>
+            <ul className="mt-2 space-y-1.5 text-sm">
+              {article!.sources.map((s) => (
+                <li key={s.url}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-terracotta-deep underline decoration-clay transition hover:decoration-terracotta">{s.name}</a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs leading-6 text-ink-muted">
+              این مطلب تولید اختصاصی تحریریه هومینو است؛ واقعیت‌ها از منابع بالا گردآوری و به‌صورت مستقل بازنویسی شده‌اند و ترجمه یا کپیِ تحت‌اللفظی نیستند.
+            </p>
+          </aside>
+        )}
         <div className="mt-8 flex items-center justify-between border-y border-clay/40 py-4">
           <Button variant="outline" onClick={async () => {
             const result = await shareContent({ title: article!.title, text: article!.excerpt, url: buildShareUrl(`/magazine/${article!.slug}`) });

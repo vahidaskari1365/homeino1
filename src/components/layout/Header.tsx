@@ -27,6 +27,7 @@ import {
   Store,
   Lightbulb,
   Palette,
+  TrendingUp,
   Tag,
   ArrowLeft,
   Wand2,
@@ -53,6 +54,7 @@ const NAV: { label: string; href: string; mega?: MegaKey; icon: typeof Package }
   { label: "فروشگاه‌ها", href: "/stores", icon: Store },
   { label: "الهام", href: "/inspiration", icon: Lightbulb },
   { label: "سبک‌ها", href: "/styles", mega: "styles", icon: Palette },
+  { label: "ترندها", href: "/trends", icon: TrendingUp },
   { label: "دسته دوم", href: "/second-hand", icon: Tag },
 ];
 

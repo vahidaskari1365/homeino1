@@ -5,6 +5,7 @@ import { storesRepository } from "@/repositories/stores";
 import { stylesRepository } from "@/repositories/styles";
 import { inspirationsRepository } from "@/repositories/inspirations";
 import { contentRepository } from "@/repositories/content";
+import { trendBriefs, trendDates } from "@/lib/trends";
 import { SITE_URL } from "@/config/site";
 
 /**
@@ -36,6 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/inspiration`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/styles`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/magazine`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    // مرجع ترند هومینو — به‌روزرسانی روزانه
+    { url: `${base}/trends`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${base}/feed.xml`, lastModified: now, changeFrequency: "daily", priority: 0.3 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/second-hand`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
     // Trust / legal surfaces — required for a trustworthy storefront.
@@ -99,6 +103,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.4,
   }));
 
+  const trendDateRoutes: MetadataRoute.Sitemap = trendDates.map((date) => ({
+    url: `${base}/trends/${date}`,
+    lastModified: new Date(`${date}T00:00:00Z`),
+    changeFrequency: "daily" as const,
+    priority: 0.6,
+  }));
+
+  const trendBriefRoutes: MetadataRoute.Sitemap = trendBriefs.map((b) => ({
+    url: `${base}/trends/${b.date}#${b.slug}`,
+    lastModified: new Date(`${b.date}T00:00:00Z`),
+    changeFrequency: "daily" as const,
+    priority: 0.5,
+  }));
+
   return [
     ...staticRoutes,
     ...productRoutes,
@@ -108,5 +126,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...inspirationRoutes,
     ...articleRoutes,
     ...projectRoutes,
+    ...trendDateRoutes,
+    ...trendBriefRoutes,
   ];
 }

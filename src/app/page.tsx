@@ -11,6 +11,7 @@ import { styles } from "@/data/styles";
 import { stores, collections } from "@/data/stores";
 import { products as allProducts, productsByStyle } from "@/data/products";
 import { inspirations } from "@/data/inspirations";
+import { latestTrendBriefs } from "@/lib/trends";
 import { IMG } from "@/data/media";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { toFa } from "@/lib/utils";
@@ -286,6 +287,27 @@ export default function HomePage() {
         <Container>
           <Reveal><SectionHeading eyebrow="فضاهای واقعی" title="ببین، الهام بگیر، همان چیدمان را بخر" desc="هر تصویر به محصولات واقعی متصل است؛ فاصله الهام تا خرید فقط چند لمس." action={<Link href="/inspiration" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">ورود به گالری <ArrowLeft size={16} /></Link>} /></Reveal>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">{inspirations.slice(0, 7).map((inspiration, index) => <div key={inspiration.id} className={index === 0 ? "col-span-2 row-span-2" : ""}><InspirationCard insp={inspiration} index={index} /></div>)}</div>
+        </Container>
+      </section>
+
+      {/* ===== DAILY TRENDS ===== */}
+      <section className="section-space-sm">
+        <Container>
+          <Reveal><SectionHeading eyebrow="مرجع ترند دیزاین" title="ترندهای روز دکوراسیون خانه" desc="هر روز مهم‌ترین ترندهای دیزاین دنیا را از معتبرترین منابع جمع می‌کنیم و به فارسیِ اختصاصی بازنویسی می‌کنیم — با منبع شفاف و نسخه‌ی ایرانی." action={<Link href="/trends" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">همه ترندهای روز <ArrowLeft size={16} /></Link>} /></Reveal>
+          <RevealGroup className="grid gap-4 sm:grid-cols-3">
+            {latestTrendBriefs(3).map((b) => (
+              <RevealItem key={b.slug}>
+                <Link href={`/trends/${b.date}#${b.slug}`} className="group flex h-full flex-col overflow-hidden card-surface card-interactive">
+                  <div className="relative aspect-[16/9] overflow-hidden"><SmartImage src={b.cover} alt={b.title} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><span className="absolute right-3 top-3 rounded-full bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur">{b.category}</span></div>
+                  <div className="flex flex-1 flex-col p-4">
+                    <h3 className="font-display text-base font-black leading-snug text-ink transition group-hover:text-terracotta-deep">{b.title}</h3>
+                    <p className="mt-1.5 line-clamp-3 flex-1 text-xs leading-6 text-ink-muted">{b.summary}</p>
+                    <div className="mt-2 text-2xs text-ink-muted">{b.dateFa} · منبع: {b.source.name}</div>
+                  </div>
+                </Link>
+              </RevealItem>
+            ))}
+          </RevealGroup>
         </Container>
       </section>
 

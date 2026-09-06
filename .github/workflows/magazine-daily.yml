@@ -1,0 +1,50 @@
+name: magazine-daily
+
+# به‌روزرسانی روزانه «ترندهای روز هومینو»
+# هر روز ساعت ۰۷:۳۰ به وقت تهران (04:00 UTC) فیدهای منابع معتبر خوانده می‌شود،
+# بریف‌های فارسیِ بازنویسی‌شده ساخته و به trends.json اضافه می‌شوند و کامیت می‌شوند.
+# برای فعال‌سازی تولید محتوا، در تنظیمات Secrets مخزن این متغیرها را تعریف کنید
+# (هر سرویس سازگار با OpenAI_chat_completions کار می‌کند):
+#   LLM_API_KEY, LLM_BASE_URL (مثلاً https://api.openai.com/v1), LLM_MODEL (اختیاری)
+# بدون Secrets هم ورک‌فلو سبز می‌ماند (فقط محتوای جدیدی تولید نمی‌شود).
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: magazine-daily
+  cancel-in-progress: true
+
+jobs:
+  daily-briefs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate daily trend briefs
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: node scripts/magazine-daily.mjs
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "homeino-magazine-bot"
+          git config user.email "bot@homeino.ir"
+          if [[ -n "$(git status --porcelain src/content/trends)" ]]; then
+            git add src/content/trends/trends.json
+            git commit -m "magazine: daily trend briefs (auto)"
+            git push
+          else
+            echo "No new briefs today — nothing to commit."
+          fi

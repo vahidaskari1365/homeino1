@@ -16,7 +16,8 @@
     "db:seed": "esbuild scripts/seed-catalog.ts --bundle --platform=node --format=esm --alias:@=./src --external:pg --external:dotenv --outfile=.seed-bundle.mjs && node .seed-bundle.mjs",
     "agents:verify": "esbuild scripts/verify-agents-db.ts --bundle --platform=node --format=esm --alias:@=./src --external:pg --external:dotenv --outfile=.verify-bundle.mjs && node .verify-bundle.mjs",
     "supabase:push": "supabase db push --linked --include-all",
-    "agents:smoke": "esbuild scripts/smoke-blueprint.ts --bundle --platform=node --format=esm --alias:@=./src --external:pg --external:dotenv --outfile=.smoke-bundle.mjs && node .smoke-bundle.mjs"
+    "agents:smoke": "esbuild scripts/smoke-blueprint.ts --bundle --platform=node --format=esm --alias:@=./src --external:pg --external:dotenv --outfile=.smoke-bundle.mjs && node .smoke-bundle.mjs",
+    "magazine:daily": "node scripts/magazine-daily.mjs"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.3.0",
