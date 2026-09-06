@@ -2,112 +2,155 @@
 // Orali HTTP Client — SERVER-ONLY. Never imported by a client
 // bundle; resolved exclusively inside the AI pipeline.
 //
-// Env:
-//   ORALI_API_BASE_URL   e.g. https://api.orali.com
-//   ORALI_API_KEY
-//   ORALI_MODEL          optional model override
+// REAL ENGINE (live-tested): the image-edit endpoint accepts
+//   POST {BASE}/images/generations/edit
+//   { prompt, images: [{ url: <dataURL> }], size: "1344x768" }
+// and returns { data: [{ url }] } with the edited image. The
+// generation endpoint accepts { prompt, size } and the chat
+// endpoint speaks plain OpenAI /chat/completions.
 //
-// ADAPTER POINT: when the final Orali OpenAPI spec is published,
-// adjust `buildEditPayload` / `parseEditResponse` in this ONE
-// file — nothing else in the app changes.
+// Env (preferred in production):
+//   ORALI_API_BASE_URL / ZAI_API_BASE_URL   e.g. https://internal-api.z.ai/v1
+//   ORALI_API_KEY     / ZAI_API_KEY         bearer key
+//   ZAI_API_TOKEN                           optional X-Token header
+// File fallback (sandbox/self-hosted): reads `.z-ai-config`
+// (JSON with baseUrl+apiKey[+token]) from process cwd, $HOME,
+// then /etc — the same search order the z-ai SDK uses.
 // ============================================================
 import type {
-  OraliClient, OraliEditRequest, OraliEditResult, OverlayRegion,
+  OraliClient, OraliEditRequest, OraliEditResult,
 } from "./types";
 import { OraliNotConfiguredError, OraliRequestError } from "./types";
+import { engineConfig, type EngineConfig } from "../engineConfig";
+import { toEngineEnglish } from "../engineTranslate";
 
-const BASE_URL = () => (process.env.ORALI_API_BASE_URL || "").replace(/\/+$/, "");
-const API_KEY = () => process.env.ORALI_API_KEY || "";
-const MODEL = () => process.env.ORALI_MODEL || "orali-room-v1";
+/** Sizes the edit/generation endpoint actually supports (tested 2025). */
+const SUPPORTED_SIZES = [
+  "1024x1024", "768x1344", "864x1152", "1344x768", "1152x864", "1440x720", "720x1440",
+] as const;
 
-export const isOraliConfigured = (): boolean => Boolean(BASE_URL() && API_KEY());
+export const isOraliConfigured = (): boolean => engineConfig() !== null;
 
-/** Map our normalized request to the Orali edit endpoint payload. */
-function buildEditPayload(req: OraliEditRequest): Record<string, unknown> {
-  const b64 = req.image.replace(/^data:image\/\w+;base64,/, "");
-  return {
-    model: MODEL(),
-    image: b64,
-    prompt: req.instruction,
-    ...(req.mask ? { mask: req.mask.replace(/^data:image\/\w+;base64,/, "") } : {}),
-    preserve_structure: req.preserveArchitecture,
-    ...(req.protectedElements?.length ? { protected_elements: req.protectedElements } : {}),
-    ...(req.targetRegion ? { target_region: req.targetRegion } : {}),
-    ...(req.style ? { style: req.style } : {}),
-    ...(req.colors?.length ? { palette: req.colors } : {}),
-    strength: req.strength ?? 0.65,
-    response_format: "b64_json",
-    metadata: { overlay_regions: true },
+function authHeaders(cfg: EngineConfig): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${cfg.apiKey}`,
+    "X-Z-AI-From": "Z",
   };
+  if (cfg.token) headers["X-Token"] = cfg.token;
+  return headers;
 }
 
-/** Parse the Orali response into our normalized contract. */
-function parseEditResponse(data: Record<string, unknown>, latencyMs: number): OraliEditResult {
-  const imageField = (data.image ?? data.output ?? data.result) as Record<string, unknown> | string | undefined;
-  let image = "";
-  if (typeof imageField === "string") image = imageField;
-  else if (imageField && typeof imageField === "object") {
-    const o = imageField as Record<string, unknown>;
-    const b64 = o.b64_json ?? o.b64 ?? o.data;
-    const url = o.url;
-    if (typeof b64 === "string" && b64) image = b64.startsWith("data:") ? b64 : `data:image/png;base64,${b64}`;
-    else if (typeof url === "string") image = url;
+/* ---- image size helpers: match the engine's supported canvas ---- */
+
+/** Decode intrinsic pixel size of a PNG/JPEG data URL (no deps). */
+function dataUrlSize(dataUrl: string): { w: number; h: number } | null {
+  const m = dataUrl.match(/^data:image\/(png|jpeg|jpg);base64,([\s\S]*)$/);
+  if (!m) return null;
+  const buf = Buffer.from(m[2], "base64");
+  if (m[1] === "png" && buf.length > 24 && buf.readUInt32BE(12) === 0x49484452) {
+    return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
   }
-  if (!image) throw new OraliRequestError("ORALI_EMPTY_IMAGE");
+  // JPEG: scan SOF markers
+  let off = 2;
+  while (off + 9 < buf.length) {
+    if (buf[off] !== 0xff) { off += 1; continue; }
+    const marker = buf[off + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+      return { h: buf.readUInt16BE(off + 5), w: buf.readUInt16BE(off + 7) };
+    }
+    off += 2 + buf.readUInt16BE(off + 2);
+  }
+  return null;
+}
 
-  const rawRegions = (data.regions ?? data.overlay ?? (data.metadata as Record<string, unknown> | undefined)?.regions) as unknown[] | undefined;
-  const regions: OverlayRegion[] = Array.isArray(rawRegions)
-    ? rawRegions
-        .map((r, i): OverlayRegion | null => {
-          if (typeof r !== "object" || r === null) return null;
-          const o = r as Record<string, unknown>;
-          const box = (o.box ?? o.bbox ?? o.region) as Record<string, unknown> | undefined;
-          if (!box) return null;
-          const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
-          const x = num(box.x), y = num(box.y), w = num(box.w ?? box.width), h = num(box.h ?? box.height);
-          if (x === null || y === null || w === null || h === null) return null;
-          return {
-            id: typeof o.id === "string" ? o.id : `orali-r${i}`,
-            label: typeof o.label === "string" ? o.label : "ناحیه تغییر",
-            element: typeof o.element === "string" ? o.element : undefined,
-            box: { x, y, w, h },
-            mask: typeof o.mask === "string" ? o.mask : undefined,
-            opacity: num(o.opacity) ?? 0.25,
-            status: o.status === "failed" ? "failed" : "applied",
-          };
-        })
-        .filter((r): r is OverlayRegion => r !== null)
-    : [];
+/** Closest engine canvas to the input's aspect ratio (fallback 4:3 landscape). */
+function pickSize(dataUrl: string): string {
+  const dim = dataUrlSize(dataUrl);
+  const ratio = dim && dim.w > 0 ? dim.w / dim.h : 4 / 3;
+  let best: string = SUPPORTED_SIZES[3]; // 1344x768
+  let bestDiff = Number.POSITIVE_INFINITY;
+  for (const size of SUPPORTED_SIZES) {
+    const [w, h] = size.split("x").map(Number);
+    const diff = Math.abs(w / h - ratio);
+    if (diff < bestDiff) { bestDiff = diff; best = size; }
+  }
+  return best;
+}
 
-  return { image, regions, model: typeof data.model === "string" ? data.model : MODEL(), latencyMs };
+/* ---- prompt assembly: fold preservation rules into the instruction ---- */
+
+function buildEditPrompt(req: OraliEditRequest): string {
+  const parts = [req.instruction.trim()];
+  if (req.protectedElements?.length) {
+    parts.push(`Keep these elements strictly unchanged: ${req.protectedElements.join(", ")}.`);
+  }
+  if (req.preserveArchitecture) {
+    parts.push("Do NOT move, add or remove walls, windows, doors, the ceiling or the floor. Keep the exact same camera angle, perspective, room dimensions and lighting.");
+  }
+  if (req.targetRegion) {
+    const { x, y, w, h } = req.targetRegion;
+    parts.push(`Apply the change inside the region around (${Math.round((x + w / 2) * 100)}% from left, ${Math.round((y + h / 2) * 100)}% from top, ${Math.round(w * 100)}% width) and nowhere else.`);
+  }
+  if (req.mask) {
+    parts.push("Edit ONLY the user-highlighted mask area; everything outside it stays pixel-identical.");
+  }
+  if (req.style) parts.push(`Target decor style: ${req.style}.`);
+  if (req.colors?.length) parts.push(`Palette to respect: ${req.colors.join(", ")}.`);
+  parts.push("Photorealistic result, consistent lighting and shadows with the original photo.");
+  return parts.join(" ");
+}
+
+/** Download the engine's result URL into a data URL (client always renderable). */
+async function toDataUrl(url: string): Promise<string> {
+  if (url.startsWith("data:")) return url;
+  const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+  if (!res.ok) throw new OraliRequestError(`ORALI_DOWNLOAD_${res.status}`);
+  const mime = res.headers.get("content-type")?.split(";")[0] || "image/png";
+  const buf = Buffer.from(await res.arrayBuffer());
+  return `data:${mime};base64,${buf.toString("base64")}`;
 }
 
 export const oraliClient: OraliClient = {
-  name: "orali",
-  configured: isOraliConfigured(),
+  get name() { return "orali" as const; },
+  get configured() { return isOraliConfigured(); },
 
   async generateEdit(req: OraliEditRequest): Promise<OraliEditResult> {
-    if (!isOraliConfigured()) throw new OraliNotConfiguredError();
+    const cfg = engineConfig();
+    if (!cfg) throw new OraliNotConfiguredError();
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120_000); // image edits can be slow
+    const timeout = setTimeout(() => controller.abort(), 180_000); // image edits can be slow
     const started = Date.now();
     try {
-      const res = await fetch(`${BASE_URL()}/v1/images/edits`, {
+      // The engine's content filter false-positives on Persian script —
+      // image prompts must go out in English (chat endpoint is Persian-safe).
+      const enginePrompt = await toEngineEnglish(buildEditPrompt(req));
+      const res = await fetch(`${cfg.baseUrl}/images/generations/edit`, {
         method: "POST",
         signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY()}`,
-        },
-        body: JSON.stringify(buildEditPayload(req)),
+        headers: authHeaders(cfg),
+        body: JSON.stringify({
+          prompt: enginePrompt,
+          images: [{ url: req.image }], // engine contract: array of {url} (data URL accepted)
+          size: pickSize(req.image),
+        }),
       });
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new OraliRequestError(`ORALI_HTTP_${res.status}${body ? `: ${body.slice(0, 180)}` : ""}`, res.status);
       }
-      const data = (await res.json()) as Record<string, unknown>;
-      return parseEditResponse(data, Date.now() - started);
+      const data = (await res.json()) as { data?: { url?: string; base64?: string; b64_json?: string }[] };
+      const item = data?.data?.[0];
+      const raw = item?.url ?? (item?.base64 ? `data:image/png;base64,${item.base64}` : undefined)
+        ?? (item?.b64_json ? `data:image/png;base64,${item.b64_json}` : undefined);
+      if (!raw) throw new OraliRequestError("ORALI_EMPTY_IMAGE");
+      return {
+        image: await toDataUrl(raw),
+        regions: [], // honest: this engine does not report per-region metadata
+        model: "zimage-edit",
+        latencyMs: Date.now() - started,
+      };
     } catch (err) {
       if (err instanceof OraliRequestError || err instanceof OraliNotConfiguredError) throw err;
       if (err instanceof Error && err.name === "AbortError") throw new OraliRequestError("ORALI_TIMEOUT");
@@ -117,3 +160,36 @@ export const oraliClient: OraliClient = {
     }
   },
 };
+
+/** Text-to-image via the same engine (used by the ZAI provider for `generate`). */
+export async function engineGenerate(prompt: string, size = "1344x768"): Promise<string> {
+  const cfg = engineConfig();
+  if (!cfg) throw new OraliNotConfiguredError();
+  const enginePrompt = await toEngineEnglish(prompt); // Persian → English (filter-safe)
+  const res = await fetch(`${cfg.baseUrl}/images/generations`, {
+    method: "POST",
+    headers: authHeaders(cfg),
+    body: JSON.stringify({ prompt: enginePrompt, size }),
+    signal: AbortSignal.timeout(180_000),
+  });
+  if (!res.ok) throw new OraliRequestError(`ORALI_HTTP_${res.status}`);
+  const data = (await res.json()) as { data?: { url?: string; base64?: string }[] };
+  const raw = data?.data?.[0]?.url ?? data?.data?.[0]?.base64;
+  if (!raw) throw new OraliRequestError("ORALI_EMPTY_IMAGE");
+  return toDataUrl(raw);
+}
+
+/** Chat completion via the same engine's OpenAI-compatible endpoint. */
+export async function engineChat(messages: { role: "system" | "user" | "assistant"; content: string }[], opts?: { temperature?: number }): Promise<string> {
+  const cfg = engineConfig();
+  if (!cfg) throw new OraliNotConfiguredError();
+  const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: authHeaders(cfg),
+    body: JSON.stringify({ model: "glm-4.5", messages, temperature: opts?.temperature ?? 0.7, max_tokens: 1200 }),
+    signal: AbortSignal.timeout(90_000),
+  });
+  if (!res.ok) throw new OraliRequestError(`ORALI_HTTP_${res.status}`);
+  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  return data?.choices?.[0]?.message?.content ?? "";
+}

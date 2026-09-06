@@ -12,17 +12,19 @@
 import type { IntentRequest, IntentAnalysis, LlmProvider } from "./types";
 import { heuristicLlmProvider, heuristicUnderstandIntent } from "./heuristicLlm";
 import { openAiCompatLlmProvider, isOpenAiCompatConfigured, normalizeIntentAnalysis } from "./openaiCompatLlm";
+import { zaiLlmProvider } from "./zaiLlm";
+import { isZEngineConfigured } from "../engineConfig";
 import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "./systemPrompt";
 
 export type { IntentRequest, IntentAnalysis, LlmProvider, DesignIntentType } from "./types";
 export { INTENT_LABELS } from "./types";
-export { heuristicUnderstandIntent, heuristicLlmProvider, openAiCompatLlmProvider };
+export { heuristicUnderstandIntent, heuristicLlmProvider, openAiCompatLlmProvider, zaiLlmProvider };
 export { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT };
 
 export interface ResolvedLlm {
   llm: LlmProvider;
-  /** "openai-compat" = real remote LLM · "heuristic" = built-in engine */
-  source: "openai-compat" | "heuristic";
+  /** "openai-compat"/"zai-engine" = real remote LLM · "heuristic" = built-in engine */
+  source: "openai-compat" | "zai-engine" | "heuristic";
 }
 
 export async function resolveLlm(): Promise<ResolvedLlm> {
@@ -30,6 +32,11 @@ export async function resolveLlm(): Promise<ResolvedLlm> {
     try {
       const m = await import("./openaiCompatLlm");
       return { llm: m.openAiCompatLlmProvider, source: "openai-compat" };
+    } catch { /* fall through */ }
+  }
+  if (isZEngineConfigured()) {
+    try {
+      return { llm: zaiLlmProvider, source: "zai-engine" };
     } catch { /* fall through */ }
   }
   return { llm: heuristicLlmProvider, source: "heuristic" };

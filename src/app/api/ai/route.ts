@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider } from "@/services/ai/provider";
+import { resolveProvider, resolveFreeGenerationFallback } from "@/services/ai/provider";
 import { mockAiProvider } from "@/services/ai/mockAiService";
 import { sanitizeUserPrompt, ALL_ELEMENTS } from "@/services/ai/roomState";
 import { understandIntent } from "@/services/ai/llm";
@@ -134,13 +134,16 @@ export async function POST(req: NextRequest) {
     // Real (paid) providers configured → ALL cost-bearing actions MUST be
     // authenticated (chat/agent/recommend burn LLM tokens just like
     // generation — an open door would be a cost-abuse vector).
-    // Sample/demo mode (no keys) stays open and free.
+    // Sample/demo mode (no keys) stays open and free. The file-configured
+    // Z-Image engine (sandbox/self-hosted) is ALSO sample mode; only its
+    // env-configured flavor counts as a real provider here.
+    const { isZEngineEnvConfigured } = await import("@/services/ai/engineConfig");
     const hasRealProvider = Boolean(
       process.env.GEMINI_API_KEY ||
         process.env.OPENAI_API_KEY ||
         process.env.LLM_BASE_URL ||
-        process.env.FREELLM_API_URL ||
-        process.env.ORALI_API_URL,
+        process.env.FREELLMAPI_API_KEY ||
+        isZEngineEnvConfigured(),
     );
     const AUTH_REQUIRED_ACTIONS = new Set([
       "generate", "edit", "inpaint", "pipeline", "chat", "agent", "understand", "recommend",
@@ -329,6 +332,18 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
       return json({ ...(result as unknown as Record<string, unknown>), _provider: name }, 200, requestId);
     } catch (err) {
       if (IMAGE_ACTIONS.has(action)) {
+        // Free keyless fallback first: guests still get a REAL AI image for
+        // generation; edits keep the honest path (no free editor exists).
+        if (action === "generate") {
+          try {
+            const free = await resolveFreeGenerationFallback();
+            if (free) {
+              const freeResult = await dispatch(free, action, p as never);
+              finish("degraded", { provider: "pollinations", errorCode: classifyAiError(err).code });
+              return json({ ...(freeResult as unknown as Record<string, unknown>), _provider: "pollinations", _degraded: true }, 200, requestId);
+            }
+          } catch { /* fall through to mock */ }
+        }
         // Honest degradation: mock marks the result as preview — never fake success.
         const fallback = await dispatch(mockAiProvider, action, p as never);
         finish("degraded", { provider: "mock", errorCode: classifyAiError(err).code });
