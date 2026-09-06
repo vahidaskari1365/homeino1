@@ -1,22 +1,17 @@
 "use client";
 // ============================================================
-// هومینو استودیو — composition layer.
-// Header/tabs and the tab bodies; the "design" tab composes the
-// independent steps (RoomUploader, StylePicker, ItemPicker,
-// BudgetStep, GenerationProgress, ResultCanvas). The room analysis
-// lives INSIDE RoomUploader, directly below the uploaded photo.
+// هومینو استودیو — composition layer (طرح D ترکیبی).
+// سربرگ + تب‌های بالای جمع‌تر + بدنه هر تب. تب «چیدمان با عکس»
+// حالا دو پنل دارد: WizardPanel (ویزارد ۳ مرحله‌ای) و ResultCanvas
+// (پیش‌نمایش زنده قبل از رندر + قهرمان و ۳ تب بعد از رندر).
+// تحلیل اتاق داخل RoomUploader، زیر عکس آپلودشده می‌ماند.
 // ============================================================
-import Link from "next/link";
 import { Wand2, Search, Sparkles } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { SuggestAssistant } from "@/components/ai/SuggestAssistant";
 import { cn } from "@/lib/utils";
 import type { DesignStudio as Studio } from "./useDesignStudio";
-import { RoomUploader } from "./RoomUploader";
-import { StylePicker } from "./StylePicker";
-import { ItemPicker } from "./ItemPicker";
-import { BudgetStep } from "./BudgetStep";
-import { GenerationProgress } from "./GenerationProgress";
+import { WizardPanel } from "./WizardPanel";
 import { ResultCanvas } from "./ResultCanvas";
 import { InspirationTab } from "./InspirationTab";
 
@@ -24,25 +19,23 @@ export function DesignStudio({ studio }: { studio: Studio }) {
   const { tab, setTab, selectStyle, setBudget, toast } = studio;
   return (
     <div className="min-h-screen bg-ivory">
-      <Container className="py-8">
-        <div className="mb-5 [&_a]:text-ink-muted"><Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "هومینو استودیو" }]} /></div>
+      <Container className="py-6 sm:py-8">
+        <div className="mb-4 [&_a]:text-ink-muted"><Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "هومینو استودیو" }]} /></div>
 
-        {/* Header */}
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-ink text-cream"><Wand2 size={24} /></span>
-            <div>
-              <h1 className="font-display text-2xl font-black leading-tight text-ink">هومینو استودیو</h1>
-              <p className="text-sm text-ink-muted">عکس خانه‌ات را آپلود کن، وسایل انتخاب کن و نتیجه را ببین</p>
-            </div>
+        {/* Header — جمع‌تر شده */}
+        <header className="mb-4 flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-ink text-cream"><Wand2 size={22} /></span>
+          <div>
+            <h1 className="font-display text-xl font-black leading-tight text-ink sm:text-2xl">هومینو استودیو</h1>
+            <p className="text-sm text-ink-muted">عکس خانه‌ات را آپلود کن، وسایل انتخاب کن و نتیجه را ببین</p>
           </div>
         </header>
 
-        {/* Tabs */}
-        <div className="mb-6 flex gap-2 rounded-xl border border-clay/50 bg-cream p-1.5">
+        {/* Tabs — جمع‌تر: نوار باریک با آیکون، لیبل کامل فقط در دسکتاپ */}
+        <div className="mb-5 flex gap-1 rounded-xl border border-clay/50 bg-cream p-1">
           {([["design", "چیدمان با عکس", Wand2], ["inspiration", "اسکن بصری", Search], ["suggest", "پیشنهاد دکور", Sparkles]] as const).map(([id, label, Icon]) => (
-            <button key={id} onClick={() => setTab(id)} className={cn("flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-bold transition", tab === id ? "bg-ink text-cream" : "text-ink-muted hover:text-ink")}>
-              <Icon size={17} /> {label}
+            <button key={id} onClick={() => setTab(id)} aria-current={tab === id} className={cn("flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[13px] font-bold transition sm:gap-2 sm:text-sm", tab === id ? "bg-ink text-cream" : "text-ink-muted hover:text-ink")}>
+              <Icon size={15} className="shrink-0" /> <span className="truncate">{label}</span>
             </button>
           ))}
         </div>
@@ -52,21 +45,16 @@ export function DesignStudio({ studio }: { studio: Studio }) {
         {tab === "inspiration" && <InspirationTab studio={studio} />}
 
         {tab === "design" && (
-          <div className="grid gap-5 lg:grid-cols-12">
-            {/* LEFT: Controls — upload card carries the studio analysis below the photo */}
-            <div className="space-y-4 lg:col-span-5">
-              <RoomUploader studio={studio} />
-              <StylePicker studio={studio} />
-              <ItemPicker studio={studio} />
-              <BudgetStep studio={studio} />
-              <GenerationProgress studio={studio} />
+          <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
+            {/* راست (RTL اول): ویزارد ۳ مرحله‌ای — عکس ← سبک ← وسایل و اجرا */}
+            <div className="lg:col-span-5">
+              <WizardPanel studio={studio} />
             </div>
 
-            {/* RIGHT: Output */}
+            {/* چپ: خروجی — قبل از رندر پیش‌نمایش زنده، بعد از رندر ۳ تب جمع */}
             <ResultCanvas studio={studio} />
           </div>
         )}
-        <div className="mt-8 text-center"><Link href="/ai/design" className="text-sm text-ink-muted hover:text-ink">← بازگشت به هومینو استودیو</Link></div>
       </Container>
     </div>
   );

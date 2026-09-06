@@ -1,20 +1,18 @@
 "use client";
-// Step ۱ — «عکس خانه» upload card. The Homeino Studio analysis now renders
-// DIRECTLY BELOW the uploaded photo (owner request), inside this same card.
+// Step ۱ — «عکس خانه» (محتوایی — کارت و تیتر را ویزارد می‌سازد).
+// تحلیل هومینو استودیو مستقیماً زیر عکس آپلودشده می‌ماند (خواسته مالک).
 import { useRef } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import type { DesignStudio } from "./useDesignStudio";
-import { panelCls, stepBadge } from "./constants";
 import { AnalysisBanner } from "./AnalysisBanner";
 
 export function RoomUploader({ studio }: { studio: DesignStudio }) {
   const { imageBase64, analyzing, handleFile, removeImage } = studio;
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <div className={panelCls}>
-      <h2 className="mb-2.5 flex items-center gap-2 border-b border-clay/30 pb-2.5 text-base font-bold text-ink"><span className={stepBadge}>۱</span> عکس خانه</h2>
+    <div>
       {!imageBase64 ? (
-        <div onClick={() => inputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }} className="flex aspect-video cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 text-center transition hover:border-terracotta">
+        <div onClick={() => inputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }} className="flex aspect-video cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-clay/60 bg-cream text-center transition hover:border-terracotta">
           <Upload size={28} className="mb-2 text-ink-muted" /><p className="text-sm font-medium text-ink">عکس اتاقت را بنداز اینجا</p><p className="mt-0.5 text-xs text-ink-muted">یا کلیک کن برای انتخاب — JPG / PNG / WEBP</p>
         </div>
       ) : (
