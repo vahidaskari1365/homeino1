@@ -1,0 +1,315 @@
+{
+  "_comment": "استخر عکس ایجنت الهام برای اجرای ابری — توسط اجراهای سندباکس (z-ai) شارژ می‌شود",
+  "pool": {
+    "modern": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/76ae716d2d97.jpg",
+          "source": "Real Homes"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4f3ac688012c.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2a7405bfc01e.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/72aeaeb84003.jpg",
+          "source": "Ideal Home"
+        }
+      ],
+      "بیرونی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5051d9c68745.png",
+          "source": "VEVOR"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8c46c98a2c99.jpg",
+          "source": "kr.pinterest.com"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/75e243196d8b.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/595df684a006.jpg",
+          "source": "Vivid Corners"
+        }
+      ]
+    },
+    "scandinavian": {
+      "اتاق خواب": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/16a0583333f3.jpg",
+          "source": "Livingetc"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7399957001ac.jpg",
+          "source": "Hello Hayley"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f1d86bf8e014.jpg",
+          "source": "100+ Home Decorating Ideas & Interior Design Blog - Buyer Select"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ba71aec0be7d.jpeg",
+          "source": "The Pioneer Woman"
+        }
+      ]
+    },
+    "minimal": {
+      "فضای کار": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e1d6e72347d4.png",
+          "source": "Resource Furniture"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a95631950f11.jpg",
+          "source": "Oakywood"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e031674713c7.jpg",
+          "source": "Amazon.com"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8794675f2b50.jpg",
+          "source": "IKEA"
+        }
+      ],
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e25617273820.jpg",
+          "source": "House Beautiful"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/adc846e0196d.png",
+          "source": "TheCoolist"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d19394cb0291.jpg",
+          "source": "Acousart"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e61af5106395.jpg",
+          "source": "Lumi Gallery"
+        }
+      ]
+    },
+    "art-deco": {
+      "ناهارخوری": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3af21ee55d50.jpg",
+          "source": "ELLE Decor"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/439214903fad.jpg",
+          "source": "JJones Design Co."
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d23813f52d6b.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d13121eb9b4f.png",
+          "source": "Architectural Digest"
+        }
+      ]
+    },
+    "japandi": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3f3f0dd63c09.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/82466c601d52.png",
+          "source": "House Designer"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/07e918cbf5a9.jpg",
+          "source": "The Architects Diary"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/73c84bcdab2d.jpg",
+          "source": "TheCoolist"
+        }
+      ],
+      "فضای کار": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/dbbbd4daf395.jpg",
+          "source": "Livingetc"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/526748b658c6.jpg",
+          "source": "Naked Kitchens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/19b13b008743.png",
+          "source": "Apex Granite Outlet"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b8621b65386a.jpg",
+          "source": "ROBAM Living"
+        }
+      ]
+    },
+    "boho": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/fe43f4e90dd8.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/6868b917b2f7.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/26db031d8c18.jpg",
+          "source": "Lamour Artisans"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8d61bc483b50.jpg",
+          "source": "Pooky Lighting"
+        }
+      ]
+    },
+    "industrial": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/372f2a05e7ff.jpg",
+          "source": "StagePro AI"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0f1e1de9c108.png",
+          "source": "TheCoolist"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/313bba6ed98b.jpg",
+          "source": "Home Designing"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3aba84aa85e5.jpg",
+          "source": "Homecrux"
+        }
+      ],
+      "فضای کار": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f35493317778.jpeg",
+          "source": "Walmart"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b271b031e32d.jpg",
+          "source": "Warm Shelf"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f89de88706c9.jpeg",
+          "source": "Walmart"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e0b9a6656a46.jpg",
+          "source": "Bed Bath & Beyond"
+        }
+      ]
+    },
+    "rustic": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4b469df1f6ae.jpg",
+          "source": "Beautiful Homes - Asian Paints"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a420f7ac2a43.jpg",
+          "source": "Belleze Furniture"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/880100f8a328.jpeg",
+          "source": "Margery Wedderburn Interiors"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/56eb4b4a8518.jpg",
+          "source": "Trendir"
+        }
+      ]
+    },
+    "contemporary": {
+      "فضای کار": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ef6e9b94fa6c.jpg",
+          "source": "Minimal Desk Setups"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/eccdf6272808.jpg",
+          "source": "Architectural Digest"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0ad701d6fb8f.jpg",
+          "source": "Architectural Digest"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/de54fd6097e1.jpg",
+          "source": "Becoming Minimalist"
+        }
+      ],
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f205801ed397.jpg",
+          "source": "Nicetown"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/84ce1d60a54a.webp",
+          "source": "Freshine Curtains"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/814503f5e913.jpeg",
+          "source": "Walmart"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ef0aa3a2e9ea.jpg",
+          "source": "Joydeco"
+        }
+      ]
+    },
+    "classic": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/77ffa0996974.png",
+          "source": "K. Powers Luxury Carpets & Flooring"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/128e2eaf2b09.png",
+          "source": "The Rug Decor"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e316d2d979b4.jpg",
+          "source": "Persian Rugs Carpet, Wool Carpet Rug, Persian Rugs And Carpets - Fanyo"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cb65d1176442.jpg",
+          "source": "Etsy"
+        }
+      ]
+    },
+    "neoclassic": {
+      "پذیرایی": [
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c5292e81ae03.jpg",
+          "source": "Amazon.com"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a4a2a7aaaeaf.jpg",
+          "source": "Homes and Gardens"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3f6a399ef107.jpg",
+          "source": "Amazon.com.be"
+        },
+        {
+          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/027037d90f9d.png",
+          "source": "TheCoolist"
+        }
+      ]
+    }
+  }
+}

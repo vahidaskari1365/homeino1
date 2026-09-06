@@ -1,0 +1,54 @@
+name: inspiration-daily
+
+# ایجنت الهام هومینو — روزی ۳ بار (۰۷:۰۰، ۱۲:۰۰، ۱۷:۰۰ تهران = 03:30/08:30/13:30 UTC)
+# هر نوبت: چرخش ماتریس سبک×فضا → جستجوی عکس چیدمان واقعی → پین فارسی اورجینال → کامیت
+# LLM: اگر Secrets مخزن (LLM_API_KEY/LLM_BASE_URL/LLM_MODEL) تعریف شده باشد از آن
+# استفاده می‌شود؛ در نبودشان متن پین‌ها از قالب پایدار فارسی ساخته می‌شود (صادقانه).
+# عکس‌ها: جستجوی تصویر زنده + اعتبار منبع روی هر پین.
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+    - cron: "30 8 * * *"
+    - cron: "30 13 * * *"
+  workflow_dispatch:
+    inputs:
+      pins:
+        description: "تعداد پین در این نوبت"
+        default: "6"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: inspiration-daily
+  cancel-in-progress: true
+
+jobs:
+  inspiration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Collect & publish inspiration pins
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: node scripts/inspiration-daily.mjs --pins=${{ github.event.inputs.pins || '6' }}
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "homeino-inspiration-bot"
+          git config user.email "bot@homeino.ir"
+          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json)" ]]; then
+            git add src/data/inspirations.generated.json
+            git commit -m "inspiration: daily agent pins (auto)"
+            git push
+          else
+            echo "No new pins this run — nothing to commit."
+          fi

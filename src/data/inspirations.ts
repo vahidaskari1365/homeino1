@@ -1,16 +1,17 @@
 import type { InspirationImage, AiDesign, Review } from "@/types";
 import { IMG } from "./media";
+import generatedPinsJson from "./inspirations.generated.json";
 
 export const inspirations: InspirationImage[] = [
-  { id: "i1", title: "پذیرایی گرم و خاکی", image: IMG.living2, styleSlug: "modern", room: "پذیرایی", tags: ["گرم", "خاکی", "نور"], productIds: ["p1", "p9", "p15"] },
-  { id: "i2", title: "اتاق خواب اسکاندیناوی", image: IMG.bed2, styleSlug: "scandinavian", room: "اتاق خواب", tags: ["آرام", "چوب"], productIds: ["p19", "p20", "p21"] },
-  { id: "i3", title: "گوشه‌ی مطالعه‌ی مینیمال", image: IMG.decor7, styleSlug: "minimal", room: "فضای کار", tags: ["مطالعه", "نور"], productIds: ["p9", "p23"] },
-  { id: "i4", title: "ناهارخوری لوکس", image: IMG.living9, styleSlug: "art-deco", room: "ناهارخوری", tags: ["لوکس", "شیک"], productIds: ["p4", "p10"] },
-  { id: "i5", title: "پالت تک‌رنگ طوسی", image: IMG.living7, styleSlug: "minimal", room: "پذیرایی", tags: ["تک‌رنگ", "طوسی"], productIds: ["p29", "p15"] },
-  { id: "i6", title: "بافت‌های طبیعی ژاپنی", image: IMG.decor6, styleSlug: "japandi", room: "پذیرایی", tags: ["بافت", "طبیعی"], productIds: ["p3", "p6"] },
-  { id: "i7", title: "بوهمیین رنگین", image: IMG.living3, styleSlug: "boho", room: "پذیرایی", tags: ["رنگین", "الگو"], productIds: ["p2", "p12", "p15"] },
-  { id: "i8", title: "صنعتی و جسور", image: IMG.decor8, styleSlug: "industrial", room: "پذیرایی", tags: ["فلز", "چوب"], productIds: ["p5", "p30"] },
-  { id: "i9", title: "روستیک گرم", image: IMG.living10, styleSlug: "rustic", room: "پذیرایی", tags: ["چوب", "گرما"], productIds: ["p12", "p16"] },
+  { id: "i1", title: "پذیرایی گرم و خاکی", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/76ae716d2d97.jpg", styleSlug: "modern", room: "پذیرایی", tags: ["گرم", "خاکی", "نور"], productIds: ["p1", "p9", "p15"] },
+  { id: "i2", title: "اتاق خواب اسکاندیناوی", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/16a0583333f3.jpg", styleSlug: "scandinavian", room: "اتاق خواب", tags: ["آرام", "چوب"], productIds: ["p19", "p20", "p21"] },
+  { id: "i3", title: "گوشه‌ی مطالعه‌ی مینیمال", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e1d6e72347d4.png", styleSlug: "minimal", room: "فضای کار", tags: ["مطالعه", "نور"], productIds: ["p9", "p23"] },
+  { id: "i4", title: "ناهارخوری لوکس", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3af21ee55d50.jpg", styleSlug: "art-deco", room: "ناهارخوری", tags: ["لوکس", "شیک"], productIds: ["p4", "p10"] },
+  { id: "i5", title: "پالت تک‌رنگ طوسی", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e61af5106395.jpg", styleSlug: "minimal", room: "پذیرایی", tags: ["تک‌رنگ", "طوسی"], productIds: ["p29", "p15"] },
+  { id: "i6", title: "بافت‌های طبیعی ژاپنی", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3f3f0dd63c09.jpg", styleSlug: "japandi", room: "پذیرایی", tags: ["بافت", "طبیعی"], productIds: ["p3", "p6"] },
+  { id: "i7", title: "بوهمیین رنگین", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/fe43f4e90dd8.jpg", styleSlug: "boho", room: "پذیرایی", tags: ["رنگین", "الگو"], productIds: ["p2", "p12", "p15"] },
+  { id: "i8", title: "صنعتی و جسور", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/372f2a05e7ff.jpg", styleSlug: "industrial", room: "پذیرایی", tags: ["فلز", "چوب"], productIds: ["p5", "p30"] },
+  { id: "i9", title: "روستیک گرم", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4b469df1f6ae.jpg", styleSlug: "rustic", room: "پذیرایی", tags: ["چوب", "گرما"], productIds: ["p12", "p16"] },
   { id: "i10", title: "پذیرایی باز و روشن", image: IMG.living2, styleSlug: "contemporary", room: "پذیرایی", tags: ["باز", "روشن"], productIds: ["p1", "p11"] },
   { id: "i11", title: "آرامش اتاق خواب", image: IMG.bed4, styleSlug: "minimal", room: "اتاق خواب", tags: ["آرام", "ساده"], productIds: ["p19", "p9"] },
   { id: "i12", title: "روشنایی دنج", image: IMG.bed3, styleSlug: "scandinavian", room: "اتاق خواب", tags: ["نور", "دنج"], productIds: ["p9", "p20"] },
@@ -18,13 +19,46 @@ export const inspirations: InspirationImage[] = [
   { id: "i14", title: "ظرافت مینیمال ژاپنی", image: IMG.decor6, styleSlug: "japandi", room: "فضای کار", tags: ["مینیمال", "طبیعی"], productIds: ["p23", "p25"] },
   { id: "i15", title: "پذیرایی مدرن معاصر", image: IMG.living8, styleSlug: "contemporary", room: "پذیرایی", tags: ["مدرن", "معاصر"], productIds: ["p29", "p13"] },
   { id: "i16", title: "ست کلاسیک و گرم", image: IMG.living9, styleSlug: "classic", room: "ناهارخوری", tags: ["کلاسیک", "گرم"], productIds: ["p4", "p5"] },
-  { id: "i17", title: "بالکن سبز و آرام", image: IMG.living5, styleSlug: "modern", room: "بیرونی", tags: ["سبز", "بالکن"], productIds: ["p27", "p28"] },
-  { id: "i18", title: "فضای کار با تمرکز", image: IMG.decor7, styleSlug: "minimal", room: "فضای کار", tags: ["کار", "تمرکز"], productIds: ["p23", "p24"] },
+  { id: "i17", title: "بالکن سبز و آرام", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5051d9c68745.png", styleSlug: "modern", room: "بیرونی", tags: ["سبز", "بالکن"], productIds: ["p27", "p28"] },
+  { id: "i18", title: "فضای کار با تمرکز", image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ef6e9b94fa6c.jpg", styleSlug: "minimal", room: "فضای کار", tags: ["کار", "تمرکز"], productIds: ["p23", "p24"] },
   { id: "i19", title: "گرمایی خاکی", image: IMG.decor1, styleSlug: "modern", room: "پذیرایی", tags: ["خاکی", "گرم"], productIds: ["p1", "p26"] },
   { id: "i20", title: "رویای اسکاندیناوی", image: IMG.bed9, styleSlug: "scandinavian", room: "اتاق خواب", tags: ["آرام", "روشن"], productIds: ["p19", "p21"] },
 ];
 
-export const getInspiration = (id: string) => inspirations.find((i) => i.id === id);
+export const getInspiration = (id: string) => getAllInspirations().find((i) => i.id === id);
+
+/**
+ * Pins produced by the daily editorial pipeline (agents) — imported from JSON so
+ * the file can be regenerated without touching this module.
+ */
+const generatedPins = generatedPinsJson as InspirationImage[];
+
+/**
+ * Merged pin feed: seed gallery + pipeline-generated pins, deduped by id and
+ * sorted NEWEST FIRST. Rows without `createdAt` sink to the bottom while
+ * preserving their current (seed) order — legacy data never jumps around.
+ */
+export function getAllInspirations(): InspirationImage[] {
+  const seen = new Set<string>();
+  const merged: InspirationImage[] = [];
+  for (const pin of [...inspirations, ...generatedPins]) {
+    if (seen.has(pin.id)) continue;
+    seen.add(pin.id);
+    merged.push(pin);
+  }
+  return merged
+    .map((pin, order) => ({ pin, order }))
+    .sort((a, b) => {
+      const ta = a.pin.createdAt ? Date.parse(a.pin.createdAt) : NaN;
+      const tb = b.pin.createdAt ? Date.parse(b.pin.createdAt) : NaN;
+      const aHas = !Number.isNaN(ta);
+      const bHas = !Number.isNaN(tb);
+      if (aHas && bHas && ta !== tb) return tb - ta; // newest first
+      if (aHas !== bHas) return aHas ? -1 : 1;       // undated sinks to bottom
+      return a.order - b.order;                       // stable fallback
+    })
+    .map((entry) => entry.pin);
+}
 
 export const aiDesigns: AiDesign[] = [
   {

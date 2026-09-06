@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.pexels.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "cdn.homeino.ir" },
+      { protocol: "https", hostname: "sfile.chatglm.cn" },
+      { protocol: "https", hostname: "z-cdn.chatglm.cn" },
     ],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 414, 640, 768, 1024, 1280, 1440, 1920],

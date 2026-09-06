@@ -27,7 +27,7 @@ export const categories: Category[] = [
     nameEn: "Decor",
     description: "تابلو، آینه، گلدان و اکسسوری برای روح بخشیدن به فضا",
     icon: "Frame",
-    image: IMG.decor6,
+    image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c5292e81ae03.jpg",
     productCount: 940,
     subcategories: [
       { id: "s7", slug: "wall-art", name: "تابلو" },
@@ -45,7 +45,7 @@ export const categories: Category[] = [
     nameEn: "Lighting",
     description: "چراغ سقفی، آباژور و نورهای دکوراتیو برای ایجاد حس و حال",
     icon: "Lamp",
-    image: IMG.decor3,
+    image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f35493317778.jpeg",
     productCount: 612,
     subcategories: [
       { id: "s13", slug: "ceiling", name: "چراغ سقفی" },
@@ -62,7 +62,7 @@ export const categories: Category[] = [
     nameEn: "Rugs & Flooring",
     description: "فرش، قالیچه و کف‌پوش برای گرم کردن زیر پا",
     icon: "SquareStack",
-    image: IMG.decor10,
+    image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/77ffa0996974.png",
     productCount: 388,
     subcategories: [
       { id: "s18", slug: "carpet", name: "فرش" },
@@ -77,7 +77,7 @@ export const categories: Category[] = [
     nameEn: "Textiles",
     description: "پرده، کوسن، پتو و رومیزی با بافت‌های دلنشین",
     icon: "Waves",
-    image: IMG.living6,
+    image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f205801ed397.jpg",
     productCount: 521,
     subcategories: [
       { id: "s21", slug: "curtain", name: "پرده" },
@@ -93,7 +93,7 @@ export const categories: Category[] = [
     nameEn: "Kitchen",
     description: "ظروف، لوازم و اکسسوری آشپزخانه برای یک تجربه‌ی دلپذیر",
     icon: "UtensilsCrossed",
-    image: IMG.bed3,
+    image: "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/dbbbd4daf395.jpg",
     productCount: 733,
     subcategories: [
       { id: "s25", slug: "dinnerware", name: "ظروف" },

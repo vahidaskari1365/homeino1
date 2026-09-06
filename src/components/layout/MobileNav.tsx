@@ -13,7 +13,6 @@ import {
   User,
   X,
   Package,
-  LayoutGrid,
   Store,
   Lightbulb,
   Palette,
@@ -29,7 +28,6 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 const MENU = [
   { label: "همه محصولات", href: "/products", icon: Package },
-  { label: "دسته‌بندی‌ها", href: "/category/furniture", icon: LayoutGrid },
   { label: "فروشگاه‌ها", href: "/stores", icon: Store },
   { label: "الهام و ایده", href: "/inspiration", icon: Lightbulb },
   { label: "سبک‌های چیدمان", href: "/styles", icon: Palette },

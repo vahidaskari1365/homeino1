@@ -23,7 +23,6 @@ import {
   Truck,
   RotateCcw,
   Package,
-  LayoutGrid,
   Store,
   Lightbulb,
   Palette,
@@ -46,11 +45,10 @@ import { SmartImage } from "../ui/SmartImage";
 /* ============================================================
    NAV MODEL
    ============================================================ */
-type MegaKey = "products" | "categories" | "styles";
+type MegaKey = "categories" | "styles";
 
 const NAV: { label: string; href: string; mega?: MegaKey; icon: typeof Package }[] = [
-  { label: "محصولات", href: "/products", mega: "products", icon: Package },
-  { label: "دسته‌بندی‌ها", href: "/category/furniture", mega: "categories", icon: LayoutGrid },
+  { label: "محصولات", href: "/products", mega: "categories", icon: Package },
   { label: "فروشگاه‌ها", href: "/stores", icon: Store },
   { label: "الهام", href: "/inspiration", icon: Lightbulb },
   { label: "سبک‌ها", href: "/styles", mega: "styles", icon: Palette },
@@ -491,7 +489,7 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1" onMouseEnter={() => setMega(null)}>
             {/* Search with ⌘K hint */}
             <button
               onClick={() => setSearch(true)}

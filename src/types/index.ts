@@ -218,6 +218,13 @@ export interface InspirationImage {
   liked?: boolean;
   // products featured inside this design
   productIds: string[];
+  // ---- Pinterest-style pin metadata (optional so legacy seed data stays valid) ----
+  description?: string;   // full Persian description of the layout
+  items?: string[];       // items used (Persian names)
+  styleNote?: string;     // explanation of the style in this pin
+  source?: { label: string; url?: string };  // inspiration source credit
+  author?: { name: string; type: "editorial" | "agent" | "user" };
+  createdAt?: string;     // ISO date
 }
 
 export interface Collection {

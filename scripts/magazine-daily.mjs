@@ -45,9 +45,16 @@ const KEYWORDS = [
   ["bedroom", 2], ["rug", 1], ["lighting", 1], ["sofa", 2], ["wood", 1],
   ["materials", 2], ["renovation", 2], ["designer", 1], ["styling", 2],
   ["minimalis", 2], ["wellness", 1], ["sustainab", 2], ["small space", 2],
+  // گسترش: ویلا، حیاط، محیط کار و وسایل ترند
+  ["villa", 2], ["vacation home", 2], ["patio", 2], ["backyard", 2],
+  ["outdoor living", 3], ["garden design", 2], ["balcony", 1], ["rooftop", 1],
+  ["home office", 3], ["workspace", 2], ["desk", 1], ["studio apartment", 2],
+  ["color of the year", 3], ["palett", 2], ["accent wall", 2],
+  ["statement piece", 2], ["curved furniture", 2], ["vintage", 1], ["antique", 1],
+  ["japandi", 2], ["quiet luxury", 2], [" maximal", 2], ["biophilic", 2],
 ];
 
-const CATEGORIES_FA = ["رنگ", "مبلمان", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند"];
+const CATEGORIES_FA = ["رنگ", "مبلمان", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند", "ویلا و باغ", "حیاط و بیرونی", "محیط کار", "وسایل ترند"];
 const COVER_BY_CATEGORY = {
   "رنگ": "/images/trends/trends-color-year.png",
   "مبلمان": "/images/trends/trends-neo-deco.png",
@@ -59,6 +66,10 @@ const COVER_BY_CATEGORY = {
   "هوشمند": "/images/trends/trends-zoning.png",
   "تزئین": "/images/trends/trends-gem-maxxing.png",
   "نقش": "/images/trends/trends-patterns-story.png",
+  "ویلا و باغ": "/images/trends/trends-colors-persian.png",
+  "حیاط و بیرونی": "/images/trends/trends-zoning.png",
+  "محیط کار": "/images/trends/trends-patterns-story.png",
+  "وسایل ترند": "/images/trends/trends-chrome-wood.png",
 };
 const DEFAULT_COVER = "/images/trends/trends-guide-2026.png";
 

@@ -1,9 +1,11 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { Heart, GitCompare, ShoppingBag, MapPin, BadgeCheck, Star } from "lucide-react";
 import type { Product, Store, InspirationImage } from "@/types";
 import { useWishlist, useCompare, useCart } from "@/stores/useShop";
 import { useUi as useUiStore } from "@/stores/useApp";
+import { getStyle } from "@/data/styles";
 import { cn, toFa, formatPrice } from "@/lib/utils";
 import { SmartImage } from "./ui/SmartImage";
 import { Badge, Rating, LogoBlock } from "./ui/primitives";
@@ -150,32 +152,49 @@ export function StoreCard({ store }: { store: Store }) {
   );
 }
 
+/** Deterministic aspect-ratio rotation for pins with unknown natural dims. */
+const PIN_ASPECTS = ["aspect-[4/5]", "aspect-square", "aspect-[3/4]", "aspect-[4/3]", "aspect-[5/4]"] as const;
+
 export function InspirationCard({ insp, index = 0 }: { insp: InspirationImage; index?: number }) {
-  const wl = useWishlist();
-  const wished = wl.inspirations.includes(insp.id);
+  // Visual-only save state — honest: no fake wishlist wiring behind it.
+  const [saved, setSaved] = useState(false);
+  const style = getStyle(insp.styleSlug);
   return (
-    <Link href={`/inspiration/${insp.id}`} className="group relative block overflow-hidden rounded-[var(--radius-lg)]">
-      <SmartImage
-        src={insp.image}
-        alt={insp.title}
-        className={cn("w-full transition-transform duration-700 group-hover:scale-105", index % 5 === 0 ? "aspect-[3/4]" : index % 5 === 2 ? "aspect-square" : "aspect-[4/5]")}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
-      <button
-        onClick={(e) => { e.preventDefault(); wl.toggleInspiration(insp.id); }}
-        className={cn("absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full glass border border-clay/40 transition", wished ? "text-terracotta-deep" : "text-cream")}
-      >
-        <Heart size={16} className={cn(wished && "fill-terracotta")} />
-      </button>
-      <div className="absolute bottom-0 right-0 p-4 text-cream">
-        <span className="text-2xs opacity-80">{insp.room}</span>
-        <h3 className="font-display text-base font-bold leading-tight">{insp.title}</h3>
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {insp.tags.slice(0, 2).map((t) => (
-            <span key={t} className="rounded-full bg-cream/15 px-2 py-0.5 text-2xs backdrop-blur">#{t}</span>
-          ))}
-        </div>
+    <Link href={`/inspiration/${insp.id}`} aria-label={insp.title} className="group card-surface card-interactive relative block overflow-hidden rounded-2xl">
+      <div className={cn("relative w-full", PIN_ASPECTS[index % PIN_ASPECTS.length])}>
+        <SmartImage
+          src={insp.image}
+          alt={insp.title}
+          className="absolute inset-0 h-full w-full"
+          sizes="(min-width:1280px) 20vw, (min-width:1024px) 25vw, (min-width:640px) 33vw, 50vw"
+        />
       </div>
+      {/* bottom gradient — always present, kept minimal like Pinterest */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent p-3 pt-12 text-cream">
+        <h3 className="line-clamp-2 font-display text-sm font-black leading-snug">{insp.title}</h3>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {style && <span className="rounded-full bg-cream/90 px-2 py-0.5 text-2xs font-medium text-ink">{style.name}</span>}
+          <span className="text-2xs text-cream/85">{insp.room}</span>
+          {insp.author?.type === "user" && (
+            <span className="rounded-full bg-terracotta/85 px-2 py-0.5 text-2xs font-medium text-cream">کاربر</span>
+          )}
+        </div>
+        {insp.source && <p className="mt-1 text-2xs text-cream/70">منبع: {insp.source.label}</p>}
+      </div>
+      {/* save button — touch-visible, hover-revealed on desktop */}
+      <button
+        type="button"
+        aria-label={saved ? "ذخیره شد" : "ذخیره"}
+        aria-pressed={saved}
+        onClick={(e) => { e.preventDefault(); setSaved((v) => !v); }}
+        className={cn(
+          "absolute left-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-full bg-cream/95 shadow-sm backdrop-blur transition active:scale-90",
+          "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100",
+          saved ? "text-terracotta" : "text-ink hover:text-terracotta"
+        )}
+      >
+        <Heart size={16} className={cn(saved && "fill-terracotta")} />
+      </button>
     </Link>
   );
 }
