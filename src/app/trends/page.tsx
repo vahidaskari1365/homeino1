@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Newspaper, Repeat2, Link2, ArrowLeft, Rss, Lightbulb } from "lucide-react";
+import { ArrowLeft, Lightbulb } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
 import { SectionHeading, Chip } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
@@ -14,12 +14,6 @@ export const metadata: Metadata = {
     "هر روز مهم‌ترین ترندهای دیزاین داخلی و دکوراسیون خانه را از معتبرترین منابع جهانی (Architectural Digest، Dezeen، Vogue و …) گردآوری و به فارسیِ روان و اختصاصی بازنویسی می‌کنیم؛ با ذکر منبع و با نسخه‌ی کاربردی برای خانه‌های ایرانی.",
   alternates: { canonical: "/trends" },
 };
-
-const HOW = [
-  { icon: Newspaper, title: "پژوهش روزانه از منابع معتبر", desc: "فیدها و مطالب تازه‌ی معتبرترین نشریات دیزاین دنیا هر روز بررسی می‌شود." },
-  { icon: Repeat2, title: "بازنویسی اختصاصی، نه ترجمه", desc: "تحریریه هومینو واقعیت‌ها را جمع می‌کند و متن مستقل فارسی می‌نویسد؛ کپی و ترجمه‌ی تحت‌اللفظی ممنوع است." },
-  { icon: Link2, title: "منبع شفاف کنار هر ترند", desc: "لینک مطلب اصلی همیشه دیده می‌شود تا بتوانید خودتان راستی‌آزمایی کنید." },
-];
 
 export default function TrendsPage() {
   const today = latestTrendDate();
@@ -48,29 +42,6 @@ export default function TrendsPage() {
         title="ترندهای روز دیزاین خانه"
         desc="هر روز، مهم‌ترین اتفاق‌های دنیای دیزاین داخلی را از معتبرترین منابع جهانی جمع می‌کنیم، به فارسیِ روان و مستقل بازنویسی می‌کنیم و نسخه‌ی کاربردی‌اش برای خانه‌های ایرانی را کنارش می‌گذاریم."
       />
-      <div className="-mt-4 mb-10 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-        <Rss size={14} className="text-terracotta-deep" />
-        <span>به‌روزرسانی روزانه ·</span>
-        <a href="/feed.xml" className="font-bold text-terracotta-deep underline decoration-clay hover:decoration-terracotta">
-          دنبال‌کردن با RSS
-        </a>
-      </div>
-
-      {/* how it works — trust strip */}
-      <RevealGroup className="mb-12 grid gap-3 sm:grid-cols-3">
-        {HOW.map(({ icon: Icon, title, desc }) => (
-          <RevealItem key={title}>
-            <div className="flex h-full gap-3 rounded-[var(--radius-lg)] border border-clay/30 bg-cream/60 p-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sage/12 text-success"><Icon size={18} /></span>
-              <div>
-                <div className="text-sm font-black text-ink">{title}</div>
-                <p className="mt-1 text-xs leading-6 text-ink-muted">{desc}</p>
-              </div>
-            </div>
-          </RevealItem>
-        ))}
-      </RevealGroup>
-
       {today && lead ? (
         <>
           <Reveal>

@@ -5,6 +5,7 @@ import { Container, Breadcrumb } from "@/components/shared";
 import { Badge, ButtonLink } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { InspirationCard } from "@/components/cards";
+import { CommentsSection } from "@/components/inspiration/CommentsSection";
 import { getAllInspirations, getInspiration } from "@/data/inspirations";
 import { getProductById } from "@/data/products";
 import { getStyle } from "@/data/styles";
@@ -147,6 +148,9 @@ export default async function InspirationDetailPage({ params }: { params: Promis
           )}
         </div>
       </div>
+
+      {/* discussion — comments & replies under this pin */}
+      <CommentsSection pinId={insp.id} />
 
       {/* similar pins */}
       {more.length > 0 && (

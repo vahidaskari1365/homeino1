@@ -11,6 +11,7 @@ import { styles } from "@/data/styles";
 import { stores, collections } from "@/data/stores";
 import { products as allProducts, productsByStyle } from "@/data/products";
 import { inspirations } from "@/data/inspirations";
+import { articles } from "@/data/content";
 import { latestTrendBriefs } from "@/lib/trends";
 import { IMG } from "@/data/media";
 import { SmartImage } from "@/components/ui/SmartImage";
@@ -303,6 +304,27 @@ export default function HomePage() {
                     <h3 className="font-display text-base font-black leading-snug text-ink transition group-hover:text-terracotta-deep">{b.title}</h3>
                     <p className="mt-1.5 line-clamp-3 flex-1 text-xs leading-6 text-ink-muted">{b.summary}</p>
                     <div className="mt-2 text-2xs text-ink-muted">{b.dateFa} · منبع: {b.source.name}</div>
+                  </div>
+                </Link>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </Container>
+      </section>
+
+      {/* ===== MAGAZINE — deep guides, always easy to find ===== */}
+      <section className="section-space-sm">
+        <Container>
+          <Reveal><SectionHeading eyebrow="مجله هومینو" title="مقالات عمیق طراحی و چیدمان" desc="راهنماهای خرید، نورپردازی و سبک‌شناسی — مطالب مهم و همیشگی که این‌جا یک‌جا جمع شده‌اند." action={<Link href="/magazine" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">همه مقالات مجله <ArrowLeft size={16} /></Link>} /></Reveal>
+          <RevealGroup className="grid gap-4 sm:grid-cols-3">
+            {articles.slice(0, 3).map((a) => (
+              <RevealItem key={a.id}>
+                <Link href={`/magazine/${a.slug}`} className="group flex h-full flex-col overflow-hidden card-surface card-interactive">
+                  <div className="relative aspect-[16/10] overflow-hidden"><SmartImage src={a.cover} alt={a.title} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><span className="absolute right-3 top-3 rounded-full bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur">{a.category}</span></div>
+                  <div className="flex flex-1 flex-col p-4">
+                    <h3 className="font-display text-base font-black leading-snug text-ink transition group-hover:text-terracotta-deep">{a.title}</h3>
+                    <p className="mt-1.5 line-clamp-3 flex-1 text-xs leading-6 text-ink-muted">{a.excerpt}</p>
+                    <div className="mt-2 text-2xs text-ink-muted">{toFa(a.readTime)} دقیقه مطالعه</div>
                   </div>
                 </Link>
               </RevealItem>

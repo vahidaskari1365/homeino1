@@ -43,3 +43,6 @@ tool-results/
 .smoke-bundle.mjs
 *.tsbuildinfo
 scripts/.llm-tmp.json
+
+# local demo stores (comments etc.)
+.data/

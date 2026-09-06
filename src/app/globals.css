@@ -16,7 +16,7 @@
   /* ---- DEPTH (dark / espresso-green) ---- */
   --color-ink: #10201A;          /* deep espresso-green — text + dark sections */
   --color-ink-soft: #173428;     /* deep forest green */
-  --color-ink-muted: #5E6F61;    /* muted sage-gray text */
+  --color-ink-muted: #44554B;    /* deep sage-gray body text — 6.5:1 on ivory (AA), was #5E6F61 (~4.2:1, hard to read) */
 
   /* ---- SURFACES (luxury warm cream — calm, premium, inviting) ---- */
   --color-ivory: #F0E8D8;        /* warm cream — main background */
