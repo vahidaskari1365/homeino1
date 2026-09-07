@@ -201,6 +201,20 @@ export function useDesignStudio() {
     r.readAsDataURL(file); trackEvent("room_uploaded", { metadata: { name: file.name, size: file.size } });
   }, [toast, rs, style, analyzeRoom]);
 
+  /** نمونهٔ آماده (الگوی رقبا: Decoratly) — عکس محلی را مثل آپلود عادی وارد جریان می‌کند. */
+  const loadSample = useCallback(async (url: string) => {
+    try {
+      toast("نمونه در حال آماده‌سازی…");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      const type = blob.type && ALLOWED_TYPES.includes(blob.type) ? blob.type : "image/jpeg";
+      handleFile(new File([blob], "sample-room.jpg", { type }));
+    } catch {
+      toast("بارگذاری نمونه ممکن نشد — لطفاً عکس خودت را آپلود کن", "error");
+    }
+  }, [handleFile, toast]);
+
   const designElements = useMemo(() => CATEGORIES.flatMap((c) => (selectedSubTypes[c.slug] || []).map((label) => { const st = c.subTypes.find((x) => x.label === label); return { catSlug: c.slug, cat: c.label, label, desc: st?.desc || "" }; })), [selectedSubTypes]);
   const placedProducts = useMemo(() => {
     const cursor: Record<string, number> = {}; const out: Product[] = [];
@@ -672,6 +686,7 @@ export function useDesignStudio() {
     inspirationMatches,
     setInspirationMatches,
     handleFile,
+    loadSample,
     // style / prompt / budget
     style,
     styleLabel,

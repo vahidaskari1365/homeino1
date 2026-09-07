@@ -1,15 +1,18 @@
 "use client";
-// ستون نتیجه هومینو استودیو — طرح D (ترکیبی):
-// • قبل از رندر: «پیش‌نمایش زندهٔ تنظیمات» — عکس آپلودشده + چک‌لیست
-//   انتخاب‌ها + دکمه طراحی (به‌جای قاب خالی «نتیجه اینجا نمایش داده میشه»).
-// • حین رندر: مراحل پیشرفت همان‌جا داخل قاب.
-// • بعد از رندر: پیش‌نمایش در بالا + ۳ تب جمع:
-//   «کالاها و خرید» / «گزارش هوش» / «جزئیات» — همهٔ بلوک‌های قبلی
-//   (تحلیل اندازه، گزارش ایجنت‌ها، محدوده تغییر، تاریخچه/واگرد،
-//   عناصر انتخابی، کالاهای چیدمان، کالاهای فروشگاه‌ها) حفظ شده‌اند.
+// ============================================================
+// ستون «کانواس» هومینو استودیو — نتیجهٔ تحقیق رقبا (طرح نهایی):
+// • عکس و تحلیل و نتیجه، همه در یک قاب — الگوی RoomGPT/InteriorAI/
+//   REimagineHome: کاربر هیچ‌وقت بین «ورودی» و «خروجی» جابه‌جا نمی‌شود.
+// • بعد از رندر: اسلایدر «قبل / بعد» (الگوی Spacely و Decoratly)
+//   یا حالت تعاملی ProductOverlay — با کلید تغییر حالت.
+// • زیر آن ۳ تب جمع: «کالاها و خرید» / «گزارش هوش» / «جزئیات».
+// همهٔ بلوک‌های قبلی (آنالیز اندازه، گزارش ایجنت‌ها، محدوده تغییر،
+// تاریخچه/واگرد، عناصر انتخابی، کالاهای چیدمان، خرید این چیدمان،
+// کالاهای هماهنگ فروشگاه‌ها) حفظ شده‌اند — چیزی حذف نشده.
+// ============================================================
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Wand2, Download, Share2, AlertCircle, Lightbulb, Lock as LockIcon, Undo2, Redo2, Sparkles, ShoppingBag, Store, Check, CreditCard, Heart, Bot, Layers, PackageCheck, RefreshCw, MousePointer2, ImagePlus, ListChecks } from "lucide-react";
+import { Wand2, Download, Share2, AlertCircle, Lightbulb, Lock as LockIcon, Undo2, Redo2, Sparkles, ShoppingBag, Store, Check, CreditCard, Heart, Bot, Layers, PackageCheck, RefreshCw, MousePointer2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProductOverlay } from "@/components/ProductOverlay";
 import { getProductById } from "@/data/products";
@@ -17,6 +20,8 @@ import { toFa, formatPrice, cn } from "@/lib/utils";
 import { shareContent, buildShareUrl } from "@/lib/share";
 import type { DesignStudio } from "./useDesignStudio";
 import { GenerationProgress } from "./GenerationProgress";
+import { RoomUploader } from "./RoomUploader";
+import { CompareSlider } from "./CompareSlider";
 
 const AGENT_STATUS_STYLE: Record<string, string> = {
   ok: "bg-success/10 text-success",
@@ -29,11 +34,10 @@ type ResultTab = "shop" | "report" | "details";
 
 export function ResultCanvas({ studio }: { studio: DesignStudio }) {
   const {
-    placements, imageBase64, rs, loading, lastScope, designElements, placedProducts, total,
+    placements, imageBase64, rs, loading, error, lastScope, designElements, placedProducts, total,
     matchedStoreProducts, updatePlacement, removePlacement, overlayCart, overlayWishlist, overlayView,
     toast, addToCart, setPlacements, buyTheLook, handleSaveToWishlist,
     compositeUrl, showComposite, setShowComposite, refreshComposite, studioPlans, studioReport, reportLoading,
-    styleLabel, budget, prompt, skuInput, generate, cost, error,
   } = studio;
 
   const [resTab, setResTab] = useState<ResultTab>("shop");
@@ -47,34 +51,26 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
   const canComposite = Boolean(compositeUrl && showComposite && placements.length > 0);
   const glowPlans = studioPlans.filter((p) => p.glow);
   const hasResult = placements.length > 0 && !loading && !error;
-
-  // ---- چک‌لیست زندهٔ قبل از رندر ----
-  const checklist: { label: string; value: string; ok: boolean }[] = [
-    { label: "عکس خانه", value: imageBase64 ? "آپلود شد" : "هنوز آپلود نشده", ok: Boolean(imageBase64) },
-    { label: "سبک دکوراسیون", value: styleLabel, ok: true },
-    { label: "وسایل", value: designElements.length > 0 ? `${toFa(designElements.length)} گروه انتخاب شد` : "چیدمان پیش‌فرض هومینو", ok: true },
-    ...(budget ? [{ label: "بودجه", value: `${toFa(budget)} تومان`, ok: true }] : []),
-    ...(prompt ? [{ label: "دستور به استودیو", value: prompt, ok: true }] : []),
-    ...(skuInput ? [{ label: "کد کالا", value: skuInput, ok: true }] : []),
-  ];
+  const busy = loading || Boolean(error && !loading);
 
   const shopBadge = placedProducts.length + matchedStoreProducts.length;
   const reportBadge = (studioReport?.agents.length ?? 0) + studioPlans.length + (lastScope ? 1 : 0);
 
   return (
     <div className="space-y-4 lg:col-span-7">
+      {/* ================= کارت کانواس ================= */}
       <div className="rounded-2xl border border-clay/50 bg-cream p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-clay/30 pb-2.5">
-          <h3 className="flex items-center gap-2 text-base font-bold text-ink"><Wand2 size={17} className="text-terracotta-deep" /> {hasResult ? "نتیجه چیدمان" : "طرح تو"}</h3>
+          <h3 className="flex items-center gap-2 text-base font-bold text-ink"><Wand2 size={17} className="text-terracotta-deep" /> {hasResult ? "نتیجه چیدمان" : "عکس و نتیجه"}</h3>
           {placements.length > 0 && (
             <div className="flex items-center gap-1.5">
               {compositeUrl && (
                 <button
                   onClick={() => setShowComposite(!canComposite)}
                   className={cn("flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition", canComposite ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted hover:text-ink")}
-                  title={canComposite ? "رفتن به حالت تعاملی برای جابه‌جایی دستی" : "نمایش پیش‌نمایش ترکیب"}
+                  title={canComposite ? "رفتن به حالت تعاملی برای جابه‌جایی دستی" : "نمایش مقایسهٔ قبل و بعد"}
                 >
-                  {canComposite ? <><MousePointer2 size={13} /> حالت تعاملی</> : <><Layers size={13} /> پیش‌نمایش ترکیب</>}
+                  {canComposite ? <><MousePointer2 size={13} /> حالت تعاملی</> : <><Layers size={13} /> مقایسه قبل/بعد</>}
                 </button>
               )}
               {canComposite && <button onClick={refreshComposite} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="به‌روزرسانی پیش‌نمایش ترکیب" title="به‌روزرسانی پیش‌نمایش ترکیب"><RefreshCw size={14} /></button>}
@@ -84,77 +80,52 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
           )}
         </div>
 
-        {/* ==== حین/خطای تولید ==== */}
-        {(loading || (error && !loading)) && <GenerationProgress studio={studio} />}
-
-        {/* ==== قبل از رندر: پیش‌نمایش زندهٔ تنظیمات ==== */}
-        {!loading && !error && placements.length === 0 && (
-          imageBase64 ? (
-            <div>
+        {/* ---- حین رندر / خطا: عکس همان‌جا + پیشرفت زیر آن ---- */}
+        {busy && (
+          <div className="space-y-3">
+            {imageBase64 && (
               <div className="relative overflow-hidden rounded-2xl border border-clay/40 bg-ink">
-                <img src={imageBase64} alt="عکس اتاق شما — آماده برای طراحی" className="aspect-video w-full object-cover" />
-                <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-gold/20 px-2.5 py-1 text-xs font-medium text-gold-soft backdrop-blur">آماده برای رندر</div>
+                <img src={imageBase64} alt="عکس اتاق شما" className="aspect-video w-full object-cover opacity-80" />
               </div>
-              <div className="mt-3 rounded-xl border border-clay/40 bg-ivory-2 p-3">
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink"><ListChecks size={14} className="text-terracotta-deep" /> تنظیمات فعلی</div>
-                <ul className="space-y-1.5">
-                  {checklist.map((row) => (
-                    <li key={row.label} className="flex items-center gap-2 text-xs leading-5">
-                      <span className={cn("grid h-4 w-4 shrink-0 place-items-center rounded-full", row.ok ? "bg-success/15 text-success" : "bg-clay/30 text-ink-muted")}>{row.ok ? <Check size={10} /> : <AlertCircle size={10} />}</span>
-                      <span className="shrink-0 font-bold text-ink">{row.label}:</span>
-                      <span className="min-w-0 flex-1 truncate text-ink-muted">{row.value}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button onClick={generate} disabled={loading || !imageBase64} className="btn-accent mt-3 flex w-full items-center justify-center gap-2 py-3.5 text-sm font-bold disabled:opacity-40"><Wand2 size={17} /> طراحی کن</button>
-              <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-ink-muted"><span>هزینه این طراحی:</span><span className="font-bold text-gold">{toFa(cost)} اعتبار</span></div>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-clay/50 bg-ivory-2 p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-cream text-ink-muted"><ImagePlus size={22} /></span>
-                <div>
-                  <p className="text-sm font-bold text-ink">سه قدم ساده تا خانهٔ تازه</p>
-                  <p className="text-xs text-ink-muted">از ویزارد سمت راست شروع کن — نتیجه همین‌جا زنده ساخته می‌شود</p>
-                </div>
-              </div>
-              <ol className="space-y-2">
-                {[
-                  ["عکس اتاقت را آپلود کن", "قسمت ۱ ویزارد — یا عکس را همین‌جا بکش"],
-                  ["سبک دکوراسیون را انتخاب کن", "۹ سبک آماده — قسمت ۲ ویزارد"],
-                  ["دکمه «طراحی کن» را بزن", "وسایل دلخواه اختیاری است — پیش‌فرض هومینو کامل است"],
-                ].map(([title, sub], i) => (
-                  <li key={i} className="flex items-start gap-2.5 rounded-lg bg-cream p-2.5">
-                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-ink text-2xs font-black text-cream">{toFa(i + 1)}</span>
-                    <span><b className="block text-xs font-bold text-ink">{title}</b><span className="text-xs text-ink-muted">{sub}</span></span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )
+            )}
+            <GenerationProgress studio={studio} />
+          </div>
         )}
 
-        {/* ==== بعد از رندر: پیش‌نمایش اصلی ==== */}
-        {!loading && hasResult && imageBase64 && (
+        {/* ---- قبل از رندر: عکس + تحلیل زنده (RoomUploader) ---- */}
+        {!busy && !hasResult && (
+          <>
+            <RoomUploader studio={studio} />
+            {!imageBase64 && (
+              <p className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5 rounded-xl bg-ivory-2/70 px-3 py-2.5 text-2xs leading-5 text-ink-muted">
+                <b className="text-ink">۱</b> عکس را آپلود کن
+                <span aria-hidden>←</span>
+                <b className="text-ink">۲</b> سبک و وسایل را از ستون تنظیمات انتخاب کن
+                <span aria-hidden>←</span>
+                <b className="text-ink">۳</b> «طراحی کن» را بزن — نتیجه همین‌جا ظاهر می‌شود
+              </p>
+            )}
+          </>
+        )}
+
+        {/* ---- بعد از رندر: مقایسهٔ قبل/بعد یا حالت تعاملی ---- */}
+        {!busy && hasResult && imageBase64 && (
           canComposite ? (
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="relative w-full select-none overflow-hidden rounded-2xl border border-clay/40 bg-ink">
-              <img src={compositeUrl!} alt="پیش‌نمایش ترکیب محصولات در عکس اتاق شما" className="w-full" />
-              <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-gold/20 px-2.5 py-1 text-xs font-medium text-gold-soft backdrop-blur">
-                پیش‌نمایش ترکیب — محصولات انتخابی در عکس شما جایگزین شدند
-              </div>
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="select-none">
+              <CompareSlider before={imageBase64} after={compositeUrl!} />
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-2xs text-ink-muted"><MousePointer2 size={12} /> دستگیره را بکش تا «قبل» و «بعد» را مقایسه کنی — با «حالت تعاملی» می‌توانی هر کالا را جابه‌جا کنی</p>
             </motion.div>
           ) : (
             <ProductOverlay mode={rs.currentImage && rs.currentImage !== imageBase64 ? "real_edit" : "interactive"} roomImage={rs.currentImage ?? imageBase64} placements={placements} onChange={updatePlacement} onRemove={removePlacement} onCart={overlayCart} onWishlist={overlayWishlist} onView={overlayView} />
           )
         )}
-        {!loading && hasResult && placements.length > 0 && rs.currentImage === rs.originalImage && !canComposite && (
+        {!busy && hasResult && placements.length > 0 && rs.currentImage === rs.originalImage && !canComposite && (
           <div className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg border border-gold/25 bg-gold/5 px-3 py-2 text-xs text-gold"><AlertCircle size={13} /> پیش‌نمایش — عکس اصلی حفظ شده</div>
         )}
       </div>
 
-      {/* ==== بعد از رندر: ۳ تب جمع ==== */}
-      {!loading && hasResult && (
+      {/* ================= ۳ تب جمع بعد از رندر ================= */}
+      {!busy && hasResult && (
         <div className="rounded-2xl border border-clay/50 bg-cream shadow-[var(--shadow-soft)]">
           <div className="flex gap-1 border-b border-clay/30 p-1.5">
             {([
@@ -186,7 +157,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                       </div>
                     </div>
                   ) : (
-                    <p className="rounded-lg bg-ivory-2 p-3 text-xs leading-5 text-ink-muted">برای این طرح کالای مشخصی انتخاب نشده — از ویزارد بخش «وسایل» چند گروه تیک بزن تا کالاهای همین چیدمان اینجا با قیمت جمع شود.</p>
+                    <p className="rounded-lg bg-ivory-2 p-3 text-xs leading-5 text-ink-muted">برای این طرح کالای مشخصی انتخاب نشده — از ستون تنظیمات بخش «وسایل» چند گروه تیک بزن تا کالاهای همین چیدمان اینجا با قیمت جمع شود.</p>
                   )}
 
                   {matchedStoreProducts.length > 0 && (
@@ -339,7 +310,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                       <div className="flex flex-wrap gap-1.5">{designElements.map((e, i) => <span key={i} className="rounded-full border border-clay/40 bg-ivory-2 px-2.5 py-1 text-xs font-medium text-ink-muted">{e.cat} · {e.label}</span>)}</div>
                     </div>
                   ) : (
-                    <p className="flex items-start gap-1.5 rounded-lg bg-ivory-2 p-3 text-xs leading-5 text-ink-muted"><Sparkles size={13} className="mt-0.5 shrink-0 text-terracotta-deep" /> این طرح با «چیدمان پیش‌فرض هومینو» ساخته شده — اگر بخواهی وسایل خاص خودت را بگذاری، از ویزارد بخش «وسایل» انتخاب کن و دوباره طراحی کن.</p>
+                    <p className="flex items-start gap-1.5 rounded-lg bg-ivory-2 p-3 text-xs leading-5 text-ink-muted"><Sparkles size={13} className="mt-0.5 shrink-0 text-terracotta-deep" /> این طرح با «چیدمان پیش‌فرض هومینو» ساخته شده — اگر بخواهی وسایل خاص خودت را بگذاری، از ستون تنظیمات بخش «وسایل» انتخاب کن و دوباره طراحی کن.</p>
                   )}
 
                   {placements.length > 0 && (

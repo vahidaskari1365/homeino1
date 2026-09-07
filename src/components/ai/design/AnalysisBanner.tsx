@@ -1,7 +1,9 @@
 "use client";
 // تحلیل اتاق + پیشنهادهای هومینو استودیو.
-// embedded = مستقیم زیر عکس آپلودشده (داخل کارت «عکس خانه»)؛
+// embedded = مستقیم زیر عکس اصلی کانواس (مسیر اصلی)؛ با انیمیشن نرم
+// ظاهر می‌شود و هیچ‌گاه جمع نمی‌شود — نتیجهٔ تحلیل باید دیده شود.
 // حالت کارت مستقل فقط برای استفاده‌های آینده نگه داشته شده است.
+import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { toFa } from "@/lib/utils";
 import type { DesignStudio } from "./useDesignStudio";
@@ -10,13 +12,20 @@ export function AnalysisBanner({ studio, embedded = false }: { studio: DesignStu
   const { roomAnalysis, applySuggestion, customizeSuggestion } = studio;
   if (!roomAnalysis) return null;
   return (
-    <div className={embedded ? "mt-3 rounded-xl border border-clay/40 bg-ivory-2 p-3.5" : "mb-4 rounded-xl border border-clay/40 bg-cream p-4"}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className={embedded ? "mt-3 overflow-hidden rounded-xl border border-terracotta/25 bg-gradient-to-b from-terracotta/8 to-ivory-2/60 p-3.5" : "mb-4 rounded-xl border border-clay/40 bg-cream p-4"}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/10 text-terracotta-deep"><Sparkles size={16} /></span>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-terracotta/15 text-terracotta-deep"><Sparkles size={16} /></span>
           <div>
-            <span className="text-sm font-bold text-ink">تحلیل اتاق: {roomAnalysis.roomType || "نشیمن"} · سبک فعلی {roomAnalysis.style}</span>
-            <span className="mr-2 text-xs text-ink-muted">(اطمینان {toFa(Math.round((roomAnalysis.confidence ?? 0.6) * 100))}٪)</span>
+            <span className="block text-sm font-bold text-ink">تحلیل هومینو از عکس تو</span>
+            <span className="block text-2xs text-ink-muted">
+              اتاق: {roomAnalysis.roomType || "نشیمن"} · سبک فعلی: {roomAnalysis.style} · اطمینان {toFa(Math.round((roomAnalysis.confidence ?? 0.6) * 100))}٪
+            </span>
           </div>
         </div>
         {roomAnalysis.palette && roomAnalysis.palette.length > 0 && (
@@ -54,6 +63,6 @@ export function AnalysisBanner({ studio, embedded = false }: { studio: DesignStu
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
