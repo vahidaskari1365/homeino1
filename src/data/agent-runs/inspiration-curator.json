@@ -1,7 +1,29 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-06T16:22:22.849Z",
+  "updatedAt": "2026-09-07T06:24:58.959Z",
   "runs": [
+    {
+      "id": "run-1788762298959-f2lfn",
+      "at": "2026-09-07T06:24:58.959Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 25,
+      "summary": "3 پین الهام جدید (قالب پایدار)",
+      "detail": {
+        "added": 3,
+        "total": 56,
+        "via": "template",
+        "combos": [
+          "مینیمال × بیرونی",
+          "جاپندی × اتاق خواب",
+          "کلاسیک × ناهارخوری",
+          "صنعتی × پذیرایی",
+          "بوهو × فضای کار",
+          "روستیک × بیرونی"
+        ]
+      }
+    },
     {
       "id": "run-1788711742849-jtry8",
       "at": "2026-09-06T16:22:22.849Z",
