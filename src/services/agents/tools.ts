@@ -553,6 +553,103 @@ export const TOOL_DEFINITIONS: AgentToolDefinition[] = [
     },
   },
   {
+    key: "getVendor",
+    name: "دریافت فروشنده",
+    description: "خواندن پروفایل عمومی فروشگاه/فروشنده با id یا slug (پرامپت مرحله ۶)",
+    category: "vendor",
+    requiredPermission: "READ_VENDORS",
+    inputSchema: { vendorId: "string?", vendorSlug: "string?" },
+    async execute(input) {
+      const { storesRepository } = await import("@/repositories/stores");
+      const vendor = str(input.vendorId)
+        ? await storesRepository.byId(str(input.vendorId)!)
+        : str(input.vendorSlug)
+          ? await storesRepository.bySlug(str(input.vendorSlug)!)
+          : undefined;
+      if (!vendor) return { found: false, reason: "vendor_not_found" };
+      return {
+        found: true,
+        vendor: {
+          id: vendor.id,
+          name: vendor.name,
+          slug: vendor.slug,
+          description: vendor.description ?? "",
+          city: vendor.city ?? "",
+          rating: vendor.rating,
+          reviewsCount: vendor.reviewsCount,
+          salesCount: vendor.salesCount,
+          followersCount: vendor.followersCount,
+          productCount: vendor.productCount,
+          verified: vendor.verified,
+          badges: vendor.badges ?? [],
+        },
+      };
+    },
+  },
+  {
+    key: "getStore",
+    name: "دریافت فروشگاه",
+    description: "خواندن نمای عمومی فروشگاه برای مشتری (پرامپت مرحله ۶)",
+    category: "vendor",
+    requiredPermission: "READ_VENDORS",
+    inputSchema: { storeId: "string?", storeSlug: "string?" },
+    async execute(input) {
+      const { storesRepository } = await import("@/repositories/stores");
+      const store = str(input.storeId)
+        ? await storesRepository.byId(str(input.storeId)!)
+        : str(input.storeSlug)
+          ? await storesRepository.bySlug(str(input.storeSlug)!)
+          : undefined;
+      if (!store) return { found: false, reason: "store_not_found" };
+      return {
+        found: true,
+        store: {
+          id: store.id,
+          name: store.name,
+          slug: store.slug,
+          description: store.description ?? "",
+          rating: store.rating,
+          productCount: store.productCount,
+          verified: store.verified,
+          shippingPolicy: store.shippingPolicy ?? "",
+          returnPolicy: store.returnPolicy ?? "",
+        },
+      };
+    },
+  },
+  {
+    key: "runWorkflow",
+    name: "اجرای ورک‌فلو",
+    description: "صف‌کردن یک اجرای ورک‌فلوی ثبت‌شده — ورک‌فلو خودش مجوزهای داخلی‌اش را دارد",
+    category: "automation",
+    requiredPermission: "WRITE_TASKS",
+    inputSchema: { workflowKey: "string", input: "object?", triggerKind: "string?" },
+    async execute(input, ctx) {
+      const workflowKey = str(input.workflowKey);
+      if (!workflowKey) return { ok: false, reason: "missing_workflow_key" };
+      // Lazy import: engine → runtime → … → tools (publicProduct) would close a
+      // static cycle; the workflow layer is only needed at call time.
+      const { runWorkflow } = await import("../workflows/runtime");
+      const result = await runWorkflow(workflowKey, {
+        triggerKind: "manual",
+        triggerPayload: { via: "agent_tool", agentKey: ctx.agentKey, runId: ctx.runId ?? null },
+        input: (input.input as Record<string, unknown>) ?? {},
+        actorRole: ctx.actorRole,
+        actorId: ctx.agentKey,
+        userId: ctx.userId ?? null,
+        sessionId: ctx.sessionId ?? null,
+      });
+      return {
+        ok: result.ok,
+        runId: result.runId ?? null,
+        status: result.status,
+        workflowKey: result.workflowKey,
+        error: result.error,
+        summary: result.ok ? `ورک‌فلو ${workflowKey} اجرا شد (${result.status})` : `اجرای ${workflowKey} ناموفق: ${result.error ?? "نامشخص"}`,
+      };
+    },
+  },
+  {
     key: "updateProductPrice",
     name: "تغییر قیمت محصول",
     description: "تغییر قیمت — فقط با تأیید انسانی اجرا می‌شود",

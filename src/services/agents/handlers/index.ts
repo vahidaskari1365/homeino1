@@ -13,6 +13,9 @@ import { runInventoryAgent } from "./inventory";
 import { runDesignerAgent } from "./designer";
 import { runBrowserAgent } from "./browser";
 import { runDeclarativeAgent } from "./declarative";
+import { runVendorAgent } from "./vendor";
+import { runMarketingAgent } from "./marketing";
+import { runDevelopmentAgent } from "./development";
 
 export const AGENT_HANDLERS: Record<string, AgentHandler> = {
   customerIntelligence: runCustomerIntelligence,
@@ -21,6 +24,9 @@ export const AGENT_HANDLERS: Record<string, AgentHandler> = {
   inventory: runInventoryAgent,
   designer: runDesignerAgent,
   browser: runBrowserAgent,
+  vendor: runVendorAgent,
+  marketing: runMarketingAgent,
+  development: runDevelopmentAgent,
   declarative: runDeclarativeAgent,
 };
 
@@ -32,4 +38,4 @@ export function resolveHandler(handlerKey?: string | null): AgentHandler {
 }
 
 export type { AgentHandler, HandlerContext, HandlerResult, ToolCallResult } from "./types";
-export { runCustomerIntelligence, runRecommendationAgent, runShoppingAssistant, runInventoryAgent, runDesignerAgent, runBrowserAgent, runDeclarativeAgent };
+export { runCustomerIntelligence, runRecommendationAgent, runShoppingAssistant, runInventoryAgent, runDesignerAgent, runBrowserAgent, runDeclarativeAgent, runVendorAgent, runMarketingAgent, runDevelopmentAgent };
