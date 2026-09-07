@@ -48,8 +48,10 @@ export function DesignStudio({ studio }: { studio: Studio }) {
 
         {tab === "inspiration" && <InspirationTab studio={studio} />}
 
+        {/* grid-cols-[minmax(0,1fr)] : در موبایل ستون‌ها زیر هم می‌آیند و بدون این،
+            min-content عکس‌های ذاتی‌بلند (۱۲۰۰px) کل صفحه را overflow می‌دهد. */}
         {tab === "design" && (
-          <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-12 lg:gap-5">
             {/* راست (اول در RTL): کانواس — عکس + تحلیل + نتیجه */}
             <ResultCanvas studio={studio} />
 
