@@ -1,11 +1,14 @@
 "use client";
 // ============================================================
-// ستون «کانواس» هومینو استودیو — نتیجهٔ تحقیق رقبا (طرح نهایی):
-// • عکس و تحلیل و نتیجه، همه در یک قاب — الگوی RoomGPT/InteriorAI/
-//   REimagineHome: کاربر هیچ‌وقت بین «ورودی» و «خروجی» جابه‌جا نمی‌شود.
-// • بعد از رندر: اسلایدر «قبل / بعد» (الگوی Spacely و Decoratly)
-//   یا حالت تعاملی ProductOverlay — با کلید تغییر حالت.
-// • زیر آن ۳ تب جمع: «کالاها و خرید» / «گزارش هوش» / «جزئیات».
+// ستون «کانواس» هومینو استودیو — بازخورد مالک (نسخهٔ نهایی):
+// • عکس و تحلیل و نتیجه، همه در یک قاب — کاربر هیچ‌وقت بین «ورودی»
+//   و «خروجی» جابه‌جا نمی‌شود.
+// • بعد از رندر: «عکس قدیمی خانه» روبروی «عکس طراحی‌شده» (دو قاب
+//   کنار هم — خواستهٔ مستقیم مالک؛ اسلایدر کشیدنی حذف شد) یا
+//   حالت تعاملی ProductOverlay با کلید تغییر حالت.
+// • زیر آن ۲ تب جمع: «کالاها و خرید» / «جزئیات». جدول گزارش
+//   ایجنت‌ها از نمای اصلی برداشته شد و فقط به‌صورت بخش جمع‌شوندهٔ
+//   فنی داخل «جزئیات» در دسترس است.
 // همهٔ بلوک‌های قبلی (آنالیز اندازه، گزارش ایجنت‌ها، محدوده تغییر،
 // تاریخچه/واگرد، عناصر انتخابی، کالاهای چیدمان، خرید این چیدمان،
 // کالاهای هماهنگ فروشگاه‌ها) حفظ شده‌اند — چیزی حذف نشده.
@@ -21,7 +24,6 @@ import { shareContent, buildShareUrl } from "@/lib/share";
 import type { DesignStudio } from "./useDesignStudio";
 import { GenerationProgress } from "./GenerationProgress";
 import { RoomUploader } from "./RoomUploader";
-import { CompareSlider } from "./CompareSlider";
 
 const AGENT_STATUS_STYLE: Record<string, string> = {
   ok: "bg-success/10 text-success",
@@ -30,7 +32,7 @@ const AGENT_STATUS_STYLE: Record<string, string> = {
   error: "bg-danger/10 text-danger",
 };
 
-type ResultTab = "shop" | "report" | "details";
+type ResultTab = "shop" | "details";
 
 export function ResultCanvas({ studio }: { studio: DesignStudio }) {
   const {
@@ -48,13 +50,13 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
     prevCount.current = placements.length;
   }, [placements.length]);
 
-  const canComposite = Boolean(compositeUrl && showComposite && placements.length > 0);
+  const showPair = Boolean(compositeUrl && showComposite) && placements.length > 0;
   const glowPlans = studioPlans.filter((p) => p.glow);
   const hasResult = placements.length > 0 && !loading && !error;
   const busy = loading || Boolean(error && !loading);
 
   const shopBadge = placedProducts.length + matchedStoreProducts.length;
-  const reportBadge = (studioReport?.agents.length ?? 0) + studioPlans.length + (lastScope ? 1 : 0);
+  const detailsBadge = studioPlans.length + (lastScope ? 1 : 0);
 
   return (
     <div className="space-y-4 lg:col-span-7">
@@ -66,14 +68,14 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
             <div className="flex items-center gap-1.5">
               {compositeUrl && (
                 <button
-                  onClick={() => setShowComposite(!canComposite)}
-                  className={cn("flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition", canComposite ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted hover:text-ink")}
-                  title={canComposite ? "رفتن به حالت تعاملی برای جابه‌جایی دستی" : "نمایش مقایسهٔ قبل و بعد"}
+                  onClick={() => (showComposite ? setShowComposite(false) : refreshComposite())}
+                  className={cn("flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition", !showComposite ? "bg-ink text-cream" : "bg-ivory-2 text-ink-muted hover:text-ink")}
+                  title={showComposite ? "جابه‌جایی دستی کالاها روی نتیجه" : "نمایش عکس قدیمی و جدید کنار هم"}
                 >
-                  {canComposite ? <><MousePointer2 size={13} /> حالت تعاملی</> : <><Layers size={13} /> مقایسه قبل/بعد</>}
+                  {showComposite ? <><MousePointer2 size={13} /> ویرایش تعاملی</> : <><Layers size={13} /> مقایسهٔ قبل/بعد</>}
                 </button>
               )}
-              {canComposite && <button onClick={refreshComposite} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="به‌روزرسانی پیش‌نمایش ترکیب" title="به‌روزرسانی پیش‌نمایش ترکیب"><RefreshCw size={14} /></button>}
+              {!showComposite && compositeUrl && <button onClick={refreshComposite} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="به‌روزرسانی پیش‌نمایش ترکیب" title="به‌روزرسانی پیش‌نمایش ترکیب"><RefreshCw size={14} /></button>}
               <button onClick={() => toast("برای ذخیره، از دکمه اشتراک‌گذاری استفاده کن")} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted hover:text-ink" aria-label="دانلود"><Download size={14} /></button>
               <button onClick={async () => { const res = await shareContent({ title: "طراحی هوشمند خانه من", text: "با Homeino طراحی کردم", url: buildShareUrl("/ai") }); toast(res.method === "clipboard" ? "لینک کپی شد" : res.method === "native" ? "اشتراک‌گذاری شد" : "خطا", res.method === "failed" ? "error" : "success"); }} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="اشتراک‌گذاری"><Share2 size={14} /></button>
             </div>
@@ -108,30 +110,29 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
           </>
         )}
 
-        {/* ---- بعد از رندر: مقایسهٔ قبل/بعد یا حالت تعاملی ---- */}
+        {/* ---- بعد از رندر: عکس قدیمی روبروی نتیجهٔ طراحی (خواستهٔ مالک) یا حالت تعاملی ---- */}
         {!busy && hasResult && imageBase64 && (
-          canComposite ? (
+          showPair ? (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="select-none">
-              <CompareSlider before={imageBase64} after={compositeUrl!} />
-              <p className="mt-2 flex items-center justify-center gap-1.5 text-2xs text-ink-muted"><MousePointer2 size={12} /> دستگیره را بکش تا «قبل» و «بعد» را مقایسه کنی — با «حالت تعاملی» می‌توانی هر کالا را جابه‌جا کنی</p>
+              <BeforeAfterPair before={imageBase64} after={compositeUrl!} />
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-2xs text-ink-muted"><Layers size={12} /> نتیجهٔ طراحی روبروی عکس قدیمی خانه‌ات — با «ویرایش تعاملی» می‌توانی هر کالا را جابه‌جا کنی</p>
             </motion.div>
           ) : (
             <ProductOverlay mode={rs.currentImage && rs.currentImage !== imageBase64 ? "real_edit" : "interactive"} roomImage={rs.currentImage ?? imageBase64} placements={placements} onChange={updatePlacement} onRemove={removePlacement} onCart={overlayCart} onWishlist={overlayWishlist} onView={overlayView} />
           )
         )}
-        {!busy && hasResult && placements.length > 0 && rs.currentImage === rs.originalImage && !canComposite && (
+        {!busy && hasResult && placements.length > 0 && rs.currentImage === rs.originalImage && !compositeUrl && (
           <div className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg border border-gold/25 bg-gold/5 px-3 py-2 text-xs text-gold"><AlertCircle size={13} /> پیش‌نمایش — عکس اصلی حفظ شده</div>
         )}
       </div>
 
-      {/* ================= ۳ تب جمع بعد از رندر ================= */}
+      {/* ================= ۲ تب جمع بعد از رندر ================= */}
       {!busy && hasResult && (
         <div className="rounded-2xl border border-clay/50 bg-cream shadow-[var(--shadow-soft)]">
           <div className="flex gap-1 border-b border-clay/30 p-1.5">
             {([
               ["shop", "کالاها و خرید", ShoppingBag, shopBadge],
-              ["report", "گزارش هوش", Bot, reportBadge],
-              ["details", "جزئیات", Layers, 0],
+              ["details", "جزئیات", Layers, detailsBadge],
             ] as const).map(([id, label, Icon, badge]) => (
               <button key={id} onClick={() => setResTab(id)} aria-current={resTab === id} className={cn("flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition sm:text-sm", resTab === id ? "bg-ink text-cream" : "text-ink-muted hover:text-ink")}>
                 <Icon size={15} /> {label}
@@ -146,6 +147,11 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
               {/* ---------- تب ۱: کالاها و خرید ---------- */}
               {resTab === "shop" && (
                 <div className="space-y-4">
+                  {studioReport && studioReport.stockWarnings.length > 0 && (
+                    <div className="space-y-1 rounded-lg border border-warning/25 bg-warning/5 p-2.5">
+                      {studioReport.stockWarnings.map((w, i) => <p key={i} className="flex items-start gap-1.5 text-xs text-warning"><AlertCircle size={13} className="mt-0.5 shrink-0" /> {w}</p>)}
+                    </div>
+                  )}
                   {placedProducts.length > 0 ? (
                     <div>
                       <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-ink"><ShoppingBag size={15} className="text-terracotta-deep" /> کالاهای چیدمان ({toFa(placedProducts.length)})</h3>
@@ -211,86 +217,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                 </div>
               )}
 
-              {/* ---------- تب ۲: گزارش هوش ---------- */}
-              {resTab === "report" && (
-                <div className="space-y-3">
-                  {studioPlans.length > 0 && (
-                    <div className="rounded-xl border border-sage/30 bg-sage/5 p-3">
-                      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink"><PackageCheck size={14} className="text-terracotta-deep" /> آنالیز اندازه و جای‌گذاری</div>
-                      <ul className="space-y-1">
-                        {studioPlans.slice(0, 6).map((p) => (
-                          <li key={p.productId} className="flex items-start gap-1.5 text-xs leading-5 text-ink-muted"><Check size={12} className="mt-0.5 shrink-0 text-success" /><span>{p.sizeReport}</span></li>
-                        ))}
-                      </ul>
-                      {glowPlans.length > 0 && (
-                        <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-5 text-gold"><Lightbulb size={13} className="mt-0.5 shrink-0" /> نور محصولات روشنایی، مطابق توضیحات هر محصول با شکل آن نمایش داده شده است.</p>
-                      )}
-                    </div>
-                  )}
-
-                  {(studioReport || reportLoading) ? (
-                    <div>
-                      <h3 className="mb-2.5 flex items-center gap-2 border-b border-clay/30 pb-2 text-sm font-bold text-ink"><Bot size={16} className="text-terracotta-deep" /> گزارش ایجنت‌های هومینو استودیو</h3>
-                      {reportLoading && !studioReport && <p className="flex items-center gap-2 text-xs text-ink-muted"><RefreshCw size={13} className="animate-spin" /> ایجنت‌ها در حال بررسی طرح...</p>}
-                      {studioReport && (
-                        <>
-                          <p className="mb-2.5 text-sm leading-6 text-ink">{studioReport.summary}</p>
-                          <div className="grid gap-1.5 sm:grid-cols-2">
-                            {studioReport.agents.map((a) => (
-                              <div key={a.key} className="rounded-lg border border-clay/30 bg-ivory-2 p-2.5">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-xs font-bold text-ink">{a.name}</span>
-                                  <span className={cn("rounded px-1.5 py-0.5 text-2xs font-bold", AGENT_STATUS_STYLE[a.status] ?? "bg-clay/20 text-ink-muted")}>
-                                    {a.status === "ok" ? "انجام شد" : a.status === "error" ? "خطا" : a.status === "skipped" ? "غیرفعال" : "بدون نتیجه"}
-                                  </span>
-                                </div>
-                                <p className="mt-1 text-xs leading-5 text-ink-muted">{a.note}</p>
-                              </div>
-                            ))}
-                          </div>
-                          {studioReport.stockWarnings.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {studioReport.stockWarnings.map((w, i) => <p key={i} className="flex items-start gap-1.5 text-xs text-warning"><AlertCircle size={13} className="mt-0.5 shrink-0" /> {w}</p>)}
-                            </div>
-                          )}
-                          {studioReport.complements.length > 0 && (
-                            <div className="mt-3 border-t border-clay/20 pt-2.5">
-                              <p className="mb-1.5 text-xs font-bold text-terracotta-deep">پیشنهاد مکمل ایجنت‌ها:</p>
-                              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                                {studioReport.complements.slice(0, 6).map((c) => {
-                                  const real = getProductById(c.id);
-                                  const href = real ? `/products/${real.slug}` : (c.url ?? "/products");
-                                  return (
-                                    <Link key={c.id} href={href} className="flex items-center gap-2 rounded-lg border border-clay/30 bg-ivory-2 p-1.5 transition hover:border-terracotta/50">
-                                      {(real?.images[0] ?? c.image) && <img src={real?.images[0] ?? c.image} alt="" className="h-9 w-9 rounded-md object-cover" />}
-                                      <span className="min-w-0 flex-1">
-                                        <span className="line-clamp-1 block text-2xs font-bold text-ink">{real?.name ?? c.name ?? "محصول"}</span>
-                                        {typeof (real?.price ?? c.price) === "number" && <span className="block text-2xs font-black text-terracotta-deep">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}
-                                      </span>
-                                    </Link>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    !studioPlans.length && <p className="rounded-lg bg-ivory-2 p-3 text-xs leading-5 text-ink-muted">گزارش ایجنت‌ها همین بعد از رندر اینجا ظاهر می‌شود.</p>
-                  )}
-
-                  {lastScope && (
-                    <div className="rounded-xl border border-gold/25 bg-gold/5 p-3.5">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-gold"><Lightbulb size={14} /> محدوده تغییر</div>
-                      <p className="mt-1 text-xs leading-6 text-ink-muted">{lastScope.summary}</p>
-                      {lastScope.lockedElements.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{lastScope.lockedElements.slice(0, 6).map((el) => <span key={el} className="flex items-center gap-1 rounded bg-ivory-2 px-1.5 py-0.5 text-2xs text-ink-muted"><LockIcon size={10} /> {el}</span>)}</div>}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ---------- تب ۳: جزئیات ---------- */}
+              {/* ---------- تب ۲: جزئیات ---------- */}
               {resTab === "details" && (
                 <div className="space-y-3">
                   {rs.history.length > 1 && (
@@ -316,12 +243,110 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                   {placements.length > 0 && (
                     <p className="text-xs leading-5 text-ink-muted">تعداد کالای رندرشده در عکس: <b className="text-ink">{toFa(placements.length)}</b> — با «حالت تعاملی» می‌توانی هر کدام را جابه‌جا، بزرگ یا حذف کنی.</p>
                   )}
+
+                  {/* ---- آنالیز اندازه و جای‌گذاری (از تب گزارش سابق) ---- */}
+                  {studioPlans.length > 0 && (
+                    <div className="rounded-xl border border-sage/30 bg-sage/5 p-3">
+                      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink"><PackageCheck size={14} className="text-terracotta-deep" /> آنالیز اندازه و جای‌گذاری</div>
+                      <ul className="space-y-1">
+                        {studioPlans.slice(0, 6).map((p) => (
+                          <li key={p.productId} className="flex items-start gap-1.5 text-xs leading-5 text-ink-muted"><Check size={12} className="mt-0.5 shrink-0 text-success" /><span>{p.sizeReport}</span></li>
+                        ))}
+                      </ul>
+                      {glowPlans.length > 0 && (
+                        <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-5 text-gold"><Lightbulb size={13} className="mt-0.5 shrink-0" /> نور محصولات روشنایی، مطابق توضیحات هر محصول با شکل آن نمایش داده شده است.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ---- محدوده تغییر ---- */}
+                  {lastScope && (
+                    <div className="rounded-xl border border-gold/25 bg-gold/5 p-3.5">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gold"><Lightbulb size={14} /> محدوده تغییر</div>
+                      <p className="mt-1 text-xs leading-6 text-ink-muted">{lastScope.summary}</p>
+                      {lastScope.lockedElements.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{lastScope.lockedElements.slice(0, 6).map((el) => <span key={el} className="flex items-center gap-1 rounded bg-ivory-2 px-1.5 py-0.5 text-2xs text-ink-muted"><LockIcon size={10} /> {el}</span>)}</div>}
+                    </div>
+                  )}
+
+                  {/* ---- پیشنهاد مکمل ---- */}
+                  {studioReport && studioReport.complements.length > 0 && (
+                    <div className="border-t border-clay/20 pt-2.5">
+                      <p className="mb-1.5 text-xs font-bold text-terracotta-deep">پیشنهاد مکمل ایجنت‌ها:</p>
+                      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                        {studioReport.complements.slice(0, 6).map((c) => {
+                          const real = getProductById(c.id);
+                          const href = real ? `/products/${real.slug}` : (c.url ?? "/products");
+                          return (
+                            <Link key={c.id} href={href} className="flex items-center gap-2 rounded-lg border border-clay/30 bg-ivory-2 p-1.5 transition hover:border-terracotta/50">
+                              {(real?.images[0] ?? c.image) && <img src={real?.images[0] ?? c.image} alt="" className="h-9 w-9 rounded-md object-cover" />}
+                              <span className="min-w-0 flex-1">
+                                <span className="line-clamp-1 block text-2xs font-bold text-ink">{real?.name ?? c.name ?? "محصول"}</span>
+                                {typeof (real?.price ?? c.price) === "number" && <span className="block text-2xs font-black text-terracotta-deep">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ---- گزارش فنی ایجنت‌ها: از نمای اصلی بردار شد؛ فقط جمع‌شونده فنی ---- */}
+                  {(studioReport || reportLoading) && (
+                    <details className="overflow-hidden rounded-xl border border-clay/40 bg-ivory-2/60">
+                      <summary className="flex cursor-pointer list-none select-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-bold text-ink transition hover:text-terracotta-deep [&::-webkit-details-marker]:hidden">
+                        <span className="flex items-center gap-2"><Bot size={15} className="text-terracotta-deep" /> گزارش فنی ایجنت‌ها{studioReport && <span className="rounded-full bg-terracotta px-1.5 py-0.5 text-2xs font-black text-white">{toFa(studioReport.agents.length)}</span>}</span>
+                        <span className="text-2xs font-normal text-ink-muted">برای دیدن باز کن</span>
+                      </summary>
+                      <div className="space-y-2 border-t border-clay/30 px-3 py-3">
+                        {reportLoading && !studioReport && <p className="flex items-center gap-2 text-xs text-ink-muted"><RefreshCw size={13} className="animate-spin" /> ایجنت‌ها در حال بررسی طرح...</p>}
+                        {studioReport && (
+                          <>
+                            <p className="text-sm leading-6 text-ink">{studioReport.summary}</p>
+                            <div className="grid gap-1.5 sm:grid-cols-2">
+                              {studioReport.agents.map((a) => (
+                                <div key={a.key} className="rounded-lg border border-clay/30 bg-cream p-2.5">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs font-bold text-ink">{a.name}</span>
+                                    <span className={cn("rounded px-1.5 py-0.5 text-2xs font-bold", AGENT_STATUS_STYLE[a.status] ?? "bg-clay/20 text-ink-muted")}>
+                                      {a.status === "ok" ? "انجام شد" : a.status === "error" ? "خطا" : a.status === "skipped" ? "غیرفعال" : "بدون نتیجه"}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-xs leading-5 text-ink-muted">{a.note}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </details>
+                  )}
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================
+// مقایسهٔ کنارهم: «عکس قدیمی خانه» روبروی «عکس طراحی‌شده» —
+// بازخورد مستقیم مالک: «عکس تغییر کرده روبروی عکس خانهٔ قدیمی
+// باشه بهتره». RTL: قاب اول (راست) = قبل، قاب دوم (چپ) = بعد؛
+// در موبایل دو قاب زیر هم می‌آیند.
+// ============================================================
+function BeforeAfterPair({ before, after }: { before: string; after: string }) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <figure className="relative overflow-hidden rounded-2xl border border-clay/40 bg-ink">
+        <img src={before} alt="عکس قدیمی خانه شما" className="block w-full" draggable={false} />
+        <span className="absolute right-2.5 top-2.5 rounded-md bg-ink/65 px-2 py-1 text-2xs font-bold text-cream backdrop-blur">قبل · عکس تو</span>
+      </figure>
+      <figure className="relative overflow-hidden rounded-2xl border-2 border-terracotta/60 bg-ink shadow-[var(--shadow-soft)]">
+        <img src={after} alt="نتیجهٔ طراحی هومینو استودیو" className="block w-full" draggable={false} />
+        <span className="absolute left-2.5 top-2.5 rounded-md bg-terracotta-deep/90 px-2 py-1 text-2xs font-bold text-cream backdrop-blur">بعد · طراحی هومینو</span>
+      </figure>
     </div>
   );
 }
