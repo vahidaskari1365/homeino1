@@ -8,14 +8,15 @@
 //   حالت تعاملی ProductOverlay با کلید تغییر حالت.
 // • زیر آن ۲ تب جمع: «کالاها و خرید» / «جزئیات». جدول گزارش
 //   ایجنت‌ها از نمای اصلی برداشته شد و فقط به‌صورت بخش جمع‌شوندهٔ
-//   فنی داخل «جزئیات» در دسترس است.
+//   فنی داخل «جزئیات» در دسترس است. کلیک روی هر عکس → لایت‌باکس
+//   تمام‌صفحه (بازخورد مالک: «روی عکس‌ها که می‌زنم بزرگ بشن»).
 // همهٔ بلوک‌های قبلی (آنالیز اندازه، گزارش ایجنت‌ها، محدوده تغییر،
 // تاریخچه/واگرد، عناصر انتخابی، کالاهای چیدمان، خرید این چیدمان،
 // کالاهای هماهنگ فروشگاه‌ها) حفظ شده‌اند — چیزی حذف نشده.
 // ============================================================
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Wand2, Download, Share2, AlertCircle, Lightbulb, Lock as LockIcon, Undo2, Redo2, Sparkles, ShoppingBag, Store, Check, CreditCard, Heart, Bot, Layers, PackageCheck, RefreshCw, MousePointer2 } from "lucide-react";
+import { Wand2, Download, Share2, AlertCircle, Lightbulb, Lock as LockIcon, Undo2, Redo2, Sparkles, ShoppingBag, Store, Check, CreditCard, Heart, Bot, Layers, PackageCheck, RefreshCw, MousePointer2, Maximize2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProductOverlay } from "@/components/ProductOverlay";
 import { getProductById } from "@/data/products";
@@ -43,6 +44,9 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
   } = studio;
 
   const [resTab, setResTab] = useState<ResultTab>("shop");
+  // لایت‌باکس: کدام عکس + توکنِ نتیجه — با هر رندر جدید توکن عوض می‌شود
+  // و لایت‌باکسِ کهنه خودبه‌خود بسته می‌ماند (بدون اثرِ جانبی).
+  const [zoom, setZoom] = useState<null | { which: "before" | "after"; token: string }>(null);
   const prevCount = useRef(0);
   // هر نتیجهٔ تازه → تب «کالاها و خرید» از اول باز شود.
   useEffect(() => {
@@ -57,6 +61,10 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
 
   const shopBadge = placedProducts.length + matchedStoreProducts.length;
   const detailsBadge = studioPlans.length + (lastScope ? 1 : 0);
+
+  // توکن نتیجهٔ فعلی — لایت‌باکس فقط با همین توکن باز می‌ماند.
+  const zoomToken = `${placements.length}|${showPair ? compositeUrl!.length : 0}`;
+  const lightbox = zoom && zoom.token === zoomToken && !busy && hasResult && imageBase64 ? zoom : null;
 
   return (
     <div className="space-y-4 lg:col-span-7">
@@ -114,7 +122,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
         {!busy && hasResult && imageBase64 && (
           showPair ? (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="select-none">
-              <BeforeAfterPair before={imageBase64} after={compositeUrl!} />
+              <BeforeAfterPair before={imageBase64} after={compositeUrl!} onZoom={(which) => setZoom({ which, token: zoomToken })} />
               <p className="mt-2 flex items-center justify-center gap-1.5 text-2xs text-ink-muted"><Layers size={12} /> نتیجهٔ طراحی روبروی عکس قدیمی خانه‌ات — با «ویرایش تعاملی» می‌توانی هر کالا را جابه‌جا کنی</p>
             </motion.div>
           ) : (
@@ -326,6 +334,18 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
           </AnimatePresence>
         </div>
       )}
+
+      {/* ================= لایت‌باکس بزرگ‌نمایی عکس ================= */}
+      <AnimatePresence>
+        {lightbox && (
+          <ImageLightbox
+            before={imageBase64!}
+            after={compositeUrl ?? rs.currentImage ?? imageBase64!}
+            initial={lightbox.which}
+            onClose={() => setZoom(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -334,19 +354,98 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
 // مقایسهٔ کنارهم: «عکس قدیمی خانه» روبروی «عکس طراحی‌شده» —
 // بازخورد مستقیم مالک: «عکس تغییر کرده روبروی عکس خانهٔ قدیمی
 // باشه بهتره». RTL: قاب اول (راست) = قبل، قاب دوم (چپ) = بعد؛
-// در موبایل دو قاب زیر هم می‌آیند.
+// در موبایل دو قاب زیر هم می‌آیند. کلیک روی هر قاب → لایت‌باکس.
 // ============================================================
-function BeforeAfterPair({ before, after }: { before: string; after: string }) {
+function BeforeAfterPair({ before, after, onZoom }: { before: string; after: string; onZoom: (which: "before" | "after") => void }) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <figure className="relative overflow-hidden rounded-2xl border border-clay/40 bg-ink">
+      <button
+        type="button"
+        onClick={() => onZoom("before")}
+        aria-label="بزرگ‌نمایی عکس قدیمی خانه"
+        className="group relative block w-full cursor-zoom-in overflow-hidden rounded-2xl border border-clay/40 bg-ink text-right transition hover:border-clay/70 focus-visible:ring-2 focus-visible:ring-terracotta/60 focus-visible:outline-none"
+      >
         <img src={before} alt="عکس قدیمی خانه شما" className="block w-full" draggable={false} />
         <span className="absolute right-2.5 top-2.5 rounded-md bg-ink/65 px-2 py-1 text-2xs font-bold text-cream backdrop-blur">قبل · عکس تو</span>
-      </figure>
-      <figure className="relative overflow-hidden rounded-2xl border-2 border-terracotta/60 bg-ink shadow-[var(--shadow-soft)]">
+        <span className="absolute inset-0 grid place-items-center bg-ink/0 opacity-0 transition group-hover:bg-ink/35 group-hover:opacity-100" aria-hidden><Maximize2 size={22} className="text-cream drop-shadow" /></span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onZoom("after")}
+        aria-label="بزرگ‌نمایی نتیجهٔ طراحی"
+        className="group relative block w-full cursor-zoom-in overflow-hidden rounded-2xl border-2 border-terracotta/60 bg-ink text-right shadow-[var(--shadow-soft)] transition hover:border-terracotta focus-visible:ring-2 focus-visible:ring-terracotta/60 focus-visible:outline-none"
+      >
         <img src={after} alt="نتیجهٔ طراحی هومینو استودیو" className="block w-full" draggable={false} />
         <span className="absolute left-2.5 top-2.5 rounded-md bg-terracotta-deep/90 px-2 py-1 text-2xs font-bold text-cream backdrop-blur">بعد · طراحی هومینو</span>
-      </figure>
+        <span className="absolute inset-0 grid place-items-center bg-ink/0 opacity-0 transition group-hover:bg-ink/35 group-hover:opacity-100" aria-hidden><Maximize2 size={22} className="text-cream drop-shadow" /></span>
+      </button>
     </div>
+  );
+}
+
+// ============================================================
+// لایت‌باکس بزرگ‌نمایی — کلیک روی عکس‌های قبل/بعد → تمام‌صفحه.
+// بستن با کلیک بیرون، دکمه × یا Esc؛ جابه‌جایی بین قبل/بعد با
+// چیپ‌ها یا فلش‌های کیبورد (راست = قبل، چپ = بعد — هم‌جهت با RTL).
+// ============================================================
+function ImageLightbox({ before, after, initial, onClose }: { before: string; after: string; initial: "before" | "after"; onClose: () => void }) {
+  const [which, setWhich] = useState<"before" | "after">(initial);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") setWhich("after");
+      if (e.key === "ArrowRight") setWhich("before");
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  const src = which === "before" ? before : after;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="نمایش بزرگ عکس"
+      className="fixed inset-0 z-[115] flex flex-col items-center justify-center gap-3 bg-ink/85 p-4 backdrop-blur-md sm:p-8"
+    >
+      <button type="button" onClick={onClose} className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-cream/10 text-cream transition hover:bg-cream/20" aria-label="بستن"><X size={20} /></button>
+      <motion.img
+        key={src}
+        src={src}
+        alt={which === "before" ? "عکس قدیمی خانه شما — بزرگ" : "نتیجهٔ طراحی هومینو استودیو — بزرگ"}
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        onClick={(e) => e.stopPropagation()}
+        draggable={false}
+        className="max-h-[76vh] w-auto max-w-full rounded-2xl border border-cream/15 object-contain shadow-2xl"
+      />
+      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        {([["before", "قبل · عکس تو"], ["after", "بعد · طراحی هومینو"]] as const).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setWhich(id)}
+            aria-current={which === id}
+            className={cn("rounded-full px-3.5 py-1.5 text-xs font-bold transition", which === id ? "bg-cream text-ink" : "bg-cream/10 text-cream/80 hover:text-cream")}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="text-2xs text-cream/60">برای بستن کلیک کن یا Esc بزن — با فلش‌های چپ و راست بین قبل و بعد جابه‌جا شو</p>
+    </motion.div>
   );
 }
