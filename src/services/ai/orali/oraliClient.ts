@@ -113,6 +113,17 @@ function pickSize(dataUrl: string): string {
 
 function buildEditPrompt(req: OraliEditRequest): string {
   const parts = [req.instruction.trim()];
+  // Multi-image product staging: the last attached image(s) ARE the exact
+  // products — the engine must reproduce their identity (the pattern that
+  // makes foreign staging tools look real instead of pasted).
+  if (req.referenceImages?.length) {
+    const n = req.referenceImages.length;
+    parts.push(
+      n === 1
+        ? "The SECOND image shows the EXACT product to place: reproduce its design, color, material, texture and proportions identically — do not invent a lookalike. If the reference photo disagrees with any text fact (e.g. a color name), the reference photo wins."
+        : `The LAST ${n} images show the EXACT products to place: reproduce each product's design, color, material, texture and proportions identically — do not invent lookalikes. If a reference photo disagrees with any text fact (e.g. a color name), the reference photo wins.`,
+    );
+  }
   if (req.protectedElements?.length) {
     parts.push(`Keep these elements strictly unchanged: ${req.protectedElements.join(", ")}.`);
   }
@@ -171,7 +182,9 @@ export const oraliClient: OraliClient = {
       const enginePrompt = await toEngineEnglish(buildEditPrompt(req));
       const res = await postWithRetry(cfg, "/images/generations/edit", {
         prompt: enginePrompt,
-        images: [{ url: req.image }], // engine contract: array of {url} (data URL accepted)
+        // engine contract: array of {url} — room first, then product
+        // reference photo(s) (data URL or remote URL accepted).
+        images: [{ url: req.image }, ...(req.referenceImages ?? []).map((url) => ({ url }))],
         size: pickSize(req.image),
       }, controller.signal);
       if (!res.ok) {

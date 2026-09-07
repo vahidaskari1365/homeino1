@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState, useCallback } from "react";
-import { ShoppingCart, Heart, X, ExternalLink, Move, Maximize2 } from "lucide-react";
+import { ShoppingCart, Heart, X, ExternalLink, Move, Maximize2, ShoppingBag } from "lucide-react";
 import { useOverlayGeometry } from "@/lib/overlayGeometry";
 import { toFa, formatPrice, cn } from "@/lib/utils";
 import type { Product } from "@/types";
@@ -114,6 +114,45 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
             ? { left: `${pixel.left}px`, top: `${pixel.top}px` }
             : { left: `${pl.xNorm * 100}%`, top: `${pl.yNorm * 100}%` };
 
+          // REAL_EDIT — the AI already rendered the product INTO the photo;
+          // pasting the raw product photo over the render would look pasted
+          // again. A compact hotspot keeps the commerce actions without
+          // covering the render.
+          if (mode === "real_edit") {
+            return (
+              <div
+                key={p.id}
+                tabIndex={0}
+                role="button"
+                aria-label={`${p.name} — کلیدهای جهت‌نما برای حرکت`}
+                className={cn("absolute cursor-grab touch-none outline-none focus-visible:ring-2 focus-visible:ring-gold active:cursor-grabbing", isSel && "z-30")}
+                style={{ ...posStyle, zIndex: isSel ? 30 : 10, transform: "translate(-50%, -50%)" }}
+                onPointerDown={(e) => startDrag(e, p.id)}
+                onKeyDown={(e) => onKeyDown(e, pl)}
+                onClick={(e) => { e.stopPropagation(); setSelected(p.id); }}
+              >
+                <div className={cn("grid h-7 w-7 place-items-center rounded-full border bg-ink/85 shadow-xl backdrop-blur transition", isSel ? "border-gold ring-2 ring-gold/60" : "border-cream/40 hover:border-gold/60")}>
+                  <ShoppingBag size={13} className={isSel ? "text-gold" : "text-cream"} />
+                </div>
+
+                {isSel && (
+                  <div className="absolute -top-3 left-1/2 flex -translate-x-1/2 -translate-y-full items-center gap-0.5 rounded-xl border border-clay/30 bg-ink/90 p-1 shadow-2xl backdrop-blur" onPointerDown={(e) => e.stopPropagation()}>
+                    <button onClick={() => onCart?.(p)} aria-label="افزودن به سبد خرید" className="grid h-9 w-9 place-items-center rounded-lg text-emerald-400 transition hover:bg-white/10 active:scale-90" title="افزودن به سبد"><ShoppingCart size={15} /></button>
+                    <button onClick={() => onWishlist?.(p)} aria-label="افزودن به علاقه‌مندی" className="grid h-9 w-9 place-items-center rounded-lg text-rose-400 transition hover:bg-white/10 active:scale-90" title="علاقه‌مندی"><Heart size={15} /></button>
+                    <button onClick={() => onView?.(p)} aria-label="مشاهده صفحه محصول" className="grid h-9 w-9 place-items-center rounded-lg text-sky-400 transition hover:bg-white/10 active:scale-90" title="صفحه محصول"><ExternalLink size={15} /></button>
+                    <button onClick={() => { onRemove?.(p.id); setSelected(null); }} aria-label="حذف محصول از چیدمان" className="grid h-9 w-9 place-items-center rounded-lg text-red-400 transition hover:bg-white/10 active:scale-90" title="حذف"><X size={15} /></button>
+                  </div>
+                )}
+
+                {isSel && (
+                  <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink/85 px-2 py-0.5 text-2xs text-cream">
+                    {p.name} · {toFa(formatPrice(p.price))} ت
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <div
               key={p.id}
@@ -176,6 +215,11 @@ export function ProductOverlay({ roomImage, placements, mode = "interactive", on
             {mode === "interactive" && (
               <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-gold/20 px-2 py-1 text-2xs font-medium text-gold-soft backdrop-blur">
                 پیش‌نمایش چیدمان — عکس اصلی حفظ شده
+              </div>
+            )}
+            {mode === "real_edit" && (
+              <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-emerald-500/20 px-2 py-1 text-2xs font-medium text-emerald-300 backdrop-blur">
+                رندر هوش مصنوعی — محصولات داخل عکس پیاده شده‌اند
               </div>
             )}
             <div className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-ink/60 px-2 py-1 text-2xs text-cream backdrop-blur">

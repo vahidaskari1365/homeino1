@@ -21,6 +21,8 @@ export interface PlacementProduct {
   material?: string;
   color?: string;
   style?: string;
+  /** Product photo (data-URL/remote URL) — engine reference for identity-preserving placement. */
+  image?: string;
   dimensions?: { width?: number; height?: number; depth?: number };
 }
 

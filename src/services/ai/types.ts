@@ -10,6 +10,12 @@ export interface GenerateDesignInput {
   mood?: string;
   aspectRatio?: string;
   referenceImage?: string;
+  /**
+   * Reference photos (data-URL/remote URL) of the exact product(s) to
+   * place — sent to the image engine alongside the room (multi-image
+   * identity-preserving staging).
+   */
+  productReferenceImages?: string[];
   productId?: string;
   /** Base64 PNG mask (white = region to edit) for precise inpainting. */
   mask?: string;

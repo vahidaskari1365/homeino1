@@ -60,8 +60,11 @@ export const zaiProvider: AiProvider = {
 
   async editImage(input: GenerateDesignInput): Promise<GeneratedDesign> {
     // Real edit through the proven adapter — room preserved, target changed.
+    // Product reference photo(s) ride along so the engine renders the EXACT
+    // product (identity-preserving multi-image staging).
     const out = await oraliClient.generateEdit({
       image: input.referenceImage ?? "",
+      referenceImages: input.productReferenceImages?.length ? input.productReferenceImages : undefined,
       instruction: input.prompt || designPrompt(input),
       preserveArchitecture: true,
       style: input.style,

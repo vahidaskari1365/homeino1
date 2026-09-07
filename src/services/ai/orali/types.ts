@@ -38,6 +38,13 @@ export interface OverlayRegion {
 export interface OraliEditRequest {
   /** Base64 data-URL of the room image to edit. */
   image: string;
+  /**
+   * Reference photos (data-URL or remote URL) of the EXACT product(s)
+   * to place — the foreign-site pattern (nano-banana style multi-image
+   * fusion): room + product photos so the engine renders the real
+   * product identity instead of inventing a lookalike.
+   */
+  referenceImages?: string[];
   /** Compiled design instruction (English, engine-facing). */
   instruction: string;
   /** Optional base64 PNG mask — edit ONLY inside the mask. */

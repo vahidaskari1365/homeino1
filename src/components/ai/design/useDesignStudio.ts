@@ -287,6 +287,9 @@ export function useDesignStudio() {
       material: p.materials?.[0],
       color: p.colors?.[0]?.name,
       style: p.styleSlugs?.[0],
+      // Real product photo → the AI engine renders THIS product into the
+      // room (identity-preserving multi-image staging), not a lookalike.
+      image: p.images?.[0],
       dimensions: parseProductDimensions(p.dimensions),
     }));
 
@@ -398,6 +401,9 @@ export function useDesignStudio() {
 
       const editedImage = pipelineRes.result.afterImage;
       const realEngineImage = !pipelineRes.result.preview && editedImage !== imageBase64 ? editedImage : null;
+      // A real AI render IS the result — the pasted preview composite must
+      // never cover it (the old default view made quality look disastrous).
+      if (realEngineImage) { setCompositeUrl(null); setShowComposite(false); }
       const isPreview = !realEngineImage && !composite;
       // A real engine render wins; otherwise our browser composite; else original.
       const outputImage = realEngineImage ?? composite ?? imageBase64;
@@ -520,6 +526,8 @@ export function useDesignStudio() {
       material: presetProduct.materials?.[0],
       color: presetProduct.colors?.[0]?.name,
       style: presetProduct.styleSlugs?.[0],
+      // Real product photo → identity-preserving AI placement.
+      image: presetProduct.images?.[0],
       dimensions: parseProductDimensions(presetProduct.dimensions),
     };
 
@@ -585,6 +593,8 @@ export function useDesignStudio() {
 
       const editedImage = pipelineRes.result.afterImage;
       const realEngineImage = !pipelineRes.result.preview && editedImage !== imageBase64 ? editedImage : null;
+      // AI render wins the canvas — the paste preview must not cover it.
+      if (realEngineImage) { setCompositeUrl(null); setShowComposite(false); }
       const isPreview = !realEngineImage && !composite;
       const outputImage = realEngineImage ?? composite ?? imageBase64;
 

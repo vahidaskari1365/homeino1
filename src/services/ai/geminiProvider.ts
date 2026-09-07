@@ -49,10 +49,20 @@ async function geminiText(system: string, user: string): Promise<string> {
 
 async function geminiImage(input: GenerateDesignInput): Promise<GeneratedDesign> {
   const parts: Record<string, unknown>[] = [{ text: buildPrompt(input) }];
+  // Multi-image fusion (nano-banana): room photo FIRST, then the exact
+  // product reference photo(s) — Gemini keeps the product's identity and
+  // renders it into the room (the foreign staging-site pattern).
+  const refs = input.productReferenceImages ?? [];
   if (input.referenceImage) {
     const b64 = input.referenceImage.replace(/^data:image\/\w+;base64,/, "");
     parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
   }
+  refs.slice(0, 3).forEach((ref, i) => {
+    const b64 = ref.replace(/^data:image\/\w+;base64,/, "");
+    if (b64 === ref) return; // not a data URL (remote) — skip, Gemini needs inline data
+    parts.push({ text: `Reference photo ${i + 1}: the EXACT product to place. Render it with identical design, color, material and proportions.` });
+    parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
+  });
   const res = await fetch(`${API}/${IMAGE_MODEL()}:generateContent?key=${key()}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

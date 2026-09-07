@@ -415,6 +415,8 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
     placement && productCandidate && productPlacementPrompt(productCandidate, placement),
     productCandidate &&
       `Product visual identity to preserve: ${productCandidate.name ?? "selected piece"} (SKU: ${productCandidate.sku ?? productCandidate.id}). Retain exact proportions, shape, design language, material textures (${productCandidate.material ?? "authentic"}), and color tone (${productCandidate.color ?? "specified"}).`,
+    (productCandidate || selectedProductCtx?.image) &&
+      `If a reference photo of the product is attached after the room image, render THAT exact product — not a similar one.`,
     constraintsToPrompt(constraints),
     "Photorealistic interior photograph, consistent perspective and lighting, high detail.",
   ]
@@ -445,6 +447,48 @@ export function buildDesignInstruction(input: PipelineInput, intent: IntentAnaly
 
 /* ---------------- Step 3: Generation (Orali → provider) ---------------- */
 
+const MAX_PRODUCT_REFERENCE_IMAGES = 3;
+
+/**
+ * Fetch a remote product photo into a data URL (engines accept both, but
+ * data URLs avoid engine-side fetch failures / CORS drift). Fail-soft:
+ * a missing reference degrades the render — it must never fail the run.
+ */
+async function toDataUrlFromUrl(url: string): Promise<string | null> {
+  if (url.startsWith("data:")) return url;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+    if (!res.ok) return null;
+    const mime = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+    if (!mime.startsWith("image/")) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length < 1024 || buf.length > 8 * 1024 * 1024) return null;
+    return `data:${mime};base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Identity-preserving staging (the pattern behind the foreign staging
+ * sites): collect the EXACT product photo(s) and hand them to the engine
+ * next to the room photo. Room first, then products — capped for payload.
+ */
+async function collectProductReferenceImages(input: PipelineInput, instruction: DesignInstruction): Promise<string[]> {
+  const urls = [
+    instruction.selectedProduct?.image,
+    ...(input.products ?? []).map((p) => p.image),
+  ]
+    .filter((u): u is string => Boolean(u && u.trim()));
+  const unique = [...new Set(urls)].slice(0, MAX_PRODUCT_REFERENCE_IMAGES);
+  const out: string[] = [];
+  for (const url of unique) {
+    const dataUrl = await toDataUrlFromUrl(url);
+    if (dataUrl) out.push(dataUrl);
+  }
+  return out;
+}
+
 async function generateVisual(
   input: PipelineInput,
   instruction: DesignInstruction,
@@ -452,6 +496,7 @@ async function generateVisual(
   const orali = resolveOrali();
   if (orali && input.referenceImage) {
     try {
+      const productReferenceImages = await collectProductReferenceImages(input, instruction);
       const targetRegion = instruction.placement?.targetRegion
         ? {
             x: instruction.placement.targetRegion.x,
@@ -462,6 +507,7 @@ async function generateVisual(
         : undefined;
       const out = await orali.generateEdit({
         image: input.referenceImage,
+        referenceImages: productReferenceImages.length ? productReferenceImages : undefined,
         instruction: instruction.enginePrompt,
         mask: input.mask,
         preserveArchitecture: instruction.constraints.preserveArchitecture,
@@ -492,10 +538,11 @@ async function generateVisual(
 
   // Fallback: base provider (mock by default — honestly marked preview).
   const { provider, name } = await resolveProvider();
+  const productReferenceImages = await collectProductReferenceImages(input, instruction);
   const useEdit = input.referenceImage && instruction.editMode !== "generate";
   const design = useEdit
-    ? await provider.editImage({ ...toProviderInput(input), prompt: instruction.enginePrompt, mask: input.mask })
-    : await provider.generateDesign({ ...toProviderInput(input), prompt: instruction.enginePrompt });
+    ? await provider.editImage({ ...toProviderInput(input), prompt: instruction.enginePrompt, mask: input.mask, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined })
+    : await provider.generateDesign({ ...toProviderInput(input), prompt: instruction.enginePrompt, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined });
   return { design: { ...design, regions: estimateRegions(instruction) }, engine: name, degraded: false };
 }
 
