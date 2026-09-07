@@ -93,13 +93,21 @@ const FREE_CHAIN = [
   { id: "opencode:deepseek-v4-flash-free", base: "https://opencode.ai/zen/v1", model: "deepseek-v4-flash-free", maxTokens: 3000 },
 ];
 
-async function chatCompletion(base, model, apiKey, messages, maxTokens, timeoutMs = 100_000) {
+// دومین وندور رایگانِ بدون‌کلید — همان سرویس قابل‌اعتماد تصاویر ریپو (Pollinations).
+// endpoint سازگار-OpenAI در /openai است (نه /chat/completions) → مسیر اختصاصی با path.
+// وقتی کل opencode از دسترس خارج شود (مثل ران 2026-09-07)، این لایه تکیه‌گاه دوم است.
+const POLLINATIONS_CHAIN = [
+  { id: "pollinations:openai-fast", base: "https://text.pollinations.ai", path: "/openai", model: "openai-fast", maxTokens: 1600 },
+  { id: "pollinations:openai", base: "https://text.pollinations.ai", path: "/openai", model: "openai", maxTokens: 1600 },
+];
+
+async function chatCompletion(base, model, apiKey, messages, maxTokens, timeoutMs = 100_000, path = "/chat/completions") {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const headers = { "Content-Type": "application/json" };
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-    const res = await fetch(`${base.replace(/\/+$/, "")}/chat/completions`, {
+    const res = await fetch(`${base.replace(/\/+$/, "")}${path}`, {
       method: "POST",
       headers,
       body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: maxTokens }),
@@ -132,12 +140,15 @@ async function callLlm(messages) {
   if (OMNIROUTE_BASE_URL) {
     attempts.push({ id: "omniroute:auto", base: OMNIROUTE_BASE_URL, model: "auto", key: OMNIROUTE_API_KEY || "", maxTokens: 3000 });
   }
-  // 3) زنجیره رایگان بدون‌کلید
-  attempts.push(...FREE_CHAIN.map((c) => ({ id: c.id, base: c.base, model: c.model, key: "", maxTokens: c.maxTokens })));
+  // 3) زنجیره رایگان بدون‌کلید — دو وندور مستقل؛ opencode از 2026-09-07 برای تیر آزاد
+  //    «MissingSessionID» برمی‌گرداند (HTTP 400) پس Pollinations اولویت می‌گیرد و
+  //    opencode فقط به‌عنوان تلاش آخرِ به‌هزینه‌ی‌کم (خطایش فوری است، timeout نیست) می‌ماند
+  attempts.push(...POLLINATIONS_CHAIN.map((c) => ({ id: c.id, base: c.base, path: c.path, model: c.model, key: "", maxTokens: c.maxTokens })));
+  attempts.push(...FREE_CHAIN.map((c) => ({ id: c.id, base: c.base, path: c.path, model: c.model, key: "", maxTokens: c.maxTokens })));
 
   for (const a of attempts) {
     for (let tryNo = 0; tryNo < 2; tryNo++) {
-      const r = await chatCompletion(a.base, a.model, a.key, messages, a.maxTokens);
+      const r = await chatCompletion(a.base, a.model, a.key, messages, a.maxTokens, 100_000, a.path);
       if (r.content && r.content.trim()) {
         if (tryNo > 0 || a !== attempts[0]) console.log(`  llm via ${a.id}${tryNo ? " (retry)" : ""}`);
         callLlm.lastVia = a.id;
@@ -316,7 +327,7 @@ function slugify(title, date) {
 }
 
 async function main() {
-  console.log(`[magazine-daily] ${new Date().toISOString()} — starting`);
+  console.log(`[m[magazine-daily] ${new Date().toISOString()} — starting`);
   const RUN_STARTED = Date.now();
   const db = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   const existing = db.briefs ?? [];
@@ -324,6 +335,16 @@ async function main() {
   const existingTitles = new Set(existing.map((b) => b.title.replace(/\s+/g, "")));
   const now = new Date();
   const cutoff = Date.now() - DAYS_BACK * 24 * 3600 * 1000;
+
+  // ۰) سقف روزانه — اسلات‌های catch-up بعد از یک ران موفق فقط صادقانه خارج می‌شوند
+  //    (dedupe با URL/عنوان هست، ولی این‌طوری نوبت جبرانی بدون تلاشِ بیهوده و بدون
+  //    کامیتِ لاگِ خالی تمام می‌شود و حجم محتوای روز هم قابل‌پیش‌بینی می‌ماند)
+  const DAILY_BRIEF_TARGET = 4;
+  const madeToday = existing.filter((b) => b.date === isoDay(now)).length;
+  if (madeToday >= DAILY_BRIEF_TARGET) {
+    console.log(`[m[magazine-daily] ${madeToday} brief(s) already published today — catch-up run exits`);
+    return;
+  }
 
   // 1) جمع‌آوری کاندیدها از همه فیدها
   const candidates = [];
@@ -357,7 +378,7 @@ async function main() {
     .slice(0, MAX_BRIEFS_PER_RUN);
 
   if (selected.length === 0) {
-    console.log("[magazine-daily] nothing new — done");
+    console.log("[m[magazine-daily] nothing new — done");
     return;
   }
 
@@ -414,7 +435,7 @@ async function main() {
     const summary = via
       ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود، همه تکراری بودند یا خروجی معتبر نبود"
       : "هیچ مسیر LLM در دسترس نبود (زنجیره رایگان شکست خورد) — در اجرای بعدی دوباره تلاش می‌شود";
-    console.log(`[magazine-daily] no briefs produced — file unchanged (${via ? "no valid briefs" : "llm unreachable"})`);
+    console.log(`[m[magazine-daily] no briefs produced — file unchanged (${via ? "no valid briefs" : "llm unreachable"})`);
     await logContentAgentRun(REPO, {
       agentKey: "magazine-editor",
       ok: false,
@@ -431,7 +452,7 @@ async function main() {
     .filter((b) => Date.parse(`${b.date}T00:00:00Z`) >= Date.now() - RETENTION_DAYS * 24 * 3600 * 1000);
 
   fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs: merged }, null, 2)}\n`, "utf8");
-  console.log(`[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
+  console.log(`[m[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
   await logContentAgentRun(REPO, {
     agentKey: "magazine-editor",
     ok: true,
@@ -448,6 +469,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error("[magazine-daily] FATAL", e);
+  console.error("[m[magazine-daily] FATAL", e);
   process.exit(1);
 });

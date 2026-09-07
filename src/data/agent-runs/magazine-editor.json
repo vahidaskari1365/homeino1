@@ -1,7 +1,43 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-07T06:25:13.037Z",
+  "updatedAt": "2026-09-07T06:41:16.885Z",
   "runs": [
+    {
+      "id": "run-1788763276885-jnsd3",
+      "at": "2026-09-07T06:41:16.885Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 155875,
+      "summary": "4 بریف ترند جدید (سبک‌ها، آشپزخانه، حمام، سبک‌ها) — از طریق zai-sdk",
+      "detail": {
+        "added": 4,
+        "total": 18,
+        "via": "zai-sdk",
+        "titles": [
+          "اکسسوری‌های شاخص: شخصیت‌بخش فضای شما",
+          "دیوارنویسی عاشقانه برای آشپزخانه",
+          "ترند میزحمام گرم و دوست‌داشتنی",
+          "سبک تابستانی در خانه‌های ایرانی"
+        ],
+        "sources": [
+          "news.google.com"
+        ]
+      }
+    },
+    {
+      "id": "run-1788762798072-z8haz",
+      "at": "2026-09-07T06:33:18.072Z",
+      "agentKey": "magazine-editor",
+      "ok": false,
+      "durationMs": 30298,
+      "summary": "هیچ مسیر LLM در دسترس نبود (زنجیره رایگان شکست خورد) — در اجرای بعدی دوباره تلاش می‌شود",
+      "detail": {
+        "added": 0,
+        "total": 14,
+        "reason": "llm_unreachable",
+        "via": null
+      }
+    },
     {
       "id": "run-1788762313037-g8lal",
       "at": "2026-09-07T06:25:13.037Z",
