@@ -22,6 +22,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
+import { callLlm } from "./lib/llm-chain.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, "..");
@@ -79,104 +80,6 @@ const COVER_BY_CATEGORY = {
 const DEFAULT_COVER = "/images/trends/trends-guide-2026.png";
 
 const UA = { "User-Agent": "Mozilla/5.0 (compatible; HomeinoMagazineBot/1.0; +https://homeino.ir)" };
-
-// ============================================================
-// زنجیره رایگان بدون‌کلید (تست‌شده زنده 2026-09-06)
-// منبع کشف: awesome-freellm-apis + کاتالوگ no-auth اومی‌روت (OpenCode Free)
-// هر کاندیدا: endpoint سازگار-OpenAI + مدل + بودجه توکن (nemotron به فضای فکرکردن نیاز دارد)
-// ============================================================
-const FREE_CHAIN = [
-  { id: "opencode:ling-3.0-flash-fin-free", base: "https://opencode.ai/zen/v1", model: "ling-3.0-flash-fin-free", maxTokens: 3000 },
-  { id: "opencode:nemotron-3.5-lightning-free", base: "https://opencode.ai/zen/v1", model: "nemotron-3.5-lightning-free", maxTokens: 6000 },
-  { id: "opencode:mimo-v2.5-free", base: "https://opencode.ai/zen/v1", model: "mimo-v2.5-free", maxTokens: 3000 },
-  { id: "opencode:big-pickle", base: "https://opencode.ai/zen/v1", model: "big-pickle", maxTokens: 3000 },
-  { id: "opencode:deepseek-v4-flash-free", base: "https://opencode.ai/zen/v1", model: "deepseek-v4-flash-free", maxTokens: 3000 },
-];
-
-// دومین وندور رایگانِ بدون‌کلید — همان سرویس قابل‌اعتماد تصاویر ریپو (Pollinations).
-// endpoint سازگار-OpenAI در /openai است (نه /chat/completions) → مسیر اختصاصی با path.
-// وقتی کل opencode از دسترس خارج شود (مثل ران 2026-09-07)، این لایه تکیه‌گاه دوم است.
-const POLLINATIONS_CHAIN = [
-  { id: "pollinations:openai-fast", base: "https://text.pollinations.ai", path: "/openai", model: "openai-fast", maxTokens: 1600 },
-  { id: "pollinations:openai", base: "https://text.pollinations.ai", path: "/openai", model: "openai", maxTokens: 1600 },
-];
-
-async function chatCompletion(base, model, apiKey, messages, maxTokens, timeoutMs = 100_000, path = "/chat/completions") {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const headers = { "Content-Type": "application/json" };
-    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-    const res = await fetch(`${base.replace(/\/+$/, "")}${path}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: maxTokens }),
-      signal: ctrl.signal,
-    });
-    if (!res.ok) {
-      const retriable = res.status === 429 || res.status >= 500;
-      const body = await res.text().catch(() => "");
-      return { error: `HTTP ${res.status}: ${body.slice(0, 120)}`, retriable };
-    }
-    const json = await res.json();
-    const content = json?.choices?.[0]?.message?.content ?? "";
-    const finish = json?.choices?.[0]?.finish_reason;
-    return { content, finish };
-  } catch (e) {
-    return { error: e?.name === "AbortError" ? "timeout" : e?.message ?? "fetch failed", retriable: true };
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-async function callLlm(messages) {
-  const { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OMNIROUTE_BASE_URL, OMNIROUTE_API_KEY } = process.env;
-  const attempts = [];
-  // 1) کلید اختصاصی کاربر (هر سرویس سازگار-OpenAI؛ اولویت با آن)
-  if (LLM_API_KEY && LLM_BASE_URL) {
-    attempts.push({ id: `env:${LLM_MODEL || "default"}`, base: LLM_BASE_URL, model: LLM_MODEL || "gpt-4o-mini", key: LLM_API_KEY, maxTokens: 1600 });
-  }
-  // 2) گیت‌وی خودمیزبان OmniRoute (فال‌بک داخلی چند ارائه‌دهنده، مدل auto)
-  if (OMNIROUTE_BASE_URL) {
-    attempts.push({ id: "omniroute:auto", base: OMNIROUTE_BASE_URL, model: "auto", key: OMNIROUTE_API_KEY || "", maxTokens: 3000 });
-  }
-  // 3) زنجیره رایگان بدون‌کلید — دو وندور مستقل؛ opencode از 2026-09-07 برای تیر آزاد
-  //    «MissingSessionID» برمی‌گرداند (HTTP 400) پس Pollinations اولویت می‌گیرد و
-  //    opencode فقط به‌عنوان تلاش آخرِ به‌هزینه‌ی‌کم (خطایش فوری است، timeout نیست) می‌ماند
-  attempts.push(...POLLINATIONS_CHAIN.map((c) => ({ id: c.id, base: c.base, path: c.path, model: c.model, key: "", maxTokens: c.maxTokens })));
-  attempts.push(...FREE_CHAIN.map((c) => ({ id: c.id, base: c.base, path: c.path, model: c.model, key: "", maxTokens: c.maxTokens })));
-
-  for (const a of attempts) {
-    for (let tryNo = 0; tryNo < 2; tryNo++) {
-      const r = await chatCompletion(a.base, a.model, a.key, messages, a.maxTokens, 100_000, a.path);
-      if (r.content && r.content.trim()) {
-        if (tryNo > 0 || a !== attempts[0]) console.log(`  llm via ${a.id}${tryNo ? " (retry)" : ""}`);
-        callLlm.lastVia = a.id;
-        return r.content;
-      }
-      if (r.error && !r.retriable) {
-        console.log(`  llm ${a.id}: ${r.error}`);
-        break; // مدل بعدی
-      }
-      if (tryNo === 0) await new Promise((s) => setTimeout(s, 8_000)); // فاصله برای 429/5xx
-      else console.log(`  llm ${a.id}: ${r.error ?? "empty"}`);
-    }
-  }
-  // سندباکس: z-ai-web-dev-sdk (در node_modules بالادست نصب است)
-  try {
-    const mod = await import("z-ai-web-dev-sdk");
-    const ZAI = mod.default ?? mod;
-    const zai = await ZAI.create();
-    const res = await zai.chat.completions.create({ messages, temperature: 0.7 });
-    const out = res?.choices?.[0]?.message?.content ?? "";
-    if (out) {
-      callLlm.lastVia = "zai-sdk";
-      return out;
-    }
-  } catch { /* LLM در دسترس نیست */ }
-  callLlm.lastVia = null;
-  return null;
-}
 
 async function fetchText(url, timeoutMs = 12000) {
   const ctrl = new AbortController();
@@ -327,7 +230,7 @@ function slugify(title, date) {
 }
 
 async function main() {
-  console.log(`[m[magazine-daily] ${new Date().toISOString()} — starting`);
+  console.log(`[magazine-daily] ${new Date().toISOString()} — starting`);
   const RUN_STARTED = Date.now();
   const db = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   const existing = db.briefs ?? [];
@@ -342,7 +245,7 @@ async function main() {
   const DAILY_BRIEF_TARGET = 4;
   const madeToday = existing.filter((b) => b.date === isoDay(now)).length;
   if (madeToday >= DAILY_BRIEF_TARGET) {
-    console.log(`[m[magazine-daily] ${madeToday} brief(s) already published today — catch-up run exits`);
+    console.log(`[magazine-daily] ${madeToday} brief(s) already published today — catch-up run exits`);
     return;
   }
 
@@ -378,7 +281,7 @@ async function main() {
     .slice(0, MAX_BRIEFS_PER_RUN);
 
   if (selected.length === 0) {
-    console.log("[m[magazine-daily] nothing new — done");
+    console.log("[magazine-daily] nothing new — done");
     return;
   }
 
@@ -435,7 +338,7 @@ async function main() {
     const summary = via
       ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود، همه تکراری بودند یا خروجی معتبر نبود"
       : "هیچ مسیر LLM در دسترس نبود (زنجیره رایگان شکست خورد) — در اجرای بعدی دوباره تلاش می‌شود";
-    console.log(`[m[magazine-daily] no briefs produced — file unchanged (${via ? "no valid briefs" : "llm unreachable"})`);
+    console.log(`[magazine-daily] no briefs produced — file unchanged (${via ? "no valid briefs" : "llm unreachable"})`);
     await logContentAgentRun(REPO, {
       agentKey: "magazine-editor",
       ok: false,
@@ -452,7 +355,7 @@ async function main() {
     .filter((b) => Date.parse(`${b.date}T00:00:00Z`) >= Date.now() - RETENTION_DAYS * 24 * 3600 * 1000);
 
   fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs: merged }, null, 2)}\n`, "utf8");
-  console.log(`[m[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
+  console.log(`[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
   await logContentAgentRun(REPO, {
     agentKey: "magazine-editor",
     ok: true,
@@ -469,6 +372,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error("[m[magazine-daily] FATAL", e);
+  console.error("[magazine-daily] FATAL", e);
   process.exit(1);
 });

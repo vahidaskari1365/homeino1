@@ -36,6 +36,7 @@ jobs:
 
       - name: Collect & publish inspiration pins
         env:
+          LLM_KEYS_JSON: ${{ secrets.LLM_KEYS_JSON }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}

@@ -4,8 +4,8 @@
 // گردش کار: چرخش ماتریس سبک×فضا → جستجوی عکس چیدمان واقعی →
 // بازنویسی فارسی اورجینال (LLM) → افزودن به پین‌های الهام → پوش
 //
-// بک‌اند LLM (به‌ترتیب): z-ai CLI (سندباکس) | LLM_API_BASE_URL+KEY (هر اندپوینت
-// سازگار با OpenAI) | قالب متن فارسی پایدار (fallback صادقانه)
+// بک‌اند LLM: زنجیره چندکلیدی LLM_KEYS_JSON (z.ai + Google) | کلید تکی env |
+// OmniRoute | z-ai CLI/SDK (سندباکس) | قالب متن فارسی پایدار (fallback صادقانه)
 // اجرا:  node scripts/inspiration-daily.mjs [--pins=6] [--dry]
 // ============================================================
 import { execFileSync, spawnSync } from "node:child_process";
@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
+import { callLlm } from "./lib/llm-chain.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GEN_FILE = join(ROOT, "src/data/inspirations.generated.json");
@@ -64,10 +65,6 @@ if (existsSync(envFile)) {
     if (m) ENV[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
 }
-const USE_CUSTOM = !!(process.env.LLM_API_KEY && process.env.LLM_BASE_URL) || !!(ENV.LLM_API_KEY && ENV.LLM_BASE_URL);
-const LLM_BASE = process.env.LLM_BASE_URL || ENV.LLM_BASE_URL;
-const LLM_KEY = process.env.LLM_API_KEY || ENV.LLM_API_KEY;
-const LLM_MODEL = process.env.LLM_MODEL || ENV.LLM_MODEL || "gpt-4o-mini";
 
 const SYSTEM = `تو سردبیر ارشد نشریه «هومینو» هستی؛ مرجع فارسی طراحی خانه.
 از روی یک عکس چیدمان (توضیح عکس را می‌گیری) یک پین الهام‌بخش فارسی می‌سازی.
@@ -76,17 +73,8 @@ const SYSTEM = `تو سردبیر ارشد نشریه «هومینو» هستی�
 {"title":"تیتر جذاب زیر ۶۰ نویسه","description":"۳-۵ جمله درباره چیدمان، نور، متریال و حس فضا","items":["۴ تا ۷ قلم وسایل کلیدی فارسی"],"styleNote":"۲-۳ جمله: چه چیزی این فضا را نماینده این سبک می‌کند","tags":["۳ تگ فارسی"]}`;
 
 async function llm(prompt) {
-  if (USE_CUSTOM) {
-    const res = await fetch(`${LLM_BASE.replace(/\/$/, "")}/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LLM_KEY}` },
-      body: JSON.stringify({ model: LLM_MODEL, messages: [{ role: "system", content: SYSTEM }, { role: "user", content: prompt }], temperature: 0.7 }),
-      signal: AbortSignal.timeout(90000),
-    });
-    if (!res.ok) throw new Error(`LLM HTTP ${res.status}`);
-    const j = await res.json();
-    return j.choices?.[0]?.message?.content || "";
-  }
+  const chained = await callLlm([{ role: "system", content: SYSTEM }, { role: "user", content: prompt }]);
+  if (chained) return chained;
   if (which("z-ai")) {
     const out = join(ROOT, "scripts/.llm-tmp.json");
     execFileSync("z-ai", ["chat", "-p", prompt, "-s", SYSTEM, "-o", out], { timeout: 150000 });
@@ -136,7 +124,7 @@ const today = new Date().toISOString().slice(0, 10);
 const added = [];
 
 console.log(`ایجنت الهام — نوبت ${runSlot + 1}/${RUNS_PER_DAY} روز ${today} | ${combos.length} پین هدف`);
-if (!USE_CUSTOM && !which("z-ai")) console.log("⚠ نه LLM خارجی هست نه z-ai — متن پین‌ها از قالب پایدار ساخته می‌شود");
+if (!process.env.LLM_KEYS_JSON && !process.env.LLM_API_KEY && !process.env.OMNIROUTE_BASE_URL && !which("z-ai")) console.log("⚠ نه زنجیره کلیدی هست نه z-ai — متن پین‌ها از قالب پایدار ساخته می‌شود");
 
 for (const [i, { style, space }] of combos.entries()) {
   const label = `${style.name} × ${space.slug}`;
