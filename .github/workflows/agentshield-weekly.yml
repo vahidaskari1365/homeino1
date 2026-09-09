@@ -1,0 +1,33 @@
+name: agentshield-weekly
+
+# اسکن امنیتی هفتگی هارنس ایجنت‌ها (الهام از ECC — github.com/affaan-m/ECC)
+# ecc-agentshield: کلید لو‌رفته، هوک/MCP خطرناک و سطح حمله تزریق پرامت را در ریپو می‌گردد.
+# برای ریپویی که روزانه ایجنت LLM با secret اجرا می‌کند این لایه دفاعی ارزان و مؤثر است.
+# قرمز شدن = یافته امنیتی؛ بلافاصله بررسی شود.
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # دوشنبه‌ها ۰۶:۳۰ تهران
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agentshield-weekly
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # اسکن تاریخ کامیت برای secret لو‌رفته
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Scan repo for leaked secrets & dangerous agent config
+        run: npx -y ecc-agentshield@1.4.0 scan --path .
