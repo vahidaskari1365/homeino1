@@ -33,7 +33,9 @@ export async function pollinationsImage(
   const url =
     `${IMG_BASE}/${encodeURIComponent(prompt.slice(0, 900))}` +
     `?width=${width}&height=${height}&seed=${seed}&nologo=true&model=sana`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(150_000) });
+  // 52s — زیر سقف 60s تابع Vercel تا پاسخ موفق برسد یا graceful به mock
+  // برگردد؛ در Vercel نباید خودِ timeout تابع اول قطع کند (504 سرد).
+  const res = await fetch(url, { signal: AbortSignal.timeout(52_000) });
   if (!res.ok) throw new Error(`POLLINATIONS_HTTP_${res.status}`);
   const mime = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
   if (!mime.startsWith("image/")) throw new Error("POLLINATIONS_NOT_IMAGE");

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider, resolveFreeGenerationFallback } from "@/services/ai/provider";
+import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, type ImageAction } from "@/services/ai/provider";
 import { mockAiProvider } from "@/services/ai/mockAiService";
 import { sanitizeUserPrompt, ALL_ELEMENTS } from "@/services/ai/roomState";
 import { understandIntent } from "@/services/ai/llm";
@@ -21,9 +21,14 @@ import { requireUser } from "@/lib/api/auth";
 //   • Duplicate-request protection (Phase 19 — no double generation)
 //   • Standardized AI error codes (Phase 18 — no stack traces)
 //   • Provider resolved per request (Mock default · Gemini-ready)
-//   • Image actions degrade gracefully to Mock on failure
+//   • Image actions follow an ordered dispatch plan:
+//       real engine → keyless Pollinations (generate only) → honest Mock
 //   • No keys, providers, or model names reach the client
 // ============================================================
+
+// Vercel: Pollinations can take up to ~52s — the function must live long
+// enough to fall back gracefully instead of a cold 504 (Hobby allows 60s).
+export const maxDuration = 60;
 
 const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
@@ -324,33 +329,36 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
       return json({ ...result, _pipeline: true }, 200, requestId);
     }
 
-    // ---- Resolve provider + dispatch ----
+    // ---- Resolve provider + ordered image dispatch ----
+    // ⚠ باگ قفل‌شده با imageChain.test.ts: mock هرگز خطا نمی‌پراند، پس
+    // dispatch مستقیمِ mock یعنی زنجیره fallback هرگز فعال نمی‌شود و
+    // «تولید عکس» همیشه عکس استوک pexels می‌داد (پروداکشن Vercel).
     const { provider, name } = await resolveProvider();
-    try {
-      const result = await dispatch(provider, action, p as never);
-      finish("ok", { provider: name });
-      return json({ ...(result as unknown as Record<string, unknown>), _provider: name }, 200, requestId);
-    } catch (err) {
-      if (IMAGE_ACTIONS.has(action)) {
-        // Free keyless fallback first: guests still get a REAL AI image for
-        // generation; edits keep the honest path (no free editor exists).
-        if (action === "generate") {
-          try {
-            const free = await resolveFreeGenerationFallback();
-            if (free) {
-              const freeResult = await dispatch(free, action, p as never);
-              finish("degraded", { provider: "pollinations", errorCode: classifyAiError(err).code });
-              return json({ ...(freeResult as unknown as Record<string, unknown>), _provider: "pollinations", _degraded: true }, 200, requestId);
-            }
-          } catch { /* fall through to mock */ }
-        }
-        // Honest degradation: mock marks the result as preview — never fake success.
-        const fallback = await dispatch(mockAiProvider, action, p as never);
-        finish("degraded", { provider: "mock", errorCode: classifyAiError(err).code });
-        return json({ ...(fallback as unknown as Record<string, unknown>), _provider: "mock", _degraded: true }, 200, requestId);
+    const imageAction = IMAGE_ACTIONS.has(action) ? (action as ImageAction) : null;
+    const plan = imageAction ? imageDispatchPlan(imageAction, name) : [name];
+
+    let lastErr: unknown = null;
+    for (const step of plan) {
+      const stepProvider =
+        step === name ? provider
+          : step === "pollinations" ? await resolveFreeGenerationFallback()
+          : mockAiProvider;
+      if (!stepProvider) continue;
+      try {
+        const result = await dispatch(stepProvider, action, p as never);
+        const degraded = step !== plan[0]; // fell back to a lesser engine
+        finish(degraded ? "degraded" : "ok", { provider: step, errorCode: degraded && lastErr ? classifyAiError(lastErr).code : undefined });
+        return json(
+          { ...(result as unknown as Record<string, unknown>), _provider: step, ...(degraded ? { _degraded: true } : {}) },
+          200,
+          requestId,
+        );
+      } catch (err) {
+        lastErr = err;
+        if (!imageAction) throw err; // non-image actions have no fallback chain
       }
-      throw err;
     }
+    throw lastErr ?? new Error("NO_IMAGE_PROVIDER");
   } catch (err) {
     const pub = toPublicAiError(err, requestId);
     finish("error", { errorCode: pub.code });

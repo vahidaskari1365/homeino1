@@ -22,8 +22,28 @@ import { mockAiProvider } from "./mockAiService";
 import { isOpenAiCompatConfigured } from "./llm/openaiCompatLlm";
 import { isZEngineConfigured } from "./engineConfig";
 
-export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat";
+export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat" | "pollinations";
 export interface ResolvedProvider { provider: AiProvider; name: ProviderName }
+
+export type ImageAction = "generate" | "edit" | "inpaint";
+
+/**
+ * ترتیب dispatch برای عملیات تصویر — خالص و تست‌پذیر (imageChain.test.ts).
+ *
+ * باگی که این تابع قفل می‌کند (پروداکشن Vercel 2026-09-09): وقتی هیچ کلیدی
+ * ست نشده، primary همان mock است و mock هرگز خطا نمی‌پراند — پس زنجیره
+ * نظریِ «خطا → pollinations → mock» هرگز فعال نمی‌شد و تولید عکس همیشه
+ * عکس استوک pexels می‌داد. pollinations باید **قبل از** mock امتحان شود.
+ *
+ *   generate: موتور واقعی → pollinations (کلید-کمتر) → mock صادقانه
+ *   edit/inpaint: موتور واقعی → mock صادقانه (pollinations ویرایش ندارد)
+ */
+export function imageDispatchPlan(action: ImageAction, primary: ProviderName): ProviderName[] {
+  if (action === "generate") {
+    return primary === "mock" ? ["pollinations", "mock"] : [primary, "pollinations", "mock"];
+  }
+  return primary === "mock" ? ["mock"] : [primary, "mock"];
+}
 
 export async function resolveProvider(): Promise<ResolvedProvider> {
   if (process.env.GEMINI_API_KEY) {

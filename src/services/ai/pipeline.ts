@@ -15,7 +15,9 @@
 // The pipeline is provider-agnostic: swap Orali or the LLM via
 // env vars — the UI contract (PipelineResult) never changes.
 // ============================================================
-import { resolveProvider } from "./provider";
+import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, type ImageAction } from "./provider";
+import { mockAiProvider } from "./mockAiService";
+import type { GeneratedDesign } from "./types";
 import { resolveOrali, OraliNotConfiguredError } from "./orali";
 import type { OverlayRegion } from "./orali";
 import { understandIntent } from "./llm";
@@ -57,7 +59,6 @@ import { createRequestId, withAiTelemetry } from "./telemetry";
 import { reserveCreditsForAi, finalizeCreditsForAi, refundCreditsForAi } from "./serverCredits";
 import { AiError } from "./errors";
 import { getProductBySkuOrCode } from "../../data/products";
-import type { GeneratedDesign } from "./types";
 import { uid } from "../../lib/utils";
 
 export type ChangeScope = "targeted" | "full";
@@ -536,14 +537,39 @@ async function generateVisual(
     }
   }
 
-  // Fallback: base provider (mock by default — honestly marked preview).
+  // Fallback: dispatch plan — real engine first, then the KEYLESS free
+  // engine for generation, then the honest mock (marked preview).
+  // ⚠ باگ قفل‌شده با imageChain.test.ts: mock هرگز خطا نمی‌پراند، پس
+  // انتخاب مستقیمِ mock یعنی تولید عکس همیشه عکس استوک pexels می‌داد
+  // (پروداکشن Vercel 2026-09-09). ترتیب plan باید رعایت شود.
   const { provider, name } = await resolveProvider();
   const productReferenceImages = await collectProductReferenceImages(input, instruction);
   const useEdit = input.referenceImage && instruction.editMode !== "generate";
-  const design = useEdit
-    ? await provider.editImage({ ...toProviderInput(input), prompt: instruction.enginePrompt, mask: input.mask, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined })
-    : await provider.generateDesign({ ...toProviderInput(input), prompt: instruction.enginePrompt, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined });
-  return { design: { ...design, regions: estimateRegions(instruction) }, engine: name, degraded: false };
+  const imageAction: ImageAction = useEdit ? "edit" : "generate";
+
+  let design: GeneratedDesign | null = null;
+  let engine = name;
+  let lastErr: unknown = null;
+  for (const step of imageDispatchPlan(imageAction, name)) {
+    const stepProvider =
+      step === name ? provider
+        : step === "pollinations" ? await resolveFreeGenerationFallback()
+        : mockAiProvider;
+    if (!stepProvider) continue; // engine unavailable (e.g. no pollinations module)
+    try {
+      const stepInput = { ...toProviderInput(input), prompt: instruction.enginePrompt, mask: input.mask, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined };
+      design = imageAction === "edit" ? await stepProvider.editImage(stepInput) : await stepProvider.generateDesign(stepInput);
+      engine = step;
+      break;
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[ai-pipeline] image engine "${step}" failed, falling back:`, err instanceof Error ? err.message : err);
+    }
+  }
+  if (!design) {
+    throw lastErr ?? new Error("NO_IMAGE_PROVIDER");
+  }
+  return { design: { ...design, regions: estimateRegions(instruction) }, engine, degraded: false };
 }
 
 function toProviderInput(input: PipelineInput) {
