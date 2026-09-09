@@ -50,11 +50,7 @@ const daySlot = Math.floor(Date.now() / 864e5); // شماره مطلق روز
 const minute = new Date().getUTCHours() * 60 + new Date().getUTCMinutes();
 const runSlot = Math.min(2, Math.floor(minute / (1440 / RUNS_PER_DAY)));
 const cursor = ((daySlot * RUNS_PER_DAY + runSlot) % (STYLES.length * SPACES.length));
-const combos = [];
-for (let i = 0; i < PINS_PER_RUN; i++) {
-  const idx = (cursor + i * 7) % (STYLES.length * SPACES.length); // گام ۷ = پوشش متفاوت در هر اجرا
-  combos.push({ style: STYLES[Math.floor(idx / SPACES.length)], space: SPACES[idx % SPACES.length] });
-}
+// انتخاب ترکیب‌ها بعد از بارگذاری استخر انجام می‌شود (چرخش هوشمند: ترکیب بدون عکس رد می‌شود)
 
 // ---------- LLM ----------
 const ENV = {};
@@ -120,10 +116,35 @@ function searchImage(query) {
 const RUN_STARTED = Date.now();
 const gen = existsSync(GEN_FILE) ? JSON.parse(readFileSync(GEN_FILE, "utf8")) : [];
 const seenImgs = new Set(gen.map((p) => p.image));
+
+// ---------- چرخش هوشمند: فقط ترکیب‌هایی که عکس مصرف‌نشده دارند ----------
+function unusedCount(styleSlug, spaceSlug) {
+  if (!POOL) return 0;
+  const direct = POOL[styleSlug]?.[spaceSlug] || [];
+  const n = direct.filter((p) => !seenImgs.has(p.url)).length;
+  if (n > 0) return n;
+  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug).flatMap(([, v]) => v);
+  return siblings.filter((p) => !seenImgs.has(p.url)).length;
+}
+const MATRIX = STYLES.length * SPACES.length;
+const combos = [];
+const poolStarved = [];
+for (let k = 0; k < MATRIX && combos.length < PINS_PER_RUN; k++) {
+  const idx = (cursor + k * 7) % MATRIX; // گام ۷ = پوشش متفاوت در هر اجرا؛ کامل دور کامل ماتریس
+  const style = STYLES[Math.floor(idx / SPACES.length)];
+  const space = SPACES[idx % SPACES.length];
+  if (unusedCount(style.slug, space.slug) > 0) combos.push({ style, space });
+  else poolStarved.push(`${style.name} × ${space.slug}`);
+}
+const poolEmpty = combos.length === 0;
+let poolRemaining = 0;
+if (POOL) for (const sp of Object.values(POOL)) for (const items of Object.values(sp)) poolRemaining += items.filter((p) => !seenImgs.has(p.url)).length;
+const poolLow = poolRemaining > 0 && poolRemaining < 40;
 const today = new Date().toISOString().slice(0, 10);
 const added = [];
 
-console.log(`ایجنت الهام — نوبت ${runSlot + 1}/${RUNS_PER_DAY} روز ${today} | ${combos.length} پین هدف`);
+console.log(`ایجنت الهام — نوبت ${runSlot + 1}/${RUNS_PER_DAY} روز ${today} | ${combos.length} پین هدف | باقیمانده استخر: ${poolRemaining}${poolLow ? " ⚠ استخر رو به اتمام" : ""}`);
+if (poolStarved.length) console.log(`⚠ ${poolStarved.length} ترکیب بدون عکس مصرف‌نشده رد شد`);
 if (!process.env.LLM_KEYS_JSON && !process.env.LLM_API_KEY && !process.env.OMNIROUTE_BASE_URL && !which("z-ai")) console.log("⚠ نه زنجیره کلیدی هست نه z-ai — متن پین‌ها از قالب پایدار ساخته می‌شود");
 
 for (const [i, { style, space }] of combos.entries()) {
@@ -195,11 +216,15 @@ await logContentAgentRun(ROOT, {
     ? `اجرای آزمایشی: ${added.length} پین ساخته شد (فایل نوشته نشد)`
     : added.length > 0
       ? `${added.length} پین الهام جدید (${added.some((p) => p._via === "llm") ? "بازنویسی LLM" : "قالب پایدار"})`
-      : "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      : poolEmpty
+        ? `استخر عکس خالی است (باقیمانده: ${poolRemaining}) — نیاز به شارژ: expand-inspiration-pool`
+        : "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
   detail: {
     added: added.length,
     total: capped.length,
     via: added.filter((p) => p._via === "llm").length ? "llm" : "template",
+    poolRemaining,
+    skippedStarved: poolStarved.length,
     combos: combos.map((c) => `${c.style.name} × ${c.space.slug}`),
   },
 });

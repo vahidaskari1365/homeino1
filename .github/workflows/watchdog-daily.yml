@@ -1,0 +1,37 @@
+name: watchdog-daily
+
+# نگهبان روزانه هومینو — سلامت ایجنت‌های محتوا را چک می‌کند.
+# اگر پین/بریف جدید منتشر نشود یا استخر عکس رو به اتمام باشد، ایسوی هشدار می‌سازد
+# (و به‌محض رفع مشکل، خودش آن را می‌بندد). اجرای قرمز = آلارم.
+# مستقل از توکن شخصی: فقط GITHUB_TOKEN داخلی — انقضای PAT هرگز این هشدار را خاموش نمی‌کند.
+# متغیر اختیاری مخزن: PAT_EXPIRES_AT (مثلاً 2026-12-08) برای یادآور شارژ مجدد توکن.
+
+on:
+  schedule:
+    - cron: "30 5 * * *"   # ۰۹:۰۰ تهران — بعد از نوبت صبح ایجنت‌ها
+    - cron: "30 16 * * *"  # ۲۰:۰۰ تهران — بعد از نوبت عصر
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: watchdog-daily
+  cancel-in-progress: true
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Health check & alarm
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAT_EXPIRES_AT: ${{ vars.PAT_EXPIRES_AT }}
+        run: node scripts/watchdog.mjs
