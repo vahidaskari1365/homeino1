@@ -1,5 +1,6 @@
 import { getDb } from "@/db";
 import { sql } from "drizzle-orm";
+import { resolveGeminiConfig } from "@/services/ai/settings";
 
 // ============================================================
 // GET /api/health — تشخیص صادقانه برای مانیتورینگ و دیباگ.
@@ -12,8 +13,9 @@ import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-function activeImageEngine(): string {
-  if (process.env.GEMINI_API_KEY) return "gemini";
+async function activeImageEngine(): Promise<string> {
+  // کلید Gemini از پنل ادمین (DB) یا env — settings.ts سقوط نرم دارد
+  if ((await resolveGeminiConfig()).apiKey) return "gemini";
   if (process.env.ZAI_API_BASE_URL || process.env.GLM_API_BASE_URL || process.env.ORALI_API_BASE_URL) return "zai";
   if (process.env.LLM_API_BASE_URL && process.env.LLM_API_KEY) return "openai-chat";
   if (process.env.FREELLMAPI_API_KEY && process.env.FREELLMAPI_BASE_URL) return "freellmapi";
@@ -25,17 +27,17 @@ export async function GET() {
 
   if (!process.env.DATABASE_URL) {
     return Response.json(
-      { ok: false, ts, checks: { db: "not-configured", ai: activeImageEngine() }, hint: "DATABASE_URL در محیط ست نشده — در Vercel → Settings → Environment Variables اضافه شود" },
+      { ok: false, ts, checks: { db: "not-configured", ai: await activeImageEngine() }, hint: "DATABASE_URL در محیط ست نشده — در Vercel → Settings → Environment Variables اضافه شود" },
       { status: 503 },
     );
   }
 
   try {
     await getDb().execute(sql`select 1`);
-    return Response.json({ ok: true, ts, checks: { db: "ok", ai: activeImageEngine() } });
+    return Response.json({ ok: true, ts, checks: { db: "ok", ai: await activeImageEngine() } });
   } catch (err) {
     return Response.json(
-      { ok: false, ts, checks: { db: "unreachable", ai: activeImageEngine() }, hint: "DATABASE_URL ست شده اما اتصال ناموفق — pooler/پسورد/IP allowlist را چک کنید", detail: err instanceof Error ? err.message.slice(0, 160) : "unknown" },
+      { ok: false, ts, checks: { db: "unreachable", ai: await activeImageEngine() }, hint: "DATABASE_URL ست شده اما اتصال ناموفق — pooler/پسورد/IP allowlist را چک کنید", detail: err instanceof Error ? err.message.slice(0, 160) : "unknown" },
       { status: 503 },
     );
   }

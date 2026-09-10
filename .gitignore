@@ -46,3 +46,7 @@ scripts/.llm-tmp.json
 
 # local demo stores (comments etc.)
 .data/
+.verify-workflows.mjs
+.seed-bundle.mjs
+.smoke-bundle.mjs
+.verify-bundle.mjs

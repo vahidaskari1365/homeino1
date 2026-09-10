@@ -1,6 +1,7 @@
 // ============================================================
-// Gemini Provider (SERVER-ONLY) — Gemini-ready slot.
-// Activates only when GEMINI_API_KEY is set (see provider.ts).
+// Gemini Provider (SERVER-ONLY).
+// Activates when a Gemini key resolves (see provider.ts + settings.ts):
+//   • key source: پنل ادمین (DB, encrypted) → env GEMINI_API_KEY
 //   • reasoning / chat / suggest → Gemini text model
 //   • image edit / generate / inpaint → Gemini image model
 //     (e.g. gemini-2.5-flash-image / "Nano Banana") which preserves
@@ -9,10 +10,7 @@
 // ============================================================
 import type { AiProvider, GenerateDesignInput, GeneratedDesign, DecorSuggestion } from "./types";
 import { uid } from "../../lib/utils";
-
-const key = () => process.env.GEMINI_API_KEY;
-const TEXT_MODEL = () => process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash";
-const IMAGE_MODEL = () => process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
+import { resolveGeminiConfig } from "./settings";
 
 const API = `https://generativelanguage.googleapis.com/v1beta/models`;
 
@@ -33,7 +31,9 @@ function buildPrompt(input: GenerateDesignInput): string {
 }
 
 async function geminiText(system: string, user: string): Promise<string> {
-  const res = await fetch(`${API}/${TEXT_MODEL()}:generateContent?key=${key()}`, {
+  const cfg = await resolveGeminiConfig();
+  if (!cfg.apiKey) throw new Error("gemini_not_configured");
+  const res = await fetch(`${API}/${cfg.textModel}:generateContent?key=${cfg.apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -63,7 +63,9 @@ async function geminiImage(input: GenerateDesignInput): Promise<GeneratedDesign>
     parts.push({ text: `Reference photo ${i + 1}: the EXACT product to place. Render it with identical design, color, material and proportions.` });
     parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
   });
-  const res = await fetch(`${API}/${IMAGE_MODEL()}:generateContent?key=${key()}`, {
+  const cfg = await resolveGeminiConfig();
+  if (!cfg.apiKey) throw new Error("gemini_not_configured");
+  const res = await fetch(`${API}/${cfg.imageModel}:generateContent?key=${cfg.apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ role: "user", parts }] }),

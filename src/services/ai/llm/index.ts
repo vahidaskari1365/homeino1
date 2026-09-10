@@ -4,7 +4,9 @@
 //
 //   resolveLlm() order:
 //     1. OpenAI-compatible endpoint → LLM_API_BASE_URL + LLM_API_KEY
-//     2. Heuristic engine (always available, deterministic)
+//     2. Z-engine (sandbox / GLM)
+//     3. Google Gemini → پنل ادمین (DB) یا GEMINI_API_KEY
+//     4. Heuristic engine (always available, deterministic)
 //
 // The service NEVER throws: remote failures degrade to the
 // heuristic provider so the pipeline can always proceed.
@@ -13,18 +15,20 @@ import type { IntentRequest, IntentAnalysis, LlmProvider } from "./types";
 import { heuristicLlmProvider, heuristicUnderstandIntent } from "./heuristicLlm";
 import { openAiCompatLlmProvider, isOpenAiCompatConfigured, normalizeIntentAnalysis } from "./openaiCompatLlm";
 import { zaiLlmProvider } from "./zaiLlm";
+import { geminiLlmProvider } from "./geminiLlm";
 import { isZEngineConfigured } from "../engineConfig";
+import { resolveGeminiConfig } from "../settings";
 import { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT } from "./systemPrompt";
 
 export type { IntentRequest, IntentAnalysis, LlmProvider, DesignIntentType } from "./types";
 export { INTENT_LABELS } from "./types";
-export { heuristicUnderstandIntent, heuristicLlmProvider, openAiCompatLlmProvider, zaiLlmProvider };
+export { heuristicUnderstandIntent, heuristicLlmProvider, openAiCompatLlmProvider, zaiLlmProvider, geminiLlmProvider };
 export { HOMEINO_SYSTEM_PROMPT, HOMEINO_RETRY_HINT };
 
 export interface ResolvedLlm {
   llm: LlmProvider;
-  /** "openai-compat"/"zai-engine" = real remote LLM · "heuristic" = built-in engine */
-  source: "openai-compat" | "zai-engine" | "heuristic";
+  /** "openai-compat"/"zai-engine"/"gemini" = real remote LLM · "heuristic" = built-in engine */
+  source: "openai-compat" | "zai-engine" | "gemini" | "heuristic";
 }
 
 export async function resolveLlm(): Promise<ResolvedLlm> {
@@ -37,6 +41,12 @@ export async function resolveLlm(): Promise<ResolvedLlm> {
   if (isZEngineConfigured()) {
     try {
       return { llm: zaiLlmProvider, source: "zai-engine" };
+    } catch { /* fall through */ }
+  }
+  // Google Gemini — کلید از پنل ادمین (DB رمزنگاری‌شده) یا env (settings.ts)
+  if ((await resolveGeminiConfig()).apiKey) {
+    try {
+      return { llm: geminiLlmProvider, source: "gemini" };
     } catch { /* fall through */ }
   }
   return { llm: heuristicLlmProvider, source: "heuristic" };

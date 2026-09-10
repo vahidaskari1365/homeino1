@@ -21,6 +21,7 @@ import type { AiProvider } from "./types";
 import { mockAiProvider } from "./mockAiService";
 import { isOpenAiCompatConfigured } from "./llm/openaiCompatLlm";
 import { isZEngineConfigured } from "./engineConfig";
+import { resolveGeminiConfig } from "./settings";
 
 export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat" | "pollinations";
 export interface ResolvedProvider { provider: AiProvider; name: ProviderName }
@@ -46,7 +47,8 @@ export function imageDispatchPlan(action: ImageAction, primary: ProviderName): P
 }
 
 export async function resolveProvider(): Promise<ResolvedProvider> {
-  if (process.env.GEMINI_API_KEY) {
+  // کلید از پنل ادمین (DB رمزنگاری‌شده) یا env — settings.ts اولویت را حل می‌کند
+  if ((await resolveGeminiConfig()).apiKey) {
     try {
       const m = await import("./geminiProvider");
       return { provider: m.geminiProvider, name: "gemini" };
