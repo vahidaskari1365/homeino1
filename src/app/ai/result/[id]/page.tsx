@@ -47,7 +47,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
     // REAL continue-editing: reopens the studio with this session restored
     // (was: a fake toast that claimed an editor opened).
     if (design) router.push(`/ai/design?session=${design.id}`);
-    else toast("اول صبر کن طراحی بارگذاری شود", "info");
+    else toast("اول صبر کن تا طراحی بارگذاری شود", "info");
   };
 
   const onDownload = () => {
@@ -108,7 +108,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
       <Container className="py-8">
         <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "هومینو استودیو", href: "/ai/design" }, { label: "نتیجه طراحی" }]} />
         <div className="mt-8">
-          <EmptyState icon={<History size={28} />} title="طراحی‌ای پیدا نشد" desc="هنوز سشنی برای این آدرس ذخیره نشده." action={<Link href="/ai/design"><Button>شروع طراحی</Button></Link>} />
+          <EmptyState icon={<History size={28} />} title="طراحی‌ای پیدا نشد" desc="هنوز طراحی‌ای برای این آدرس ذخیره نشده." action={<Link href="/ai/design"><Button>شروع طراحی</Button></Link>} />
         </div>
       </Container>
     );
@@ -149,7 +149,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
             <div className="mb-2 text-xs text-ink-muted">جزئیات</div>
             <div className="flex justify-between py-1 text-sm"><span className="text-ink-muted">حالت</span><span className="font-medium text-ink">{modeLabel(design.scope)}</span></div>
             <div className="flex justify-between py-1 text-sm"><span className="text-ink-muted">تاریخ</span><span className="font-medium text-ink">{faDate(design.createdAt)}</span></div>
-            <div className="flex justify-between py-1 text-sm"><span className="text-ink-muted">وضعیت</span><span className="font-medium text-success">تکمیل شده</span></div>
+            <div className="flex justify-between py-1 text-sm"><span className="text-ink-muted">وضعیت</span><span className="font-medium text-success">تکمیل‌شده</span></div>
           </div>
 
           <Link href="/ai/design"><Button className="mt-5 w-full"><Wand2 size={18} /> طراحی جدید بساز</Button></Link>

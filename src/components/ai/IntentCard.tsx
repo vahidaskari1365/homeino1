@@ -24,7 +24,7 @@ export function IntentCard({
     if (understanding) {
       return (
         <div className="flex items-center gap-2 rounded-xl border border-clay/40 bg-cream px-3.5 py-2.5 text-2xs text-ink-muted">
-          <Loader2 size={13} className="animate-spin text-terracotta-deep" /> دارم درک می‌کنم چه چیزی می‌خواهی عوض کنی…
+          <Loader2 size={13} className="animate-spin text-terracotta-deep" /> دارم می‌فهمم چه چیزی را می‌خواهی عوض کنی…
         </div>
       );
     }

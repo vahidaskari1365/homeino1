@@ -59,7 +59,7 @@ export default function SecondHandAdForm() {
       setBusy(false);
       return;
     }
-    toast("آگهی تو ثبت شد و در بازار دسته دوم منتشر شد");
+    toast("آگهی تو ثبت شد و در بازار دست‌دوم منتشر شد");
     router.push("/account/ads");
   }
 
@@ -120,7 +120,7 @@ export default function SecondHandAdForm() {
       </div>
       <div className="sm:col-span-2 flex items-center gap-2 rounded-lg bg-ivory-2 p-3 text-2xs leading-6 text-ink-muted">
         <Tag size={14} className="shrink-0" />
-        <span>آگهی تو بلافاصله در صفحهٔ «بازار دسته دوم» با برچسب «آگهی تو» منتشر می‌شود و در همین حساب هم ذخیره می‌ماند.</span>
+        <span>آگهی تو بلافاصله در صفحهٔ «بازار دست‌دوم» با برچسب «آگهی تو» منتشر می‌شود و در همین حساب هم ذخیره می‌ماند.</span>
       </div>
       <div className="sm:col-span-2"><Button type="submit" disabled={busy}>ثبت آگهی</Button></div>
     </form>

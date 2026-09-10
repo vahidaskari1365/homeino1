@@ -122,7 +122,7 @@ export function ItemPicker({ studio }: { studio: DesignStudio }) {
 
       <p className="mt-2 text-xs leading-5 text-ink-muted">
         {totalSel > 0
-          ? `${toFa(totalSel)} گروه وسایل انتخاب شده — هر چیپ یک دسته است، برای تغییر کلیک کن.`
+          ? `${toFa(totalSel)} گروه وسایل انتخاب‌شده — هر چیپ یک دسته است، برای تغییر کلیک کن.`
           : "روی هر چیپ بزن و وسایل موردنظرت را تیک بزن — یا بدون انتخاب، هومینو یک چیدمان کامل پیش‌فرض می‌چیند."}
       </p>
     </div>

@@ -58,7 +58,7 @@ export function buildScopeSummary(
   fallback: { targets: RoomElement[]; summary: string; lockedElements: RoomElement[] },
 ): string {
   const targets = res.instruction.targets.length ? res.instruction.targets : fallback.targets;
-  if (res.scope === "whole_home") return "بازطراحی کل خانه — همه چیز قابل تغییر است";
+  if (res.scope === "whole_home") return "بازطراحی کل خانه — همه‌چیز قابل تغییر است";
   if (res.scope === "room") return "بازطراحی کل اتاق";
   if (res.scope === "area") return `ناحیه ${targets.join("، ")} تغییر می‌کند`;
   return fallback.summary;

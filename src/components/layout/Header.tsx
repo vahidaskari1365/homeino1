@@ -55,7 +55,7 @@ const NAV: { label: string; href: string; mega?: MegaKey; icon: typeof Package }
   { label: "سبک‌ها", href: "/styles", mega: "styles", icon: Palette },
   { label: "ترندها", href: "/trends", icon: TrendingUp },
   { label: "مجله", href: "/magazine", icon: BookOpen },
-  { label: "دسته دوم", href: "/second-hand", icon: Tag },
+  { label: "دست‌دوم", href: "/second-hand", icon: Tag },
 ];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -140,7 +140,7 @@ function AiFeatureCard() {
           <span className="text-gold-gradient">طراحی و چیدمان کن</span>
         </h3>
         <p className="mt-2 text-[13px] leading-6 text-cream/70">
-          عکس اتاقت را بفرست، چیدمان پیشنهادی بگیر و محصولات هماهنگ با سبکت را همان‌جا کشف کن.
+          عکس اتاقت را بفرست، چیدمان پیشنهادی بگیر و محصولات هماهنگ با سبکت را همان‌جا پیدا کن.
         </p>
       </div>
 
@@ -499,7 +499,7 @@ export function Header() {
               aria-label="جستجو"
             >
               <Search size={16} className="transition-transform duration-300 group-hover:scale-110" />
-              <span className="hidden text-[12px] xl:inline">جستجو در خانه‌نو…</span>
+              <span className="hidden text-[12px] xl:inline">جستجو در هومینو…</span>
               <kbd className="hidden place-items-center rounded-md border border-clay/60 bg-ivory-2 px-1.5 py-0.5 text-2xs font-bold text-ink-muted xl:grid">
                 ⌘K
               </kbd>

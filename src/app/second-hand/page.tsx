@@ -82,10 +82,10 @@ export default function SecondHandPage() {
   return (
     <Container className="py-10">
       <PageHeader
-        eyebrow="بازار دسته دوم"
-        title="محصولات دسته دوم خانه"
+        eyebrow="بازار دست‌دوم"
+        title="محصولات دست‌دوم خانه"
         desc="وسایل خانگی کم‌استفاده و سالم را با قیمت مناسب پیدا کن، یا وسایل خودت را آگهی کن."
-        action={<Button onClick={() => setShowForm(!showForm)}><Plus size={16} /> ثبت آگهی دسته دوم</Button>}
+        action={<Button onClick={() => setShowForm(!showForm)}><Plus size={16} /> ثبت آگهی دست‌دوم</Button>}
       />
 
       {/* CTA banner */}
@@ -94,7 +94,7 @@ export default function SecondHandPage() {
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-sage/15 text-sage"><Recycle size={24} /></span>
           <div>
             <h3 className="font-display font-bold text-ink">اقتصاد چرخشی خانه</h3>
-            <p className="text-sm text-ink-muted">با خرید دسته دوم، هم صرفه‌جویی کن و هم به محیط‌زیست کمک کن.</p>
+            <p className="text-sm text-ink-muted">با خرید دست‌دوم، هم صرفه‌جویی کن و هم به محیط‌زیست کمک کن.</p>
           </div>
         </div>
         <div className="flex gap-6">
@@ -140,7 +140,7 @@ export default function SecondHandPage() {
               <SmartImage src={p.image} alt={p.title} className="absolute inset-0 h-full w-full" />
               <div className="absolute right-2 top-2 flex flex-col gap-1">
                 <span className={cn("rounded-full border px-2 py-0.5 text-2xs font-bold", CONDITIONS[p.condition])}>{p.condition}</span>
-                <span className="flex items-center gap-0.5 rounded-full bg-gold/90 px-2 py-0.5 text-2xs font-bold text-ink"><TrendingDown size={10} /> دسته دوم</span>
+                <span className="flex items-center gap-0.5 rounded-full bg-gold/90 px-2 py-0.5 text-2xs font-bold text-ink"><TrendingDown size={10} /> دست‌دوم</span>
                 {p.mine && <span className="flex items-center gap-0.5 rounded-full bg-sage px-2 py-0.5 text-2xs font-bold text-cream"><Tag size={10} /> آگهی تو</span>}
                 {p.status === "sold" && <span className="rounded-full bg-ink/80 px-2 py-0.5 text-2xs font-bold text-cream">فروخته شد</span>}
               </div>
@@ -166,7 +166,7 @@ export default function SecondHandPage() {
         ))}
       </div>
 
-      <p className="mt-6 text-center text-sm text-ink-muted">آگهی‌های دسته دوم توسط کاربران ثبت می‌شوند. Homeino مسئولیت محتوای آگهی را ندارد.</p>
+      <p className="mt-6 text-center text-sm text-ink-muted">آگهی‌های دست‌دوم توسط کاربران ثبت می‌شوند. Homeino مسئولیت محتوای آگهی را ندارد.</p>
     </Container>
   );
 }

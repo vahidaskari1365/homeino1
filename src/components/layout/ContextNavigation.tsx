@@ -23,7 +23,7 @@ const exact: Record<string, RouteContext> = {
   "/wishlist": { parentHref: "/", parentLabel: "خانه", currentLabel: "ذخیره‌ها" },
   "/collections": { parentHref: "/wishlist", parentLabel: "ذخیره‌ها", currentLabel: "کالکشن‌های من" },
   "/compare": { parentHref: "/products", parentLabel: "محصولات", currentLabel: "مقایسه" },
-  "/second-hand": { parentHref: "/", parentLabel: "خانه", currentLabel: "دسته دوم" },
+  "/second-hand": { parentHref: "/", parentLabel: "خانه", currentLabel: "دست‌دوم" },
   "/magazine": { parentHref: "/", parentLabel: "خانه", currentLabel: "مجله" },
   "/projects": { parentHref: "/", parentLabel: "خانه", currentLabel: "پروژه‌ها" },
   "/ai": { parentHref: "/", parentLabel: "خانه", currentLabel: "طراحی هوشمند اتاق" },

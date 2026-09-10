@@ -13,7 +13,7 @@ const STYLES = [
   { id: "office", label: "اداری", image: IMG.decor7 },
 ];
 
-const ROOM_TYPES = [["living", "نشیمن"], ["bedroom", "خواب"], ["kitchen", "آشپزخانه"], ["bathroom", "حمام"], ["office", "کار"], ["dining", "ناهارخوری"], ["outdoor", "باز"]] as const;
+const ROOM_TYPES = [["living", "نشیمن"], ["bedroom", "اتاق خواب"], ["kitchen", "آشپزخانه"], ["bathroom", "حمام"], ["office", "فضای کار"], ["dining", "ناهارخوری"], ["outdoor", "فضای باز"]] as const;
 const BUDGETS = [["low", "اقتصادی (تا ۱۰م)"], ["mid", "متوسط (۱۰-۵۰م)"], ["high", "بالا (۵۰-۱۰۰م)"], ["premium", "لوکس (۱۰۰م+)"]] as const;
 
 export function SuggestAssistant({ onApply, onBack }: { onApply: (p: { style: string; budget: string; roomType: string; colors: string[] }) => void; onBack: () => void }) {

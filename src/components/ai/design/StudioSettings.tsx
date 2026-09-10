@@ -61,7 +61,7 @@ export function StudioSettings({ studio }: { studio: DesignStudio }) {
         <Section n="۱" title="سبک دکوراسیون" hint="حال‌وهوای طراحی">
           <StylePicker studio={studio} />
         </Section>
-        <Section n="۲" title="وسایل" hint="اختیاری — پیش‌فرض هومینو کامل است">
+        <Section n="۲" title="وسایل" hint="اختیاری — بدون انتخاب، چیدمان کامل پیش‌فرض هومینو چیده می‌شود">
           <ItemPicker studio={studio} />
         </Section>
         <Section n="۳" title="بودجه، دستور و کد کالا" hint="همه اختیاری — برای دقت بیشتر">

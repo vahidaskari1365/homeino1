@@ -16,12 +16,12 @@ export default function StoresPage() {
     { id: "all", label: "همه", icon: StoreIcon },
     { id: "trending", label: "محبوب", icon: Flame },
     { id: "new", label: "جدید", icon: Sparkles },
-    { id: "verified", label: "تأیید شده", icon: CheckCircle2 },
+    { id: "verified", label: "تأییدشده", icon: CheckCircle2 },
   ] as const;
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="فروشگاه‌ها" title="فروشگاه‌ها و برندها" desc={`${toFa(stores.length)} فروشگاه منتخب در سراسر کشور. محصولات هر فروشگاه را کاوش کن.`} />
+      <PageHeader eyebrow="فروشگاه‌ها" title="فروشگاه‌ها و برندها" desc={`${toFa(stores.length)} فروشگاه منتخب در سراسر کشور. محصولات هر فروشگاه را ببین.`} />
       <div className="mb-8 flex flex-wrap gap-2">
         {tabs.map((t) => <Chip key={t.id} active={filter === t.id} onClick={() => setFilter(t.id)}>{t.label}</Chip>)}
       </div>

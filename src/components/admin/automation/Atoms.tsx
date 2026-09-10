@@ -53,7 +53,7 @@ const STATUS_TONE: Record<string, "neutral" | "success" | "accent" | "gold" | "d
 const STATUS_LABEL: Record<string, string> = {
   active: "فعال",
   completed: "کامل",
-  approved: "تأیید شده",
+  approved: "تأییدشده",
   running: "در حال اجرا",
   queued: "در صف",
   pending: "در انتظار",

@@ -14,7 +14,7 @@ export const STYLE_KEYWORDS: Record<string, string[]> = {
   modern: ["مدرن", "modern", "نوگرا"],
   minimal: ["مینیمال", "minimal", "ساده", "خلوت"],
   scandinavian: ["اسکاندیناوی", "scandinavian", "نوردیک"],
-  japandi: ["ژاپندی", "japandi", "ژاپن"],
+  japandi: ["ژاپندی", "japandi", "ژاپن", "جاپندی", "جاپاندی", "جپندی"],
   classic: ["کلاسیک", "classic", "سلطنتی"],
   neoclassical: ["نئوکلاسیک", "neoclassical", "نئو کلاسیک"],
   industrial: ["صنعتی", "industrial", "لوфт"],

@@ -33,7 +33,7 @@ const MENU = [
   { label: "الهام و ایده", href: "/inspiration", icon: Lightbulb },
   { label: "سبک‌های چیدمان", href: "/styles", icon: Palette },
   { label: "مجله هومینو", href: "/magazine", icon: BookOpen },
-  { label: "دسته دوم", href: "/second-hand", icon: Tag },
+  { label: "دست‌دوم", href: "/second-hand", icon: Tag },
   { label: "علاقه‌مندی‌ها", href: "/wishlist", icon: Heart },
   { label: "مقایسه محصولات", href: "/compare", icon: GitCompare },
   { label: "حساب کاربری", href: "/account", icon: User },
@@ -144,7 +144,7 @@ export function MobileNav() {
                 className="relative flex-1 overflow-y-auto px-4 py-5"
               >
                 <motion.div variants={row} className="mb-3 px-2 text-2xs font-bold uppercase tracking-wider text-ink-muted">
-                  کاوش خانه‌نو
+                  کاوش در هومینو
                 </motion.div>
 
                 <div className="space-y-1">

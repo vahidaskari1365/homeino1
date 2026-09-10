@@ -116,7 +116,7 @@ export default async function InspirationDetailPage({ params }: { params: Promis
 
           <div className="mt-6 flex flex-wrap gap-2">
             <Link href="/ai/design" className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium">
-              <Wand2 size={16} /> بساز مشابهش با هومینو استودیو
+              <Wand2 size={16} /> مشابهش را با هومینو استودیو بساز
             </Link>
             {style && (
               <Link href={`/styles/${style.slug}`} className="btn-ghost inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium">

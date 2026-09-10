@@ -29,7 +29,7 @@ export default function ComparePage() {
     return (
       <Container className="py-16">
         <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "مقایسه" }]} />
-        <div className="mt-8"><EmptyState icon={<GitCompare size={32} />} title="هیچ محصولی برای مقایسه نیست" desc="از روی کارت محصولات، آن‌ها را برای مقایسه اضافه کن." action={<Link href="/products"><Button>کاوش محصولات</Button></Link>} /></div>
+        <div className="mt-8"><EmptyState icon={<GitCompare size={32} />} title="هیچ محصولی برای مقایسه نیست" desc="محصولات را از روی کارت‌ها به مقایسه اضافه کن." action={<Link href="/products"><Button>مشاهده محصولات</Button></Link>} /></div>
       </Container>
     );
   }

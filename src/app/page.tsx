@@ -169,14 +169,14 @@ export default function HomePage() {
                 </Badge>
               </motion.div>
               <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
-                خانه ایی که <span className="text-gold-gradient">شبیه توست</span> ، همین جا آغاز می شود
+                خانه‌ای که <span className="text-gold-gradient">شبیه توست</span>، همین‌جا آغاز می‌شود
               </motion.h1>
               <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.25 }} className="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-cream/80">
-                سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز
+                سبک خودت را انتخاب کن و خانهٔ رؤیایی‌ات را بساز
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-cream px-6 py-3 font-bold text-ink transition hover:translate-y-[-2px] hover:shadow-gold">
-                  <Search size={18} /> کشف محصولات
+                  <Search size={18} /> مشاهده محصولات
                 </Link>
                 <Link href="/ai/design" className="inline-flex items-center justify-center gap-2 rounded-xl border border-cream/30 px-5 py-3 font-medium text-cream transition hover:bg-white/10">
                   <Wand2 size={18} /> طراحی فضای من با هومینو استودیو
@@ -216,7 +216,7 @@ export default function HomePage() {
       {/* ===== CATEGORIES ===== */}
       <section className="section-space-sm">
         <Container>
-          <Reveal><SectionHeading eyebrow="سریع پیدا کن" title="از کجای خانه شروع می‌کنی؟" desc="دسته‌بندی‌های اصلی را بر اساس فضای خانه و نیازت کاوش کن." action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">همه محصولات <ArrowLeft size={16} /></Link>} /></Reveal>
+          <Reveal><SectionHeading eyebrow="سریع پیدا کن" title="از کجای خانه شروع می‌کنی؟" desc="دسته‌بندی‌های اصلی را بر اساس فضای خانه و نیازت مرور کن." action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">همه محصولات <ArrowLeft size={16} /></Link>} /></Reveal>
           <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {categories.slice(0, 6).map((category) => (
               <RevealItem key={category.id}>
@@ -233,7 +233,7 @@ export default function HomePage() {
       {/* ===== SHOP BY STYLE ===== */}
       <section className="section-space-sm border-y border-clay/25 bg-cream/38">
         <Container>
-          <Reveal><SectionHeading eyebrow="خرید بر اساس سبک" title="محصولی که دوست داری را از روی سبک مورد علاقت پیدا و انتخاب کن" desc="روی سبک مورد علاقه‌ات بزن تا محصولات هماهنگ با همان سبک برایت مرتب و نمایش داده شود؛ داخل صفحه‌ی هر سبک می‌توانی بر اساس دسته‌بندی‌های سایت هم فیلتر کنی." action={<Link href="/styles" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">راهنمای همه سبک‌ها <ArrowLeft size={16} /></Link>} /></Reveal>
+          <Reveal><SectionHeading eyebrow="خرید بر اساس سبک" title="محصولی که دوستش داری را از روی سبک مورد علاقه‌ات پیدا و انتخاب کن" desc="روی سبک مورد علاقه‌ات بزن تا محصولات هماهنگ با همان سبک برایت مرتب و نمایش داده شوند؛ داخل صفحه‌ی هر سبک می‌توانی بر اساس دسته‌بندی‌های سایت هم فیلتر کنی." action={<Link href="/styles" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">راهنمای همه سبک‌ها <ArrowLeft size={16} /></Link>} /></Reveal>
           <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
             {styles.map((style) => (
               <RevealItem key={style.id}>
@@ -286,7 +286,7 @@ export default function HomePage() {
       {/* ===== INSPIRATION ===== */}
       <section className="section-space-sm">
         <Container>
-          <Reveal><SectionHeading eyebrow="فضاهای واقعی" title="ببین، الهام بگیر، همان چیدمان را بخر" desc="هر تصویر به محصولات واقعی متصل است؛ فاصله الهام تا خرید فقط چند لمس." action={<Link href="/inspiration" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">ورود به گالری <ArrowLeft size={16} /></Link>} /></Reveal>
+          <Reveal><SectionHeading eyebrow="فضاهای واقعی" title="ببین، الهام بگیر، همان چیدمان را بخر" desc="هر تصویر به محصولات واقعی متصل است؛ فاصلهٔ الهام تا خرید فقط چند لمس است." action={<Link href="/inspiration" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">ورود به گالری <ArrowLeft size={16} /></Link>} /></Reveal>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">{inspirations.slice(0, 7).map((inspiration, index) => <div key={inspiration.id} className={index === 0 ? "col-span-2 row-span-2" : ""}><InspirationCard insp={inspiration} index={index} /></div>)}</div>
         </Container>
       </section>
@@ -363,7 +363,7 @@ export default function HomePage() {
       <section className="pb-8 sm:pb-12">
         <Container>
           <div className="overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-l from-terracotta-deep to-ink p-6 text-cream shadow-[var(--shadow-card)] sm:p-10">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران خانه‌دوست</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> کشف محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با هومینو استودیو</ButtonLink></div></div>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران دوستدار خانه</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> مشاهده محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با هومینو استودیو</ButtonLink></div></div>
           </div>
         </Container>
       </section>

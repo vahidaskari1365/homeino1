@@ -126,7 +126,7 @@ export function StoreCard({ store }: { store: Store }) {
         <div className="absolute inset-0 bg-ink/35" />
         {store.verified && (
           <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-cream/90 px-2 py-0.5 text-2xs font-medium text-ink">
-            <BadgeCheck size={13} className="text-sage" /> تأیید شده
+            <BadgeCheck size={13} className="text-sage" /> تأییدشده
           </span>
         )}
         {store.isNew && <span className="absolute left-3 top-3"><Badge tone="accent">جدید</Badge></span>}

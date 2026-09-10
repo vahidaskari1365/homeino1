@@ -107,7 +107,7 @@ export default function CollectionsPage() {
         </div>
       )}
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="کالکشن جدید" description="یک نام روشن انتخاب کن تا بعداً سریع پیدایش کنی." footer={<><Button variant="ghost" onClick={() => setCreateOpen(false)}>انصراف</Button><Button onClick={create} disabled={!title.trim()}>ساخت کالکشن</Button></>}>
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="کالکشن جدید" description="یک نام روشن انتخاب کن تا بعداً سریع پیداش کنی." footer={<><Button variant="ghost" onClick={() => setCreateOpen(false)}>انصراف</Button><Button onClick={create} disabled={!title.trim()}>ساخت کالکشن</Button></>}>
         <div className="space-y-4"><div><label htmlFor="collection-title" className="field-label">نام کالکشن</label><input id="collection-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="مثلاً اتاق نشیمن مینیمال" className="field-control" autoFocus /></div><div><label htmlFor="collection-description" className="field-label">توضیح کوتاه <span className="font-normal text-ink-muted">(اختیاری)</span></label><textarea id="collection-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="بودجه، سبک یا هر چیزی که برای این پروژه مهم است…" className="field-control resize-none" /></div></div>
       </Modal>
 

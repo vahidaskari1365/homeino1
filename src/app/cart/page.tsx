@@ -115,7 +115,7 @@ export default function CartPage() {
 
           {subtotal < PLATFORM.policies.freeShippingThreshold && (
             <div className="mb-4 rounded-xl border border-terracotta/30 bg-terracotta/5 p-3">
-              <p className="mb-2 flex items-center gap-1.5 text-xs text-ink"><Truck size={14} className="text-terracotta-deep" /> ارسال هر مرسوله با رسیدن به سقف، رایگان می‌شود.</p>
+              <p className="mb-2 flex items-center gap-1.5 text-xs text-ink"><Truck size={14} className="text-terracotta-deep" /> با رسیدن جمع هر مرسوله به سقف، ارسال آن رایگان می‌شود.</p>
             </div>
           )}
 

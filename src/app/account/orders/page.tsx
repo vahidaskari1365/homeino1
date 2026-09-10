@@ -81,7 +81,7 @@ export default function OrdersPage() {
             {serverOrders.map((o) => (
               <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-clay/30 px-3 py-2 text-sm">
                 <span className="font-bold text-ink">#{toFa(o.orderNumber)}</span>
-                <span className="text-xs text-ink-muted">{o.status === "pending" ? "در انتظار پرداخت" : o.status === "confirmed" ? "تأیید شده" : o.status}</span>
+                <span className="text-xs text-ink-muted">{o.status === "pending" ? "در انتظار پرداخت" : o.status === "confirmed" ? "تأییدشده" : o.status}</span>
                 <span className="font-bold text-ink">{toFa(formatPrice(o.total))} تومان</span>
                 {o.status === "pending" && (
                   <Button variant="ghost" size="sm" disabled={cancellingId === o.id} onClick={() => void cancelServer(o)}>
@@ -175,7 +175,7 @@ export default function OrdersPage() {
               ))}
               <div className="flex items-start gap-2 rounded-lg bg-ivory-2 p-3 text-2xs leading-6 text-ink-muted">
                 <X size={13} className="mt-0.5 shrink-0" />
-                <span>در دمو بدون دیتابیس: مرسولهٔ «{active.storeName}» را همان فروشگاه از پنل فروشنده جلو می‌برد و بقیه مرسوله‌ها طبق زمان‌بندی دمو (۶/۲۶/۷۴ ساعت) دقیق جلو می‌روند. هر تغییر همان لحظه در همین صفحه اعمال می‌شود.</span>
+                <span>در دمو بدون دیتابیس: مرسولهٔ «{active.storeName}» را همان فروشگاه از پنل فروشنده جلو می‌برد و بقیه مرسوله‌ها طبق زمان‌بندی دمو (۶، ۲۶ و ۷۴ ساعت) دقیق جلو می‌روند. هر تغییر همان لحظه در همین صفحه اعمال می‌شود.</span>
               </div>
               <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setTracking(null)}><ChevronLeft size={15} /> بستن</Button></div>
             </div>

@@ -35,7 +35,7 @@ function SearchInner() {
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="جستجو" title={term ? `نتایج برای «${term}»` : "جستجو در Homeino"} desc={term ? `${toFa(total)} نتیجه پیدا شد` : "هر چیزی دنبالش هستی اینجا پیدا کن."} />
+      <PageHeader eyebrow="جستجو" title={term ? `نتایج برای «${term}»` : "جستجو در Homeino"} desc={term ? `${toFa(total)} نتیجه پیدا شد` : "هر چیزی که دنبالش هستی اینجا پیدا کن."} />
 
       {!term ? (
         <EmptyState icon={<SearchX size={28} />} title="عبارتی برای جستجو وارد کن" desc="مثلاً: مبل کرم برای پذیرایی کوچک" />

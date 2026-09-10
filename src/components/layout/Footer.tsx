@@ -8,8 +8,8 @@ import { subscribeNewsletter } from "@/lib/commerceClient";
 import { useUi } from "@/stores/useApp";
 
 const COLS = [
-  { title: "کاوش", links: [["همه محصولات", "/products"], ["دسته دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["ترندهای روز", "/trends"], ["مجله", "/magazine"]] },
-  { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دسته دوم", "/second-hand"]] },
+  { title: "کاوش", links: [["همه محصولات", "/products"], ["دست‌دوم", "/second-hand"], ["الهام", "/inspiration"], ["پروژه‌ها", "/projects"], ["ترندهای روز", "/trends"], ["مجله", "/magazine"]] },
+  { title: "پلتفرم", links: [["فروشگاه‌ها", "/stores"], ["مقایسه", "/compare"], ["علاقه‌مندی", "/wishlist"], ["دست‌دوم", "/second-hand"]] },
   { title: "حساب کاربری", links: [["پروفایل", "/account/profile"], ["اعتبار هومینو استودیو", "/account/credits"], ["سفارش‌ها", "/account/orders"], ["آگهی‌های من", "/account/ads"], ["طراحی‌های من", "/account/designs"]] },
   { title: "پنل‌ها", links: [["پنل فروشنده", "/vendor"], ["پنل مدیریت", "/admin"], ["ثبت فروشگاه", "/register/vendor"], ["پیوستن به ما", "/register/vendor"]] },
   { title: "پشتیبانی", links: [["درباره هومینو", "/about"], ["تماس با ما", "/contact"], ["قوانین و مقررات", "/terms"], ["حریم خصوصی", "/privacy"], ["رویه بازگشت کالا", "/refund"]] },
@@ -32,8 +32,8 @@ function NewsletterForm() {
     if (res.ok) {
       setDoneMsg(res.data.message ?? "عضویت ثبت شد");
     } else {
-      setErr(res.message ?? "ثبت ناموفق بود — دوباره تلاش کن");
-      toast(res.message ?? "ثبت ناموفق بود", "error");
+      setErr(res.message ?? "عضویت ناموفق بود — دوباره تلاش کن");
+      toast(res.message ?? "عضویت ناموفق بود", "error");
     }
   };
   if (doneMsg) return <div className="flex items-center gap-1.5 rounded-lg bg-sage/20 px-3 py-2 text-xs font-bold text-sage-soft"><Check size={14} /> {doneMsg}</div>;

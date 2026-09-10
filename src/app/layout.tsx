@@ -9,11 +9,11 @@ import { organizationJsonLd, websiteJsonLd, jsonLdScript } from "@/lib/seo";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Homeino | خانه‌ ایی که شبیه توست، همین‌جا آغاز می‌شود",
+    default: "Homeino | خانه‌ای که شبیه توست، همین‌جا آغاز می‌شود",
     template: "%s | Homeino",
   },
   description:
-    "سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز — Homeino: بازارگاه خانه، دکوراسیون، مقایسه فروشگاه‌ها و طراحی هوشمند با هومینو استودیو.",
+    "سبک خودت را انتخاب کن و خانهٔ رؤیایی‌ات را بساز — Homeino: بازارگاه خانه، دکوراسیون، مقایسه فروشگاه‌ها و طراحی هوشمند با هومینو استودیو.",
   keywords: [
     "خرید مبلمان",
     "بازارگاه دکوراسیون",
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Homeino | خانه‌ ایی که شبیه توست، همین‌جا آغاز می‌شود",
-    description: "سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز — خانه، دکوراسیون، مقایسه فروشگاه و طراحی هوشمند.",
+    title: "Homeino | خانه‌ای که شبیه توست، همین‌جا آغاز می‌شود",
+    description: "سبک خودت را انتخاب کن و خانهٔ رؤیایی‌ات را بساز — خانه، دکوراسیون، مقایسه فروشگاه و طراحی هوشمند.",
     type: "website",
     locale: SITE.locale,
     siteName: SITE.name,
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Homeino | خانه‌ ایی که شبیه توست، همین‌جا آغاز می‌شود",
-    description: "سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز — بازارگاه خانه و دکوراسیون Homeino.",
+    title: "Homeino | خانه‌ای که شبیه توست، همین‌جا آغاز می‌شود",
+    description: "سبک خودت را انتخاب کن و خانهٔ رؤیایی‌ات را بساز — بازارگاه خانه و دکوراسیون Homeino.",
     images: [SITE.ogImage],
   },
   robots: {

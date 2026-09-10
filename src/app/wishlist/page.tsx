@@ -82,7 +82,7 @@ export default function WishlistPage() {
             emptyDescription="فیلتر سبک یا سایر فیلترهای علاقه‌مندی‌ها را تغییر بده."
           />
         </>
-      ) : <EmptyState icon={<Heart size={28} />} title="محصولی ذخیره نکرده‌ای" action={<Link href="/products"><Button>کاوش محصولات</Button></Link>} />)}
+      ) : <EmptyState icon={<Heart size={28} />} title="محصولی ذخیره نکرده‌ای" action={<Link href="/products"><Button>مشاهده محصولات</Button></Link>} />)}
       {tab === "inspirations" && (insp.length ? <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">{insp.map((i, idx) => i && <InspirationCard key={i.id} insp={i} index={idx} />)}</div> : <EmptyState icon={<ImageIcon size={28} />} title="ایده‌ای ذخیره نکرده‌ای" action={<Link href="/inspiration"><Button>گالری الهام</Button></Link>} />)}
       {tab === "designs" && (designs.length ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -94,7 +94,7 @@ export default function WishlistPage() {
           ))}
         </div>
       ) : <EmptyState icon={<Sparkles size={28} />} title="طراحی هومینو استودیو ذخیره نکرده‌ای" action={<Link href="/ai/design"><Button>ورود به هومینو استودیو</Button></Link>} />)}
-      {tab === "stores" && (stores.length ? <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{stores.map((s) => s && <StoreCard key={s.id} store={s} />)}</div> : <EmptyState icon={<StoreIcon size={28} />} title="فروشگاهی دنبال نمی‌کنی" action={<Link href="/stores"><Button>کاوش فروشگاه‌ها</Button></Link>} />)}
+      {tab === "stores" && (stores.length ? <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{stores.map((s) => s && <StoreCard key={s.id} store={s} />)}</div> : <EmptyState icon={<StoreIcon size={28} />} title="فروشگاهی دنبال نمی‌کنی" action={<Link href="/stores"><Button>مشاهده فروشگاه‌ها</Button></Link>} />)}
     </Container>
   );
 }

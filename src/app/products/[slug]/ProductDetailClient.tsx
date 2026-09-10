@@ -226,7 +226,7 @@ export default function ProductDetailClient({
               </div>
               {product!.inStock ? (
                 <span className="flex items-center gap-1.5 text-sm text-success"><Check size={16} /> موجود
-                  {product!.stockCount <= 10 && <b className="text-danger"> · فقط {toFa(product!.stockCount)} عدد باقی مانده!</b>}
+                  {product!.stockCount <= 10 && <b className="text-danger"> · فقط {toFa(product!.stockCount)} عدد باقی‌مانده!</b>}
                   {product!.stockCount > 10 && <span className="text-ink-muted">({toFa(product!.stockCount)} عدد)</span>}
                 </span>
               ) : (

@@ -73,10 +73,10 @@ export const CATEGORIES: CategoryDef[] = [
     { label: "میز اداری", desc: "فضای کافی لپ‌تاپ" }, { label: "صندلی ارگونومیک", desc: "تکیه‌گاه کمری" },
     { label: "مبلمان اداری", desc: "حرفه‌ای" }, { label: "نظم‌دهنده", desc: "آرشیو" }, { label: "چراغ رومیزی", desc: "متمرکز" },
   ]},
-  { slug: "second-hand", label: "دسته دوم", Icon: Recycle, subTypes: [
-    { label: "مبلمان دسته دوم", desc: "کم‌استفاده با قیمت مناسب" }, { label: "فرش دسته دوم", desc: "قالیچه سالم" },
-    { label: "نورپردازی دسته دوم", desc: "آباژور و لوستر" }, { label: "میز و صندلی دسته دوم", desc: "ناهارخوری" },
-    { label: "دکور دسته دوم", desc: "گلدان و اکسسوری" },
+  { slug: "second-hand", label: "دست‌دوم", Icon: Recycle, subTypes: [
+    { label: "مبلمان دست‌دوم", desc: "کم‌استفاده با قیمت مناسب" }, { label: "فرش دست‌دوم", desc: "قالیچه سالم" },
+    { label: "نورپردازی دست‌دوم", desc: "آباژور و لوستر" }, { label: "میز و صندلی دست‌دوم", desc: "ناهارخوری" },
+    { label: "دکور دست‌دوم", desc: "گلدان و اکسسوری" },
   ]},
 ];
 
@@ -89,14 +89,14 @@ export const CAT_PRODUCTS: Record<string, string[]> = {
 export const SECOND_HAND_AS_PRODUCTS: Record<string, Product[]> = (() => {
   const map: Record<string, Product[]> = {};
   secondHandProducts.forEach((sh) => {
-    const pseudo: Product = { id: sh.id, slug: sh.slug, name: sh.title + " (دسته دوم)", brand: sh.sellerName, storeId: "sh", categorySlug: sh.category, styleSlugs: [], price: sh.price, oldPrice: sh.originalPrice, currency: "تومان", rating: 4, reviewsCount: 0, images: [sh.image], colors: [], materials: [], description: sh.description, specs: [], inStock: true, stockCount: 1, purchaseCount: 0, tags: ["دسته دوم"] };
+    const pseudo: Product = { id: sh.id, slug: sh.slug, name: sh.title + " (دست‌دوم)", brand: sh.sellerName, storeId: "sh", categorySlug: sh.category, styleSlugs: [], price: sh.price, oldPrice: sh.originalPrice, currency: "تومان", rating: 4, reviewsCount: 0, images: [sh.image], colors: [], materials: [], description: sh.description, specs: [], inStock: true, stockCount: 1, purchaseCount: 0, tags: ["دست‌دوم"] };
     (map[sh.category] ??= []).push(pseudo);
   });
   const subMap: Record<string, Product[]> = {};
-  map.furniture?.forEach((p) => { (subMap["مبلمان دسته دوم"] ??= []).push(p); (subMap["میز و صندلی دسته دوم"] ??= []).push(p); });
-  map.rugs?.forEach((p) => { (subMap["فرش دسته دوم"] ??= []).push(p); });
-  map.lighting?.forEach((p) => { (subMap["نورپردازی دسته دوم"] ??= []).push(p); });
-  map.decor?.forEach((p) => { (subMap["دکور دسته دوم"] ??= []).push(p); });
+  map.furniture?.forEach((p) => { (subMap["مبلمان دست‌دوم"] ??= []).push(p); (subMap["میز و صندلی دست‌دوم"] ??= []).push(p); });
+  map.rugs?.forEach((p) => { (subMap["فرش دست‌دوم"] ??= []).push(p); });
+  map.lighting?.forEach((p) => { (subMap["نورپردازی دست‌دوم"] ??= []).push(p); });
+  map.decor?.forEach((p) => { (subMap["دکور دست‌دوم"] ??= []).push(p); });
   return subMap;
 })();
 export const DEFAULT_ROOM_IDS = ["p1", "p3", "p9", "p12", "p15", "p6"];

@@ -22,6 +22,7 @@ import { ProductOverlay } from "@/components/ProductOverlay";
 import { getProductById } from "@/data/products";
 import { toFa, formatPrice, cn } from "@/lib/utils";
 import { shareContent, buildShareUrl } from "@/lib/share";
+import { ELEMENT_LABELS } from "@/services/ai/roomState";
 import type { DesignStudio } from "./useDesignStudio";
 import { GenerationProgress } from "./GenerationProgress";
 import { RoomUploader } from "./RoomUploader";
@@ -84,7 +85,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                 </button>
               )}
               {!showComposite && compositeUrl && <button onClick={refreshComposite} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="به‌روزرسانی پیش‌نمایش ترکیب" title="به‌روزرسانی پیش‌نمایش ترکیب"><RefreshCw size={14} /></button>}
-              <button onClick={() => toast("برای ذخیره، از دکمه اشتراک‌گذاری استفاده کن")} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted hover:text-ink" aria-label="دانلود"><Download size={14} /></button>
+              <button onClick={() => toast("برای ذخیره، از صفحه نتیجه دکمه «دانلود» را بزن")} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted hover:text-ink" aria-label="دانلود"><Download size={14} /></button>
               <button onClick={async () => { const res = await shareContent({ title: "طراحی هوشمند خانه من", text: "با Homeino طراحی کردم", url: buildShareUrl("/ai") }); toast(res.method === "clipboard" ? "لینک کپی شد" : res.method === "native" ? "اشتراک‌گذاری شد" : "خطا", res.method === "failed" ? "error" : "success"); }} className="grid h-8 w-8 place-items-center rounded-lg bg-ivory-2 text-ink-muted transition hover:text-ink" aria-label="اشتراک‌گذاری"><Share2 size={14} /></button>
             </div>
           )}
@@ -262,7 +263,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                         ))}
                       </ul>
                       {glowPlans.length > 0 && (
-                        <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-5 text-gold"><Lightbulb size={13} className="mt-0.5 shrink-0" /> نور محصولات روشنایی، مطابق توضیحات هر محصول با شکل آن نمایش داده شده است.</p>
+                        <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-5 text-gold"><Lightbulb size={13} className="mt-0.5 shrink-0" /> نورپردازی محصولات، مطابق توضیحات هر محصول با شکل آن نمایش داده شده است.</p>
                       )}
                     </div>
                   )}
@@ -272,7 +273,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                     <div className="rounded-xl border border-gold/25 bg-gold/5 p-3.5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gold"><Lightbulb size={14} /> محدوده تغییر</div>
                       <p className="mt-1 text-xs leading-6 text-ink-muted">{lastScope.summary}</p>
-                      {lastScope.lockedElements.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{lastScope.lockedElements.slice(0, 6).map((el) => <span key={el} className="flex items-center gap-1 rounded bg-ivory-2 px-1.5 py-0.5 text-2xs text-ink-muted"><LockIcon size={10} /> {el}</span>)}</div>}
+                      {lastScope.lockedElements.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{lastScope.lockedElements.slice(0, 6).map((el) => <span key={el} className="flex items-center gap-1 rounded bg-ivory-2 px-1.5 py-0.5 text-2xs text-ink-muted"><LockIcon size={10} /> {ELEMENT_LABELS[el as keyof typeof ELEMENT_LABELS] ?? el}</span>)}</div>}
                     </div>
                   )}
 
@@ -298,7 +299,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                     </div>
                   )}
 
-                  {/* ---- گزارش فنی ایجنت‌ها: از نمای اصلی بردار شد؛ فقط جمع‌شونده فنی ---- */}
+                  {/* ---- گزارش فنی ایجنت‌ها: از نمای اصلی برداشته شد؛ فقط جمع‌شونده فنی ---- */}
                   {(studioReport || reportLoading) && (
                     <details className="overflow-hidden rounded-xl border border-clay/40 bg-ivory-2/60">
                       <summary className="flex cursor-pointer list-none select-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-bold text-ink transition hover:text-terracotta-deep [&::-webkit-details-marker]:hidden">

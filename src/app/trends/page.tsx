@@ -115,7 +115,7 @@ export default function TrendsPage() {
       {/* archive */}
       {archiveDates.length > 0 && (
         <section className="mt-14">
-          <SectionHeading eyebrow="آرشیو" title="روزهای پیشین" desc="بریف‌های ترند روزهای قبل، روزبه‌روز نگه‌داری می‌شوند." />
+          <SectionHeading eyebrow="آرشیو" title="روزهای پیشین" desc="بریف‌های ترند روزهای قبل، به‌صورت روزانه آرشیو می‌شوند." />
           <div className="flex flex-wrap gap-2">
             {archiveDates.map((d) => {
               const list = briefsByDate(d);

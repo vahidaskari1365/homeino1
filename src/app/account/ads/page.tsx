@@ -25,10 +25,10 @@ export default function MyAdsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-xl font-black text-ink">آگهی‌های من</h1>
-          <p className="text-sm text-ink-muted">آگهی‌های دسته دومی که خودت ثبت کرده‌ای — همین‌جا مدیریتشان کن.</p>
+          <p className="text-sm text-ink-muted">آگهی‌های دست‌دومی که خودت ثبت کرده‌ای — همین‌جا مدیریتشان کن.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/second-hand"><Button variant="outline">مشاهده بازار دسته دوم</Button></Link>
+          <Link href="/second-hand"><Button variant="outline">مشاهده بازار دست‌دوم</Button></Link>
           <Link href="/account/ads/new"><Button><Plus size={16} /> آگهی جدید</Button></Link>
         </div>
       </div>
@@ -64,13 +64,13 @@ export default function MyAdsPage() {
         <EmptyState
           icon={<Tag size={28} />}
           title="هنوز آگهی‌ای نداری"
-          desc="وسایل دسته دومی که لازم نداری را آگهی کن — با همان دسته‌بندی‌های خود سایت."
+          desc="وسایل دست‌دومی که لازم نداری را آگهی کن — با همان دسته‌بندی‌های خود سایت."
           action={<Link href="/account/ads/new"><Button><Plus size={16} /> ثبت اولین آگهی</Button></Link>}
         />
       )}
 
       {ads.length > 0 && (
-        <p className="flex items-center gap-2 text-2xs text-ink-muted"><RefreshCcw size={12} /> آگهی‌ها در همین مرورگر ذخیره می‌شوند و در صفحهٔ عمومی «دسته دوم» با برچسب «آگهی تو» نمایش داده می‌شوند.</p>
+        <p className="flex items-center gap-2 text-2xs text-ink-muted"><RefreshCcw size={12} /> آگهی‌ها در همین مرورگر ذخیره می‌شوند و در صفحهٔ عمومی «دست‌دوم» با برچسب «آگهی تو» نمایش داده می‌شوند.</p>
       )}
 
       <ConfirmDialog

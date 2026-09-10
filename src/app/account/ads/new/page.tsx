@@ -8,8 +8,8 @@ export default function NewAdPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display text-xl font-black text-ink">ثبت آگهی دسته دوم</h1>
-        <p className="text-sm text-ink-muted">کالایت را در دسته‌بندی خود سایت آگهی کن — بعد از ثبت، در بازار دسته دوم منتشر می‌شود.</p>
+        <h1 className="font-display text-xl font-black text-ink">ثبت آگهی دست‌دوم</h1>
+        <p className="text-sm text-ink-muted">کالایت را در دسته‌بندی خود سایت آگهی کن — بعد از ثبت، در بازار دست‌دوم منتشر می‌شود.</p>
       </div>
       <div className="card-surface p-6">
         <div className="mb-5 flex items-center gap-2 text-sm font-bold text-ink"><Tag size={16} /> مشخصات کالا</div>

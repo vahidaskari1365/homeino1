@@ -78,7 +78,7 @@ function mockChatReply(message: string, context?: string): string {
     }
     const rug = realProduct((p) => (p.subCategorySlug ?? "").match(/^(rug|carpet)$/) !== null);
     const throwP = realProduct((p) => p.subCategorySlug === "throw");
-    return `پالت خاکی با ترکیب کرم، شنی و یک رنگ تاکیدی مثل تراکوتا یا سبز مریم‌گلی، تعادلی دلنشین می‌سازه. رنگ غالب رو خنثی بگیر؛ ${rug ? `${citeProduct(rug)} یا` : ""} ${throwP ? citeProduct(throwP) : "یک بافت گرم"} می‌تونه نقطه‌ی تاکیدی فضا باشه.`;
+    return `پالت خاکی با ترکیب کرم، شنی و یک رنگ تأکیدی مثل تراکوتا یا سبز مریم‌گلی، تعادلی دلنشین می‌سازه. رنگ غالب رو خنثی بگیر؛ ${rug ? `${citeProduct(rug)} یا` : ""} ${throwP ? citeProduct(throwP) : "یک بافت گرم"} می‌تونه نقطه‌ی تأکیدی فضا باشه.`;
   }
 
   // Style questions
@@ -152,7 +152,7 @@ function mockChatReply(message: string, context?: string): string {
   if (/نور|چراغ|light|لوستر|آباژور/.test(msg)) {
     const lamp = realProduct((p) => p.subCategorySlug === "table-lamp");
     const ceiling = realProduct((p) => p.subCategorySlug === "ceiling");
-    return `نورپردازی سه لایه داره: محیطی (سقفی)، وظیفه‌ای (مطالعه/کار) و تاکیدی. نور گرم (۳۰۰۰K) حس دنجی و نور سرد (۴۰۰۰K) حس تمیزی می‌ده؛ ${[citeProduct(ceiling), citeProduct(lamp)].filter(Boolean).join(" و ")} دو محصول واقعی برای شروع‌ان. دایمر هم پیشنهاد طلایی‌ست.`;
+    return `نورپردازی سه لایه داره: محیطی (سقفی)، وظیفه‌ای (مطالعه/کار) و تأکیدی. نور گرم (۳۰۰۰K) حس دنجی و نور سرد (۴۰۰۰K) حس تمیزی می‌ده؛ ${[citeProduct(ceiling), citeProduct(lamp)].filter(Boolean).join(" و ")} دو محصول واقعی برای شروع‌ان. دایمر هم پیشنهاد طلایی‌ست.`;
   }
 
   // Fallback — still useful
