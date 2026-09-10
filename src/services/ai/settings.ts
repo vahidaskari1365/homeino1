@@ -39,8 +39,11 @@ export interface GeminiRuntimeConfig {
   enabled: boolean;
 }
 
-export const DEFAULT_TEXT_MODEL = "gemini-2.5-flash";
-export const DEFAULT_IMAGE_MODEL = "gemini-2.5-flash-image";
+// ۲۰۲۶-۰۹: گوگل مدل‌های 2.5 را برای کاربران جدید بازنشسته کرده —
+// نسل فعلی: gemini-3.6-flash (متن) و gemini-3.1-flash-image (Nano Banana 2).
+// ادمین می‌تواند از پنل مدل دیگری (مثل gemini-3-pro-image) ست کند.
+export const DEFAULT_TEXT_MODEL = "gemini-3.6-flash";
+export const DEFAULT_IMAGE_MODEL = "gemini-3.1-flash-image";
 
 // ------------------------------------------------------------
 // رمزنگاری — AES-256-GCM. کلید از APP_SECRET / AI_SETTINGS_SECRET /
@@ -131,7 +134,9 @@ export async function saveGeminiSettings(input: {
     let apiKeyEnc = prev?.apiKeyEnc ?? "";
     if (input.apiKey != null && input.apiKey.trim()) {
       const key = input.apiKey.trim();
-      if (!/^AIza[0-9A-Za-z_-]{30,}$/.test(key)) return { saved: false, reason: "قالب کلید گوگل معتبر نیست (باید با AIza شروع شود)" };
+      // کلید کلاسیک با AIza شروع می‌شود؛ کلیدهای جدید AI Studio (۲۰۲۶) با AQ.
+      if (!/^(?:AIza[0-9A-Za-z_-]{30,}|AQ\.[A-Za-z0-9_-]{30,})$/.test(key))
+        return { saved: false, reason: "قالب کلید گوگل معتبر نیست (باید با AIza یا AQ. شروع شود)" };
       apiKeyEnc = encryptSecret(key);
     }
     if (!apiKeyEnc) return { saved: false, reason: "هیچ کلیدی برای ذخیره وجود ندارد — ابتدا کلید را وارد کنید" };

@@ -4,7 +4,7 @@
 //   • key source: پنل ادمین (DB, encrypted) → env GEMINI_API_KEY
 //   • reasoning / chat / suggest → Gemini text model
 //   • image edit / generate / inpaint → Gemini image model
-//     (e.g. gemini-2.5-flash-image / "Nano Banana") which preserves
+//     (e.g. gemini-3.1-flash-image / "Nano Banana 2") which preserves
 //     the source image; degrades gracefully on any failure.
 // Keys NEVER reach the client. No FLUX / Veo / other models here.
 // ============================================================

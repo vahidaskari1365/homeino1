@@ -26,8 +26,9 @@ export const POST = guard(async (req) => {
   if (provider !== "gemini") throw ApiError.badRequest("الان فقط provider=gemini پشتیبانی می‌شود");
 
   const inlineKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
-  if (inlineKey && !inlineKey.startsWith("AIza")) {
-    return ok({ ok: false, provider, error: "قالب کلید معتبر نیست — کلید Google با AIza شروع می‌شود" });
+  // کلید کلاسیک: AIza… · کلیدهای جدید AI Studio (۲۰۲۶): AQ.…
+  if (inlineKey && !/^(?:AIza[0-9A-Za-z_-]{30,}|AQ\.[A-Za-z0-9_-]{30,})$/.test(inlineKey)) {
+    return ok({ ok: false, provider, error: "قالب کلید معتبر نیست — کلید Google با AIza یا AQ. شروع می‌شود" });
   }
 
   const cfg = await resolveGeminiConfig();
@@ -42,16 +43,24 @@ export const POST = guard(async (req) => {
     const res = await fetch(`${API}?pageSize=200&key=${encodeURIComponent(key)}`, { signal: controller.signal });
     if (!res.ok) {
       const status = res.status;
-      const detail =
-        status === 400 ? "کلید نامعتبر است (API_KEY_INVALID)" :
-        status === 403 ? "کلید معتبر نیست یا دسترسی Generative Language API ندارد" :
-        status === 429 ? "سقف درخواست موقتاً پر شده — بعداً تست کنید" :
-        "خطای گوگل";
+      let detail = "خطای گوگل";
+      try {
+        const body = (await res.json()) as { error?: { message?: string } };
+        const msg = body.error?.message ?? "";
+        if (/location is not supported/i.test(msg))
+          detail = "منطقه‌ی سرور فعلی توسط Gemini API پشتیبانی نمی‌شود (location block) — روی Vercel مشکلی نیست";
+        else if (/API_KEY_INVALID|api key not valid/i.test(msg)) detail = "کلید نامعتبر است (API_KEY_INVALID)";
+        else if (status === 403) detail = "کلید معتبر نیست یا دسترسی Generative Language API ندارد";
+        else if (status === 429) detail = "سقف درخواست موقتاً پر شده — بعداً تست کنید";
+      } catch {
+        /* بدنه‌ی خطا خوانده نشد — همان «خطای گوگل» */
+      }
       return ok({ ok: false, provider, error: `${detail} (HTTP ${status})` });
     }
     const data = (await res.json()) as { models?: { name?: string; supportedGenerationMethods?: string[] }[] };
     const models = (data.models ?? []).map((m) => (m.name ?? "").replace("models/", ""));
-    const hasText = models.some((m) => m.startsWith("gemini-2.5-flash") || m.startsWith("gemini-flash"));
+    // متن: هر Gemini فلشِ بدون تصویر — نسل 2.5/3.x/4 و آینده
+    const hasText = models.some((m) => /^gemini-\d/.test(m) && m.includes("flash") && !m.includes("image"));
     const hasImage = models.includes(cfg.imageModel) || models.some((m) => m.includes("flash-image") || m.includes("nano-banana"));
     return ok({
       ok: true,
