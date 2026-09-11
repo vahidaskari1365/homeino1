@@ -1,7 +1,31 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-11T05:19:52.231Z",
+  "updatedAt": "2026-09-11T08:21:26.056Z",
   "runs": [
+    {
+      "id": "run-1789114886056-dxjli",
+      "at": "2026-09-11T08:21:26.056Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 445691,
+      "summary": "6 پین الهام جدید (بازنویسی LLM)",
+      "detail": {
+        "added": 6,
+        "total": 127,
+        "via": "llm",
+        "poolRemaining": 638,
+        "skippedStarved": 0,
+        "combos": [
+          "کلاسیک × فضای کار",
+          "نئوکلاسیک × حیاط و محوطه",
+          "بوهو × اتاق خواب",
+          "روستیک × ناهارخوری",
+          "معاصر × پذیرایی",
+          "آرت دکو × فضای کار"
+        ]
+      }
+    },
     {
       "id": "run-1789103992231-5d7yx",
       "at": "2026-09-11T05:19:52.231Z",
