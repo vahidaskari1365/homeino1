@@ -84,12 +84,13 @@ function parseAttempts() {
   return attempts;
 }
 
-export async function callLlm(messages) {
+export async function callLlm(messages, opts = {}) {
   const attempts = parseAttempts();
 
   for (const a of attempts) {
+    const maxTokens = opts.maxTokens ?? a.maxTokens;
     for (let tryNo = 0; tryNo < 2; tryNo++) {
-      const r = await chatCompletion(a.base, a.model, a.key, messages, a.maxTokens);
+      const r = await chatCompletion(a.base, a.model, a.key, messages, maxTokens);
       if (r.content && r.content.trim()) {
         if (tryNo > 0 || a !== attempts[0]) console.log(`  llm via ${a.id}${tryNo ? " (retry)" : ""}`);
         callLlm.lastVia = a.id;

@@ -461,6 +461,30 @@ async function main() {
   }
 
   if (created.length === 0) {
+    // مقالهٔ امروز می‌تواند از بریفِ همین‌روزِ موجود ساخته شود (بدون بریف جدید)
+    const todaysBrief = existing.find((b) => b.date === today);
+    if (todaysBrief) {
+      try {
+        const realUrl2 = await resolveRealSourceUrl(todaysBrief.source?.url ?? "");
+        const html2 = await fetchText(realUrl2, 11000);
+        const art = await generateDailyArticle(
+          { brief: todaysBrief, item: null, realUrl: realUrl2, sourceText: stripHtml(html2).slice(0, 3000) },
+          { dateFa, today },
+        );
+        if (art) {
+          await logContentAgentRun(REPO, {
+            agentKey: "magazine-editor",
+            ok: true,
+            durationMs: Date.now() - RUN_STARTED,
+            summary: `۱ مقاله کامل مجله از بریف امروز («${art.title.slice(0, 40)}…») — بریف جدیدی نبود`,
+            detail: { added: 0, articlesAdded: 1, total: existing.length, via: callLlm.lastVia ?? "unknown" },
+          });
+          return;
+        }
+      } catch (e) {
+        console.log(`[magazine-daily] article-from-existing failed: ${e.message}`);
+      }
+    }
     const via = callLlm.lastVia ?? null;
     const summary = via
       ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود، همه تکراری بودند یا خروجی معتبر نبود"
@@ -538,8 +562,9 @@ const ARTICLE_PROMPT = (brief, sourceText, dateFa) => [
       "- title: فارسی، تازه و متفاوت از عنوان بریف، حداکثر ~۷۰ کاراکتر.\n" +
       "- excerpt: ۱ تا ۲ جمله جذاب (۳۰ تا ۵۵ واژه) برای کارت مقاله.\n" +
       `- category: دقیقاً یکی از ${JSON.stringify(CATEGORIES_FA)}.\n` +
-      "- paragraphs: ۵ تا ۷ پاراگراف؛ هر پاراگراف ۳ تا ۵ جملهٔ پیوسته (۶۰ تا ۱۰۰ واژه)؛ بدون شماره‌گذاری و بدون تیتر داخل متن؛ " +
-      "سیر مقاله: ورود به ماجرا → پیش‌زمینه و چرایی اهمیت → جزئیات اجرایی و متریال/رنگ/نور → کاربرد در خانه‌های ایرانی (متراژ، اقلیم، بودجه) → اشتباه‌های رایج → جمع‌بندی.\n" +
+      "- paragraphs: ۴ تا ۶ پاراگراف؛ هر پاراگراف ۳ تا ۴ جملهٔ پیوسته (۵۰ تا ۸۰ واژه)؛ بدون شماره‌گذاری و بدون تیتر داخل متن؛ " +
+      "سیر مقاله: ورود به ماجرا → چرایی اهمیت → کاربرد در خانه‌های ایرانی → جمع‌بندی.\n" +
+      "- کل خروجی را در حد ۹۰۰ تا ۱۳۰۰ واژه نگه دار؛ از طول اضافه خودداری کن تا پاسخ ناقص نشود.\n" +
       `تاریخ امروز (شمسی، برای ارجاع ذهنی خودت): ${dateFa}`,
   },
 ];
@@ -559,8 +584,18 @@ async function generateDailyArticle(leadCtx, { dateFa, today }) {
   }
 
   const brief = leadCtx.brief;
-  const out = await callLlm(ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa));
-  const parsed = extractJson(out);
+  const out1 = await callLlm(ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa), { maxTokens: 3600 });
+  let parsed = extractJson(out1);
+  if (!parsed || !parsed.title || !Array.isArray(parsed.paragraphs)) {
+    // تلاش دوم — خروجی قبلی ناقص/نامعتبر بوده؛ خواسته‌ی کوتاه‌تر
+    console.log("[magazine-daily] article: first attempt invalid — retrying shorter");
+    const retryMsg = [
+      ...ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa).slice(0, -1),
+      { role: "user", content: "پاسخ قبلی معتبر نبود. این‌بار فقط و فقط یک بلوک ```json ``` برگردان با «۴ پاراگرافِ ۳ جمله‌ای» و هیچ متن اضافه‌ای بیرون از JSON ننویس." },
+    ];
+    const out2 = await callLlm(retryMsg, { maxTokens: 2600 });
+    parsed = extractJson(out2);
+  }
   if (!parsed || !parsed.title || !Array.isArray(parsed.paragraphs)) {
     console.log("[magazine-daily] article: invalid LLM output — skipped");
     return null;
@@ -568,7 +603,7 @@ async function generateDailyArticle(leadCtx, { dateFa, today }) {
 
   const paragraphs = parsed.paragraphs.map((p) => String(p).trim()).filter(Boolean);
   const totalChars = paragraphs.join(" ").length;
-  if (paragraphs.length < 4 || totalChars < 700) {
+  if (paragraphs.length < 3 || totalChars < 550) {
     console.log(`[magazine-daily] article: too short (${paragraphs.length} §, ${totalChars} chars) — skipped`);
     return null;
   }
