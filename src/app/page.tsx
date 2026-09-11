@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Search, Sparkles, ArrowLeft, Play, Wand2, ChevronDown, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, HeartHandshake, Truck } from "lucide-react";
+import { Search, Sparkles, ArrowLeft, Play, Wand2, ChevronDown, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, HeartHandshake, Truck, X } from "lucide-react";
 import { Container, SectionHeading, Badge, ButtonLink, Rating } from "@/components/ui/primitives";
 import { StoreCard, InspirationCard } from "@/components/cards";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
@@ -24,6 +24,18 @@ export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  // Intro flow: "wait" = mounted, autoplay not confirmed yet · "play" = the
+  // intro video is playing solo (copy hidden) · "done" = video finished (or
+  // was skipped / blocked) and the copy is on stage.
+  const [intro, setIntro] = useState<"wait" | "play" | "done">("wait");
+  const showText = intro === "done";
+
+  const endIntro = () => {
+    const v = videoRef.current;
+    if (v && !v.paused) v.pause();
+    setIntro("done");
+  };
+
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
   const scaleBg = useTransform(scrollYProgress, [0, 1], [1.08, 1.22]);
@@ -33,10 +45,13 @@ export default function HomePage() {
     const v = videoRef.current;
     if (!v) return;
 
-    // Respect the user's data-saver preference: the hero works perfectly with
-    // its static poster (gradient overlays animate on top) — on metered
-    // connections we simply never start the video stream.
-    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-data: reduce)").matches) {
+    // Respect the user's data-saver / reduced-motion preferences: the hero
+    // skips the intro entirely and the copy is shown straight away.
+    if (
+      window.matchMedia?.("(prefers-reduced-data: reduce)").matches ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setIntro("done");
       return;
     }
 
@@ -85,17 +100,58 @@ export default function HomePage() {
 
     // Silent retry loop: on mobile networks the first play() call can land
     // before any data is buffered, some browsers reject it and never re-fire
-    // canplay. Retry quietly every 400ms (max ~8s) until playback starts.
+    // canplay. It ALSO catches the attribute-autoplay race: `autoPlay` can
+    // start playback BEFORE hydration attaches the 'playing' listener (the
+    // event never re-fires) — so every tick re-checks the element state.
     let tries = 0;
     const retry = window.setInterval(() => {
-      if (cancelled || !v.paused || tries++ > 20) {
+      if (cancelled) {
+        window.clearInterval(retry);
+        return;
+      }
+      if (!v.paused && !v.ended && v.currentTime > 0) {
+        // already playing (with or without our play() call) → start the intro
+        window.clearInterval(retry);
+        setIntro((s) => (s === "done" ? s : "play"));
+        return;
+      }
+      if (tries++ > 20) {
         window.clearInterval(retry);
         return;
       }
       v.play().catch(() => {});
     }, 400);
-    const onPlaying = () => window.clearInterval(retry);
+    const onPlaying = () => {
+      window.clearInterval(retry);
+      // First confirmed playback → start the solo intro (unless the copy is
+      // already out, e.g. the 2.5s fallback fired on a slow connection).
+      setIntro((s) => (s === "done" ? s : "play"));
+    };
     v.addEventListener("playing", onPlaying);
+
+    // The copy is never held hostage: if autoplay hasn't started within 2.5s
+    // (slow network / blocked), the text comes out immediately — if the video
+    // starts later it simply plays behind it like the classic hero.
+    const waitTimer = window.setTimeout(() => {
+      setIntro((s) => {
+        if (s !== "wait") return s;
+        // video already playing via attribute-autoplay → let the intro run
+        if (!v.paused && !v.ended && v.currentTime > 0) return "play";
+        return "done";
+      });
+    }, 2500);
+
+    // Hard cap: no event glitch can ever extend the intro beyond 20s.
+    const capTimer = window.setTimeout(() => setIntro("done"), 20000);
+
+    // When the intro finishes, the copy takes the stage.
+    const onEnded = () => {
+      window.clearTimeout(capTimer);
+      setIntro("done");
+    };
+    const onError = () => setIntro("done");
+    v.addEventListener("ended", onEnded);
+    v.addEventListener("error", onError);
 
     // Coming back to the tab is another autoplay window on some browsers.
     const onVisible = () => {
@@ -106,9 +162,13 @@ export default function HomePage() {
     return () => {
       cancelled = true;
       window.clearInterval(retry);
+      window.clearTimeout(waitTimer);
+      window.clearTimeout(capTimer);
       v.removeEventListener("loadeddata", tryPlay);
       v.removeEventListener("canplay", tryPlay);
       v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("ended", onEnded);
+      v.removeEventListener("error", onError);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("touchstart", resumePlayback);
       window.removeEventListener("pointerdown", resumePlayback);
@@ -151,30 +211,33 @@ export default function HomePage() {
           />
         </motion.div>
 
-        {/* layered emerald gradient overlay — only visible after the video ends */}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30 opacity-100" />
-        <div className="absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40 opacity-100" />
+        {/* scrims — light while the intro plays (video stays clean & bright),
+            the full cinematic overlays fade in together with the copy */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent transition-opacity duration-700 ${showText ? "opacity-0" : "opacity-100"}`} />
+        <div className={`absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30 transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
+        <div className={`absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40 transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
         {/* aurora glow */}
-        <div className="pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate] opacity-100" />
-        <div className="pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px] opacity-100" />
+        <div className={`pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate] transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
+        <div className={`pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px] transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
         <div className="absolute inset-0 grain opacity-40" />
 
-        {/* content — shown immediately; video plays behind it */}
+        {/* content — fully SSR'd (SEO-safe) but visually held back until the
+            intro video ends; framer then replays the staggered reveal */}
         <motion.div style={{ opacity }} className="relative z-10 flex h-full flex-col justify-center">
           <Container className="py-10 px-4 sm:px-0">
-            <div className="max-w-2xl">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <div className={`max-w-2xl transition-opacity duration-700 ${showText ? "visible opacity-100" : "invisible pointer-events-none opacity-0"}`}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={showText ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.7 }}>
                 <Badge tone="dark" className="mb-6 border-gold/30 bg-white/10 px-4 py-1.5 text-gold-soft backdrop-blur">
                   <Sparkles size={13} /> خانه · دکوراسیون · هومینو استودیو
                 </Badge>
               </motion.div>
-              <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
+              <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={showText ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 28, filter: "blur(12px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
                 خانه‌ای که <span className="text-gold-gradient">شبیه توست</span>، همین‌جا آغاز می‌شود
               </motion.h1>
-              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.25 }} className="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-cream/80">
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={showText ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.9, delay: 0.25 }} className="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-cream/80">
                 سبک خودت را انتخاب کن و خانهٔ رؤیایی‌ات را بساز
               </motion.p>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={showText ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.9, delay: 0.32 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-cream px-6 py-3 font-bold text-ink transition hover:translate-y-[-2px] hover:shadow-gold">
                   <Search size={18} /> مشاهده محصولات
                 </Link>
@@ -182,7 +245,7 @@ export default function HomePage() {
                   <Wand2 size={18} /> طراحی فضای من با هومینو استودیو
                 </Link>
               </motion.div>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }} className="mt-8 flex flex-wrap items-center gap-4 text-sm text-cream/70">
+              <motion.div initial={{ opacity: 0 }} animate={showText ? { opacity: 1 } : { opacity: 0 }} transition={{ duration: 1, delay: 0.5 }} className="mt-8 flex flex-wrap items-center gap-4 text-sm text-cream/70">
                 <span className="flex items-center gap-1.5"><Search size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(allProducts.length)}</b> محصول منتخب</span>
                 <span className="hidden text-cream/30 sm:inline">|</span>
                 <span className="flex items-center gap-1.5"><Users size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(stores.length)}</b> فروشگاه معتبر</span>
@@ -193,8 +256,17 @@ export default function HomePage() {
           </Container>
         </motion.div>
 
+        {/* skip intro (only while the video plays) */}
+        <button
+          type="button"
+          onClick={endIntro}
+          className={`absolute bottom-6 left-5 z-20 inline-flex items-center gap-1.5 rounded-full border border-cream/25 bg-ink/45 px-3.5 py-1.5 text-xs font-bold text-cream/85 backdrop-blur transition-all duration-500 hover:bg-ink/70 hover:text-cream ${showText ? "pointer-events-none opacity-0" : "opacity-100"}`}
+        >
+          <X size={13} /> رد کردن ویدیو
+        </button>
+
         {/* scroll indicator */}
-        <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center">
+        <div className={`absolute inset-x-0 bottom-6 z-10 flex justify-center transition-opacity duration-700 ${showText ? "opacity-100" : "pointer-events-none opacity-0"}`}>
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity }} className="flex flex-col items-center gap-1 text-cream/50">
             <span className="text-2xs tracking-widest">اسکرول کن</span>
             <ChevronDown size={18} />
