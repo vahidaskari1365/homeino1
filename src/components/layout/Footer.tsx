@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AtSign, Send, Globe, Gift, Check, Phone, Mail } from "lucide-react";
 import { Container } from "../ui/primitives";
+import { LogoMark } from "@/components/ui/LogoMark";
 import { categories } from "@/data/categories";
 import { subscribeNewsletter } from "@/lib/commerceClient";
 import { useUi } from "@/stores/useApp";
@@ -68,7 +69,7 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-cream text-ink"><span className="font-display text-lg font-black">H</span></span>
+              <LogoMark variant="dark" className="h-9 w-9 shrink-0" />
               <span className="font-display text-xl font-black text-cream">Home<span className="text-terracotta-soft">ino</span></span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-6 text-cream/60">

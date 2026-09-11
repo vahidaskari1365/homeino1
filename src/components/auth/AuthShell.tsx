@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SmartImage } from "../ui/SmartImage";
+import { LogoMark } from "@/components/ui/LogoMark";
 import { collections } from "@/data/stores";
 
 export function AuthShell({ title, subtitle, children, footer }: { title: string; subtitle: string; children: ReactNode; footer?: ReactNode }) {
@@ -13,7 +14,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
         <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-ink/30" />
         <div className="absolute inset-0 flex flex-col justify-end p-12 text-cream">
           <Link href="/" className="mb-auto flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-cream text-ink"><span className="font-display text-lg font-black">H</span></span>
+            <LogoMark variant="dark" className="h-9 w-9 shrink-0" />
             <span className="font-display text-xl font-black">Home<span className="text-terracotta-soft">ino</span></span>
           </Link>
           <h2 className="font-display text-4xl font-black leading-tight">خانه‌ای که دوست داری، اینجا شکل می‌گیرد.</h2>
@@ -24,7 +25,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
       <div className="flex items-center justify-center px-5 py-12">
         <div className="w-full max-w-sm">
           <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-cream"><span className="font-display text-lg font-black">H</span></span>
+            <LogoMark variant="light" className="h-9 w-9 shrink-0" />
             <span className="font-display text-xl font-black text-ink">Home<span className="text-terracotta-deep">ino</span></span>
           </Link>
           <h1 className="font-display text-3xl font-black text-ink">{title}</h1>

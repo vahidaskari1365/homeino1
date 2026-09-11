@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LogoMark } from "@/components/ui/LogoMark";
 import {
   AnimatePresence,
   motion,
@@ -413,10 +414,7 @@ export function Header() {
             className="group flex shrink-0 items-center gap-2.5 rounded-full ps-1"
             aria-label="Homeino — خانه"
           >
-            <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-ink text-cream transition-transform duration-500 group-hover:rotate-6">
-              <span className="font-display text-lg font-black">H</span>
-              <span className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-l from-gold to-gold-soft" />
-            </span>
+            <LogoMark variant="light" className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover:scale-105" />
             <span className="font-display text-xl font-black tracking-tight text-ink">
               Home<span className="text-gold-gradient">ino</span>
             </span>
