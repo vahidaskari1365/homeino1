@@ -569,6 +569,45 @@ const ARTICLE_PROMPT = (brief, sourceText, dateFa) => [
   },
 ];
 
+/** نرمال‌سازی: paragraphs رشته‌ای → آرایه؛ حذف مقادیر تهی */
+function repairArticleJson(obj) {
+  if (!obj || typeof obj !== "object") return null;
+  if (typeof obj.paragraphs === "string") {
+    obj.paragraphs = obj.paragraphs.split(/\n{2,}|\n/).map((s) => s.trim()).filter(Boolean);
+  }
+  if (!Array.isArray(obj.paragraphs)) return null;
+  obj.paragraphs = obj.paragraphs.map((p) => String(p).trim()).filter((p) => p.length > 40);
+  if (!obj.title) return null;
+  return obj;
+}
+
+/** تعمیر JSON نیمه‌بریده (قطع‌شدگی توکن): بستن آرایه/آبجکت تا جایی که ممکن باشد */
+function extractJsonLenient(text) {
+  if (!text) return null;
+  let raw = text;
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenced) raw = fenced[1];
+  const start = raw.indexOf("{");
+  if (start === -1) return null;
+  raw = raw.slice(start);
+  const candidates = [raw];
+  // برش تا آخرین »,« کامل + بستن‌های حدسی
+  const lastQuoteComma = Math.max(raw.lastIndexOf('",'), raw.lastIndexOf('”,'));
+  if (lastQuoteComma > 0) candidates.push(raw.slice(0, lastQuoteComma + 1));
+  const lastNewlineQuote = raw.lastIndexOf('",\n');
+  if (lastNewlineQuote > 0) candidates.push(raw.slice(0, lastNewlineQuote + 1));
+  const closers = ['', '"]}', '"}]', '"}', '}'];
+  for (const base of candidates) {
+    for (const c of closers) {
+      try {
+        const j = JSON.parse(base + c);
+        if (j && typeof j === "object") return j;
+      } catch { /* بعدی */ }
+    }
+  }
+  return null;
+}
+
 /** ساخت ۱ مقاله کامل در روز از روی بریف تازهٔ صدر فهرست + نوشتن src/content/magazine/articles.json */
 async function generateDailyArticle(leadCtx, { dateFa, today }) {
   let prev = [];
@@ -584,17 +623,17 @@ async function generateDailyArticle(leadCtx, { dateFa, today }) {
   }
 
   const brief = leadCtx.brief;
-  const out1 = await callLlm(ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa), { maxTokens: 3600 });
-  let parsed = extractJson(out1);
-  if (!parsed || !parsed.title || !Array.isArray(parsed.paragraphs)) {
-    // تلاش دوم — خروجی قبلی ناقص/نامعتبر بوده؛ خواسته‌ی کوتاه‌تر
+  const out1 = await callLlm(ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa), { maxTokens: 3000 });
+  let parsed = repairArticleJson(extractJson(out1) ?? extractJsonLenient(out1));
+  if (!parsed) {
+    // تلاش دوم — خواسته‌ی کوتاه‌تر با بودجه‌ی توکنِ اثبات‌شده
     console.log("[magazine-daily] article: first attempt invalid — retrying shorter");
     const retryMsg = [
       ...ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa).slice(0, -1),
       { role: "user", content: "پاسخ قبلی معتبر نبود. این‌بار فقط و فقط یک بلوک ```json ``` برگردان با «۴ پاراگرافِ ۳ جمله‌ای» و هیچ متن اضافه‌ای بیرون از JSON ننویس." },
     ];
-    const out2 = await callLlm(retryMsg, { maxTokens: 2600 });
-    parsed = extractJson(out2);
+    const out2 = await callLlm(retryMsg, { maxTokens: 2400 });
+    parsed = repairArticleJson(extractJson(out2) ?? extractJsonLenient(out2));
   }
   if (!parsed || !parsed.title || !Array.isArray(parsed.paragraphs)) {
     console.log("[magazine-daily] article: invalid LLM output — skipped");
