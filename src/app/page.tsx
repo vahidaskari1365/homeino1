@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Search, Sparkles, ArrowLeft, Play, Wand2, ChevronDown, Lightbulb, Store, BadgeCheck, Users, ShieldCheck, HeartHandshake, Truck, X } from "lucide-react";
 import { Container, SectionHeading, Badge, ButtonLink, Rating } from "@/components/ui/primitives";
@@ -20,20 +20,29 @@ import { toFa } from "@/lib/utils";
 const HERO_VIDEO = "/video/01.mp4";
 const HERO_POSTER = "/video/hero-poster.jpg";
 
+// Effects that must run BEFORE the browser's first paint (SSR-safe wrapper).
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Intro flow: "wait" = mounted, autoplay not confirmed yet · "play" = the
-  // intro video is playing solo (copy hidden) · "done" = video finished (or
-  // was skipped / blocked) and the copy is on stage.
-  const [intro, setIntro] = useState<"wait" | "play" | "done">("wait");
-  const showText = intro === "done";
+  // Hero intro stage machine: 0 = video plays alone → 1 = halo fades in →
+  // 2 = copy enters. SSR renders stage 0 (video alone) so the very first
+  // paint is already the clean intro — no halo flash before hydration.
+  // Users who skip the intro (data-saver / reduced-motion / no video) are
+  // moved to stage 2 before first paint by the layout effect below.
+  const [stage, setStage] = useState<0 | 1 | 2>(0);
+  const ready = stage >= 2;
 
-  const endIntro = () => {
+  // Skip affordance (button shown while the video plays solo): pauses the
+  // video and runs the SAME halo → copy sequence, just sooner.
+  const skipIntro = () => {
     const v = videoRef.current;
     if (v && !v.paused) v.pause();
-    setIntro("done");
+    if (stage >= 1) return;
+    setStage(1);
+    window.setTimeout(() => setStage((s) => (s < 2 ? 2 : s)), 850);
   };
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
@@ -41,17 +50,18 @@ export default function HomePage() {
   const scaleBg = useTransform(scrollYProgress, [0, 1], [1.08, 1.22]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    // Respect the user's data-saver / reduced-motion preferences: the hero
-    // skips the intro entirely and the copy is shown straight away.
+    // Respect data-saver / reduced-motion users: the hero works perfectly
+    // with its static poster — skip the intro entirely, land on the complete
+    // hero (halo + copy) and never start the video stream.
     if (
       window.matchMedia?.("(prefers-reduced-data: reduce)").matches ||
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
     ) {
-      setIntro("done");
+      setStage(2);
       return;
     }
 
@@ -68,6 +78,19 @@ export default function HomePage() {
     }
 
     let cancelled = false;
+    let hasPlayed = false;
+    let finished = false;
+    const timers: number[] = [];
+
+    // Video finished (or a safety net fired): the halo fades in first, the
+    // copy follows ~0.85s later. Idempotent — once shown, the copy is never
+    // hidden again, no matter what the video does afterwards.
+    const finishIntro = () => {
+      if (finished || cancelled) return;
+      finished = true;
+      setStage((s) => (s < 1 ? 1 : s));
+      timers.push(window.setTimeout(() => setStage((s) => (s < 2 ? 2 : s)), 850));
+    };
 
     // Programmatic autoplay. On iOS Safari a play() call made before the video
     // has buffered data rejects, so also retry once the video is ready.
@@ -82,8 +105,41 @@ export default function HomePage() {
       }
     };
 
+    // Silent retry loop: on mobile networks the first play() call can land
+    // before any data is buffered, some browsers reject it and never re-fire
+    // canplay. Retry quietly every 400ms (max ~8s) until playback starts.
+    let tries = 0;
+    const retry = window.setInterval(() => {
+      if (cancelled || !v.paused || tries++ > 20) {
+        window.clearInterval(retry);
+        return;
+      }
+      v.play().catch(() => {});
+    }, 400);
+
+    const onEnded = () => finishIntro();
+    const onError = () => finishIntro();
+
+    // "Playback actually started" marker. NOTE: the native autoPlay attribute
+    // can start the video BEFORE React hydrates, so the one-shot `playing`
+    // event may fire before we listen. `timeupdate` fires every ~250ms during
+    // playback, and the paused/currentTime probe below catches playback that
+    // already began — together they make `hasPlayed` reliable.
+    const markPlaying = () => {
+      if (hasPlayed) return;
+      hasPlayed = true;
+      window.clearInterval(retry);
+    };
+    const onTimeUpdate = () => markPlaying();
+    const onPlayingEvt = () => markPlaying();
+    if (!v.paused || v.currentTime > 0) markPlaying();
+
     v.addEventListener("loadeddata", tryPlay);
     v.addEventListener("canplay", tryPlay);
+    v.addEventListener("playing", onPlayingEvt);
+    v.addEventListener("timeupdate", onTimeUpdate);
+    v.addEventListener("ended", onEnded);
+    v.addEventListener("error", onError);
 
     // Try programmatic autoplay right away.
     tryPlay();
@@ -98,75 +154,28 @@ export default function HomePage() {
     window.addEventListener("touchstart", resumePlayback, { once: true });
     window.addEventListener("pointerdown", resumePlayback, { once: true });
 
-    // Silent retry loop: on mobile networks the first play() call can land
-    // before any data is buffered, some browsers reject it and never re-fire
-    // canplay. It ALSO catches the attribute-autoplay race: `autoPlay` can
-    // start playback BEFORE hydration attaches the 'playing' listener (the
-    // event never re-fires) — so every tick re-checks the element state.
-    let tries = 0;
-    const retry = window.setInterval(() => {
-      if (cancelled) {
-        window.clearInterval(retry);
-        return;
-      }
-      if (!v.paused && !v.ended && v.currentTime > 0) {
-        // already playing (with or without our play() call) → start the intro
-        window.clearInterval(retry);
-        setIntro((s) => (s === "done" ? s : "play"));
-        return;
-      }
-      if (tries++ > 20) {
-        window.clearInterval(retry);
-        return;
-      }
-      v.play().catch(() => {});
-    }, 400);
-    const onPlaying = () => {
-      window.clearInterval(retry);
-      // First confirmed playback → start the solo intro (unless the copy is
-      // already out, e.g. the 2.5s fallback fired on a slow connection).
-      setIntro((s) => (s === "done" ? s : "play"));
-    };
-    v.addEventListener("playing", onPlaying);
-
-    // The copy is never held hostage: if autoplay hasn't started within 2.5s
-    // (slow network / blocked), the text comes out immediately — if the video
-    // starts later it simply plays behind it like the classic hero.
-    const waitTimer = window.setTimeout(() => {
-      setIntro((s) => {
-        if (s !== "wait") return s;
-        // video already playing via attribute-autoplay → let the intro run
-        if (!v.paused && !v.ended && v.currentTime > 0) return "play";
-        return "done";
-      });
-    }, 2500);
-
-    // Hard cap: no event glitch can ever extend the intro beyond 20s.
-    const capTimer = window.setTimeout(() => setIntro("done"), 20000);
-
-    // When the intro finishes, the copy takes the stage.
-    const onEnded = () => {
-      window.clearTimeout(capTimer);
-      setIntro("done");
-    };
-    const onError = () => setIntro("done");
-    v.addEventListener("ended", onEnded);
-    v.addEventListener("error", onError);
-
     // Coming back to the tab is another autoplay window on some browsers.
     const onVisible = () => {
       if (document.visibilityState === "visible") tryPlay();
     };
     document.addEventListener("visibilitychange", onVisible);
 
+    // Safety nets — the copy must never be trapped behind a video that cannot
+    // play (blocked autoplay, dead stream, throttled tab): if playback hasn't
+    // started within 5s we show halo + copy anyway; 14s is a hard cap.
+    timers.push(window.setTimeout(() => {
+      if (!hasPlayed) finishIntro();
+    }, 5000));
+    timers.push(window.setTimeout(() => finishIntro(), 14000));
+
     return () => {
       cancelled = true;
       window.clearInterval(retry);
-      window.clearTimeout(waitTimer);
-      window.clearTimeout(capTimer);
+      timers.forEach((t) => window.clearTimeout(t));
       v.removeEventListener("loadeddata", tryPlay);
       v.removeEventListener("canplay", tryPlay);
-      v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("playing", onPlayingEvt);
+      v.removeEventListener("timeupdate", onTimeUpdate);
       v.removeEventListener("ended", onEnded);
       v.removeEventListener("error", onError);
       document.removeEventListener("visibilitychange", onVisible);
@@ -202,7 +211,7 @@ export default function HomePage() {
             webkit-playsinline="true"
             // poster + metadata-only preload: LCP comes from the 68KB poster,
             // the 311KB video streams in afterwards (was 3.6MB preload=auto
-            // which starved the hero headline on mobile).
+            // which starved the hero intro on mobile).
             preload="metadata"
             disablePictureInPicture
             aria-hidden="true"
@@ -211,41 +220,45 @@ export default function HomePage() {
           />
         </motion.div>
 
-        {/* scrims — light while the intro plays (video stays clean & bright),
-            the full cinematic overlays fade in together with the copy */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent transition-opacity duration-700 ${showText ? "opacity-0" : "opacity-100"}`} />
-        <div className={`absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30 transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
-        <div className={`absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40 transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
-        {/* aurora glow */}
-        <div className={`pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate] transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
-        <div className={`pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px] transition-opacity duration-1000 ${showText ? "opacity-100" : "opacity-0"}`} />
-        <div className="absolute inset-0 grain opacity-40" />
+        {/* halo pass — legibility gradients + green/gold aurora glows + grain.
+            Hidden while the video plays alone (stage 0); fades in once the
+            video ends (stage 1), before the copy enters (stage 2). */}
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 transition-opacity ease-out ${stage >= 1 ? "opacity-100 duration-[1400ms]" : "opacity-0 duration-300"}`}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
+          <div className="absolute inset-0 bg-gradient-to-l from-ink/85 via-transparent to-ink/40" />
+          {/* aurora glow */}
+          <div className="pointer-events-none absolute -right-32 top-1/4 h-[60vh] w-[60vh] rounded-full bg-terracotta/30 blur-[120px] animate-[aurora_14s_ease-in-out_infinite_alternate]" />
+          <div className="pointer-events-none absolute -left-24 bottom-0 h-[50vh] w-[50vh] rounded-full bg-gold/15 blur-[120px]" />
+          <div className="absolute inset-0 grain opacity-40" />
+        </div>
 
-        {/* content — fully SSR'd (SEO-safe) but visually held back until the
-            intro video ends; framer then replays the staggered reveal */}
+        {/* copy — enters after the video ends and the halo has landed (stage 2) */}
         <motion.div style={{ opacity }} className="relative z-10 flex h-full flex-col justify-center">
           <Container className="py-10 px-4 sm:px-0">
-            <div className={`max-w-2xl transition-opacity duration-700 ${showText ? "visible opacity-100" : "invisible pointer-events-none opacity-0"}`}>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={showText ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.7 }}>
+            <div className="max-w-2xl">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={ready ? { duration: 0.7 } : { duration: 0 }}>
                 <Badge tone="dark" className="mb-6 border-gold/30 bg-white/10 px-4 py-1.5 text-gold-soft backdrop-blur">
                   <Sparkles size={13} /> خانه · دکوراسیون · هومینو استودیو
                 </Badge>
               </motion.div>
-              <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={showText ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 28, filter: "blur(12px)" }} transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] } as any} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
-                خانه‌ای که <span className="text-gold-gradient">شبیه توست</span>، همین‌جا آغاز می‌شود
+              <motion.h1 initial={{ opacity: 0, y: 28, filter: "blur(12px)" }} animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 28, filter: "blur(12px)" }} transition={ready ? ({ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] } as any) : { duration: 0 }} className="mt-3 font-display text-4xl font-black leading-tight text-cream sm:text-6xl">
+                خانه ایی که <span className="text-gold-gradient">شبیه توست</span> ، همین جا آغاز می شود
               </motion.h1>
-              <motion.p initial={{ opacity: 0, y: 20 }} animate={showText ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.9, delay: 0.25 }} className="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-cream/80">
-                سبک خودت را انتخاب کن و خانهٔ رؤیایی‌ات را بساز
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={ready ? { duration: 0.9, delay: 0.35 } : { duration: 0 }} className="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-cream/80">
+                سبک خودت رو را انتخاب کن و خانه رویایی ات رو بساز
               </motion.p>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={showText ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.9, delay: 0.32 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={ready ? { duration: 0.9, delay: 0.45 } : { duration: 0 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-cream px-6 py-3 font-bold text-ink transition hover:translate-y-[-2px] hover:shadow-gold">
-                  <Search size={18} /> مشاهده محصولات
+                  <Search size={18} /> کشف محصولات
                 </Link>
                 <Link href="/ai/design" className="inline-flex items-center justify-center gap-2 rounded-xl border border-cream/30 px-5 py-3 font-medium text-cream transition hover:bg-white/10">
                   <Wand2 size={18} /> طراحی فضای من با هومینو استودیو
                 </Link>
               </motion.div>
-              <motion.div initial={{ opacity: 0 }} animate={showText ? { opacity: 1 } : { opacity: 0 }} transition={{ duration: 1, delay: 0.5 }} className="mt-8 flex flex-wrap items-center gap-4 text-sm text-cream/70">
+              <motion.div initial={{ opacity: 0 }} animate={ready ? { opacity: 1 } : { opacity: 0 }} transition={ready ? { duration: 1, delay: 0.65 } : { duration: 0 }} className="mt-8 flex flex-wrap items-center gap-4 text-sm text-cream/70">
                 <span className="flex items-center gap-1.5"><Search size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(allProducts.length)}</b> محصول منتخب</span>
                 <span className="hidden text-cream/30 sm:inline">|</span>
                 <span className="flex items-center gap-1.5"><Users size={15} className="text-gold-soft" /> <b className="text-cream">{toFa(stores.length)}</b> فروشگاه معتبر</span>
@@ -256,17 +269,17 @@ export default function HomePage() {
           </Container>
         </motion.div>
 
-        {/* skip intro (only while the video plays) */}
+        {/* skip intro (only while the video plays solo) */}
         <button
           type="button"
-          onClick={endIntro}
-          className={`absolute bottom-6 left-5 z-20 inline-flex items-center gap-1.5 rounded-full border border-cream/25 bg-ink/45 px-3.5 py-1.5 text-xs font-bold text-cream/85 backdrop-blur transition-all duration-500 hover:bg-ink/70 hover:text-cream ${showText ? "pointer-events-none opacity-0" : "opacity-100"}`}
+          onClick={skipIntro}
+          className={`absolute bottom-6 left-5 z-20 inline-flex items-center gap-1.5 rounded-full border border-cream/25 bg-ink/45 px-3.5 py-1.5 text-xs font-bold text-cream/85 backdrop-blur transition-all duration-500 hover:bg-ink/70 hover:text-cream ${stage === 0 ? "opacity-100" : "pointer-events-none opacity-0"}`}
         >
           <X size={13} /> رد کردن ویدیو
         </button>
 
-        {/* scroll indicator */}
-        <div className={`absolute inset-x-0 bottom-6 z-10 flex justify-center transition-opacity duration-700 ${showText ? "opacity-100" : "pointer-events-none opacity-0"}`}>
+        {/* scroll indicator — appears together with the copy */}
+        <div className={`absolute inset-x-0 bottom-6 z-10 flex justify-center transition-opacity duration-700 ${ready ? "opacity-100" : "pointer-events-none opacity-0"}`}>
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity }} className="flex flex-col items-center gap-1 text-cream/50">
             <span className="text-2xs tracking-widest">اسکرول کن</span>
             <ChevronDown size={18} />
@@ -288,7 +301,7 @@ export default function HomePage() {
       {/* ===== CATEGORIES ===== */}
       <section className="section-space-sm">
         <Container>
-          <Reveal><SectionHeading eyebrow="سریع پیدا کن" title="از کجای خانه شروع می‌کنی؟" desc="دسته‌بندی‌های اصلی را بر اساس فضای خانه و نیازت مرور کن." action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">همه محصولات <ArrowLeft size={16} /></Link>} /></Reveal>
+          <Reveal><SectionHeading eyebrow="سریع پیدا کن" title="از کجای خانه شروع می‌کنی؟" desc="دسته‌بندی‌های اصلی را بر اساس فضای خانه و نیازت کاوش کن." action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">همه محصولات <ArrowLeft size={16} /></Link>} /></Reveal>
           <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {categories.slice(0, 6).map((category) => (
               <RevealItem key={category.id}>
@@ -305,16 +318,16 @@ export default function HomePage() {
       {/* ===== SHOP BY STYLE ===== */}
       <section className="section-space-sm border-y border-clay/25 bg-cream/38">
         <Container>
-          <Reveal><SectionHeading eyebrow="خرید بر اساس سبک" title="محصولی که دوستش داری را از روی سبک مورد علاقه‌ات پیدا و انتخاب کن" desc="روی سبک مورد علاقه‌ات بزن تا محصولات هماهنگ با همان سبک برایت مرتب و نمایش داده شوند؛ داخل صفحه‌ی هر سبک می‌توانی بر اساس دسته‌بندی‌های سایت هم فیلتر کنی." action={<Link href="/styles" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">راهنمای همه سبک‌ها <ArrowLeft size={16} /></Link>} /></Reveal>
+          <Reveal><SectionHeading eyebrow="خرید بر اساس سبک" title="محصولی که دوست داری را از روی سبک مورد علاقت پیدا و انتخاب کن" desc="روی سبک مورد علاقه‌ات بزن تا محصولات هماهنگ با همان سبک برایت مرتب و نمایش داده شود؛ داخل صفحه‌ی هر سبک می‌توانی بر اساس دسته‌بندی‌های سایت هم فیلتر کنی." action={<Link href="/styles" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">راهنمای همه سبک‌ها <ArrowLeft size={16} /></Link>} /></Reveal>
           <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
             {styles.map((style) => (
               <RevealItem key={style.id}>
                 <Link href={`/styles/${style.slug}`} className="group card-surface card-interactive block h-full overflow-hidden">
                   <div className="relative aspect-square overflow-hidden">
                     <SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-ink/85 via-ink/15 to-transparent" />
-                    <span className="absolute left-2 bottom-2 rounded-full bg-cream/90 px-2 py-1 text-2xs font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
-                    <div className="absolute inset-x-0 top-0 p-3 text-cream sm:p-4">
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
+                    <span className="absolute left-2 top-2 rounded-full bg-cream/90 px-2 py-1 text-2xs font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
+                    <div className="absolute inset-x-0 bottom-0 p-3 text-cream sm:p-4">
                       <div className="text-2xs font-bold uppercase tracking-[0.18em] text-gold-soft">{style.nameEn}</div>
                       <h3 className="mt-0.5 text-base font-black text-cream transition group-hover:text-gold-soft sm:text-lg">{style.name}</h3>
                       <p className="mt-0.5 line-clamp-1 text-2xs text-cream/70 sm:text-xs">{style.tagline}</p>
@@ -358,7 +371,7 @@ export default function HomePage() {
       {/* ===== INSPIRATION ===== */}
       <section className="section-space-sm">
         <Container>
-          <Reveal><SectionHeading eyebrow="فضاهای واقعی" title="ببین، الهام بگیر، همان چیدمان را بخر" desc="هر تصویر به محصولات واقعی متصل است؛ فاصلهٔ الهام تا خرید فقط چند لمس است." action={<Link href="/inspiration" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">ورود به گالری <ArrowLeft size={16} /></Link>} /></Reveal>
+          <Reveal><SectionHeading eyebrow="فضاهای واقعی" title="ببین، الهام بگیر، همان چیدمان را بخر" desc="هر تصویر به محصولات واقعی متصل است؛ فاصله الهام تا خرید فقط چند لمس." action={<Link href="/inspiration" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">ورود به گالری <ArrowLeft size={16} /></Link>} /></Reveal>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">{inspirations.slice(0, 7).map((inspiration, index) => <div key={inspiration.id} className={index === 0 ? "col-span-2 row-span-2" : ""}><InspirationCard insp={inspiration} index={index} /></div>)}</div>
         </Container>
       </section>
@@ -419,7 +432,7 @@ export default function HomePage() {
         <Container>
           <Reveal><SectionHeading eyebrow="زبان طراحی تو" title="سبکت را پیدا کن" desc="از مینیمال تا کلاسیک؛ راهنمای هر سبک، پالت و محصولات هماهنگ را یک‌جا ببین." /></Reveal>
           <div className="hide-scrollbar scroll-fade -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
-            {styles.slice(0, 5).map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="group card-surface card-interactive w-[72vw] max-w-64 shrink-0 snap-start overflow-hidden lg:w-auto"><div className="relative aspect-[4/5] overflow-hidden"><SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-b from-ink/88 via-ink/15 to-transparent" /><div className="absolute inset-x-0 top-0 p-4 text-cream"><div className="text-2xs tracking-wider text-gold-soft">{style.nameEn}</div><h3 className="mt-1 text-xl font-black text-cream">{style.name}</h3><p className="mt-1 text-xs text-cream/68">{style.tagline}</p></div></div></Link>)}
+            {styles.slice(0, 5).map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="group card-surface card-interactive w-[72vw] max-w-64 shrink-0 snap-start overflow-hidden lg:w-auto"><div className="relative aspect-[4/5] overflow-hidden"><SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-ink/88 via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-4 text-cream"><div className="text-2xs tracking-wider text-gold-soft">{style.nameEn}</div><h3 className="mt-1 text-xl font-black text-cream">{style.name}</h3><p className="mt-1 text-xs text-cream/68">{style.tagline}</p></div></div></Link>)}
             <Link href="/styles" aria-label="مشاهده همه سبک‌ها" className="group card-surface card-interactive flex w-[72vw] max-w-64 shrink-0 snap-start flex-col items-center justify-center gap-4 bg-gradient-to-br from-ivory to-cream p-6 text-center lg:w-auto" style={{ aspectRatio: "4 / 5" }}>
               <span className="grid h-16 w-16 place-items-center rounded-full border-2 border-terracotta/45 bg-cream text-terracotta-deep shadow-[var(--shadow-soft)] transition-all duration-500 group-hover:scale-110 group-hover:border-gold group-hover:bg-gold/15">
                 <ArrowLeft size={26} className="transition-transform duration-500 group-hover:-translate-x-1" />
@@ -435,7 +448,7 @@ export default function HomePage() {
       <section className="pb-8 sm:pb-12">
         <Container>
           <div className="overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-l from-terracotta-deep to-ink p-6 text-cream shadow-[var(--shadow-card)] sm:p-10">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران دوستدار خانه</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> مشاهده محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با هومینو استودیو</ButtonLink></div></div>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران خانه‌دوست</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> کشف محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با هومینو استودیو</ButtonLink></div></div>
           </div>
         </Container>
       </section>
