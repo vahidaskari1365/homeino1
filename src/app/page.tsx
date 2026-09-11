@@ -240,9 +240,9 @@ export default function HomePage() {
                 <Link href={`/styles/${style.slug}`} className="group card-surface card-interactive block h-full overflow-hidden">
                   <div className="relative aspect-square overflow-hidden">
                     <SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
-                    <span className="absolute left-2 top-2 rounded-full bg-cream/90 px-2 py-1 text-2xs font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
-                    <div className="absolute inset-x-0 bottom-0 p-3 text-cream sm:p-4">
+                    <div className="absolute inset-0 bg-gradient-to-b from-ink/85 via-ink/15 to-transparent" />
+                    <span className="absolute left-2 bottom-2 rounded-full bg-cream/90 px-2 py-1 text-2xs font-bold text-ink backdrop-blur">{toFa(productsByStyle(style.slug).length)} محصول</span>
+                    <div className="absolute inset-x-0 top-0 p-3 text-cream sm:p-4">
                       <div className="text-2xs font-bold uppercase tracking-[0.18em] text-gold-soft">{style.nameEn}</div>
                       <h3 className="mt-0.5 text-base font-black text-cream transition group-hover:text-gold-soft sm:text-lg">{style.name}</h3>
                       <p className="mt-0.5 line-clamp-1 text-2xs text-cream/70 sm:text-xs">{style.tagline}</p>
@@ -347,7 +347,7 @@ export default function HomePage() {
         <Container>
           <Reveal><SectionHeading eyebrow="زبان طراحی تو" title="سبکت را پیدا کن" desc="از مینیمال تا کلاسیک؛ راهنمای هر سبک، پالت و محصولات هماهنگ را یک‌جا ببین." /></Reveal>
           <div className="hide-scrollbar scroll-fade -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
-            {styles.slice(0, 5).map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="group card-surface card-interactive w-[72vw] max-w-64 shrink-0 snap-start overflow-hidden lg:w-auto"><div className="relative aspect-[4/5] overflow-hidden"><SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-ink/88 via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-4 text-cream"><div className="text-2xs tracking-wider text-gold-soft">{style.nameEn}</div><h3 className="mt-1 text-xl font-black text-cream">{style.name}</h3><p className="mt-1 text-xs text-cream/68">{style.tagline}</p></div></div></Link>)}
+            {styles.slice(0, 5).map((style) => <Link key={style.slug} href={`/styles/${style.slug}`} className="group card-surface card-interactive w-[72vw] max-w-64 shrink-0 snap-start overflow-hidden lg:w-auto"><div className="relative aspect-[4/5] overflow-hidden"><SmartImage src={style.image} alt={`سبک ${style.name}`} className="h-full w-full transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-b from-ink/88 via-ink/15 to-transparent" /><div className="absolute inset-x-0 top-0 p-4 text-cream"><div className="text-2xs tracking-wider text-gold-soft">{style.nameEn}</div><h3 className="mt-1 text-xl font-black text-cream">{style.name}</h3><p className="mt-1 text-xs text-cream/68">{style.tagline}</p></div></div></Link>)}
             <Link href="/styles" aria-label="مشاهده همه سبک‌ها" className="group card-surface card-interactive flex w-[72vw] max-w-64 shrink-0 snap-start flex-col items-center justify-center gap-4 bg-gradient-to-br from-ivory to-cream p-6 text-center lg:w-auto" style={{ aspectRatio: "4 / 5" }}>
               <span className="grid h-16 w-16 place-items-center rounded-full border-2 border-terracotta/45 bg-cream text-terracotta-deep shadow-[var(--shadow-soft)] transition-all duration-500 group-hover:scale-110 group-hover:border-gold group-hover:bg-gold/15">
                 <ArrowLeft size={26} className="transition-transform duration-500 group-hover:-translate-x-1" />

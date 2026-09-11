@@ -15,14 +15,14 @@ function StyleGuideSection({ style, index, total }: { style: Style; index: numbe
       <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="relative min-h-72 overflow-hidden lg:min-h-full">
           <SmartImage src={style.image} alt={style.imageAlt} priority={index === 0} className="absolute inset-0 h-full w-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
-          <div className="absolute right-5 top-5 rounded-full border border-cream/25 bg-ink/45 px-3 py-1 text-xs font-bold text-cream backdrop-blur">
-            {toFa(index + 1).padStart(2, "۰")} / {toFa(total)}
-          </div>
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+          <div className="absolute inset-0 bg-gradient-to-b from-ink/85 via-ink/15 to-transparent" />
+          <div className="absolute inset-x-0 top-0 p-5 sm:p-7">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-soft">{style.nameEn}</p>
             <h2 className="mt-1 font-display text-3xl font-black text-cream sm:text-4xl">سبک {style.name}</h2>
             <p className="mt-1 text-sm text-cream/75">{style.tagline}</p>
+          </div>
+          <div className="absolute bottom-5 left-5 rounded-full border border-cream/25 bg-ink/45 px-3 py-1 text-xs font-bold text-cream backdrop-blur">
+            {toFa(index + 1).padStart(2, "۰")} / {toFa(total)}
           </div>
         </div>
 

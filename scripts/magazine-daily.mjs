@@ -125,6 +125,33 @@ async function resolveRealSourceUrl(url) {
   } catch { return url; }
 }
 
+/** ابعاد واقعی عکس از خود بایت‌ها — PNG/JPEG/WebP/GIF بدون وابستگی (در CI هم کار می‌کند) */
+function probeImageDims(buf) {
+  try {
+    if (buf.length > 24 && buf.readUInt32BE(0) === 0x89504e47) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+    if (buf.length > 4 && buf[0] === 0xff && buf[1] === 0xd8) {
+      let i = 2;
+      while (i + 9 < buf.length) {
+        if (buf[i] !== 0xff) { i++; continue; }
+        const m = buf[i + 1];
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
+        if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
+        i += 2 + buf.readUInt16BE(i + 2);
+      }
+      return null;
+    }
+    if (buf.length > 30 && buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP") {
+      const fmt = buf.toString("ascii", 12, 16);
+      if (fmt === "VP8 ") return { w: buf.readUInt16LE(26) & 0x3fff, h: buf.readUInt16LE(28) & 0x3fff };
+      if (fmt === "VP8L") { const b = buf.readUInt32LE(21); return { w: (b & 0x3fff) + 1, h: ((b >> 14) & 0x3fff) + 1 }; }
+      if (fmt === "VP8X") return { w: 1 + (buf[24] | (buf[25] << 8) | (buf[26] << 16)), h: 1 + (buf[27] | (buf[28] << 8) | (buf[29] << 16)) };
+      return null;
+    }
+    if (buf.length > 10 && buf.toString("ascii", 0, 3) === "GIF") return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) };
+    return null;
+  } catch { return null; }
+}
+
 /** دانلود عکس og به public — مسیر عمومی برمی‌گردد یا null */
 async function downloadSourceImage(imgUrl, destBase) {
   try {
@@ -137,6 +164,13 @@ async function downloadSourceImage(imgUrl, destBase) {
     if (!type.startsWith("image/") || /svg|icon/.test(type)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.length < 6000) return null; // آیکون/اسپرایت‌ها را رد کن
+    // گیت ابعاد: لوگو/آواتار/آیکون جای عکس مطلب را نمی‌گیرد (مثل لوگوی گوگل‌نیوز ۳۰۰×۳۰۰)
+    const dims = probeImageDims(buf);
+    if (dims) {
+      if (dims.w < 500 || dims.h < 320) return null;
+    } else if (buf.length < 25000) {
+      return null; // فرمت ناشناخته و حجیم‌نشده = مشکوک به لوگو
+    }
     const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("avif") ? "avif" : "jpg";
     const dest = `${destBase}.${ext}`;
     fs.writeFileSync(dest, buf);
@@ -165,7 +199,11 @@ function zAiImageSearch(query) {
   try {
     const raw = execFileSync("z-ai", ["image-search", "-q", query, "--count", "4", "--gl", "us", "--no-rank"], { timeout: 150000, encoding: "utf8" });
     const j = JSON.parse(raw.slice(raw.indexOf("{")));
-    return (j.results || []).map((r) => ({ url: r.original_url, source: r.source || "وب", w: parseInt(r.original_width) || 1200, h: parseInt(r.original_height) || 800 }));
+    // پیش‌نمایش آژانس‌های استوک همیشه واترمارک دارد — اصلاً کاندید نشود
+    const STOCK_DOMAINS = /(dreamstime|shutterstock|gettyimages|istockphoto|123rf|alamy|depositphotos|stock\.adobe|freepik|bigstockphoto|colourbox|agefotostock|photos\.com|stockcake|vecteezy)\.?/i;
+    return (j.results || [])
+      .filter((r) => !STOCK_DOMAINS.test(r.original_url || ""))
+      .map((r) => ({ url: r.original_url, source: r.source || "وب", w: parseInt(r.original_width) || 1200, h: parseInt(r.original_height) || 800 }));
   } catch { return []; }
 }
 
