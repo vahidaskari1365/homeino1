@@ -1,0 +1,27 @@
+{
+  "minimal": {
+    "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1c5a6df15b08.jpg",
+    "source": "Home Designing",
+    "kb": 214
+  },
+  "neoclassical": {
+    "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a234c90e128b.jpg",
+    "source": "Home Designing",
+    "kb": 242
+  },
+  "industrial": {
+    "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f1dea3d44346.jpg",
+    "source": "Houzz",
+    "kb": 491
+  },
+  "japandi": {
+    "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d32b18cc6b1e.jpg",
+    "source": "Mojo Boutique",
+    "kb": 154
+  },
+  "rustic": {
+    "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9bd2099e7aec.jpg",
+    "source": "Work-tops.com",
+    "kb": 209
+  }
+}

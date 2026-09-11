@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Lightbulb } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
-import { AgentRunStatus } from "@/components/AgentRunStatus";
-import { SectionHeading, Chip } from "@/components/ui/primitives";
+import { SectionHeading } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
-import { trendBriefs, briefsByDate, latestTrendDate, trendDates } from "@/lib/trends";
+import { trendBriefs } from "@/lib/trends";
 import { SITE_URL } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -17,10 +16,8 @@ export const metadata: Metadata = {
 };
 
 export default function TrendsPage() {
-  const today = latestTrendDate();
-  const todayBriefs = today ? briefsByDate(today) : [];
-  const archiveDates = trendDates.filter((d) => d !== today);
-  const [lead, ...rest] = todayBriefs;
+  // همه بریف‌ها، تازه‌ترین اول — بدون آرشیوِ جدا؛ تاریخِ هر بریف روی خود کارت می‌نشیند.
+  const [lead, ...rest] = trendBriefs;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -41,16 +38,15 @@ export default function TrendsPage() {
       <PageHeader
         eyebrow="مرجع ترند هومینو"
         title="ترندهای روز دیزاین خانه"
-        desc="هر روز، مهم‌ترین اتفاق‌های دنیای دیزاین داخلی را از معتبرترین منابع جهانی جمع می‌کنیم، به فارسیِ روان و مستقل بازنویسی می‌کنیم و نسخه‌ی کاربردی‌اش برای خانه‌های ایرانی را کنارش می‌گذاریم."
+        desc="هر روز مهم‌ترین اتفاق‌های دنیای دیزاین داخلی را از معتبرترین منابع جهانی گردش می‌آوریم، به فارسیِ روان و مستقل بازنویسی می‌کنیم و نسخه‌ی کاربردی‌اش برای خانه‌های ایرانی را کنارش می‌گذاریم."
       />
-      <AgentRunStatus />
-      {today && lead ? (
+      {lead ? (
         <>
           <Reveal>
             <SectionHeading
               eyebrow={`تازه‌ترین · ${lead.dateFa}`}
               title="امروز در دنیای دیزاین"
-              desc="خلاصه‌های امروز از مرزهای دیزاین داخلی — بازنویسی اختصاصی تحریریه هومینو."
+              desc="تازه‌ترین روایت‌های دیزاین داخلی — بازنویسی اختصاصی تحریریه هومینو."
               action={<Link href="/magazine" className="inline-flex items-center gap-1 text-sm font-bold text-terracotta-deep">مقالات عمیق مجله <ArrowLeft size={16} /></Link>}
             />
           </Reveal>
@@ -61,6 +57,7 @@ export default function TrendsPage() {
               <div className="relative min-h-56 overflow-hidden md:min-h-full">
                 <SmartImage src={lead.cover} alt={lead.title} className="absolute inset-0 h-full w-full" />
                 <span className="absolute right-4 top-4 rounded-full bg-terracotta px-3 py-1 text-xs font-bold text-cream">{lead.category}</span>
+                <span className="absolute left-4 top-4 rounded-full bg-ink/55 px-2.5 py-1 text-2xs font-bold text-cream backdrop-blur">{lead.dateFa}</span>
               </div>
               <div className="flex flex-col p-6 sm:p-8">
                 <h2 className="font-display text-2xl font-black leading-snug text-ink">{lead.title}</h2>
@@ -88,6 +85,7 @@ export default function TrendsPage() {
                   <div className="relative aspect-[16/9] overflow-hidden">
                     <SmartImage src={b.cover} alt={b.title} className="h-full w-full" />
                     <span className="absolute right-3 top-3 rounded-full bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur">{b.category}</span>
+                    <span className="absolute left-3 top-3 rounded-full bg-ink/55 px-2 py-1 text-2xs font-bold text-cream backdrop-blur">{b.dateFa}</span>
                   </div>
                   <div className="flex flex-1 flex-col p-5">
                     <h3 className="font-display text-lg font-black leading-snug text-ink">{b.title}</h3>
@@ -108,28 +106,8 @@ export default function TrendsPage() {
         </>
       ) : (
         <div className="rounded-[var(--radius-lg)] border border-clay/35 bg-cream/60 p-8 text-center text-ink-muted">
-          هنوز بریف امروز منتشر نشده؛ به‌زودی برمی‌گردیم.
+          هنوز بریفی منتشر نشده؛ به‌زودی برمی‌گردیم.
         </div>
-      )}
-
-      {/* archive */}
-      {archiveDates.length > 0 && (
-        <section className="mt-14">
-          <SectionHeading eyebrow="آرشیو" title="روزهای پیشین" desc="بریف‌های ترند روزهای قبل، به‌صورت روزانه آرشیو می‌شوند." />
-          <div className="flex flex-wrap gap-2">
-            {archiveDates.map((d) => {
-              const list = briefsByDate(d);
-              return (
-                <Link key={d} href={`/trends/${d}`} className="group">
-                  <Chip active={false}>
-                    {list[0]?.dateFa ?? d}
-                    <span className="mr-1 text-2xs text-ink-muted group-hover:text-terracotta-deep">({list.length} ترند)</span>
-                  </Chip>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
       )}
     </Container>
   );

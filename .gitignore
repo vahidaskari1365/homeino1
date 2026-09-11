@@ -50,3 +50,10 @@ scripts/.llm-tmp.json
 .seed-bundle.mjs
 .smoke-bundle.mjs
 .verify-bundle.mjs
+
+# sandbox junk
+.zz-hr/
+.zz-tr/
+upload/
+.start-log.txt
+.verify-workflows.mjs

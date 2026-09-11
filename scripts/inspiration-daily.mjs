@@ -39,8 +39,10 @@ const SPACES = [
   { slug: "اتاق خواب", en: "bedroom" },
   { slug: "فضای کار", en: "home office workspace" },
   { slug: "ناهارخوری", en: "dining room" },
-  { slug: "بیرونی", en: "outdoor patio balcony" },
+  { slug: "حیاط و محوطه", en: "outdoor courtyard backyard patio garden landscape design" },
 ];
+// کلید قدیمی استخر عکس برای این فضا «بیرونی» است؛ برای سازگاری نگه می‌داریم
+const SPACE_POOL_ALIAS = { "حیاط و محوطه": "بیرونی" };
 
 // ---------- چرخش: هر اجرا نوبت بعدی ماتریس ----------
 const PINS_PER_RUN = Number(process.argv.find((a) => a.startsWith("--pins="))?.split("=")[1] || 6);
@@ -97,8 +99,9 @@ try { POOL = JSON.parse(readFileSync(POOL_FILE, "utf8")).pool; } catch { POOL = 
 
 function poolImage(styleSlug, spaceSlug) {
   if (!POOL) return null;
-  const direct = POOL[styleSlug]?.[spaceSlug] || [];
-  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug).flatMap(([, v]) => v);
+  const alias = SPACE_POOL_ALIAS[spaceSlug];
+  const direct = POOL[styleSlug]?.[spaceSlug] || (alias ? POOL[styleSlug]?.[alias] || [] : []);
+  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug && s !== alias).flatMap(([, v]) => v);
   const cands = [...direct, ...siblings];
   return cands.find((p) => !seenImgs.has(p.url)) || null; // صادقانه: بدون تکرار
 }
@@ -120,10 +123,11 @@ const seenImgs = new Set(gen.map((p) => p.image));
 // ---------- چرخش هوشمند: فقط ترکیب‌هایی که عکس مصرف‌نشده دارند ----------
 function unusedCount(styleSlug, spaceSlug) {
   if (!POOL) return 0;
-  const direct = POOL[styleSlug]?.[spaceSlug] || [];
+  const alias = SPACE_POOL_ALIAS[spaceSlug];
+  const direct = POOL[styleSlug]?.[spaceSlug] || (alias ? POOL[styleSlug]?.[alias] || [] : []);
   const n = direct.filter((p) => !seenImgs.has(p.url)).length;
   if (n > 0) return n;
-  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug).flatMap(([, v]) => v);
+  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug && s !== alias).flatMap(([, v]) => v);
   return siblings.filter((p) => !seenImgs.has(p.url)).length;
 }
 const MATRIX = STYLES.length * SPACES.length;
@@ -169,7 +173,7 @@ for (const [i, { style, space }] of combos.entries()) {
       items: space.slug === "اتاق خواب" ? ["تخت چوبی", "پشه‌پوش بافت", "آباژور کنار تخت", "فرش دستباف", "میز کنسول"]
         : space.slug === "فضای کار" ? ["میز کار چوبی", "صندلی ارگونومیک", "قفسه دیواری", "چراغ رومیزی", "گلدان سبز"]
         : space.slug === "ناهارخوری" ? ["میز ناهارخوری", "صندلی ناهارخوری", "لوستر", "بوفه", "جلد میز پارچه‌ای"]
-        : space.slug === "بیرونی" ? ["صندلی باغی", "گلدان کاشته", "چراغ محوطه", "نیمکت چوبی", "فرش بیرونی"]
+        : space.slug === "حیاط و محوطه" || space.slug === "بیرونی" ? ["مبل حیاطی", "گلدان کاشته", "چراغ محوطه", "نیمکت چوبی", "آتشدان یا باربیکیو", "فرش بیرونی"]
         : ["کاناپه", "میز جلومبلی", "فرش", "آباژور", "تابلو", "کوسن‌های هماهنگ"],
       styleNote: `سبک ${style.name} با تکیه بر ${style.en.split(" ").slice(0, 3).join(" ")} شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.`,
       tags: [style.name, space.slug, "ایده چیدمان"],

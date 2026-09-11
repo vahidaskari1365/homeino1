@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Camera, ImagePlus, RotateCcw } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
-import { AgentRunStatus } from "@/components/AgentRunStatus";
 import { Chip, Button, EmptyState } from "@/components/ui/primitives";
 import { InspirationCard } from "@/components/cards";
 import { UploadModal } from "@/components/inspiration/UploadModal";
@@ -11,7 +10,11 @@ import { styles } from "@/data/styles";
 import { toFa } from "@/lib/utils";
 
 /** Fixed space taxonomy — deliberately NOT derived from data. */
-const SPACES = ["پذیرایی", "اتاق خواب", "فضای کار", "ناهارخوری", "بیرونی"] as const;
+const SPACES = ["پذیرایی", "اتاق خواب", "فضای کار", "ناهارخوری", "حیاط و محوطه"] as const;
+
+/** پین‌های قدیمی با برچسب «بیرونی» هم زیر همین فضا جمع می‌شوند. */
+const ROOM_ALIAS: Record<string, string> = { بیرونی: "حیاط و محوطه" };
+const roomOf = (r: string): string => ROOM_ALIAS[r] ?? r;
 
 export default function InspirationPage() {
   const [style, setStyle] = useState<string>("all");
@@ -20,7 +23,7 @@ export default function InspirationPage() {
 
   const pins = getAllInspirations();
   const list = pins.filter(
-    (i) => (style === "all" || i.styleSlug === style) && (room === "all" || i.room === room)
+    (i) => (style === "all" || i.styleSlug === style) && (room === "all" || roomOf(i.room) === room)
   );
   const filtered = style !== "all" || room !== "all";
 
@@ -31,7 +34,6 @@ export default function InspirationPage() {
         title="پین‌های الهام‌بخش چیدمان"
         desc="هر روز پین‌های تازه از سردبیر هومینو و کاربران؛ بگرد، ذخیره کن و عکس خانه‌ات را هم با بقیه به اشتراک بگذار."
       />
-      <AgentRunStatus />
 
       <div className="mb-4 space-y-3">
         <div className="flex flex-wrap items-center gap-2">

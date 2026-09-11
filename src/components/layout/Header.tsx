@@ -551,7 +551,7 @@ export function Header() {
             {/* hover bridge — keeps the panel alive between nav and panel */}
             <div className="absolute inset-x-0 -top-4 h-4" onMouseEnter={() => setMega(mega)} />
             <Container>
-              <div className="glass mt-2 overflow-hidden rounded-3xl border border-gold/20 p-5 shadow-[var(--shadow-lift)] sm:p-6">
+              <div className="glass-solid mt-2 overflow-hidden rounded-3xl border border-gold/20 p-5 shadow-[var(--shadow-lift)] sm:p-6">
                 <MegaPanel mega={mega} />
               </div>
             </Container>
