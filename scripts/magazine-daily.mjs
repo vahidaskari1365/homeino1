@@ -346,10 +346,12 @@ async function main() {
   // ۰) سقف روزانه — اسلات‌های catch-up بعد از یک ران موفق فقط صادقانه خارج می‌شوند
   //    (dedupe با URL/عنوان هست، ولی این‌طوری نوبت جبرانی بدون تلاشِ بیهوده و بدون
   //    کامیتِ لاگِ خالی تمام می‌شود و حجم محتوای روز هم قابل‌پیش‌بینی می‌ماند)
+  //    ⚠ اما «مقالهٔ امروز» حتی در catch-up باید تضمین شود — قبل از خروج چک می‌شود.
   const DAILY_BRIEF_TARGET = 4;
   const madeToday = existing.filter((b) => b.date === isoDay(now)).length;
   if (madeToday >= DAILY_BRIEF_TARGET) {
-    console.log(`[magazine-daily] ${madeToday} brief(s) already published today — catch-up run exits`);
+    console.log(`[magazine-daily] ${madeToday} brief(s) already published today — catch-up run checks article only`);
+    await ensureTodayArticle(existing, toJalaliFa(now), isoDay(now));
     return;
   }
 
@@ -385,7 +387,8 @@ async function main() {
     .slice(0, MAX_BRIEFS_PER_RUN);
 
   if (selected.length === 0) {
-    console.log("[magazine-daily] nothing new — done");
+    console.log("[magazine-daily] nothing new — trying article from today's briefs");
+    await ensureTodayArticle(existing, toJalaliFa(now), isoDay(now));
     return;
   }
 
@@ -461,30 +464,7 @@ async function main() {
   }
 
   if (created.length === 0) {
-    // مقالهٔ امروز می‌تواند از بریفِ همین‌روزِ موجود ساخته شود (بدون بریف جدید)
-    const todaysBrief = existing.find((b) => b.date === today);
-    if (todaysBrief) {
-      try {
-        const realUrl2 = await resolveRealSourceUrl(todaysBrief.source?.url ?? "");
-        const html2 = await fetchText(realUrl2, 11000);
-        const art = await generateDailyArticle(
-          { brief: todaysBrief, item: null, realUrl: realUrl2, sourceText: stripHtml(html2).slice(0, 3000) },
-          { dateFa, today },
-        );
-        if (art) {
-          await logContentAgentRun(REPO, {
-            agentKey: "magazine-editor",
-            ok: true,
-            durationMs: Date.now() - RUN_STARTED,
-            summary: `۱ مقاله کامل مجله از بریف امروز («${art.title.slice(0, 40)}…») — بریف جدیدی نبود`,
-            detail: { added: 0, articlesAdded: 1, total: existing.length, via: callLlm.lastVia ?? "unknown" },
-          });
-          return;
-        }
-      } catch (e) {
-        console.log(`[magazine-daily] article-from-existing failed: ${e.message}`);
-      }
-    }
+    await ensureTodayArticle(existing, dateFa, today);
     const via = callLlm.lastVia ?? null;
     const summary = via
       ? "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود، همه تکراری بودند یا خروجی معتبر نبود"
@@ -509,10 +489,12 @@ async function main() {
   console.log(`[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
 
   // 5) مقاله کامل روزانه مجله — صفحه مجله هم مثل ترندها هر روز نفس تازه دارد
+  //    بعد از بریف‌ها سهمیهٔ رایگان گرم است؛ دو دقیقه استراحت تا 429 نخوریم
   let articleNote = "";
   let articleAdded = 0;
   if (leadCtx) {
     try {
+      await new Promise((s) => setTimeout(s, 120_000));
       const art = await generateDailyArticle(leadCtx, { dateFa, today });
       if (art) {
         articleAdded = 1;
@@ -608,6 +590,47 @@ function extractJsonLenient(text) {
   return null;
 }
 
+/** تضمین مقالهٔ امروز — از بریف موجود امروز، حتی در اجرای catch-up */
+async function ensureTodayArticle(existing, dateFa, today) {
+  let prev = [];
+  try {
+    prev = JSON.parse(fs.readFileSync(MAG_FILE, "utf8"));
+    if (!Array.isArray(prev)) prev = [];
+  } catch { prev = []; }
+  if (prev.some((a) => a.dateISO === today)) {
+    console.log("[magazine-daily] article already published today — nothing to do");
+    return null;
+  }
+  const brief = existing.find((b) => b.date === today);
+  if (!brief) {
+    console.log("[magazine-daily] no brief for today — article impossible");
+    return null;
+  }
+  const started = Date.now();
+  await new Promise((s) => setTimeout(s, 20_000)); // سهمیه نفس بکشد
+  try {
+    const realUrl = await resolveRealSourceUrl(brief.source?.url ?? "");
+    const html = await fetchText(realUrl, 11000);
+    const art = await generateDailyArticle(
+      { brief, item: null, realUrl, sourceText: stripHtml(html).slice(0, 3000) },
+      { dateFa, today },
+    );
+    if (art) {
+      await logContentAgentRun(REPO, {
+        agentKey: "magazine-editor",
+        ok: true,
+        durationMs: Date.now() - started,
+        summary: `۱ مقاله کامل مجله از بریف امروز («${art.title.slice(0, 40)}…»)`,
+        detail: { added: 0, articlesAdded: 1, total: existing.length, via: callLlm.lastVia ?? "unknown" },
+      });
+    }
+    return art;
+  } catch (e) {
+    console.log(`[magazine-daily] ensureTodayArticle failed: ${e.message}`);
+    return null;
+  }
+}
+
 /** ساخت ۱ مقاله کامل در روز از روی بریف تازهٔ صدر فهرست + نوشتن src/content/magazine/articles.json */
 async function generateDailyArticle(leadCtx, { dateFa, today }) {
   let prev = [];
@@ -628,6 +651,7 @@ async function generateDailyArticle(leadCtx, { dateFa, today }) {
   if (!parsed) {
     // تلاش دوم — خواسته‌ی کوتاه‌تر با بودجه‌ی توکنِ اثبات‌شده
     console.log("[magazine-daily] article: first attempt invalid — retrying shorter");
+    await new Promise((s) => setTimeout(s, 30_000)); // سهمیه نفس بکشد
     const retryMsg = [
       ...ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa).slice(0, -1),
       { role: "user", content: "پاسخ قبلی معتبر نبود. این‌بار فقط و فقط یک بلوک ```json ``` برگردان با «۴ پاراگرافِ ۳ جمله‌ای» و هیچ متن اضافه‌ای بیرون از JSON ننویس." },
