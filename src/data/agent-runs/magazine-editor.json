@@ -1,7 +1,21 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-11T05:43:44.643Z",
+  "updatedAt": "2026-09-11T08:32:02.507Z",
   "runs": [
+    {
+      "id": "run-1789115522507-hvh55",
+      "at": "2026-09-11T08:32:02.507Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 145287,
+      "summary": "۱ مقاله کامل مجله از بریف امروز («وداع با خانه‌های بی‌روح: بازگشت جسورانه …»)",
+      "detail": {
+        "added": 0,
+        "articlesAdded": 1,
+        "total": 39,
+        "via": "google-1"
+      }
+    },
     {
       "id": "run-1789105424643-6xy7a",
       "at": "2026-09-11T05:43:44.643Z",
