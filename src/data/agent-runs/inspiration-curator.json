@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-12T10:36:14.691Z",
+  "updatedAt": "2026-09-12T12:23:03.544Z",
   "runs": [
+    {
+      "id": "run-1789215783544-unjub",
+      "at": "2026-09-12T12:23:03.544Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 440614,
+      "summary": "6 پین الهام جدید (بازنویسی LLM؛ 2 پین محصول‌محور)",
+      "detail": {
+        "added": 6,
+        "productPins": 2,
+        "total": 157,
+        "via": "llm",
+        "poolRemaining": 704,
+        "productPoolRemaining": 92,
+        "skippedStarved": 0,
+        "combos": [
+          "نئوکلاسیک × پذیرایی",
+          "صنعتی × فضای کار",
+          "بوهو × حیاط و محوطه",
+          "مدیترانه‌ای × اتاق خواب"
+        ],
+        "productJobs": [
+          "گلدان و گیاه",
+          "مبل و مبلمان"
+        ]
+      }
+    },
     {
       "id": "run-1789209374691-jeevt",
       "at": "2026-09-12T10:36:14.691Z",
