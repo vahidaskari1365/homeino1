@@ -54,15 +54,31 @@ export default function HomePage() {
     const v = videoRef.current;
     if (!v) return;
 
-    // Respect data-saver / reduced-motion users: the hero works perfectly
-    // with its static poster — skip the intro entirely, land on the complete
-    // hero (halo + copy) and never start the video stream.
-    if (
-      window.matchMedia?.("(prefers-reduced-data: reduce)").matches ||
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setStage(2);
-      return;
+    let cancelled = false;
+    const timers: number[] = [];
+
+    // Data-saver users: never pull the 311KB stream on metered connections —
+    // cancel the attribute-autoplay before it starts and reveal the halo +
+    // copy over the static poster after a short beat, so the hero is never
+    // an empty poster. (Reduced-motion intentionally follows the NORMAL
+    // sequence now: the intro is the site's centerpiece, every reveal is a
+    // gentle opacity fade and a skip button is one tap away. The old
+    // instant-skip to stage 2 was exactly the bug that flashed the halo
+    // before the video on desktops with "reduce motion" enabled — the halo
+    // must never be visible until the video has played, on ANY device.)
+    if (window.matchMedia?.("(prefers-reduced-data: reduce)")?.matches) {
+      try {
+        v.removeAttribute("autoplay");
+        v.pause();
+      } catch {
+        // ignore
+      }
+      setStage((s) => (s < 1 ? 1 : s));
+      timers.push(window.setTimeout(() => setStage((s) => (s < 2 ? 2 : s)), 900));
+      return () => {
+        cancelled = true;
+        timers.forEach((t) => window.clearTimeout(t));
+      };
     }
 
     // Ensure attributes are set for maximum autoplay compatibility on mobile
@@ -77,10 +93,8 @@ export default function HomePage() {
       // ignore
     }
 
-    let cancelled = false;
     let hasPlayed = false;
     let finished = false;
-    const timers: number[] = [];
 
     // Video finished (or a safety net fired): the halo fades in first, the
     // copy follows ~0.85s later. Idempotent — once shown, the copy is never
@@ -162,11 +176,11 @@ export default function HomePage() {
 
     // Safety nets — the copy must never be trapped behind a video that cannot
     // play (blocked autoplay, dead stream, throttled tab): if playback hasn't
-    // started within 5s we show halo + copy anyway; 14s is a hard cap.
+    // started within 4.5s we show halo + copy anyway; 12s is a hard cap.
     timers.push(window.setTimeout(() => {
       if (!hasPlayed) finishIntro();
-    }, 5000));
-    timers.push(window.setTimeout(() => finishIntro(), 14000));
+    }, 4500));
+    timers.push(window.setTimeout(() => finishIntro(), 12000));
 
     return () => {
       cancelled = true;
@@ -191,14 +205,14 @@ export default function HomePage() {
         {/* parallax background (video) */}
         <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0">
           <video
+            id="hero-video"
             ref={(el) => {
               videoRef.current = el;
-              // React serialises `muted` as a property-only prop — it never
-              // lands in the SSR HTML, so mobile Safari sees an UNMUTED video
-              // and blocks autoplay (play button instead of playback). Setting
-              // it in the ref callback runs at commit time, before the browser
-              // makes its autoplay decision, so muted inline playback is
-              // granted on iOS Safari and Android Chrome alike.
+              // `muted` must hold BEFORE the browser's autoplay decision.
+              // React 19 does render the muted attribute into the SSR HTML,
+              // and this ref callback re-asserts the property at commit time
+              // so muted inline playback is granted on iOS Safari and
+              // Android Chrome alike — no native play button on phones.
               if (el) {
                 el.defaultMuted = true;
                 el.muted = true;
