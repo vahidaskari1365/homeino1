@@ -5,7 +5,7 @@ import { ArrowRight, Lightbulb } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
-import { briefsByDate, trendDates } from "@/lib/trends";
+import { briefsByDate, trendDates, trendCategoryByLabel } from "@/lib/trends";
 import { SITE_URL } from "@/config/site";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -31,22 +31,38 @@ export default async function TrendDatePage({ params }: { params: Promise<{ date
   const list = briefsByDate(date);
   if (list.length === 0) notFound();
 
+  const hasPart = list.map((b) => ({
+    "@type": "NewsArticle",
+    headline: b.title,
+    url: `${SITE_URL}/trends/${date}#${b.slug}`,
+    datePublished: b.date,
+  }));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `ترندهای دیزاین خانه — ${list[0].dateFa}`,
     url: `${SITE_URL}/trends/${date}`,
-    hasPart: list.map((b) => ({
-      "@type": "NewsArticle",
-      headline: b.title,
-      url: `${SITE_URL}/trends/${date}#${b.slug}`,
-      datePublished: b.date,
-    })),
+    hasPart,
   };
+  // GEO — پرسش‌وپاسخ‌های بریف‌های امروز به‌صورت FAQPage برای قابل‌استناد بودن در AIها
+  const faqs = list.filter((b) => b.faq && b.faq.length > 0).flatMap((b) => b.faq ?? []);
+  const faqLd =
+    faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }
+      : null;
 
   return (
     <Container className="py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
       <PageHeader
         eyebrow="آرشیو ترندها"
         title={`ترندهای روز ${list[0].dateFa}`}
@@ -64,7 +80,7 @@ export default async function TrendDatePage({ params }: { params: Promise<{ date
             <article id={b.slug} className="flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] card-surface">
               <div className="relative aspect-[16/9] overflow-hidden">
                 <SmartImage src={b.cover} alt={b.title} className="h-full w-full" />
-                <span className="absolute right-3 top-3 rounded-full bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur">{b.category}</span>
+                <CategoryBadge label={b.category} className="absolute right-3 top-3 bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur" />
               </div>
               <div className="flex flex-1 flex-col p-5">
                 <h2 className="font-display text-lg font-black leading-snug text-ink">{b.title}</h2>
@@ -73,6 +89,16 @@ export default async function TrendDatePage({ params }: { params: Promise<{ date
                   <div className="flex items-center gap-1.5 text-2xs font-black text-terracotta-deep"><Lightbulb size={12} /> برای خانه ایرانی</div>
                   <p className="mt-1 text-xs leading-6 text-ink">{b.takeaway}</p>
                 </div>
+                {b.faq && b.faq.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {b.faq.map((f) => (
+                      <details key={f.q} className="rounded-xl border border-clay/40 bg-cream/60 p-3">
+                        <summary className="cursor-pointer text-xs font-black text-ink">{f.q}</summary>
+                        <p className="mt-1.5 text-xs leading-6 text-ink-muted">{f.a}</p>
+                      </details>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-x-2 text-2xs text-ink-muted">
                   <span>منبع: <a href={b.source.url} target="_blank" rel="noopener noreferrer" className="font-bold text-ink hover:text-terracotta-deep">{b.source.name}</a></span>
                   {b.extraSources?.map((s) => (
@@ -86,4 +112,17 @@ export default async function TrendDatePage({ params }: { params: Promise<{ date
       </RevealGroup>
     </Container>
   );
+}
+
+/** بج دسته — اگر هاب دسته‌ای دارد، لینک به آن است (کلستر سئو) */
+function CategoryBadge({ label, className }: { label: string; className?: string }) {
+  const meta = trendCategoryByLabel(label);
+  if (meta) {
+    return (
+      <Link href={`/trends/category/${meta.slug}`} className={`rounded-full transition hover:opacity-85 ${className ?? ""}`}>
+        {label}
+      </Link>
+    );
+  }
+  return <span className={`rounded-full ${className ?? ""}`}>{label}</span>;
 }

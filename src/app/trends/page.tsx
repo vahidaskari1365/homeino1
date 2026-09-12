@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Lightbulb } from "lucide-react";
 import { Container, PageHeader } from "@/components/shared";
-import { SectionHeading } from "@/components/ui/primitives";
+import { SectionHeading, Chip } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
-import { trendBriefs } from "@/lib/trends";
+import { trendBriefs, trendCategoryList, trendCategoryByLabel } from "@/lib/trends";
 import { SITE_URL } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -40,6 +40,21 @@ export default function TrendsPage() {
         title="ترندهای روز دیزاین خانه"
         desc="هر روز مهم‌ترین اتفاق‌های دنیای دیزاین داخلی را از معتبرترین منابع جهانی گردش می‌آوریم، به فارسیِ روان و مستقل بازنویسی می‌کنیم و نسخه‌ی کاربردی‌اش برای خانه‌های ایرانی را کنارش می‌گذاریم."
       />
+
+      {/* هاب‌های دسته‌ای — کلستر سئو: هر دسته صفحه مرجع خودش را دارد */}
+      {trendCategoryList.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-black text-ink-muted">ترندها بر اساس دسته:</span>
+          {trendCategoryList.map(({ meta, count }) => (
+            <Link key={meta.slug} href={`/trends/category/${meta.slug}`} className="group">
+              <Chip active={false}>
+                {meta.label}
+                <span className="mr-1 text-2xs text-ink-muted group-hover:text-terracotta-deep">({toFaSafe(count)})</span>
+              </Chip>
+            </Link>
+          ))}
+        </div>
+      )}
       {lead ? (
         <>
           <Reveal>
@@ -56,7 +71,7 @@ export default function TrendsPage() {
             <article id={lead.slug} className="mb-6 grid overflow-hidden rounded-[var(--radius-xl)] card-surface md:grid-cols-2">
               <div className="relative min-h-56 overflow-hidden md:min-h-full">
                 <SmartImage src={lead.cover} alt={lead.title} className="absolute inset-0 h-full w-full" />
-                <span className="absolute right-4 top-4 rounded-full bg-terracotta px-3 py-1 text-xs font-bold text-cream">{lead.category}</span>
+                <CategoryBadge label={lead.category} className="absolute right-4 top-4 bg-terracotta px-3 py-1 text-xs font-bold text-cream" />
                 <span className="absolute left-4 top-4 rounded-full bg-ink/55 px-2.5 py-1 text-2xs font-bold text-cream backdrop-blur">{lead.dateFa}</span>
               </div>
               <div className="flex flex-col p-6 sm:p-8">
@@ -84,7 +99,7 @@ export default function TrendsPage() {
                 <article id={b.slug} className="flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] card-surface">
                   <div className="relative aspect-[16/9] overflow-hidden">
                     <SmartImage src={b.cover} alt={b.title} className="h-full w-full" />
-                    <span className="absolute right-3 top-3 rounded-full bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur">{b.category}</span>
+                    <CategoryBadge label={b.category} className="absolute right-3 top-3 bg-cream/92 px-2.5 py-1 text-2xs font-bold text-ink backdrop-blur" />
                     <span className="absolute left-3 top-3 rounded-full bg-ink/55 px-2 py-1 text-2xs font-bold text-cream backdrop-blur">{b.dateFa}</span>
                   </div>
                   <div className="flex flex-1 flex-col p-5">
@@ -94,6 +109,16 @@ export default function TrendsPage() {
                       <span className="text-2xs font-black text-terracotta-deep">برای خانه ایرانی: </span>
                       <span className="text-xs leading-6 text-ink">{b.takeaway}</span>
                     </div>
+                    {b.faq && b.faq.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {b.faq.map((f) => (
+                          <details key={f.q} className="rounded-xl border border-clay/40 bg-cream/60 p-3">
+                            <summary className="cursor-pointer text-xs font-black text-ink">{f.q}</summary>
+                            <p className="mt-1.5 text-xs leading-6 text-ink-muted">{f.a}</p>
+                          </details>
+                        ))}
+                      </div>
+                    )}
                     <div className="mt-3 flex flex-wrap items-center gap-x-2 text-2xs text-ink-muted">
                       <span>منبع: <a href={b.source.url} target="_blank" rel="noopener noreferrer" className="font-bold text-ink hover:text-terracotta-deep">{b.source.name}</a></span>
                       <span>· {b.dateFa}</span>
@@ -115,4 +140,17 @@ export default function TrendsPage() {
 
 function toFaSafe(n: number): string {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
+}
+
+/** بج دسته — اگر هاب دسته‌ای دارد، لینک به آن است (کلستر سئو) */
+function CategoryBadge({ label, className }: { label: string; className?: string }) {
+  const meta = trendCategoryByLabel(label);
+  if (meta) {
+    return (
+      <Link href={`/trends/category/${meta.slug}`} className={`rounded-full transition hover:opacity-85 ${className ?? ""}`}>
+        {label}
+      </Link>
+    );
+  }
+  return <span className={`rounded-full ${className ?? ""}`}>{label}</span>;
 }

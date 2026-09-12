@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trendBriefs, trendDates, briefsByDate, latestTrendBriefs, trendCategories } from "./trends";
+import { trendBriefs, trendDates, briefsByDate, latestTrendBriefs, trendCategories, TREND_CATEGORY_META } from "./trends";
 
 /**
  * قرارداد داده‌ی «ترندهای روز» — این تست‌ها هم داده‌ی دستی امروز و هم
@@ -29,7 +29,7 @@ describe("trends data", () => {
       expect(b.summary.length).toBeGreaterThan(150); // بازنویسی اختصاصی، نه یک‌خطی
       expect(b.takeaway.length).toBeGreaterThan(20);
       expect(b.dateFa).toMatch(/[\u06F0-\u06F9]{4}\//);
-      expect(b.cover).toMatch(/^\/images\/trends\/.+\.(png|jpg|jpeg|webp)$/);
+      expect(b.cover).toMatch(/^\/images\/(trends|product-pins|trend-covers)\/.+\.(png|jpg|jpeg|webp)$/);
       expect(b.source.url).toMatch(/^https:\/\//);
       expect(b.source.name.length).toBeGreaterThan(2);
       expect(b.readTime).toBeGreaterThan(0);
@@ -45,12 +45,34 @@ describe("trends data", () => {
     expect(latestTrendBriefs(3).length).toBeLessThanOrEqual(3);
   });
 
-  it("categories are from the editorial list", () => {
-    // همان لیست CATEGORIES_FA در scripts/magazine-daily.mjs — ۸ دسته پایه + ۴ دسته توسعه (ویلا/حیاط/کار/وسایل)
-    const allowed = [
-      "رنگ", "مبلمان", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند",
-      "ویلا و باغ", "حیاط و بیرونی", "محیط کار", "وسایل ترند",
-    ];
+  it("categories are from the editorial list (aligned with site categories)", () => {
+    // همان فهرست CONTENT_CATEGORIES در scripts/magazine-daily.mjs — هم‌راستا با دسته‌بندی‌های سایت
+    const allowed = TREND_CATEGORY_META.map((m) => m.label);
     for (const c of trendCategories) expect(allowed).toContain(c);
+  });
+
+  it("every brief category has hub metadata (slug for /trends/category/…)", () => {
+    for (const b of trendBriefs) {
+      const meta = TREND_CATEGORY_META.find((m) => m.label === b.category);
+      expect(meta).toBeDefined();
+      expect(meta?.slug).toMatch(/^[a-z-]+$/);
+    }
+  });
+
+  it("optional GEO fields (keywords / faq) have a valid shape", () => {
+    for (const b of trendBriefs) {
+      if (b.keywords) {
+        expect(Array.isArray(b.keywords)).toBe(true);
+        expect(b.keywords.length).toBeGreaterThan(0);
+        for (const k of b.keywords) expect(typeof k).toBe("string");
+      }
+      if (b.faq) {
+        expect(b.faq.length).toBeGreaterThan(0);
+        for (const f of b.faq) {
+          expect(f.q.length).toBeGreaterThan(5);
+          expect(f.a.length).toBeGreaterThan(10);
+        }
+      }
+    }
   });
 });

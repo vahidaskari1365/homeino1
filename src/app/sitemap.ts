@@ -5,7 +5,7 @@ import { storesRepository } from "@/repositories/stores";
 import { stylesRepository } from "@/repositories/styles";
 import { inspirationsRepository } from "@/repositories/inspirations";
 import { contentRepository } from "@/repositories/content";
-import { trendBriefs, trendDates } from "@/lib/trends";
+import { trendBriefs, trendDates, trendCategoryList } from "@/lib/trends";
 import { SITE_URL } from "@/config/site";
 
 /**
@@ -117,6 +117,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
+  // هاب‌های ترندِ دسته‌ای — کلستر سئوی هر دسته (فقط دسته‌های با محتوا)
+  const trendHubRoutes: MetadataRoute.Sitemap = trendCategoryList.map(({ meta, latest }) => ({
+    url: `${base}/trends/category/${meta.slug}`,
+    lastModified: latest ? new Date(`${latest}T00:00:00Z`) : now,
+    changeFrequency: "daily" as const,
+    priority: 0.7,
+  }));
+
   return [
     ...staticRoutes,
     ...productRoutes,
@@ -128,5 +136,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...projectRoutes,
     ...trendDateRoutes,
     ...trendBriefRoutes,
+    ...trendHubRoutes,
   ];
 }

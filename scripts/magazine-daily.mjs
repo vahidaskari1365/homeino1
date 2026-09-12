@@ -380,7 +380,7 @@ const BRIEF_PROMPT = (item, sourceText, dateFa) => [
       `از مطلب زیر یک بریف ترند فارسی بساز.\n\nعنوان منبع: ${item.title}\nناشر: ${item.publisher}\n` +
       `خلاصه فید: ${item.desc}\n\nمتن استخراج‌شده (ممکن است ناقص باشد):\n"""\n${(sourceText || "").slice(0, 2600)}\n"""\n\n` +
       "الگوی خروجی — یک آبجکت JSON و فقط آن:\n" +
-      '{"title": "...", "summary": "...", "takeaway": "...", "category": "...", "tags": ["...","..."]}\n' +
+      '{"title": "...", "summary": "...", "takeaway": "...", "category": "...", "tags": ["...","..."], "keywords": ["...","...","..."], "faq": [{"q": "...", "a": "..."}, {"q": "...", "a": "..."}]}\n' +
       "قواعد فیلدها:\n" +
       "- title: فارسی، حداکثر ~۶۰ کاراکتر، بدون علامت تعجب اغراق‌آمیز؛ اگر ممکن است کلیدواژه اصلی موضوع (نام دسته/محصول) در آن باشد.\n" +
       "- summary: ۳ تا ۵ جملهٔ پیوسته (۱۱۰ تا ۱۷۰ واژه)؛ حقایق مشخص (رنگ‌ها، متریال، اعداد، نام برندها اگر هست) + چرایی اهمیتش الان.\n" +
@@ -389,6 +389,8 @@ const BRIEF_PROMPT = (item, sourceText, dateFa) => [
       "- takeaway: ۱ تا ۲ جمله با شروع مفهومی «برای خانه ایرانی»؛ پیشنهاد کاربردی و کم‌هزینه، ترجیحاً با یک جزئیات مشخص (ابعاد، متریال، تعداد).\n" +
       `- category: دقیقاً یکی از ${JSON.stringify(CATEGORIES_FA)}.\n` +
       "- tags: ۳ تا ۴ برچسب فارسی کوتاه.\n" +
+      "- keywords: ۳ تا ۴ عبارت جستجوی فارسی که کاربر واقعی در گوگل تایپ می‌کند (مثل «ترند فرش ۲۰۲۶» یا «رنگ سال اتاق نشیمن»).\n" +
+      "- faq: دقیقاً دو پرسش واقعی که مخاطب درباره همین ترند می‌پرسد، هرکدام با پاسخ قطعی ۱ تا ۲ جمله‌ای مستند (اعداد و اسم‌ها را از متن منبع بگیر).\n" +
       `تاریخ امروز (شمسی برای ارجاع ذهنی خودت): ${dateFa}`,
   },
 ];
@@ -539,6 +541,18 @@ async function main() {
       source: { name: item.publisher, url: item.link },
       readTime: 2,
       tags: Array.isArray(parsed.tags) ? parsed.tags.map((t) => String(t).slice(0, 24)).slice(0, 4) : [],
+      // GEO — عبارت‌های جستجو و پرسش‌وپاسخ؛ پایه FAQPage JSON-LD و استناد دستیارهای هوشمند
+      ...(Array.isArray(parsed.keywords) && parsed.keywords.length
+        ? { keywords: parsed.keywords.map((k) => String(k).trim().slice(0, 60)).filter((k) => k.length > 1).slice(0, 4) }
+        : {}),
+      ...(Array.isArray(parsed.faq)
+        ? {
+            faq: parsed.faq
+              .map((f) => ({ q: String(f?.q ?? "").trim().slice(0, 140), a: String(f?.a ?? "").trim().slice(0, 320) }))
+              .filter((f) => f.q.length > 5 && f.a.length > 10)
+              .slice(0, 2),
+          }
+        : {}),
     });
     console.log(`  brief ✓ ${title.slice(0, 60)}`);
     if (!leadCtx) leadCtx = { brief: created[created.length - 1], item, realUrl, sourceText };

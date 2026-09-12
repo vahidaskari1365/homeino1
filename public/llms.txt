@@ -29,6 +29,25 @@ Homeino یک بازارگاه چندفروشگاهی خانه و دکوراسی�
 - [الهام](https://homeino.ir/inspiration) — روزی ۱۸ پین تازه: چیدمان‌های واقعی به تفکیک سبک (۱۲ سبک) و فضا + پین‌های تخصصی انتخاب محصول
 - نقل‌قول آزاد: بریف‌ها و مقاله‌ها جمله آغازین خودبسنده دارند و برای استناد دستیارهای هوشمند نوشته می‌شوند؛ منبع هر بریف داخل همان متن ذکر است.
 
+## هاب‌های ترند بر اساس دسته (کلستر سئو)
+
+هر دسته صفحه مرجع اختصاصی دارد و به صفحه خرید همان دسته لینک می‌شود:
+
+- [ترندهای مبلمان](https://homeino.ir/trends/category/furniture) — مبل، کاناپه، صندلی و میز ↔ خرید: /category/furniture
+- [ترندهای فرش و قالیچه](https://homeino.ir/trends/category/rugs) — فرش دستباف و مدرن ↔ خرید: /category/rugs
+- [ترندهای کف‌پوش](https://homeino.ir/trends/category/flooring) — پارکت، لمینت و ترازو
+- [ترندهای روشنایی و لوستر](https://homeino.ir/trends/category/lighting) — لوستر، آباژور، چراغ آویز ↔ خرید: /category/lighting
+- [ترندهای تابلو و دیوارکوب](https://homeino.ir/trends/category/wall-art) — گالری‌وال و تابلو ↔ خرید: /category/decor
+- [ترندهای گلدان و گیاه](https://homeino.ir/trends/category/vase-plant) — گلدان و گیاهان آپارتمانی ↔ خرید: /category/decor
+- [ترندهای پرده و منسوجات](https://homeino.ir/trends/category/textiles) — پرده، کوسن و رومیزی ↔ خرید: /category/textiles
+- [ترندهای دکوری و اکسسوری](https://homeino.ir/trends/category/decor-accessories) — آینه، شمع، استایلینگ ↔ خرید: /category/decor
+- [ترندهای کمد و ذخیره‌سازی](https://homeino.ir/trends/category/storage) — کمد و نظم‌دهنده ↔ خرید: /category/bedroom
+- [ترندهای دیوارپوش](https://homeino.ir/trends/category/wallpaper) — کاغذدیواری و وال‌پنل
+- [ترندهای آشپزخانه](https://homeino.ir/trends/category/kitchen) ↔ خرید: /category/kitchen
+- [ترندهای حیاط و بیرونی](https://homeino.ir/trends/category/outdoor) ↔ خرید: /category/outdoor
+- [ترندهای محیط کار](https://homeino.ir/trends/category/workspace) ↔ خرید: /category/workspace
+- هاب‌های تحریریه‌ای: /trends/category/color (رنگ) · /trends/category/styles (سبک‌ها) · /trends/category/bathroom (حمام) · /trends/category/materials (متریال) · /trends/category/smart-home (هوشمند) · /trends/category/lifestyle (سبک زندگی) · /trends/category/villa-garden (ویلا و باغ) · /trends/category/trend-pieces (وسایل ترند)
+
 ## داده‌های ساخت‌یافته
 
 - Organization / WebSite JSON-LD در صفحات اصلی

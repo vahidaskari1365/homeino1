@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Suspense, use } from "react";
 import { notFound, usePathname, useSearchParams } from "next/navigation";
 import { Container, Breadcrumb, PageHeader, ProductGrid } from "@/components/shared";
@@ -10,6 +11,7 @@ import { getCategory, categories } from "@/data/categories";
 import { productsByCategory } from "@/data/products";
 import { inspirations } from "@/data/inspirations";
 import { toFa } from "@/lib/utils";
+import { TREND_CATEGORY_META } from "@/lib/trends";
 import { InspirationCard } from "@/components/cards";
 import type { Category } from "@/types";
 
@@ -62,6 +64,9 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
     .filter((item) => item.tags.some((tag) => category.name.includes(tag) || category.nameEn.toLowerCase().includes(tag)))
     .slice(0, 3);
 
+  // دسته‌ی محصول ↔ هاب ترند (کلستر سئو)
+  const trendMeta = TREND_CATEGORY_META.find((m) => m.productSlug === category.slug);
+
   return (
     <Container className="py-8">
       <Breadcrumb items={[{ label: "خانه", href: "/" }, { label: "دسته‌بندی‌ها", href: "/products" }, { label: category.name }]} />
@@ -79,6 +84,21 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
       <Suspense fallback={<div className="mt-8"><ProductGrid products={[]} loading /></div>}>
         <CategoryProducts category={category} />
       </Suspense>
+
+      {/* کلستر سئو: صفحه دسته‌ی محصول ↔ هاب ترند همان دسته */}
+      {trendMeta && (
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gold/8 p-6">
+          <div>
+            <h2 className="font-display text-lg font-black text-ink">ترندهای {trendMeta.label} را دنبال کنید</h2>
+            <p className="mt-1 max-w-xl text-sm leading-7 text-ink-muted">
+              هر روز تازه‌ترین ترندهای جهانی {trendMeta.label} را از معتبرترین منابع دیزاین جمع می‌کنیم و به فارسیِ مستقل بازنویسی می‌کنیم — با نسخه کاربردی برای خانه ایرانی.
+            </p>
+          </div>
+          <Link href={`/trends/category/${trendMeta.slug}`} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-cream transition hover:bg-terracotta-deep">
+            مشاهده ترندهای {category.name} <ArrowLeft size={15} />
+          </Link>
+        </div>
+      )}
 
       {relatedInspirations.length > 0 && (
         <div className="mt-14">
