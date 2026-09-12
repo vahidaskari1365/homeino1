@@ -24,6 +24,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 import { callLlm } from "./lib/llm-chain.mjs";
+import { CATEGORY_FEEDS, itemCategory } from "./lib/homeino-categories.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, "..");
@@ -33,6 +34,8 @@ const MAG_FILE = path.join(REPO, "src", "content", "magazine", "articles.json");
 const RETENTION_DAYS = 120;
 const MAX_BRIEFS_PER_RUN = 4;
 const DAYS_BACK = 3;
+// روزی ۳ نوبت (۰۷:۵۰، ۱۲:۴۰، ۱۷:۳۰ تهران) × ۴ بریف = هدف ۱۲ بریف/روز
+const DAILY_BRIEF_TARGET = 12;
 
 // فیدهای تأییدشده (تست‌شده در 2026-09-06) + fallbackهای Google News
 const FEEDS = [
@@ -46,12 +49,19 @@ const FEEDS = [
   "https://www.surfacemag.com/feed",
   "https://news.google.com/rss/search?q=interior+design+trends+when:2d&hl=en-US&gl=US&ceid=US:en",
   "https://news.google.com/rss/search?q=home+decor+color+OR+kitchen+OR+furniture+when:2d&hl=en-US&gl=US&ceid=US:en",
+  // فیدهای صنفی دسته‌های محصول (فرش، روشنایی، پرده، تابلو، گلدان، کف‌پوش، کمد، دیوارپوش…)
+  ...CATEGORY_FEEDS,
 ];
 
 const KEYWORDS = [
   ["trend", 3], ["color", 2], ["paint", 2], ["kitchen", 3], ["bathroom", 3],
   ["furniture", 3], ["interior", 3], ["decor", 3], ["living room", 2],
-  ["bedroom", 2], ["rug", 1], ["lighting", 1], ["sofa", 2], ["wood", 1],
+  ["bedroom", 2], ["rug", 3], ["carpet", 3], ["lighting", 3], ["lamp", 2],
+  ["chandelier", 3], ["pendant", 2], ["sofa", 2], ["wood", 1],
+  ["curtain", 3], ["draper", 2], ["window treatment", 3],
+  ["vase", 2], ["houseplant", 2], ["planter", 2],
+  ["wallpaper", 3], ["wall panel", 2], ["flooring", 3], ["parquet", 2],
+  ["wall art", 3], ["gallery wall", 3], ["mirror", 2], ["wardrobe", 3], ["closet", 2],
   ["materials", 2], ["renovation", 2], ["designer", 1], ["styling", 2],
   ["minimalis", 2], ["wellness", 1], ["sustainab", 2], ["small space", 2],
   // گسترش: ویلا، حیاط، محیط کار و وسایل ترند
@@ -63,10 +73,26 @@ const KEYWORDS = [
   ["japandi", 2], ["quiet luxury", 2], [" maximal", 2], ["biophilic", 2],
 ];
 
-const CATEGORIES_FA = ["رنگ", "مبلمان", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند", "ویلا و باغ", "حیاط و بیرونی", "محیط کار", "وسایل ترند"];
+// دسته‌های محتوایی — ۱۰ دسته محصول سایت + موضوع‌های عمومی دیزاین
+const CATEGORIES_FA = [
+  "مبلمان", "فرش و قالیچه", "کف‌پوش", "روشنایی و لوستر", "تابلو و دیوارکوب",
+  "گلدان و گیاه", "پرده و منسوجات", "دکوری و اکسسوری", "کمد و ذخیره‌سازی", "دیوارپوش",
+  "رنگ", "آشپزخانه", "حمام", "متریال", "سبک زندگی", "سبک‌ها", "هوشمند",
+  "ویلا و باغ", "حیاط و بیرونی", "محیط کار", "وسایل ترند",
+];
 const COVER_BY_CATEGORY = {
   "رنگ": "/images/trends/trends-color-year.png",
   "مبلمان": "/images/trends/trends-neo-deco.png",
+  // دسته‌های محصول‌محور جدید — کاور از استخر عکس همان دسته (لوکال، فشرده)
+  "فرش و قالیچه": "/images/product-pins/c2-01.jpg",
+  "کف‌پوش": "/images/product-pins/c3-01.jpg",
+  "روشنایی و لوستر": "/images/product-pins/c4-01.jpg",
+  "تابلو و دیوارکوب": "/images/product-pins/c5-01.jpg",
+  "گلدان و گیاه": "/images/product-pins/c6-01.jpg",
+  "پرده و منسوجات": "/images/product-pins/c7-01.jpg",
+  "دکوری و اکسسوری": "/images/product-pins/c8-01.jpg",
+  "کمد و ذخیره‌سازی": "/images/product-pins/c9-01.jpg",
+  "دیوارپوش": "/images/product-pins/c10-01.jpg",
   "آشپزخانه": "/images/trends/trends-kitchen-wood.png",
   "حمام": "/images/trends/trends-wetroom.png",
   "متریال": "/images/trends/trends-chrome-wood.png",
@@ -356,9 +382,11 @@ const BRIEF_PROMPT = (item, sourceText, dateFa) => [
       "الگوی خروجی — یک آبجکت JSON و فقط آن:\n" +
       '{"title": "...", "summary": "...", "takeaway": "...", "category": "...", "tags": ["...","..."]}\n' +
       "قواعد فیلدها:\n" +
-      "- title: فارسی، حداکثر ~۶۰ کاراکتر، بدون علامت تعجب اغراق‌آمیز.\n" +
+      "- title: فارسی، حداکثر ~۶۰ کاراکتر، بدون علامت تعجب اغراق‌آمیز؛ اگر ممکن است کلیدواژه اصلی موضوع (نام دسته/محصول) در آن باشد.\n" +
       "- summary: ۳ تا ۵ جملهٔ پیوسته (۱۱۰ تا ۱۷۰ واژه)؛ حقایق مشخص (رنگ‌ها، متریال، اعداد، نام برندها اگر هست) + چرایی اهمیتش الان.\n" +
-      "- takeaway: ۱ تا ۲ جمله با شروع مفهومی «برای خانه ایرانی»؛ پیشنهاد کاربردی و کم‌هزینه.\n" +
+      "  · سئو/GEO: جملهٔ اول یک تعریف یا ادعای مستقیم و خودبسنده با کلیدواژهٔ دسته باشد که موتور جستجو و دستیارهای هوشمند بتوانند بدون زمینه نقلش کنند (مثال الگو: «میز آینه‌ای راهرو، ...» نه «این ترند که همه‌جا می‌بینیم، ...»).\n" +
+      "  · برای هر اصطلاح تخصصی، معادل انگلیسی را یک‌بار داخل پرانتز بیاور (مثل جاپندی (Japandi)) تا هم سئوی فارسی و هم انگلیسی پوشش داده شود.\n" +
+      "- takeaway: ۱ تا ۲ جمله با شروع مفهومی «برای خانه ایرانی»؛ پیشنهاد کاربردی و کم‌هزینه، ترجیحاً با یک جزئیات مشخص (ابعاد، متریال، تعداد).\n" +
       `- category: دقیقاً یکی از ${JSON.stringify(CATEGORIES_FA)}.\n` +
       "- tags: ۳ تا ۴ برچسب فارسی کوتاه.\n" +
       `تاریخ امروز (شمسی برای ارجاع ذهنی خودت): ${dateFa}`,
@@ -381,11 +409,8 @@ async function main() {
   const now = new Date();
   const cutoff = Date.now() - DAYS_BACK * 24 * 3600 * 1000;
 
-  // ۰) سقف روزانه — اسلات‌های catch-up بعد از یک ران موفق فقط صادقانه خارج می‌شوند
-  //    (dedupe با URL/عنوان هست، ولی این‌طوری نوبت جبرانی بدون تلاشِ بیهوده و بدون
-  //    کامیتِ لاگِ خالی تمام می‌شود و حجم محتوای روز هم قابل‌پیش‌بینی می‌ماند)
-  //    ⚠ اما «مقالهٔ امروز» حتی در catch-up باید تضمین شود — قبل از خروج چک می‌شود.
-  const DAILY_BRIEF_TARGET = 4;
+  // ۰) سقف روزانه — نوبت‌های اضافی بعد از رسیدن به هدف فقط صادقانه خارج می‌شوند
+  //    (هدف: ۱۲ بریف/روز = ۴ بریف × ۳ نوبت) — مقالهٔ امروز هم در catch-up تضمین می‌شود.
   const madeToday = existing.filter((b) => b.date === isoDay(now)).length;
   if (madeToday >= DAILY_BRIEF_TARGET) {
     console.log(`[magazine-daily] ${madeToday} brief(s) already published today — catch-up run checks article only`);
@@ -412,17 +437,35 @@ async function main() {
   }
   console.log(`  candidates: ${candidates.length}`);
 
-  // 2) انتخاب برترها
-  const seenTitles = new Set();
-  const selected = candidates
+  // 2) انتخاب متنوع‌بین‌دسته — هر بریف یک دسته؛ پوشش دسته‌های محصول
+  //    (فرش/روشنایی/پرده/تابلو/گلدان/کمد/کف‌پوش/دیوارپوش…) در طول روز
+  //    پاس ۱: حداکثر ۱ بریف از هر دسته (تنوع حداکثری) — پاس ۲: تکمیل سهمیه
+  const ranked = candidates
     .sort((a, b) => b.score - a.score)
-    .filter((c) => {
-      const key = c.title.toLowerCase().replace(/\W+/g, "");
-      if (seenTitles.has(key)) return false;
-      seenTitles.add(key);
-      return c.score >= 3;
-    })
-    .slice(0, MAX_BRIEFS_PER_RUN);
+    .filter((c) => c.score >= 3);
+  const seenTitles = new Set();
+  const perCat = new Map(); // cat → تعداد انتخاب‌شده
+  const catOf = (c) => itemCategory(c) ?? "سبک زندگی";
+  const tryTake = (c, capPerCat) => {
+    const key = c.title.toLowerCase().replace(/\W+/g, "");
+    if (seenTitles.has(key)) return false;
+    const cat = catOf(c);
+    if ((perCat.get(cat) ?? 0) >= capPerCat) return false;
+    seenTitles.add(key);
+    perCat.set(cat, (perCat.get(cat) ?? 0) + 1);
+    return true;
+  };
+  const selected = [];
+  for (const c of ranked) {
+    if (selected.length >= MAX_BRIEFS_PER_RUN) break;
+    if (tryTake(c, 1)) selected.push(c);
+  }
+  if (selected.length < MAX_BRIEFS_PER_RUN) {
+    for (const c of ranked) {
+      if (selected.length >= MAX_BRIEFS_PER_RUN) break;
+      if (tryTake(c, 2)) selected.push(c); // آیتم‌های پاس ۱ خودشان در seenTitles هستند و دوباره برنمی‌دارند
+    }
+  }
 
   if (selected.length === 0) {
     console.log("[magazine-daily] nothing new — trying article from today's briefs");
@@ -584,6 +627,8 @@ const ARTICLE_PROMPT = (brief, sourceText, dateFa) => [
       `- category: دقیقاً یکی از ${JSON.stringify(CATEGORIES_FA)}.\n` +
       "- paragraphs: ۴ تا ۶ پاراگراف؛ هر پاراگراف ۳ تا ۴ جملهٔ پیوسته (۵۰ تا ۸۰ واژه)؛ بدون شماره‌گذاری و بدون تیتر داخل متن؛ " +
       "سیر مقاله: ورود به ماجرا → چرایی اهمیت → کاربرد در خانه‌های ایرانی → جمع‌بندی.\n" +
+      "  · سئو/GEO: پاراگراف اول باید مستقیم به سوال رایج مخاطب درباره موضوع پاسخ دهد و خودبسنده باشد (کلیدواژه دسته/محصول در جمله اول بیاید) تا موتورها و دستیارهای هوشمند بتوانند مستقیم نقل کنند.\n" +
+      "  · در پاراگراف کاربرد ایرانی، حداقل یک جزئیات عملی مشخص بیاور (ابعاد پیشنهادی، متریال، فاصله استاندارد) و برای اصطلاح‌های تخصصی معادل انگلیسی داخل پرانتز بگذار.\n" +
       "- کل خروجی را در حد ۹۰۰ تا ۱۳۰۰ واژه نگه دار؛ از طول اضافه خودداری کن تا پاسخ ناقص نشود.\n" +
       `تاریخ امروز (شمسی، برای ارجاع ذهنی خودت): ${dateFa}`,
   },
