@@ -121,7 +121,7 @@ export default function SettingsPage() {
                 {g.items.map(([k, label]) => (
                   <label key={k} className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2.5 hover:bg-ivory-2">
                     <span className="text-sm text-ink">{label}</span>
-                    <button type="button" onClick={() => toggle(k)} className={`relative h-6 w-11 rounded-full transition ${prefs[k] ? "bg-terracotta" : "bg-clay/60"}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-cream transition-all ${prefs[k] ? "right-0.5" : "right-5"}`} /></button>
+                    <button type="button" onClick={() => toggle(k)} className={`relative h-6 w-11 rounded-full transition ${prefs[k] ? "bg-terracotta" : "bg-clay/60"}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-cream transition ${prefs[k] ? "right-0.5" : "right-5"}`} /></button>
                   </label>
                 ))}
               </div>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                   aria-label={`فعال/غیرفعال: ${info.title}`}
                   className={cn("relative h-6 w-11 shrink-0 rounded-full transition", isOn ? "bg-terracotta" : "bg-clay/60")}
                 >
-                  <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-cream transition-all", isOn ? "right-0.5" : "right-5")} />
+                  <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-cream transition", isOn ? "right-0.5" : "right-5")} />
                 </button>
               </label>
             );

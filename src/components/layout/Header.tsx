@@ -100,7 +100,7 @@ function IconButton({
   className?: string;
 }) {
   const cls = cn(
-    "grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/80 transition-all duration-300 hover:bg-ink hover:text-cream hover:shadow-[var(--shadow-soft)] active:scale-90",
+    "grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/80 transition duration-300 hover:bg-ink hover:text-cream hover:shadow-[var(--shadow-soft)] active:scale-90",
     className
   );
   if (href) {
@@ -127,7 +127,7 @@ function AiFeatureCard() {
       className="group relative flex min-h-[240px] flex-col justify-between overflow-hidden rounded-2xl surface-emerald p-6 text-cream"
     >
       {/* ambient glows */}
-      <div className="pointer-events-none absolute -left-12 -bottom-12 h-44 w-44 rounded-full bg-gold/25 blur-3xl transition-all duration-700 group-hover:bg-gold/40" />
+      <div className="pointer-events-none absolute -left-12 -bottom-12 h-44 w-44 rounded-full bg-gold/25 blur-3xl transition duration-700 group-hover:bg-gold/40" />
       <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-terracotta-soft/30 blur-3xl" />
 
       <div className="relative">
@@ -186,7 +186,7 @@ function MegaPanel({ mega }: { mega: MegaKey }) {
                     {c.name}
                     <ChevronLeft
                       size={14}
-                      className="-translate-x-1 text-terracotta opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+                      className="-translate-x-1 text-terracotta opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-100"
                     />
                   </div>
                   <div className="text-xs text-ink-muted">{toFa(productsByCategory(c.slug).length)} محصول</div>
@@ -218,7 +218,7 @@ function MegaPanel({ mega }: { mega: MegaKey }) {
               >
                 <Link
                   href={`/styles/${s.slug}`}
-                  className="group flex items-center gap-2 rounded-full border border-clay/50 bg-cream/70 py-2 pe-4 ps-2.5 text-sm font-medium text-ink transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-[var(--shadow-soft)]"
+                  className="group flex items-center gap-2 rounded-full border border-clay/50 bg-cream/70 py-2 pe-4 ps-2.5 text-sm font-medium text-ink transition duration-300 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-[var(--shadow-soft)]"
                 >
                   <span className="flex -space-x-1.5">
                     {s.colorPalette.slice(0, 3).map((col) => (
@@ -236,7 +236,7 @@ function MegaPanel({ mega }: { mega: MegaKey }) {
           </div>
           <Link
             href="/styles"
-            className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-bold text-terracotta-deep transition-all hover:gap-2.5"
+            className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-bold text-terracotta-deep transition hover:gap-2.5"
           >
             مشاهده همه سبک‌ها
             <ArrowLeft size={15} />
@@ -402,7 +402,7 @@ export function Header() {
           animate={{ y: scrolled ? 4 : 0 }}
           transition={{ duration: 0.4, ease: EASE }}
           className={cn(
-            "flex items-center justify-between gap-3 rounded-2xl border px-3 py-2 transition-all duration-500 sm:px-4 lg:rounded-full",
+            "flex items-center justify-between gap-3 rounded-2xl border px-3 py-2 transition duration-500 sm:px-4 lg:rounded-full",
             scrolled
               ? "glass border-gold/25 shadow-[var(--shadow-lift)]"
               : "border-clay/30 bg-cream/55 shadow-[var(--shadow-soft)] backdrop-blur-md"
@@ -476,7 +476,7 @@ export function Header() {
             <Link
               href="/ai/design"
               onMouseEnter={() => setMega(null)}
-              className="group relative ms-1 flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-l from-gold to-gold-soft px-4 py-2 text-[13px] font-black text-ink shadow-[var(--shadow-gold)] transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+              className="group relative ms-1 flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-l from-gold to-gold-soft px-4 py-2 text-[13px] font-black text-ink shadow-[var(--shadow-gold)] transition duration-300 hover:-translate-y-0.5 active:scale-95"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-l from-transparent via-white/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
               <Wand2 size={14} className="relative z-10" />
@@ -493,7 +493,7 @@ export function Header() {
             {/* Search with ⌘K hint */}
             <button
               onClick={() => setSearch(true)}
-              className="group me-0.5 flex h-10 items-center gap-2 rounded-full border border-clay/50 bg-cream/80 ps-3.5 pe-2 text-ink-muted transition-all duration-300 hover:border-terracotta/50 hover:text-ink sm:pe-3"
+              className="group me-0.5 flex h-10 items-center gap-2 rounded-full border border-clay/50 bg-cream/80 ps-3.5 pe-2 text-ink-muted transition duration-300 hover:border-terracotta/50 hover:text-ink sm:pe-3"
               aria-label="جستجو"
             >
               <Search size={16} className="transition-transform duration-300 group-hover:scale-110" />
@@ -526,7 +526,7 @@ export function Header() {
             <button
               onClick={() => setMobileNav(true)}
               aria-label="باز کردن منو"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink transition-all duration-300 hover:bg-ink hover:text-cream active:scale-90 lg:hidden"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink transition duration-300 hover:bg-ink hover:text-cream active:scale-90 lg:hidden"
             >
               <Menu size={20} />
             </button>

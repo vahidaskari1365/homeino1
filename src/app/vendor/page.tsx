@@ -74,7 +74,7 @@ export default function VendorDashboard() {
           <h3 className="mb-4 font-display font-bold text-ink">عملکرد فروش</h3>
           <div className="flex h-40 items-end justify-between gap-1.5">
             {bars.map((h, i) => (
-              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-terracotta to-terracotta-soft transition-all hover:opacity-80" style={{ height: `${h}%` }} title={`سفارش ${toFa(i + 1)}`} />
+              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-terracotta to-terracotta-soft transition hover:opacity-80" style={{ height: `${h}%` }} title={`سفارش ${toFa(i + 1)}`} />
             ))}
           </div>
           <div className="mt-3 text-center text-xs text-ink-muted">ارتفاع میله‌ها از مبلغ ۱۲ سفارش آخر محاسبه می‌شود</div>

@@ -51,7 +51,7 @@ export default function ComparePage() {
               <div key={p.id} className="px-3 text-center">
                 <div className="relative">
                   <button onClick={() => remove(p.id)} aria-label="حذف از مقایسه" className="absolute left-0 top-0 grid h-9 w-9 place-items-center rounded-full bg-ivory-2 text-ink-muted hover:text-danger"><X size={14} /></button>
-                  <img src={p.images[0]} alt={p.name} className="mx-auto aspect-square w-full rounded-xl object-cover" />
+                  <img width="400" height="400" src={p.images[0]} alt={p.name} className="mx-auto aspect-square w-full rounded-xl object-cover" />
                 </div>
                 <Link href={`/products/${p.slug}`} className="mt-2 block line-clamp-2 text-sm font-medium text-ink hover:text-terracotta-deep">{p.name}</Link>
                 <div className="text-xs text-ink-muted">{p.brand}</div>

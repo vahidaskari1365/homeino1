@@ -41,8 +41,8 @@ function NewsletterForm() {
   return (
     <form onSubmit={submit} className="space-y-2">
       <div className="flex gap-2">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت..." className="w-full rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
-        <button type="submit" disabled={busy} className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90 disabled:opacity-50">{busy ? "..." : "دریافت هدیه"}</button>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" dir="ltr" placeholder="ایمیلت…" className="w-full rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
+        <button type="submit" disabled={busy} className="rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink transition hover:opacity-90 disabled:opacity-50">{busy ? "…" : "دریافت هدیه"}</button>
       </div>
       <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" dir="ltr" placeholder="یا شماره موبایل 09xxxxxxxxx" className="w-full rounded-lg border border-white/15 bg-ink/40 px-3 py-2 text-xs text-cream outline-none focus:border-gold/50" />
       {err && <p className="text-2xs text-red-300">{err}</p>}

@@ -49,7 +49,7 @@ export default function VendorAnalyticsPage() {
         <h3 className="mb-4 font-display font-bold text-ink">روند فروش</h3>
         <div className="flex h-48 items-end justify-between gap-1.5">
           {bars.map((h, i) => (
-            <div key={i} className="group relative flex-1 rounded-t bg-gradient-to-t from-ink to-ink-soft transition-all hover:from-terracotta hover:to-terracotta-deep" style={{ height: `${h}%` }}><span className="absolute -top-5 right-1/2 translate-x-1/2 text-2xs text-ink-muted opacity-0 group-hover:opacity-100">{toFa(h)}</span></div>
+            <div key={i} className="group relative flex-1 rounded-t bg-gradient-to-t from-ink to-ink-soft transition hover:from-terracotta hover:to-terracotta-deep" style={{ height: `${h}%` }}><span className="absolute -top-5 right-1/2 translate-x-1/2 text-2xs text-ink-muted opacity-0 group-hover:opacity-100">{toFa(h)}</span></div>
           ))}
         </div>
         <p className="mt-3 text-center text-xs text-ink-muted">ارتفاع میله‌ها از مبلغ ۱۲ سفارش آخر همین فروشگاه محاسبه می‌شود</p>

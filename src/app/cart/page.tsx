@@ -57,7 +57,7 @@ export default function CartPage() {
               {parcel.shippingCost > 0 && parcel.subtotal < PLATFORM.policies.freeShippingThreshold && (
                 <div className="mx-4 mt-3 rounded-xl border border-terracotta/30 bg-terracotta/5 p-2.5">
                   <p className="mb-1.5 text-2xs text-ink"><b>{toFa(formatPrice(PLATFORM.policies.freeShippingThreshold - parcel.subtotal))} تومان</b> دیگه تا ارسال رایگان این مرسوله!</p>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-sand/60"><div className="h-full rounded-full bg-gradient-to-l from-terracotta-soft to-terracotta transition-all" style={{ width: `${Math.min(100, (parcel.subtotal / PLATFORM.policies.freeShippingThreshold) * 100)}%` }} /></div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-sand/60"><div className="h-full rounded-full bg-gradient-to-l from-terracotta-soft to-terracotta transition" style={{ width: `${Math.min(100, (parcel.subtotal / PLATFORM.policies.freeShippingThreshold) * 100)}%` }} /></div>
                 </div>
               )}
               {parcel.shippingCost === 0 && parcel.lines.length > 0 && (
@@ -99,7 +99,7 @@ export default function CartPage() {
                 .slice(0, 6)
                 .map((p) => (
                   <div key={p.id} className="flex w-32 shrink-0 flex-col rounded-xl border border-clay/40 bg-ivory-2 p-2">
-                    <img src={p.images[0]} alt={p.name} className="mb-1.5 aspect-square w-full rounded-lg object-cover" />
+                    <img width="400" height="400" src={p.images[0]} alt={p.name} className="mb-1.5 aspect-square w-full rounded-lg object-cover" />
                     <p className="line-clamp-1 text-2xs font-bold text-ink">{p.name}</p>
                     <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
                     <button onClick={() => { addToCart(p.id); toast("به سبد اضافه شد"); }} className="btn-accent mt-1.5 flex items-center justify-center gap-1 rounded-md py-1 text-2xs font-bold"><PlusIcon size={10} /> افزودن</button>

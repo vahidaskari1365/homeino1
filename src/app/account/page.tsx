@@ -85,7 +85,7 @@ export default function AccountOverview() {
             <div className="space-y-3">
               {myDesigns.map((d) => (
                 <Link key={d.id} href={`/ai/result/${d.id}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
-                  <img src={d.afterImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                  <img width="48" height="48" src={d.afterImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{d.title}</div><div className="text-xs text-ink-muted">{d.prompt || d.roomType}</div></div>
                   <Badge tone="gold">{toFa(d.creditsUsed)}</Badge>
                 </Link>
@@ -108,7 +108,7 @@ export default function AccountOverview() {
           <div className="space-y-3">
             {recommended.map((p) => (
               <Link key={p.id} href={`/products/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
-                <img src={p.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                <img width="48" height="48" src={p.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{p.name}</div><div className="text-xs text-ink-muted">{p.brand}</div></div>
                 <ArrowLeft size={15} className="text-ink-muted" />
               </Link>

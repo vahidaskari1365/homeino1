@@ -20,7 +20,7 @@ export function OverlayRegionsView({ image, regions, className }: { image: strin
     <div className={cn("relative overflow-hidden rounded-xl border border-clay/40", className)}>
       {/* Rendered result — usually a base64/data URL returned by the AI provider.
           next/image can't optimize data URLs, and the overlay boxes rely on this element's box for alignment. */}
-      <img src={image} alt="نتیجه طراحی" className="block aspect-video w-full object-cover" draggable={false} />
+      <img width="1280" height="720" src={image} alt="نتیجه طراحی" className="block aspect-video w-full object-cover" draggable={false} />
       {regions.length > 0 ? (
         regions.map((r) => {
           const active = hovered === r.id;
@@ -33,7 +33,7 @@ export function OverlayRegionsView({ image, regions, className }: { image: strin
               onFocus={() => setHovered(r.id)}
               onBlur={() => setHovered(null)}
               className={cn(
-                "absolute cursor-default rounded-lg border-2 transition-all duration-200",
+                "absolute cursor-default rounded-lg border-2 transition duration-200",
                 r.status === "failed" ? "border-danger/80 bg-danger/10" : "border-gold/80 bg-gold/15",
                 active ? "shadow-[0_0_0_3px_rgba(190,154,79,0.35)]" : "",
               )}

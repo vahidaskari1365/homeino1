@@ -88,7 +88,7 @@ export default function WishlistPage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {designs.map((d) => (
             <Link key={d.id} href={`/ai/result/${d.id}`} className="card-surface overflow-hidden">
-              <img src={d.afterImage} alt={d.title} className="aspect-video w-full object-cover" />
+              <img width="1280" height="720" src={d.afterImage} alt={d.title} className="aspect-video w-full object-cover" />
               <div className="p-4"><div className="text-xs text-ink-muted">{d.room}</div><div className="font-display font-bold text-ink">{d.title}</div></div>
             </Link>
           ))}

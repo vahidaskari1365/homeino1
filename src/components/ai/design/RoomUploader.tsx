@@ -48,7 +48,7 @@ export function RoomUploader({ studio }: { studio: DesignStudio }) {
           <div className="grid grid-cols-3 gap-2">
             {SAMPLE_ROOMS.map((s) => (
               <button key={s.src} onClick={() => loadSample(s.src)} className="group relative overflow-hidden rounded-xl border border-clay/40 transition hover:border-terracotta/60">
-                <img src={s.src} alt={`نمونه ${s.label}`} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <img width="800" height="600" src={s.src} alt={`نمونه ${s.label}`} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/75 to-transparent px-1.5 pb-1 pt-4 text-right text-2xs font-bold text-cream">{s.label}</span>
               </button>
             ))}
@@ -62,7 +62,7 @@ export function RoomUploader({ studio }: { studio: DesignStudio }) {
   return (
     <div>
       <div className="relative overflow-hidden rounded-2xl border border-clay/40 bg-ink">
-        <img src={imageBase64} alt="عکس اتاق شما" className="aspect-video w-full object-cover" />
+        <img width="1280" height="720" src={imageBase64} alt="عکس اتاق شما" className="aspect-video w-full object-cover" />
 
         {/* اسکن تحلیل — انیمیشن روی خود عکس (لحظهٔ جادویی) */}
         <AnimatePresence>

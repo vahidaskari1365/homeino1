@@ -119,7 +119,7 @@ export default function SecondHandPage() {
             </select>
             <input required name="city" placeholder="شهر" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
             <input name="age" placeholder="مدت استفاده (مثلاً ۲ سال)" className="rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
-            <textarea required name="description" minLength={20} placeholder="توضیحات آگهی (حداقل ۲۰ نویسه)..." className="sm:col-span-2 min-h-[80px] resize-none rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
+            <textarea required name="description" minLength={20} placeholder="توضیحات آگهی (حداقل ۲۰ نویسه)…" className="sm:col-span-2 min-h-[80px] resize-none rounded-xl border border-clay/60 bg-ivory-2 p-2.5 text-sm outline-none focus:border-sage" />
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 py-6 text-sm text-ink-muted hover:border-sage sm:col-span-2">
               <Plus size={18} /> افزودن تصویر محصول (اختیاری — حداکثر ۸۰۰ کیلوبایت)
               <input type="file" name="image" accept="image/*" className="hidden" />

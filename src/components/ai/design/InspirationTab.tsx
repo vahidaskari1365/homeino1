@@ -22,7 +22,7 @@ export function InspirationTab({ studio }: { studio: DesignStudio }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-clay/40 bg-ivory-2 p-4">
             <div className="mb-2 text-xs font-bold text-terracotta-deep">محصول انتخاب‌شده</div>
-            <div className="flex items-center gap-3"><img src={presetProduct.images[0]} alt="" className="h-16 w-16 rounded-lg object-cover" /><div><p className="text-sm font-bold text-ink">{presetProduct.name}</p><p className="text-xs text-ink-muted">{presetProduct.brand}</p></div></div>
+            <div className="flex items-center gap-3"><img width="64" height="64" src={presetProduct.images[0]} alt="" className="h-16 w-16 rounded-lg object-cover" /><div><p className="text-sm font-bold text-ink">{presetProduct.name}</p><p className="text-xs text-ink-muted">{presetProduct.brand}</p></div></div>
             <button onClick={() => setPresetProduct(null)} className="mt-2.5 text-xs text-ink-muted hover:text-danger">حذف</button>
           </div>
           <div>
@@ -30,7 +30,7 @@ export function InspirationTab({ studio }: { studio: DesignStudio }) {
               <div onClick={() => inputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }} className="flex aspect-video cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 text-center transition hover:border-terracotta">
                 <Upload size={26} className="mb-2 text-ink-muted" /><p className="text-sm font-medium text-ink">آپلود عکس خانه</p>
               </div>
-            ) : (<><div className="overflow-hidden rounded-xl border border-clay/40"><img src={imageBase64} alt="" className="aspect-video w-full object-cover" /></div><button onClick={placePresetInRoom} disabled={loading} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-ink py-3 text-sm font-bold text-cream transition hover:bg-terracotta-deep disabled:opacity-40"><Wand2 size={16} /> جای‌گذاری در خانه</button></>)}
+            ) : (<><div className="overflow-hidden rounded-xl border border-clay/40"><img width="1280" height="720" src={imageBase64} alt="" className="aspect-video w-full object-cover" /></div><button onClick={placePresetInRoom} disabled={loading} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-ink py-3 text-sm font-bold text-cream transition hover:bg-terracotta-deep disabled:opacity-40"><Wand2 size={16} /> جای‌گذاری در خانه</button></>)}
             <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
           </div>
         </div>
@@ -41,7 +41,7 @@ export function InspirationTab({ studio }: { studio: DesignStudio }) {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="overflow-hidden rounded-xl border border-clay/40"><img src={imageBase64} alt="" className="aspect-video w-full object-cover" /></div>
+          <div className="overflow-hidden rounded-xl border border-clay/40"><img width="1280" height="720" src={imageBase64} alt="" className="aspect-video w-full object-cover" /></div>
           <div>
             <button onClick={() => { setInspirationMatches([...products].sort(() => Math.random() - 0.5).slice(0, 6)); toast("محصولات مشابه پیدا شد"); }} className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-ink py-3 text-sm font-bold text-cream"><Sparkles size={16} /> پیدا کردن مشابه</button>
             {inspirationMatches.length > 0 && (<><div className="grid grid-cols-3 gap-2">{inspirationMatches.map((p) => { const isSel = !!selected[p.id]; return (

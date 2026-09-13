@@ -71,7 +71,7 @@ export default function VendorOrdersPage() {
                     return (
                       <div key={line.productId} className="flex items-center justify-between rounded-xl border border-clay/30 bg-ivory-2/60 px-3 py-2 text-sm">
                         <div className="flex items-center gap-2">
-                          {product && <img src={product.images[0]} alt="" className="h-9 w-9 rounded-lg object-cover" />}
+                          {product && <img width="36" height="36" src={product.images[0]} alt="" className="h-9 w-9 rounded-lg object-cover" />}
                           <span className="font-medium text-ink">{product?.name ?? "محصول حذف‌شده"}</span>
                         </div>
                         <span className="text-xs text-ink-muted">{toFa(line.qty)} عدد · {toFa(formatPrice(line.price * line.qty))} ت</span>

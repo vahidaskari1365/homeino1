@@ -158,7 +158,7 @@ export function MobileNav() {
                           href={item.href}
                           onClick={close}
                           className={cn(
-                            "group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-bold transition-all duration-300",
+                            "group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-bold transition duration-300",
                             active
                               ? "bg-ink text-cream shadow-[var(--shadow-soft)]"
                               : "text-ink hover:bg-ivory-2"
@@ -181,7 +181,7 @@ export function MobileNav() {
                           <ArrowLeft
                             size={16}
                             className={cn(
-                              "transition-all duration-300",
+                              "transition duration-300",
                               active ? "text-gold-soft" : "text-clay group-hover:-translate-x-1 group-hover:text-ink"
                             )}
                           />
@@ -242,7 +242,7 @@ export function MobileNav() {
           {DOCK.map((it) => {
             const active = pathname === it.href;
             const iconCls = cn(
-              "relative grid h-10 w-10 place-items-center rounded-full transition-all duration-300",
+              "relative grid h-10 w-10 place-items-center rounded-full transition duration-300",
               active ? "bg-ink text-cream shadow-[var(--shadow-soft)]" : "text-ink/70"
             );
             const labelCls = cn(

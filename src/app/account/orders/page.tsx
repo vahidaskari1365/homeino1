@@ -114,7 +114,7 @@ export default function OrdersPage() {
                     {parcel.lines.map((line) => (
                       <div key={`${line.productId}-${parcel.storeId}`} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
-                          {line.image && <img src={line.image} alt="" className="h-9 w-9 rounded-lg object-cover" />}
+                          {line.image && <img width="36" height="36" src={line.image} alt="" className="h-9 w-9 rounded-lg object-cover" />}
                           <span className="text-ink">{line.name}</span>
                         </div>
                         <span className="text-xs text-ink-muted">{toFa(line.qty)} عدد · {toFa(formatPrice(line.price * line.qty))} ت</span>

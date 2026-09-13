@@ -57,8 +57,8 @@ export default function MyDesignsPage() {
           {designs.map((d) => (
             <div key={d.id} className="card-surface overflow-hidden">
               <Link href={`/ai/result/${d.id}`} className="group relative block">
-                <img src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full object-cover transition group-hover:scale-105" />
-                {d.beforeImage && <img src={d.beforeImage} alt="" className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream object-cover" />}
+                <img width="800" height="600" src={d.afterImage} alt={d.title} className="aspect-[4/3] w-full object-cover transition group-hover:scale-105" />
+                {d.beforeImage && <img width="64" height="64" src={d.beforeImage} alt="" className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-cream object-cover" />}
                 <div className="absolute right-2 top-2 flex gap-1">
                   {d.preview && <Badge tone="gold">پیش‌نمایش</Badge>}
                   <Badge tone="dark">{d.roomType}</Badge>

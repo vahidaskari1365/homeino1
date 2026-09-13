@@ -235,7 +235,7 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   {parcel.lines.map(({ item, product, unitPrice }) => (
                     <div key={`${product.id}-${item.offerId ?? ""}`} className="flex items-center gap-2">
-                      <img src={product.images[0]} alt="" className="h-11 w-11 rounded-lg object-cover" />
+                      <img width="44" height="44" src={product.images[0]} alt="" className="h-11 w-11 rounded-lg object-cover" />
                       <div className="min-w-0 flex-1"><div className="truncate text-xs font-medium text-ink">{product.name}</div><div className="text-2xs text-ink-muted">{toFa(item.qty)} عدد × {toFa(formatPrice(unitPrice))} ت</div></div>
                     </div>
                   ))}

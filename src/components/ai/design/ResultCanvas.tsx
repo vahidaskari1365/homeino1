@@ -96,7 +96,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
           <div className="space-y-3">
             {imageBase64 && (
               <div className="relative overflow-hidden rounded-2xl border border-clay/40 bg-ink">
-                <img src={imageBase64} alt="عکس اتاق شما" className="aspect-video w-full object-cover opacity-80" />
+                <img width="1280" height="720" src={imageBase64} alt="عکس اتاق شما" className="aspect-video w-full object-cover opacity-80" />
               </div>
             )}
             <GenerationProgress studio={studio} />
@@ -164,7 +164,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                   {placedProducts.length > 0 ? (
                     <div>
                       <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-ink"><ShoppingBag size={15} className="text-terracotta-deep" /> کالاهای چیدمان ({toFa(placedProducts.length)})</h3>
-                      <div className="grid max-h-56 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">{placedProducts.map((p) => (<div key={p.id} className="flex items-center gap-2.5 rounded-lg border border-clay/30 bg-ivory-2 p-2.5"><img src={p.images[0]} alt="" className="h-12 w-12 rounded-md object-cover" /><div className="min-w-0 flex-1"><p className="line-clamp-1 text-xs font-bold text-ink">{p.name}</p><p className="flex items-center gap-1 text-xs text-ink-muted"><Store size={11} /> {p.brand}</p></div><span className="text-xs font-black text-gold">{toFa(formatPrice(p.price))}</span></div>))}</div>
+                      <div className="grid max-h-56 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">{placedProducts.map((p) => (<div key={p.id} className="flex items-center gap-2.5 rounded-lg border border-clay/30 bg-ivory-2 p-2.5"><img width="48" height="48" src={p.images[0]} alt="" className="h-12 w-12 rounded-md object-cover" /><div className="min-w-0 flex-1"><p className="line-clamp-1 text-xs font-bold text-ink">{p.name}</p><p className="flex items-center gap-1 text-xs text-ink-muted"><Store size={11} /> {p.brand}</p></div><span className="text-xs font-black text-gold">{toFa(formatPrice(p.price))}</span></div>))}</div>
                       <div className="mt-3 flex items-center justify-between border-t border-clay/30 pt-2.5"><span className="text-sm font-bold text-ink">جمع کل:</span><span className="text-base font-black text-terracotta-deep">{toFa(formatPrice(total))} ت</span></div>
                       <div className="mt-3 space-y-2">
                         <button onClick={buyTheLook} className="btn-accent flex w-full items-center justify-center gap-2 py-3.5 text-sm font-bold"><CreditCard size={16} /> خرید این چیدمان ({toFa(placedProducts.length)} کالا)</button>
@@ -188,7 +188,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                         {matchedStoreProducts.map((item) => (
                           <div key={item.productId} className="flex flex-col justify-between rounded-lg border border-clay/30 bg-ivory-2 p-3">
                             <div className="flex items-start gap-2.5">
-                              <img src={item.image} alt={item.name} className="h-14 w-14 shrink-0 rounded-md object-cover" />
+                              <img width="56" height="56" src={item.image} alt={item.name} className="h-14 w-14 shrink-0 rounded-md object-cover" />
                               <div className="min-w-0 flex-1">
                                 <Link href={item.productUrl} className="line-clamp-1 text-xs font-bold text-ink hover:text-terracotta-deep">
                                   {item.name}
@@ -287,7 +287,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
                           const href = real ? `/products/${real.slug}` : (c.url ?? "/products");
                           return (
                             <Link key={c.id} href={href} className="flex items-center gap-2 rounded-lg border border-clay/30 bg-ivory-2 p-1.5 transition hover:border-terracotta/50">
-                              {(real?.images[0] ?? c.image) && <img src={real?.images[0] ?? c.image} alt="" className="h-9 w-9 rounded-md object-cover" />}
+                              {(real?.images[0] ?? c.image) && <img width="36" height="36" src={real?.images[0] ?? c.image} alt="" className="h-9 w-9 rounded-md object-cover" />}
                               <span className="min-w-0 flex-1">
                                 <span className="line-clamp-1 block text-2xs font-bold text-ink">{real?.name ?? c.name ?? "محصول"}</span>
                                 {typeof (real?.price ?? c.price) === "number" && <span className="block text-2xs font-black text-terracotta-deep">{toFa(formatPrice(real?.price ?? c.price!))} ت</span>}

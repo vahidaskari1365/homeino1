@@ -344,7 +344,7 @@ export default function ProductDetailClient({
               return (
                 <div key={p.id} className="flex flex-col rounded-xl border border-clay/40 bg-cream p-3">
                   <div className="mb-2 flex items-center gap-2.5">
-                    <img src={p.images[0]} alt={p.name} className="h-14 w-14 rounded-lg object-cover" />
+                    <img width="56" height="56" src={p.images[0]} alt={p.name} className="h-14 w-14 rounded-lg object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-1 text-xs font-bold text-ink">{p.name}</p>
                       <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
@@ -481,7 +481,7 @@ function RecentlyViewedSection({ currentId }: { currentId: string }) {
       <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
         {recent.map((p) => (
           <Link key={p.id} href={`/products/${p.slug}`} className="group w-32 shrink-0">
-            <div className="overflow-hidden rounded-xl border border-clay/40"><img src={p.images[0]} alt={p.name} className="aspect-square w-full object-cover transition group-hover:scale-105" /></div>
+            <div className="overflow-hidden rounded-xl border border-clay/40"><img width="400" height="400" src={p.images[0]} alt={p.name} className="aspect-square w-full object-cover transition group-hover:scale-105" /></div>
             <p className="mt-1.5 line-clamp-1 text-2xs font-bold text-ink">{p.name}</p>
             <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
           </Link>

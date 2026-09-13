@@ -21,7 +21,7 @@ export function BudgetStep({ studio }: { studio: DesignStudio }) {
         <input
           value={skuInput}
           onChange={(e) => handleSkuChange(e.target.value)}
-          placeholder="مثلاً SKU-SOFA-01 یا CHR-3011..."
+          placeholder="مثلاً SKU-SOFA-01 یا CHR-3011…"
           dir="ltr"
           className="w-full rounded-lg border border-clay/50 bg-ivory-2 px-3 py-2.5 font-mono text-sm text-ink outline-none focus:border-terracotta"
         />
@@ -36,7 +36,7 @@ export function BudgetStep({ studio }: { studio: DesignStudio }) {
       {/* Budget + Prompt */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-clay/50 bg-ivory-2/70 p-3.5"><span className="mb-1.5 block text-xs font-bold text-ink-muted">بودجه (تومان)</span><input type="text" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^\d]/g, ""))} placeholder="تومان" dir="ltr" className="w-full rounded-lg border border-clay/50 bg-cream px-3 py-2.5 text-sm text-ink outline-none focus:border-terracotta" /></div>
-        <div className="rounded-xl border border-clay/50 bg-ivory-2/70 p-3.5"><span className="mb-1.5 block text-xs font-bold text-ink-muted">دستور به استودیو (اختیاری)</span><input value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="مثلاً نور گرم‌تر..." className="w-full rounded-lg border border-clay/50 bg-cream px-3 py-2.5 text-sm text-ink outline-none focus:border-terracotta" /></div>
+        <div className="rounded-xl border border-clay/50 bg-ivory-2/70 p-3.5"><span className="mb-1.5 block text-xs font-bold text-ink-muted">دستور به استودیو (اختیاری)</span><input value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="مثلاً نور گرم‌تر…" className="w-full rounded-lg border border-clay/50 bg-cream px-3 py-2.5 text-sm text-ink outline-none focus:border-terracotta" /></div>
       </div>
     </div>
   );
