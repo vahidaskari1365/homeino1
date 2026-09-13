@@ -5,15 +5,21 @@
 // is a SINGLE source of truth.
 //
 // Precedence for base URL:
-//   1. NEXT_PUBLIC_SITE_URL  (set in Vercel / prod)
-//   2. VERCEL_URL            (auto per-deploy preview URL)
-//   3. https://homeino.ir    (production fallback)
+//   1. NEXT_PUBLIC_SITE_URL  (explicit override, set in Vercel if needed)
+//   2. Production deploys    → https://homeino.ir  (ALWAYS the brand domain —
+//      never the per-deploy VERCEL_URL, otherwise canonicals/sitemap/JSON-LD
+//      rotate with every deployment and point away from the money domain)
+//   3. VERCEL_URL            (preview deploys keep their own URL)
+//   4. https://homeino.ir    (local dev fallback)
 // ============================================================
 
 const raw =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-  "https://homeino.ir";
+  (process.env.VERCEL_ENV === "production"
+    ? "https://homeino.ir"
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://homeino.ir");
 
 export const SITE_URL: string = raw.replace(/\/+$/, "");
 
