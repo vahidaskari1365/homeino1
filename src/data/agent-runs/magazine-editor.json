@@ -1,7 +1,27 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-14T16:02:51.620Z",
+  "updatedAt": "2026-09-14T19:39:19.775Z",
   "runs": [
+    {
+      "id": "run-1789414759774-v19yr",
+      "at": "2026-09-14T19:39:19.775Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 768567,
+      "summary": "1 بریف ترند جدید (رنگ) — از طریق zai-2",
+      "detail": {
+        "added": 1,
+        "articlesAdded": 0,
+        "total": 56,
+        "via": "zai-2",
+        "titles": [
+          "رنگ جدید پرایج جایگزین گریج می‌شود"
+        ],
+        "sources": [
+          "idealhome.co.uk"
+        ]
+      }
+    },
     {
       "id": "run-1789401771620-z0l98",
       "at": "2026-09-14T16:02:51.620Z",
