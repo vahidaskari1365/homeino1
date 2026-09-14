@@ -1,7 +1,31 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-14T09:30:10.735Z",
+  "updatedAt": "2026-09-14T16:02:51.620Z",
   "runs": [
+    {
+      "id": "run-1789401771620-z0l98",
+      "at": "2026-09-14T16:02:51.620Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 552286,
+      "summary": "3 بریف ترند جدید (تابلو و دیوارکوب، آشپزخانه، رنگ) + ۱ مقاله کامل مجله («دیوارکوب‌های گالری: روایتگر داستان خانه‌…») — از طریق zai-1",
+      "detail": {
+        "added": 3,
+        "articlesAdded": 1,
+        "total": 55,
+        "via": "zai-1",
+        "titles": [
+          "هنر دیوارکوب و تابلوهای گالری (Gallery Wall) | ترند دکوراسیون",
+          "ترند‌های آشپزخانه که ۵ سال دیگر بی‌اعتبار می‌شوند",
+          "رنگ سال ۲۰۲۷ گراهام و براون Rose Earth"
+        ],
+        "sources": [
+          "news.google.com",
+          "livingetc.com",
+          "homesandgardens.com"
+        ]
+      }
+    },
     {
       "id": "run-1789378210735-mm75d",
       "at": "2026-09-14T09:30:10.735Z",
