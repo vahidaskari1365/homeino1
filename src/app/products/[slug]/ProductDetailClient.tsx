@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, Ruler } from "lucide-react";
@@ -96,6 +96,22 @@ export default function ProductDetailClient({
   useEffect(() => { if (product) trackRecent(product.id); }, [product, trackRecent]);
   const router = useRouter();
 
+  // Tab keyboard pattern (ARIA APG) — RTL reading order: ArrowLeft = next.
+  // (Hook must live above the early return below — rules-of-hooks.)
+  const TAB_KEYS = ["desc", "specs", "reviews"] as const;
+  const tablistRef = useRef<HTMLDivElement>(null);
+  const focusTab = (idx: number) => {
+    setTab(TAB_KEYS[idx]);
+    tablistRef.current?.querySelector<HTMLButtonElement>(`#tab-${TAB_KEYS[idx]}`)?.focus();
+  };
+  const onTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const idx = TAB_KEYS.indexOf(tab);
+    if (event.key === "ArrowLeft") { event.preventDefault(); focusTab((idx + 1) % TAB_KEYS.length); }
+    else if (event.key === "ArrowRight") { event.preventDefault(); focusTab((idx + TAB_KEYS.length - 1) % TAB_KEYS.length); }
+    else if (event.key === "Home") { event.preventDefault(); focusTab(0); }
+    else if (event.key === "End") { event.preventDefault(); focusTab(TAB_KEYS.length - 1); }
+  };
+
   // One-frame placeholder while a vp-* product hydrates out of the persisted
   // vendor session — every hook above already ran, so the swap is clean.
   if (!product) {
@@ -167,7 +183,7 @@ export default function ProductDetailClient({
             </div>
             <div className="mt-3 flex gap-3">
               {product!.images.map((img, i) => (
-                <button key={i} onClick={() => setActive(i)} className={cn("h-20 w-20 overflow-hidden rounded-xl border-2 transition", active === i ? "border-ink" : "border-transparent opacity-60 hover:opacity-100")}>
+                <button key={i} type="button" onClick={() => setActive(i)} aria-label={`نمایش تصویر ${toFa(i + 1)} از ${toFa(product!.images.length)}`} aria-current={active === i} className={cn("h-20 w-20 overflow-hidden rounded-xl border-2 transition", active === i ? "border-ink" : "border-transparent opacity-60 hover:opacity-100")}>
                   <SmartImage src={img} alt="" className="h-full w-full" sizes="80px" />
                 </button>
               ))}
@@ -297,16 +313,29 @@ export default function ProductDetailClient({
         </Reveal>
       </div>
 
-      {/* tabs */}
+      {/* tabs — ARIA tab pattern: roving tabindex + RTL-aware arrows */}
       <div className="mt-12">
-        <div className="flex gap-1 border-b border-clay/40">
-          {[["desc", "توضیحات"], ["specs", "مشخصات"], ["reviews", `نقد و بررسی (${toFa(product!.reviewsCount)})`]].map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k as typeof tab)} className={cn("relative px-4 py-3 text-sm font-medium transition", tab === k ? "text-ink" : "text-ink-muted hover:text-ink")}>
-              {l}{tab === k && <span className="absolute inset-x-2 -bottom-px h-0.5 bg-ink" />}
-            </button>
-          ))}
+        <div ref={tablistRef} role="tablist" aria-label="اطلاعات محصول" onKeyDown={onTabKeyDown} className="flex gap-1 border-b border-clay/40">
+          {["desc", "specs", "reviews"].map((k) => {
+            const label = k === "desc" ? "توضیحات" : k === "specs" ? "مشخصات" : `نقد و بررسی (${toFa(product!.reviewsCount)})`;
+            return (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                id={`tab-${k}`}
+                aria-selected={tab === k}
+                aria-controls={`panel-${k}`}
+                tabIndex={tab === k ? 0 : -1}
+                onClick={() => setTab(k as typeof tab)}
+                className={cn("relative px-4 py-3 text-sm font-medium transition", tab === k ? "text-ink" : "text-ink-muted hover:text-ink")}
+              >
+                {label}{tab === k && <span className="absolute inset-x-2 -bottom-px h-0.5 bg-ink" />}
+              </button>
+            );
+          })}
         </div>
-        <div className="py-6">
+        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="py-6">
           {tab === "desc" && <p className="max-w-3xl leading-8 text-ink-muted">{product!.description}</p>}
           {tab === "specs" && (
             <div className="max-w-xl divide-y divide-clay/40 rounded-xl border border-clay/40">
@@ -431,13 +460,13 @@ function ReviewModal({ open, productName, onClose, onSave }: { open: boolean; pr
           <div className="mb-1.5 text-sm text-ink-muted">امتیاز تو</div>
           <div className="flex gap-1.5">
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" onClick={() => setRating(n)} className={cn("grid h-9 w-9 place-items-center rounded-lg border text-lg transition", n <= rating ? "border-gold bg-gold/15 text-gold" : "border-clay/60 text-ink-muted hover:border-gold")} aria-label={`${toFa(n)} ستاره`}>★</button>
+              <button key={n} type="button" onClick={() => setRating(n)} aria-pressed={n <= rating} className={cn("grid h-9 w-9 place-items-center rounded-lg border text-lg transition", n <= rating ? "border-gold bg-gold/15 text-gold" : "border-clay/60 text-ink-muted hover:border-gold")} aria-label={`${toFa(n)} ستاره`}>★</button>
             ))}
           </div>
         </div>
         <div>
-          <label className="mb-1.5 block text-sm text-ink-muted">نظر تو دربارهٔ این محصول</label>
-          <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="تجربه‌ات از کیفیت، ارسال و … را بنویس." className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" />
+          <label htmlFor="review-comment" className="mb-1.5 block text-sm text-ink-muted">نظر تو دربارهٔ این محصول</label>
+          <textarea id="review-comment" rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="مثال: کیفیت چوب و دوخت عالی بود؛ ارسال هم سریع…" className="w-full resize-none rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink" />
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>انصراف</Button>

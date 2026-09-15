@@ -45,9 +45,9 @@ function CategoryProductsInner({
   return (
     <>
       <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-1" aria-label="زیردسته‌ها">
-        <Link href={subHref(null)} scroll={false} className={`min-h-9 shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${!sub ? "border-ink bg-ink text-cream" : "border-clay/60 bg-cream text-ink-muted hover:border-ink hover:text-ink"}`}>همه</Link>
+        <Link href={subHref(null)} scroll={false} aria-current={!sub ? "true" : undefined} className={`min-h-9 shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${!sub ? "border-ink bg-ink text-cream" : "border-clay/60 bg-cream text-ink-muted hover:border-ink hover:text-ink"}`}>همه</Link>
         {category.subcategories.map((item) => (
-          <Link key={item.id} href={subHref(item.slug)} scroll={false} className={`min-h-9 shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${sub === item.slug ? "border-ink bg-ink text-cream" : "border-clay/60 bg-cream text-ink-muted hover:border-ink hover:text-ink"}`}>{item.name}</Link>
+          <Link key={item.id} href={subHref(item.slug)} scroll={false} aria-current={sub === item.slug ? "true" : undefined} className={`min-h-9 shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${sub === item.slug ? "border-ink bg-ink text-cream" : "border-clay/60 bg-cream text-ink-muted hover:border-ink hover:text-ink"}`}>{item.name}</Link>
         ))}
       </div>
 

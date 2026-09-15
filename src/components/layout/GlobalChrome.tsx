@@ -65,7 +65,7 @@ export function GlobalChrome() {
             <div key={t.id} className="flex animate-[fadeUp_0.3s_ease] items-center gap-2 rounded-xl border border-clay/40 bg-cream px-4 py-3 text-sm text-ink shadow-[var(--shadow-card)]">
               <Icon size={17} className={t.type === "error" ? "text-danger" : t.type === "info" ? "text-info" : "text-sage"} />
               <span>{t.text}</span>
-              <button onClick={() => dismissToast(t.id)} className="text-ink-muted hover:text-ink"><X size={14} /></button>
+              <button type="button" onClick={() => dismissToast(t.id)} aria-label="بستن اعلان" className="text-ink-muted hover:text-ink"><X size={14} /></button>
             </div>
           );
         })}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, RotateCcw, SearchX, SlidersHorizontal, X } from "lucide-react";
 import type { Product } from "@/types";
@@ -169,6 +169,17 @@ function FilterableProductGridInner({
     setSingle("priceMax", draftPrice < priceCeiling ? String(draftPrice) : undefined);
     setDraftPrice(null);
   };
+
+  // Mobile filter sheet: Escape closes it from anywhere (WIG: keyboard
+  // alternative for overlays).
+  useEffect(() => {
+    if (!showFilters) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowFilters(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showFilters]);
 
   // Facet counts in ONE pass over the catalog (rules: js-combine-iterations +
   // js-index-maps). Previously every facet option re-filtered the whole list
@@ -480,7 +491,7 @@ function FilterableProductGridInner({
 
       {showFilters && (
         <div className="fixed inset-0 z-[100] bg-ink/50 lg:hidden" onClick={() => setShowFilters(false)}>
-          <div className="absolute bottom-0 max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-cream p-5" onClick={(event) => event.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label="فیلتر محصولات" className="absolute bottom-0 max-h-[88vh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-cream p-5" onClick={(event) => event.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <div><h3 className="font-display text-lg font-bold text-ink">فیلتر محصولات</h3><p className="mt-0.5 text-xs text-ink-muted">{toFa(filtered.length)} نتیجه</p></div>
               <button type="button" onClick={() => setShowFilters(false)} aria-label="بستن فیلترها" className="grid h-10 w-10 place-items-center rounded-lg transition hover:bg-ivory-2"><X size={20} /></button>

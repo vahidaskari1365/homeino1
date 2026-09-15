@@ -72,7 +72,9 @@ export function Badge({ children, className, tone = "neutral" }: { children: Rea
 export function Chip({ active, children, onClick }: { active?: boolean; children: ReactNode; onClick?: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "rounded-full border px-4 py-1.5 text-sm transition whitespace-nowrap",
         active ? "border-ink bg-ink text-cream" : "border-clay/60 bg-cream text-ink-muted hover:border-ink hover:text-ink"
@@ -86,8 +88,12 @@ export function Chip({ active, children, onClick }: { active?: boolean; children
 /* ---------- Rating ---------- */
 export function Rating({ value, count, size = 14 }: { value: number; count?: number; size?: number }) {
   return (
-    <span className="inline-flex items-center gap-1 text-ink-muted">
-      <Star size={size} className="fill-gold text-gold" />
+    <span
+      role="img"
+      aria-label={`امتیاز ${toFa(value.toFixed(1))} از ۵${count != null ? ` (${toFa(count)} نظر)` : ""}`}
+      className="inline-flex items-center gap-1 text-ink-muted"
+    >
+      <Star size={size} aria-hidden="true" className="fill-gold text-gold" />
       <span className="font-medium text-ink">{toFa(value.toFixed(1))}</span>
       {count != null && <span className="text-xs">({toFa(count)})</span>}
     </span>

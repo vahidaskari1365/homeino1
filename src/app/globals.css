@@ -115,7 +115,7 @@ select option {
   color: var(--color-ink);
 }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
 body {
   background-color: var(--color-ivory);
@@ -379,6 +379,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   max-width: 34rem;
   max-height: min(86vh, 46rem);
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-radius: 1.25rem;
   background: var(--color-cream);
   box-shadow: var(--shadow-lift);
