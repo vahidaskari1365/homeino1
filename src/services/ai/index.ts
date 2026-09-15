@@ -94,5 +94,9 @@ export const aiService = {
   understand: (input: IntentRequest) => callAiServer<IntentAnalysis>("understand", input),
   /** Full design pipeline: understand → instruct → generate → validate. */
   pipeline: (input: PipelineInput) => callAiServer<PipelineResult>("pipeline", input),
+  /** Vision: where does each counterpart ACTUALLY sit in the room photo?
+   *  Returns [] when the key is absent / detection fails — planner falls back. */
+  detectObjects: (input: { referenceImage: string; categories: string[] }) =>
+    callAiServer<{ objects: { type: string; region: { x: number; y: number; w: number; h: number } }[] }>("detect-objects", input),
 };
 

@@ -52,6 +52,12 @@ export interface StudioPlacementPlan {
   glow?: { color: string; radiusPct: number; intensity: number; warmth: string };
 }
 
+/** A vision-detected counterpart region (from /api/ai action=detect-objects). Wire format: normalized {x,y,w,h}. */
+export interface DetectedCounterpart {
+  type: string;
+  region: { x: number; y: number; w: number; h: number };
+}
+
 /* ---------------- Scene + furniture reference sizes (cm) ---------------- */
 
 const SCENE_WIDTH_CM: Record<string, number> = {
@@ -167,6 +173,46 @@ function brightnessOf(description?: string): { intensity: number; note?: string;
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
+/* ---------------- Vision-detected counterpart matching ---------------- */
+
+/**
+ * Family aliasing — what the planner calls «furniture» may have been
+ * detected as a sofa/bed/chair…; rugs are detected as carpet/rug, etc.
+ * Deterministic: exact category match wins, then the largest footprint.
+ */
+const COUNTERPART_ALIASES: Record<string, string[]> = {
+  furniture: ["sofa", "furniture", "bed", "chair", "table", "dining", "office"],
+  furniture_default: ["sofa", "furniture", "bed", "chair", "table", "dining", "office"],
+  sofa: ["sofa", "furniture"],
+  bed: ["bed"],
+  bedding: ["bed"],
+  dining: ["dining", "table"],
+  table: ["table"],
+  chair: ["chair"],
+  carpet: ["carpet", "rug"],
+  rug: ["rug", "carpet"],
+  lighting: ["lighting", "lamp"],
+  lamp: ["lamp", "lighting"],
+  plants: ["plants"],
+  plant: ["plants"],
+  curtain: ["curtain"],
+  textiles: ["curtain"],
+  office: ["office", "table", "chair"],
+};
+
+export function matchCounterpart(
+  category: string,
+  detected: DetectedCounterpart[] | undefined,
+): DetectedCounterpart | null {
+  if (!detected?.length) return null;
+  const wanted = COUNTERPART_ALIASES[normalizeCat(category)] ?? [normalizeCat(category)];
+  const hits = detected.filter((d) => wanted.includes(d.type));
+  if (!hits.length) return null;
+  const exact = hits.find((d) => d.type === normalizeCat(category));
+  if (exact) return exact;
+  return hits.reduce((a, b) => (a.region.w * a.region.h >= b.region.w * b.region.h ? a : b));
+}
+
 /* ---------------- Size analysis ---------------- */
 
 export interface PlacementSizeAnalysis {
@@ -244,11 +290,14 @@ function resolveCollision(region: StudioRegion, occupied: StudioRegion[]): Studi
  */
 export function planReplacementPlacements(
   products: StudioProductInput[],
-  opts?: { roomType?: string; /** Previously occupied regions (all layers). */ occupied?: StudioRegion[] },
+  opts?: { roomType?: string; /** Previously occupied regions (all layers). */ occupied?: StudioRegion[]; /** Vision-detected counterpart regions — the product replaces the REAL item. */ detected?: DetectedCounterpart[] },
 ): StudioPlacementPlan[] {
   const initial = opts?.occupied ?? [];
   const byLayer: Record<StudioAnchor, StudioRegion[]> = { floor: [...initial], ground: [...initial], wall: [...initial], ceiling: [...initial] };
   const plans: StudioPlacementPlan[] = [];
+  // One detection = one replacement: the first product of a type consumes
+  // the detected counterpart; the rest fall back to category anchors.
+  const consumedTypes = new Set<string>();
 
   products.forEach((product, index) => {
     const name = product.name ?? "";
@@ -260,12 +309,25 @@ export function planReplacementPlacements(
 
     const size = analyzePlacementSize(product, fit, opts?.roomType);
 
+    // VISION-FIRST anchoring: when the photo's counterpart was detected,
+    // the product EXACTLY replaces it (same center, same footprint) —
+    // otherwise the deterministic category anchor applies (fallback).
+    let det = matchCounterpart(product.category ?? "", opts?.detected);
+    if (det && consumedTypes.has(det.type)) det = null;
+    else if (det) consumedTypes.add(det.type);
+    const cx = det ? det.region.x + det.region.w / 2 : fit.cx;
+    const cy = det ? det.region.y + det.region.h / 2 : fit.cy;
+    const effWidthPct = det ? clamp(det.region.w, 0.05, 0.92) : size.widthPct;
+    const effHeightPct = det
+      ? clamp((size.heightCm / Math.max(1, size.widthCm)) * effWidthPct * (fit.squash ?? 1), 0.04, 0.95)
+      : size.heightPct;
+
     // Region around the anchor center.
     let region: StudioRegion = {
-      x: clamp(fit.cx - size.widthPct / 2, 0.01, 0.99 - size.widthPct),
-      y: clamp(fit.cy - size.heightPct / 2, 0.01, 0.99 - size.heightPct),
-      width: size.widthPct,
-      height: size.heightPct,
+      x: clamp(cx - effWidthPct / 2, 0.01, 0.99 - effWidthPct),
+      y: clamp(cy - effHeightPct / 2, 0.01, 0.99 - effHeightPct),
+      width: effWidthPct,
+      height: effHeightPct,
     };
 
     const isEmitters = fit.anchor === "ceiling" || product.category === "lighting" || /لوستر|آباژور|چراغ|دیوارکوب/.test(name);
@@ -285,15 +347,18 @@ export function planReplacementPlacements(
     }
 
     byLayer[fit.anchor].push(region);
+    const sizeReport = det
+      ? `«${name || "محصول"}» دقیقاً جای نمونهٔ مشابه پیدا‌شده در عکس می‌نشیند — footprint واقعی همان وسیله (${Math.round(effWidthPct * 100)}٪ عرض عکس).`
+      : sizeReportFa(name, size, fit, glowNote);
     plans.push({
       productId: product.id,
       targetRegion: region,
-      widthPct: size.widthPct,
-      heightPct: size.heightPct,
+      widthPct: effWidthPct,
+      heightPct: effHeightPct,
       anchor: fit.anchor,
       rotation: 0,
       rationale: fit.rationale,
-      sizeReport: sizeReportFa(name, size, fit, glowNote),
+      sizeReport,
       squash: fit.squash ?? 1,
       glow,
     });

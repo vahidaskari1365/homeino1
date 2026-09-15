@@ -30,7 +30,7 @@ import { requireUser } from "@/lib/api/auth";
 // enough to fall back gracefully instead of a cold 504 (Hobby allows 60s).
 export const maxDuration = 60;
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice", "detect-objects"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -279,6 +279,19 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
         200,
         requestId,
       );
+    }
+
+    if (action === "detect-objects") {
+      // Vision: where does each counterpart ACTUALLY sit in the room photo?
+      // Non-generative, non-crediting, silent-degrading ([] on any failure).
+      const image = typeof p.referenceImage === "string" ? p.referenceImage : "";
+      const cats = Array.isArray(p.categories)
+        ? (p.categories as unknown[]).filter((x): x is string => typeof x === "string").slice(0, 12)
+        : [];
+      const { detectCounterparts } = await import("@/services/ai/roomObjects");
+      const objects = await detectCounterparts(image, cats);
+      finish("ok", { provider: objects.length ? "gemini-vision" : "fallback" });
+      return json({ objects }, 200, requestId);
     }
 
     // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----

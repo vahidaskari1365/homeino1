@@ -6,14 +6,14 @@
 // hook only owns the state + side effects of the studio. JSX and
 // classes were moved verbatim — no visual change.
 // ============================================================
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Product } from "@/types";
 import { costForMode, aiService } from "@/services/ai";
 import type { PipelineInput, PipelineResult } from "@/services/ai/pipeline";
 import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/placement";
 import { parseProductDimensions } from "@/services/ai/placement";
-import { planReplacementPlacements, type StudioPlacementPlan } from "@/services/ai/studioPlacement";
+import { planReplacementPlacements, type StudioPlacementPlan, type DetectedCounterpart } from "@/services/ai/studioPlacement";
 import { compositeRoomImage } from "@/lib/studioComposite";
 import type { StudioAgentsReport } from "@/services/agents/studio";
 import type { RoomElement } from "@/services/ai/roomState";
@@ -105,7 +105,12 @@ export function useDesignStudio() {
    * HOMINO STUDIO CORE — replace every selected product in the photo:
    * analyzed spot + real size + (luminaires) light projection, then
    * render the composite in the browser.
+   *
+   * VISION-FIRST: the photo is sent to the vision model once (cached per
+   * image) to find where each counterpart ACTUALLY sits — so the product
+   * lands exactly on the item it replaces, not on a generic anchor.
    */
+  const detectedCache = useRef<Map<string, DetectedCounterpart[]>>(new Map());
   const buildReplacement = useCallback(async (chosen: Product[], roomImg: string): Promise<{ placements: Placement[]; plans: StudioPlacementPlan[]; composite: string | null }> => {
     const studioInputs = chosen.map((p) => ({
       id: p.id,
@@ -114,7 +119,18 @@ export function useDesignStudio() {
       dimensions: parseProductDimensions(p.dimensions),
       description: p.description,
     }));
-    const plans = planReplacementPlacements(studioInputs, { roomType: rs.roomType || "نشیمن" });
+    // One vision call per unique photo — retries/undo reuse the cache.
+    let detected = detectedCache.current.get(roomImg) ?? [];
+    if (roomImg && !detectedCache.current.has(roomImg)) {
+      detectedCache.current.set(roomImg, []); // in-flight marker — no parallel duplicates
+      const cats = [...new Set(chosen.map((c) => (c.categorySlug || "furniture").toLowerCase()))].slice(0, 12);
+      detected = await aiService
+        .detectObjects({ referenceImage: roomImg, categories: cats })
+        .then((r) => r.objects ?? [])
+        .catch(() => []);
+      detectedCache.current.set(roomImg, detected);
+    }
+    const plans = planReplacementPlacements(studioInputs, { roomType: rs.roomType || "نشیمن", detected });
     const placements = plansToPlacements(chosen, plans);
     const composite = await compositeRoomImage({
       roomImage: roomImg,
