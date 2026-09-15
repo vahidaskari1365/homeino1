@@ -177,7 +177,7 @@ export default function AIResultPage({ params }: { params: Promise<{ id: string 
               </Link>
             ) : (
               <div key={i} className="card-surface flex items-center gap-3 p-4">
-                <LogoBlock char={p.label[0]} color="#6b6358" size={48} />
+                <LogoBlock char={p.label[0]} size={48} />
                 <div><div className="text-xs text-ink-muted">{p.label}</div><div className="text-sm font-medium text-ink">به‌زودی موجود</div></div>
               </div>
             );

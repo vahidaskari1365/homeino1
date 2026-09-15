@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
+import { createContext, use, useEffect, useRef, type ReactNode } from "react";
 import { useAuth } from "@/stores/useApp";
 
 // ============================================================
@@ -188,5 +188,6 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 }
 
 export function useTracking() {
-  return useContext(Ctx);
+  // React 19: use() replaces useContext (and can be called conditionally).
+  return use(Ctx);
 }

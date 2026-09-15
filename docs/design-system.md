@@ -71,6 +71,15 @@
 - Overlays: `Modal`, `ConfirmDialog`, `Drawer`
 - Global feedback: toast stack در `GlobalChrome`
 
+### قراردادهای React 19 و ترکیب کامپوننت‌ها (فاز ۳ — composition patterns)
+
+- `ref` در React 19 پراپ عادی است؛ در کتابخانه‌ی UI از `forwardRef` استفاده نکنید (نمونه: `Button`).
+- برای خواندن کانتکست از `use()` به‌جای `useContext` استفاده کنید (نمونه: `useTracking`).
+- `LogoBlock` رنگ پیش‌فرض توکنی دارد (`--color-ink-muted`)؛ برای آواتارها رنگ هاردکد ننویسید — رنگ‌های اختصاصی فقط برای لوگوی فروشگاه‌ها (`store.logoColor`).
+- `LogoMark` رنگ‌هایش را مستقیم از `var(--color-*)` می‌خواند؛ تغییر پالت برند فقط از `@theme` در `globals.css`.
+- منطق مشترک کارت‌ها (wishlist/compare/cart) یک‌بار بالای کامپوننت تعریف می‌شود تا نسخه‌ی موبایل و دسکتاپ هم‌رویت بماند.
+- رنگ‌های محتوایی (پالت پیشنهاد رنگ AI، رنگ‌های تولیدی لوگوی فروشگاه، سوآچ پالت اتاق) استثنا هستند و hex مستقیم مجاز است.
+
 ## Responsive rules
 
 - viewport هدف حداقل: 320px.

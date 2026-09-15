@@ -58,7 +58,7 @@ export default function AdminVendorsPage() {
             {pending.map((app) => (
               <div key={app.id} className="card-surface p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2"><LogoBlock char={app.storeName[0] ?? "ف"} color="#b8915a" size={36} />
+                  <div className="flex items-center gap-2"><LogoBlock char={app.storeName[0] ?? "ف"} size={36} />
                     <div><div className="font-bold text-ink">{app.storeName}</div><div className="text-xs text-ink-muted">{app.ownerName} · {app.phone} · {app.city}</div></div>
                   </div>
                   <Badge tone="gold">در انتظار</Badge>

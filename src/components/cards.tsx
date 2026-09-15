@@ -22,6 +22,16 @@ export function ProductCard({ product, sizes = CARD_SIZES_4COL }: { product: Pro
   const wished = wl.products.includes(product.id);
   const compared = cmp.has(product.id);
 
+  // Shared internals — mobile & desktop overlays stay in sync (composition over duplication).
+  const toggleWish = () => {
+    wl.toggleProduct(product.id);
+    toast(wished ? "از علاقه‌مندی حذف شد" : "به علاقه‌مندی اضافه شد");
+  };
+  const toggleCompare = () => {
+    cmp.toggle(product.id);
+    toast(compared ? "از مقایسه حذف شد" : "به مقایسه اضافه شد");
+  };
+
   return (
     <div className="group relative overflow-hidden rounded-[var(--radius-lg)] bg-ink shadow-[var(--shadow-soft)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] sm:aspect-[3/4]">
       {/* Image fills the entire card */}
@@ -39,14 +49,14 @@ export function ProductCard({ product, sizes = CARD_SIZES_4COL }: { product: Pro
       <div className="absolute left-2 top-2 z-20 flex flex-col gap-1.5 lg:hidden">
         <button
           aria-label="افزودن به علاقه‌مندی"
-          onClick={() => { wl.toggleProduct(product.id); toast(wished ? "از علاقه‌مندی حذف شد" : "به علاقه‌مندی اضافه شد"); }}
+          onClick={toggleWish}
           className={cn("grid h-9 w-9 place-items-center rounded-full bg-ink/70 text-cream backdrop-blur transition active:scale-90", wished && "text-rose-400")}
         >
           <Heart size={16} className={cn(wished && "fill-current")} />
         </button>
         <button
           aria-label="افزودن به مقایسه"
-          onClick={() => { cmp.toggle(product.id); toast(compared ? "از مقایسه حذف شد" : "به مقایسه اضافه شد"); }}
+          onClick={toggleCompare}
           className={cn("grid h-9 w-9 place-items-center rounded-full bg-ink/70 text-cream backdrop-blur transition active:scale-90", compared && "text-gold-soft")}
         >
           <GitCompare size={16} />
@@ -94,14 +104,14 @@ export function ProductCard({ product, sizes = CARD_SIZES_4COL }: { product: Pro
         <div className="mt-auto flex items-center gap-1.5 pt-3">
           <button
             aria-label="افزودن به علاقه‌مندی"
-            onClick={() => { wl.toggleProduct(product.id); toast(wished ? "از علاقه‌مندی حذف شد" : "به علاقه‌مندی اضافه شد"); }}
+            onClick={toggleWish}
             className={cn("flex flex-1 items-center justify-center gap-1 rounded-lg border py-2.5 text-xs font-bold transition", wished ? "border-terracotta-soft bg-terracotta-soft/20 text-terracotta-soft" : "border-cream/30 bg-cream/5 text-cream hover:bg-cream/15")}
           >
             <Heart size={14} className={cn(wished && "fill-current")} /> علاقه‌مندی
           </button>
           <button
             aria-label="افزودن به مقایسه"
-            onClick={() => { cmp.toggle(product.id); toast(compared ? "از مقایسه حذف شد" : "به مقایسه اضافه شد"); }}
+            onClick={toggleCompare}
             className={cn("flex flex-1 items-center justify-center gap-1 rounded-lg border py-2.5 text-xs font-bold transition", compared ? "border-gold-soft bg-gold/20 text-gold-soft" : "border-cream/30 bg-cream/5 text-cream hover:bg-cream/15")}
           >
             <GitCompare size={14} /> مقایسه

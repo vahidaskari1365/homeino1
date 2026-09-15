@@ -96,7 +96,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ slug: st
               {storeReviews.map((review) => (
                 <div key={review.id} className="border-b border-clay/30 pb-3 last:border-0 last:pb-0">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2"><LogoBlock char={review.author[0]} color="#6b6358" size={30} /><div><div className="text-sm font-medium text-ink">{review.author}</div><div className="text-xs text-ink-muted">{review.date}</div></div></div>
+                    <div className="flex items-center gap-2"><LogoBlock char={review.author[0]} size={30} /><div><div className="text-sm font-medium text-ink">{review.author}</div><div className="text-xs text-ink-muted">{review.date}</div></div></div>
                     <Rating value={review.rating} size={13} />
                   </div>
                   <p className="mt-2 text-sm leading-7 text-ink-muted">{review.comment}</p>

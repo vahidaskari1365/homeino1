@@ -356,7 +356,7 @@ export default function ProductDetailClient({
                 {reviews.map((r) => (
                   <div key={r.id} className="card-surface p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2"><LogoBlock char={r.author[0]} color="#6b6358" size={36} /><div><div className="text-sm font-medium text-ink">{r.author}</div><div className="text-xs text-ink-muted">{r.date}</div></div></div>
+                      <div className="flex items-center gap-2"><LogoBlock char={r.author[0]} size={36} /><div><div className="text-sm font-medium text-ink">{r.author}</div><div className="text-xs text-ink-muted">{r.date}</div></div></div>
                       <Rating value={r.rating} />
                     </div>
                     <p className="mt-3 text-sm leading-7 text-ink-muted">{r.comment}</p>

@@ -65,7 +65,7 @@ export default function AdminAdsPage() {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <LogoBlock char={(ad.sellerName ?? "؟")[0]} color="#6b6358" size={32} />
+                      <LogoBlock char={(ad.sellerName ?? "؟")[0]} size={32} />
                       <span className="text-ink">{ad.sellerName}</span>
                     </div>
                   </td>

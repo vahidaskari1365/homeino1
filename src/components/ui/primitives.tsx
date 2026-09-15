@@ -1,5 +1,5 @@
 "use client";
-import { forwardRef, useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type Ref } from "react";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { AlertTriangle, Star, X } from "lucide-react";
@@ -17,6 +17,8 @@ type Size = "sm" | "md" | "lg" | "icon";
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
+  /** React 19: ref is a regular prop — no forwardRef needed. */
+  ref?: Ref<HTMLButtonElement>;
 }
 const variants: Record<Variant, string> = {
   primary: "btn-primary",
@@ -34,8 +36,8 @@ const sizes: Record<Size, string> = {
   icon: "h-10 w-10 grid place-items-center",
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", className, children, ...props }, ref) => (
+export function Button({ variant = "primary", size = "md", className, children, ref, ...props }: ButtonProps) {
+  return (
     <button
       ref={ref}
       className={cn(
@@ -48,9 +50,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     >
       {children}
     </button>
-  )
-);
-Button.displayName = "Button";
+  );
+}
 
 /* ---------- Badge ---------- */
 export function Badge({ children, className, tone = "neutral" }: { children: ReactNode; className?: string; tone?: "neutral" | "accent" | "success" | "dark" | "gold" }) {
@@ -173,7 +174,7 @@ export function FaNumberInput({ value, onChange, placeholder, className, dir = "
 }
 
 /* ---------- Avatar (logo block) ---------- */
-export function LogoBlock({ char, color, size = 44 }: { char: string; color: string; size?: number }) {
+export function LogoBlock({ char, color = "var(--color-ink-muted)", size = 44 }: { char: string; color?: string; size?: number }) {
   return (
     <span
       className="grid shrink-0 place-items-center rounded-xl font-display font-bold text-cream"
