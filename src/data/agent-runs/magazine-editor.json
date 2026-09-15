@@ -1,7 +1,28 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-15T09:02:52.092Z",
+  "updatedAt": "2026-09-15T14:27:11.574Z",
   "runs": [
+    {
+      "id": "run-1789482431574-waj1w",
+      "at": "2026-09-15T14:27:11.574Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 436596,
+      "summary": "2 بریف ترند جدید (تابلو و دیوارکوب، دکوری و اکسسوری) — از طریق zai-1",
+      "detail": {
+        "added": 2,
+        "articlesAdded": 0,
+        "total": 58,
+        "via": "zai-1",
+        "titles": [
+          "تابلو دیواری زن قدرتمند با طرح گل و تاروت",
+          "دکوری‌های ارزان‌قیمت با حس لوکس"
+        ],
+        "sources": [
+          "news.google.com"
+        ]
+      }
+    },
     {
       "id": "run-1789462972092-0xzc6",
       "at": "2026-09-15T09:02:52.092Z",
