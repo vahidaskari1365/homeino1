@@ -1,7 +1,21 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-14T19:39:19.775Z",
+  "updatedAt": "2026-09-15T09:02:52.092Z",
   "runs": [
+    {
+      "id": "run-1789462972092-0xzc6",
+      "at": "2026-09-15T09:02:52.092Z",
+      "agentKey": "magazine-editor",
+      "ok": false,
+      "durationMs": 223322,
+      "summary": "بریف جدیدی تولید نشد — مطلب تازه‌ای در فیدها نبود، همه تکراری بودند یا خروجی معتبر نبود",
+      "detail": {
+        "added": 0,
+        "total": 56,
+        "reason": "no_valid_briefs",
+        "via": "google-1"
+      }
+    },
     {
       "id": "run-1789414759774-v19yr",
       "at": "2026-09-14T19:39:19.775Z",
