@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
-import { ProductCard } from "./cards";
+import { ProductCard, CARD_SIZES_3COL, CARD_SIZES_4COL } from "./cards";
 import type { Product } from "@/types";
 import { Reveal } from "./motion/Reveal";
 import { Container, Skeleton } from "./ui/primitives";
@@ -58,7 +58,9 @@ export function ProductGrid({ products, loading, cols = 4 }: { products: Product
   }
   return (
     <div className={`grid gap-3 sm:gap-4 ${colClass}`}>
-      {products.map((p) => <ProductCard key={p.id} product={p} />)}
+      {/* Contextual sizes: the optimizer picks a right-sized candidate per card
+          instead of a viewport-wide one (rule: minimize image bytes). */}
+      {products.map((p) => <ProductCard key={p.id} product={p} sizes={cols === 3 ? CARD_SIZES_3COL : CARD_SIZES_4COL} />)}
     </div>
   );
 }

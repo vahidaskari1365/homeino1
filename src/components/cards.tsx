@@ -10,7 +10,11 @@ import { cn, toFa, formatPrice } from "@/lib/utils";
 import { SmartImage } from "./ui/SmartImage";
 import { Badge, Rating, LogoBlock } from "./ui/primitives";
 
-export function ProductCard({ product }: { product: Product }) {
+/** Default responsive candidates for a grid card (2-col mobile → 3-col lg → 4-col xl). */
+export const CARD_SIZES_4COL = "(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw";
+export const CARD_SIZES_3COL = "(min-width:1024px) 33vw, 50vw";
+
+export function ProductCard({ product, sizes = CARD_SIZES_4COL }: { product: Product; sizes?: string }) {
   const wl = useWishlist();
   const cmp = useCompare();
   const addToCart = useCart((s) => s.add);
@@ -22,7 +26,7 @@ export function ProductCard({ product }: { product: Product }) {
     <div className="group relative overflow-hidden rounded-[var(--radius-lg)] bg-ink shadow-[var(--shadow-soft)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] sm:aspect-[3/4]">
       {/* Image fills the entire card */}
       <Link href={`/products/${product.slug}`} className="relative block aspect-square overflow-hidden sm:aspect-auto sm:h-full" aria-label={product.name}>
-        <SmartImage src={product.images[0]} alt={product.name} className="absolute inset-0 h-full w-full" />
+        <SmartImage src={product.images[0]} alt={product.name} className="absolute inset-0 h-full w-full" sizes={sizes} />
         {/* top badges */}
         <div className="absolute right-2 top-2 z-20 flex flex-col gap-1">
           {product.discount ? <Badge tone="accent">٪{product.discount} تخفیف</Badge> : null}

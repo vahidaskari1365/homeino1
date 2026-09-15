@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, GitCompare, ShoppingBag, Minus, Plus, Check, Truck, ShieldCheck, RotateCcw, Sparkles, Wand2, Ruler } from "lucide-react";
@@ -8,7 +8,7 @@ import { FilterableProductGrid } from "@/components/products/FilterableProductGr
 import { Button, Badge, Rating, Price, EmptyState, LogoBlock, Modal, Skeleton } from "@/components/ui/primitives";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { Reveal } from "@/components/motion/Reveal";
-import { getProductById, products } from "@/data/products";
+import { getProductById } from "@/data/products";
 import { findVendorProductPublic } from "@/data/vendorSession";
 import { getStyle } from "@/data/styles";
 import { getStoreById } from "@/data/stores";
@@ -54,9 +54,20 @@ export default function ProductDetailClient({
   const [reviewOpen, setReviewOpen] = useState(false);
   const productId = product?.id ?? "";
   const [reviewVersion, setReviewVersion] = useState(0);
-  // Read the persisted reviews only after hydration so the first paint
-  // (server + pre-hydration) stays identical to SSR — zero console mismatch.
-  const myReviews = hydrated && productId ? localReviews(productId) : [];
+  // Persisted reviews: derived in render but MEMOIZED — localStorage is read
+  // only when the product changes or a review is saved (reviewVersion bump),
+  // instead of a storage read + JSON.parse on every render (rules:
+  // rerender-lazy-state-init + js-cache-storage). Reading waits for hydration
+  // so the first paint stays identical to SSR — zero console mismatch.
+  const myReviews = useMemo(
+    () => {
+      // reviewVersion is an intentional re-read trigger (a saved review bumps
+      // it) — not a value the callback consumes.
+      void reviewVersion;
+      return hydrated && productId ? localReviews(productId) : [];
+    },
+    [hydrated, productId, reviewVersion],
+  );
   // Server reviews (verified purchases, DB-backed) merge above the samples.
   const [serverReviews, setServerReviews] = useState<Review[]>([]);
   useEffect(() => {
@@ -148,7 +159,7 @@ export default function ProductDetailClient({
         <Reveal>
           <div>
             <div className="relative overflow-hidden rounded-[var(--radius-lg)]">
-              <SmartImage src={product!.images[active]} alt={product!.name} className="aspect-square w-full" />
+              <SmartImage src={product!.images[active]} alt={product!.name} className="aspect-square w-full" priority={active === 0} sizes="(min-width:1024px) 50vw, 100vw" />
               <div className="absolute right-4 top-4 flex flex-col gap-1.5">
                 {product!.aiRecommended && <Badge tone="gold"><Sparkles size={11} /> پیشنهاد AI</Badge>}
                 {product!.discount && <Badge tone="accent">٪{toFa(product!.discount)} تخفیف</Badge>}
@@ -157,7 +168,7 @@ export default function ProductDetailClient({
             <div className="mt-3 flex gap-3">
               {product!.images.map((img, i) => (
                 <button key={i} onClick={() => setActive(i)} className={cn("h-20 w-20 overflow-hidden rounded-xl border-2 transition", active === i ? "border-ink" : "border-transparent opacity-60 hover:opacity-100")}>
-                  <SmartImage src={img} alt="" className="h-full w-full" />
+                  <SmartImage src={img} alt="" className="h-full w-full" sizes="80px" />
                 </button>
               ))}
             </div>
@@ -344,7 +355,7 @@ export default function ProductDetailClient({
               return (
                 <div key={p.id} className="flex flex-col rounded-xl border border-clay/40 bg-cream p-3">
                   <div className="mb-2 flex items-center gap-2.5">
-                    <img width="56" height="56" src={p.images[0]} alt={p.name} className="h-14 w-14 rounded-lg object-cover" />
+                    <SmartImage src={p.images[0]} alt={p.name} className="h-14 w-14 shrink-0 rounded-lg" sizes="56px" />
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-1 text-xs font-bold text-ink">{p.name}</p>
                       <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
@@ -473,7 +484,7 @@ function saveLocalReview(productId: string, rating: number, comment: string): Re
 
 function RecentlyViewedSection({ currentId }: { currentId: string }) {
   const recentIds = useRecentlyViewed((s) => s.productIds);
-  const recent = recentIds.map(getProductById).filter((p) => p && p.id !== currentId).slice(0, 5) as typeof products;
+  const recent = recentIds.map(getProductById).filter((p) => p && p.id !== currentId).slice(0, 5) as Product[];
   if (recent.length < 2) return null;
   return (
     <div className="mt-10">
@@ -481,7 +492,7 @@ function RecentlyViewedSection({ currentId }: { currentId: string }) {
       <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
         {recent.map((p) => (
           <Link key={p.id} href={`/products/${p.slug}`} className="group w-32 shrink-0">
-            <div className="overflow-hidden rounded-xl border border-clay/40"><img width="400" height="400" src={p.images[0]} alt={p.name} className="aspect-square w-full object-cover transition group-hover:scale-105" /></div>
+            <div className="overflow-hidden rounded-xl border border-clay/40"><SmartImage src={p.images[0]} alt={p.name} className="aspect-square w-full" sizes="128px" /></div>
             <p className="mt-1.5 line-clamp-1 text-2xs font-bold text-ink">{p.name}</p>
             <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
           </Link>

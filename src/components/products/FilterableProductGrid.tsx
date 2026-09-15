@@ -13,8 +13,6 @@ import {
   filterProducts,
   parseProductFilters,
   productPriceCeiling,
-  uniqueProductColors,
-  uniqueProductMaterials,
   type AvailabilityFilter,
 } from "@/lib/productFilters";
 import { cn, formatPrice, toFa } from "@/lib/utils";
@@ -42,6 +40,13 @@ interface FacetOption {
   count?: number;
   href?: string;
 }
+
+// Static name lookups for the active-filter chips — built ONCE at module
+// level instead of three `new Map(...)` allocations on every render
+// (rules: hoist static work / rerender-memo-with-default-value).
+const STYLE_NAME = new Map(styles.map((style) => [style.slug, style.name]));
+const CATEGORY_NAME = new Map(categories.map((category) => [category.slug, category.name]));
+const STORE_NAME = new Map(stores.map((store) => [store.id, store.name]));
 
 const SORTS = [
   ["newest", "جدیدترین"],
@@ -165,11 +170,55 @@ function FilterableProductGridInner({
     setDraftPrice(null);
   };
 
+  // Facet counts in ONE pass over the catalog (rules: js-combine-iterations +
+  // js-index-maps). Previously every facet option re-filtered the whole list
+  // (~60 full-catalog passes per render, re-running on every slider tick);
+  // now a single pass builds count maps + name sets and every lookup is O(1).
+  const facets = useMemo(() => {
+    const style = new Map<string, number>();
+    const category = new Map<string, number>();
+    const color = new Map<string, number>();
+    const material = new Map<string, number>();
+    const store = new Map<string, number>();
+    const colorNames = new Set<string>();
+    const materialNames = new Set<string>();
+    let inStock = 0;
+    let outOfStock = 0;
+
+    for (const product of products) {
+      for (const slug of product.styleSlugs) style.set(slug, (style.get(slug) ?? 0) + 1);
+      category.set(product.categorySlug, (category.get(product.categorySlug) ?? 0) + 1);
+      for (const item of product.colors) {
+        colorNames.add(item.name);
+        color.set(item.name, (color.get(item.name) ?? 0) + 1);
+      }
+      for (const materialName of product.materials) {
+        materialNames.add(materialName);
+        material.set(materialName, (material.get(materialName) ?? 0) + 1);
+      }
+      store.set(product.storeId, (store.get(product.storeId) ?? 0) + 1);
+      if (product.inStock) inStock += 1;
+      else outOfStock += 1;
+    }
+
+    return {
+      style,
+      category,
+      color,
+      material,
+      store,
+      inStock,
+      outOfStock,
+      colorNames: Array.from(colorNames),
+      materialNames: Array.from(materialNames),
+    };
+  }, [products]);
+
   const styleOptions = styles
     .map((style) => ({
       value: style.slug,
       label: style.name,
-      count: products.filter((product) => product.styleSlugs.includes(style.slug)).length,
+      count: facets.style.get(style.slug) ?? 0,
       href: `/styles/${style.slug}`,
     }))
     .filter((option) => option.count > 0 || filters.styles.includes(option.value));
@@ -178,43 +227,41 @@ function FilterableProductGridInner({
     .map((category) => ({
       value: category.slug,
       label: category.name,
-      count: products.filter((product) => product.categorySlug === category.slug).length,
+      count: facets.category.get(category.slug) ?? 0,
     }))
     .filter((option) => option.count > 0 || filters.categories.includes(option.value));
 
-  const colorOptions = uniqueProductColors(products).map((color) => ({
+  const colorOptions = facets.colorNames.map((color) => ({
     value: color,
     label: color,
-    count: products.filter((product) => product.colors.some((item) => item.name === color)).length,
+    count: facets.color.get(color) ?? 0,
   }));
 
-  const materialOptions = uniqueProductMaterials(products).map((material) => ({
-    value: material,
-    label: material,
-    count: products.filter((product) => product.materials.includes(material)).length,
-  }));
+  const materialOptions = facets.materialNames
+    .sort((a, b) => a.localeCompare(b, "fa"))
+    .map((material) => ({
+      value: material,
+      label: material,
+      count: facets.material.get(material) ?? 0,
+    }));
 
   const storeOptions = stores
     .map((store) => ({
       value: store.id,
       label: store.name,
-      count: products.filter((product) => product.storeId === store.id).length,
+      count: facets.store.get(store.id) ?? 0,
     }))
     .filter((option) => option.count > 0 || filters.stores.includes(option.value));
-
-  const selectedStyleNames = new Map(styles.map((style) => [style.slug, style.name]));
-  const selectedCategoryNames = new Map(categories.map((category) => [category.slug, category.name]));
-  const selectedStoreNames = new Map(stores.map((store) => [store.id, store.name]));
 
   const activeChips: { key: string; label: string; remove: () => void }[] = [
     ...filters.styles.map((style) => ({
       key: `style-${style}`,
-      label: `سبک: ${selectedStyleNames.get(style) ?? style}`,
+      label: `سبک: ${STYLE_NAME.get(style) ?? style}`,
       remove: () => setCsv("style", filters.styles.filter((item) => item !== style)),
     })),
     ...filters.categories.map((category) => ({
       key: `category-${category}`,
-      label: `دسته: ${selectedCategoryNames.get(category) ?? category}`,
+      label: `دسته: ${CATEGORY_NAME.get(category) ?? category}`,
       remove: () => setCsv("category", filters.categories.filter((item) => item !== category)),
     })),
     ...filters.colors.map((color) => ({
@@ -229,7 +276,7 @@ function FilterableProductGridInner({
     })),
     ...filters.stores.map((store) => ({
       key: `store-${store}`,
-      label: `فروشگاه: ${selectedStoreNames.get(store) ?? store}`,
+      label: `فروشگاه: ${STORE_NAME.get(store) ?? store}`,
       remove: () => setCsv("store", filters.stores.filter((item) => item !== store)),
     })),
     ...(filters.availability
@@ -255,8 +302,8 @@ function FilterableProductGridInner({
   ];
 
   const availabilityOptions: FacetOption[] = [
-    { value: "in-stock", label: "فقط کالاهای موجود", count: products.filter((product) => product.inStock).length },
-    { value: "out-of-stock", label: "کالاهای ناموجود", count: products.filter((product) => !product.inStock).length },
+    { value: "in-stock", label: "فقط کالاهای موجود", count: facets.inStock },
+    { value: "out-of-stock", label: "کالاهای ناموجود", count: facets.outOfStock },
   ];
 
   const filtersPanel = (
@@ -340,7 +387,7 @@ function FilterableProductGridInner({
           href={filters.styles.length === 1 ? `/styles/${filters.styles[0]}` : "/styles"}
           className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-bold text-ink-muted transition hover:bg-ivory-2 hover:text-ink"
         >
-          <BookOpen size={13} /> درباره {filters.styles.length === 1 ? `سبک ${selectedStyleNames.get(filters.styles[0])}` : "این سبک‌ها"}
+          <BookOpen size={13} /> درباره {filters.styles.length === 1 ? `سبک ${STYLE_NAME.get(filters.styles[0])}` : "این سبک‌ها"}
         </Link>
       )}
       <button type="button" onClick={reset} className="inline-flex min-h-9 items-center gap-1 px-2 text-xs text-ink-muted hover:text-danger"><RotateCcw size={12} /> پاک‌کردن همه</button>

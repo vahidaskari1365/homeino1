@@ -11,6 +11,14 @@
 //      rotate with every deployment and point away from the money domain)
 //   3. VERCEL_URL            (preview deploys keep their own URL)
 //   4. https://homeino.ir    (local dev fallback)
+//
+// DOMAIN SWITCH NOTE (recorded 2026-09-15): the owner plans to register
+// homeino.com next month and may use it as the final brand domain. The switch
+// is CONFIG-ONLY — no code change needed:
+//   1. Set NEXT_PUBLIC_SITE_URL=https://homeino.com in Vercel env vars
+//   2. Add + verify the domain in Vercel / DNS
+//   3. Update SITE.domain + twitter below, Search Console property + sitemap ping
+// Until then every canonical keeps pointing at the configured brand domain.
 // ============================================================
 
 const raw =
