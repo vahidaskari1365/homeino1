@@ -176,21 +176,38 @@ export const oraliClient: OraliClient = {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 180_000); // image edits can be slow
     const started = Date.now();
+    /**
+     * ENGINE CONTRACT (probed live 2026-09-16): the edit endpoint accepts at
+     * most THREE images total (room + 2 references). A 4th image → HTTP 400
+     * «image_url参数非法». With a mask attached the budget is room + mask + 1
+     * reference. Over-budget payloads made the pipeline fall back to a FULL
+     * re-render — the exact «کل عکس عوض میشه» catastrophe.
+     */
+    const maxRefs = req.mask ? 1 : 2;
+    const refs = (req.referenceImages ?? []).slice(0, maxRefs);
+    const buildImages = (withExtras: boolean) => [
+      { url: req.image },
+      ...(withExtras ? refs.map((url) => ({ url })) : []),
+      ...(withExtras && req.mask ? [{ url: req.mask }] : []),
+    ];
     try {
       // The engine's content filter false-positives on Persian script —
       // image prompts must go out in English (chat endpoint is Persian-safe).
       const enginePrompt = await toEngineEnglish(buildEditPrompt(req));
-      const res = await postWithRetry(cfg, "/images/generations/edit", {
+      let res = await postWithRetry(cfg, "/images/generations/edit", {
         prompt: enginePrompt,
-        // engine contract: array of {url} — room first, then product
-        // reference photo(s), then the edit mask (white = editable area).
-        images: [
-          { url: req.image },
-          ...(req.referenceImages ?? []).map((url) => ({ url })),
-          ...(req.mask ? [{ url: req.mask }] : []),
-        ],
+        images: buildImages(true),
         size: pickSize(req.image),
       }, controller.signal);
+      if (!res.ok && res.status === 400 && (refs.length || req.mask)) {
+        // Trim to room-only and retry once: a degraded edit that PRESERVES
+        // the user's photo beats a fallback that discards it entirely.
+        res = await postWithRetry(cfg, "/images/generations/edit", {
+          prompt: enginePrompt,
+          images: buildImages(false),
+          size: pickSize(req.image),
+        }, controller.signal);
+      }
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new OraliRequestError(`ORALI_HTTP_${res.status}${body ? `: ${body.slice(0, 180)}` : ""}`, res.status);

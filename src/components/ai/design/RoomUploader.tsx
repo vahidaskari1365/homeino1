@@ -10,7 +10,7 @@
 // ============================================================
 import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, Loader2, ScanLine, Replace, ImagePlus } from "lucide-react";
+import { Upload, X, Loader2, ScanLine, Replace, ImagePlus, AlertCircle } from "lucide-react";
 import { toFa, cn } from "@/lib/utils";
 import type { DesignStudio } from "./useDesignStudio";
 import { AnalysisBanner } from "./AnalysisBanner";
@@ -23,7 +23,7 @@ export const SAMPLE_ROOMS = [
 ];
 
 export function RoomUploader({ studio }: { studio: DesignStudio }) {
-  const { imageBase64, analyzing, handleFile, removeImage, roomAnalysis, loadSample } = studio;
+  const { imageBase64, analyzing, handleFile, removeImage, roomAnalysis, analysisError, analyzeRoom, loadSample } = studio;
   const inputRef = useRef<HTMLInputElement>(null);
 
   // ---------- حالت خالی: دراپ‌زون + نمونه‌ها ----------
@@ -120,6 +120,19 @@ export function RoomUploader({ studio }: { studio: DesignStudio }) {
         </div>
       )}
       {!analyzing && roomAnalysis && <AnalysisBanner studio={studio} embedded />}
+
+      {/* شکست تحلیل — صادقانه + تلاش دوباره (باگ سکوت ۲۰۲۶-۰۹-۱۶) */}
+      {!analyzing && analysisError && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-danger/25 bg-danger/5 px-3 py-2.5">
+          <p className="flex items-start gap-1.5 text-xs leading-5 text-danger"><AlertCircle size={13} className="mt-0.5 shrink-0" /> {analysisError}</p>
+          <button
+            onClick={() => imageBase64 && analyzeRoom(imageBase64)}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-cream transition hover:bg-terracotta-deep"
+          >
+            <ScanLine size={13} /> تحلیل دوباره
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }

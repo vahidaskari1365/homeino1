@@ -52,11 +52,12 @@ export function DesignStudio({ studio }: { studio: Studio }) {
             min-content عکس‌های ذاتی‌بلند (۱۲۰۰px) کل صفحه را overflow می‌دهد. */}
         {tab === "design" && (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-12 lg:gap-5">
-            {/* راست (اول در RTL): کانواس — عکس + تحلیل + نتیجه */}
+            {/* DOM: کانواس اول — در موبایل آپلود/عکس اول دیده می‌شود.
+                دسکتاپ: با order تنظیمات می‌رود راست (order-1 در RTL اول است)
+                و کانواس می‌رود چپ (خواستهٔ مالک ۲۰۲۶-۰۹-۱۶). */}
             <ResultCanvas studio={studio} />
 
-            {/* چپ: تنظیمات — سبک / وسایل / بودجه و دستور + CTA چسبان */}
-            <div className="lg:col-span-5">
+            <div className="lg:order-1 lg:col-span-5">
               <StudioSettings studio={studio} />
             </div>
           </div>

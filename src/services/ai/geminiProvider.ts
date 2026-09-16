@@ -11,6 +11,7 @@
 import type { AiProvider, GenerateDesignInput, GeneratedDesign, DecorSuggestion } from "./types";
 import { uid } from "../../lib/utils";
 import { resolveGeminiConfig } from "./settings";
+import { normalizeRoomAnalysisFa, FA_ANALYSIS_DIRECTIVE } from "./analysisNormalize";
 
 const API = `https://generativelanguage.googleapis.com/v1beta/models`;
 
@@ -135,12 +136,13 @@ export const geminiProvider: AiProvider = {
   },
   async analyzeRoom(input) {
     const raw = await geminiText(
-      "You are an interior designer. Reply ONLY compact JSON with keys: roomType, style, likelyStyle({style, confidence}), palette[], mood, strengths[], opportunities[], suggestions[], guidedSuggestions([{id, title, desc, impact, creditCost, category}]), architecture, lighting, furniture[], emptySpaces[], functionalIssues[], designOpportunities[]. Persian values for text, English for IDs/keys.",
+      "You are an interior designer. Reply ONLY compact JSON with keys: roomType, style, likelyStyle({style, confidence}), palette[], mood, strengths[], opportunities[], suggestions[], guidedSuggestions([{id, title, desc, impact, creditCost, category}]), architecture, lighting, furniture[], emptySpaces[], functionalIssues[], designOpportunities[]. Persian values for text, English for IDs/keys. " + FA_ANALYSIS_DIRECTIVE,
       `Analyze this room photo/context: ${input.room ?? ""} ${input.style ?? ""}.`
     );
     try {
       const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] ?? "{}");
-      return {
+      // نرمال‌ساز مشترک: هر مقدار انگلیسیِ لیز خورده (سبک/رنگ/عبارت) فارسی می‌شود
+      return normalizeRoomAnalysisFa({
         roomType: parsed.roomType || input.room || "پذیرایی",
         style: parsed.style || input.style || "اسکاندیناوی",
         likelyStyle: parsed.likelyStyle || { style: input.style || "Scandinavian", confidence: 0.78 },
@@ -161,7 +163,7 @@ export const geminiProvider: AiProvider = {
         emptySpaces: parsed.emptySpaces || ["دیوار اصلی خالی", "گوشه دنج"],
         functionalIssues: parsed.functionalIssues || ["کمبود نور موضعی"],
         designOpportunities: parsed.designOpportunities || ["امکان افزودن فرش و تابلوی دیواری"],
-      };
+      });
     } catch {
       return {
         roomType: input.room || "پذیرایی",

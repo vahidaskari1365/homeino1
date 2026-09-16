@@ -61,7 +61,22 @@ export async function callAiServer<T>(action: string, payload: unknown): Promise
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, payload, _userHash: userHash }),
   });
-  if (!res.ok) throw new Error("AI service unavailable");
+  if (!res.ok) {
+    // پیام صادقانه به‌جای «AI service unavailable» مبهم: بدنهٔ JSON خطای
+    // سرور (UNAUTHORIZED / RATE_LIMIT / پیام فارسی) حفظ می‌شود تا UI
+    // بتواند ۴۰۱ را به ورود هدایت کند. صفحات HTML خطا (۵۰۰) هم safe.
+    let message = "سرویس هوش مصنوعی در دسترس نیست";
+    let code = "";
+    try {
+      const j = (await res.json()) as { error?: string; code?: string };
+      if (j?.error) message = j.error;
+      if (j?.code) code = j.code;
+    } catch { /* HTML error page — keep the default message */ }
+    const err = new Error(message) as Error & { status?: number; code?: string };
+    err.status = res.status;
+    err.code = code;
+    throw err;
+  }
   return res.json() as Promise<T>;
 }
 

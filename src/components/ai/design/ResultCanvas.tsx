@@ -68,7 +68,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
   const lightbox = zoom && zoom.token === zoomToken && !busy && hasResult && imageBase64 ? zoom : null;
 
   return (
-    <div className="space-y-4 lg:col-span-7">
+    <div className="space-y-4 lg:order-2 lg:col-span-7">
       {/* ================= کارت کانواس ================= */}
       <div className="rounded-2xl border border-clay/50 bg-cream p-4 shadow-[var(--shadow-soft)] sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-clay/30 pb-2.5">

@@ -14,8 +14,31 @@
 // output misbehave, the lock fails soft: the honest engine image is
 // returned unchanged instead of a broken composite.
 // ============================================================
-import sharp from "sharp";
 import type { Sharp } from "sharp";
+
+/**
+ * LAZY sharp loader — PRODUCTION CRITICAL (2026-09-16).
+ *
+ * A top-level `import sharp from "sharp"` crashed the ENTIRE /api/ai route
+ * module on the Vercel function runtime (native binding failed to load →
+ * every AI request 500ed — analysis, chat, generation, everything). Now
+ * sharp loads on first use; if the binary is unavailable the pixel-lock
+ * degrades honestly (returns null / ok:false) and the route STAYS ALIVE.
+ */
+type SharpFactory = typeof import("sharp").default;
+let sharpPromise: Promise<SharpFactory | null> | null = null;
+async function loadSharp(): Promise<SharpFactory | null> {
+  sharpPromise ??= import("sharp")
+    .then((m) => {
+      const mod = m as unknown as { default?: SharpFactory };
+      if (typeof mod?.default === "function") return mod.default;
+      const direct = m as unknown as SharpFactory;
+      if (typeof direct === "function") return direct; // no-interop bundler
+      return null;
+    })
+    .catch(() => null);
+  return sharpPromise;
+}
 
 /** Normalized rect (0..1), origin top-left. */
 export interface NormRect {
@@ -84,6 +107,8 @@ function rectsToSvg(rects: NormRect[], w: number, h: number, fill: string): stri
 export async function buildEngineMask(originalDataUrl: string, rects: NormRect[]): Promise<string | null> {
   const decoded = dataUrlToBuffer(originalDataUrl);
   if (!decoded || !rects.length) return null;
+  const sharp = await loadSharp();
+  if (!sharp) return null; // sharp unavailable → no engine mask (fail soft)
   try {
     const meta = await sharp(decoded.buf).metadata();
     const w = meta.width ?? 0;
@@ -152,6 +177,8 @@ export async function pixelLockComposite(input: PixelLockInput): Promise<PixelLo
   if (!gen) return { ok: false, reason: "generated_decode_failed" };
   if (!input.rects.length) return { ok: false, reason: "no_mask_rects" };
 
+  const sharp = await loadSharp();
+  if (!sharp) return { ok: false, reason: "sharp_unavailable" };
   try {
     const origSharp = sharp(orig.buf, { failOn: "none" });
     const meta = await origSharp.metadata();

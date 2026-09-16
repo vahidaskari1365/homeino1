@@ -19,6 +19,7 @@ import { uid } from "../../lib/utils";
 import { engineChat, engineGenerate } from "./orali/oraliClient";
 import { oraliClient } from "./orali/oraliClient";
 import { isZEngineFileConfigured } from "./engineConfig";
+import { normalizeRoomAnalysisFa, FA_ANALYSIS_DIRECTIVE } from "./analysisNormalize";
 
 const PERSIAN_ASSISTANT =
   "تو دستیار هوشمند دکوراسیون Homeino هستی. فقط درباره‌ی خانه، مبلمان، رنگ، چیدمان و خرید راهنمایی کن. کوتاه، مهربان و حرفه‌ای به فارسی پاسخ بده.";
@@ -114,7 +115,7 @@ export const zaiProvider: AiProvider = {
 
   async analyzeRoom(input): Promise<RoomAnalysis> {
     const system =
-      "You are an interior designer. Reply ONLY compact JSON with keys: roomType, style, likelyStyle({style, confidence}), palette[], mood, strengths[], opportunities[], suggestions[], guidedSuggestions([{id, title, desc, impact, creditCost, category}]), architecture, lighting, emptySpaces[], functionalIssues[], designOpportunities[]. Persian values for Persian text, English for IDs.";
+      "You are an interior designer. Reply ONLY compact JSON with keys: roomType, style, likelyStyle({style, confidence}), palette[], mood, strengths[], opportunities[], suggestions[], guidedSuggestions([{id, title, desc, impact, creditCost, category}]), architecture, lighting, emptySpaces[], functionalIssues[], designOpportunities[]. Persian values for Persian text, English for IDs. " + FA_ANALYSIS_DIRECTIVE;
     const base = await jsonViaChat<Partial<RoomAnalysis>>(
       system,
       `Analyze this room context: ${input.room ?? ""} ${input.style ?? ""}. ${input.prompt ?? ""}`,
@@ -122,7 +123,9 @@ export const zaiProvider: AiProvider = {
     );
     const { mockAiProvider } = await import("./mockAiService");
     const baseMock = await mockAiProvider.analyzeRoom(input);
-    return { ...baseMock, ...base, guidedSuggestions: base.guidedSuggestions ?? baseMock.guidedSuggestions };
+    // GLM حتی با prompt فارسی مقادیر انگلیسی می‌دهد (باگ مالک ۲۰۲۶-۰۹-۱۶) —
+    // نرمال‌ساز مشترک سبک/رنگ/اتاق/عبارات را فارسی می‌کند.
+    return normalizeRoomAnalysisFa({ ...baseMock, ...base, guidedSuggestions: base.guidedSuggestions ?? baseMock.guidedSuggestions });
   },
 
   async recommendProducts(): Promise<{ productId: string; reason: string; score: number }[]> {

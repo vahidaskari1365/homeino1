@@ -3,8 +3,9 @@
 // Extracted verbatim from the former single-file page so every
 // component (RoomUploader, StylePicker, ItemPicker, …) reads from
 // one source. No visual value changed.
+// ⚠ عکس سبک‌ها لوکال است (public/images/styles/) — Pexels در ایران
+// ناپایدار است و مالک گزارش کرد که فقط مدرن لود می‌شد (باگ ۲۰۲۶-۰۹-۱۶).
 // ============================================================
-import { IMG } from "@/data/media";
 import { secondHandProducts } from "@/data/secondHand";
 import type { Product } from "@/types";
 import {
@@ -20,11 +21,15 @@ export const STAGE_LABEL: Record<Stage, string> = {
 export const STAGE_ORDER: Stage[] = ["UPLOADING", "ANALYZING_SPACE", "SELECTING_PRODUCTS", "LAYING_OUT", "RENDERING"];
 
 export const STYLES = [
-  { id: "modern", label: "مدرن", image: IMG.living2 }, { id: "classic", label: "کلاسیک", image: IMG.living9 },
-  { id: "minimalist", label: "مینیمال", image: IMG.living7 }, { id: "luxury", label: "لوکس", image: IMG.living5 },
-  { id: "scandinavian", label: "اسکاندیناوی", image: IMG.bed9 }, { id: "industrial", label: "صنعتی", image: IMG.decor8 },
-  { id: "bohemian", label: "بوهمی", image: IMG.living3 }, { id: "japanese", label: "ژاپنی", image: IMG.decor6 },
-  { id: "office", label: "اداری", image: IMG.decor7 },
+  { id: "modern", label: "مدرن", image: "/images/styles/modern.jpg" },
+  { id: "classic", label: "کلاسیک", image: "/images/styles/classic.jpg" },
+  { id: "minimalist", label: "مینیمال", image: "/images/styles/minimalist.jpg" },
+  { id: "luxury", label: "لوکس", image: "/images/styles/luxury.jpg" },
+  { id: "scandinavian", label: "اسکاندیناوی", image: "/images/styles/scandinavian.jpg" },
+  { id: "industrial", label: "صنعتی", image: "/images/styles/industrial.jpg" },
+  { id: "bohemian", label: "بوهمی", image: "/images/styles/bohemian.jpg" },
+  { id: "japanese", label: "ژاپنی", image: "/images/styles/japandi.jpg" },
+  { id: "office", label: "اداری", image: "/images/styles/office.jpg" },
 ];
 
 export interface SubType { label: string; desc: string }

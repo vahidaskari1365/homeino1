@@ -90,15 +90,19 @@ export function useDesignStudio() {
   const [lastScope, setLastScope] = useState<ScopedChange | null>(null);
   const [roomAnalysis, setRoomAnalysis] = useState<RoomAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const analyzeRoom = useCallback(async (image: string) => {
-    setAnalyzing(true); setRoomAnalysis(null);
+    setAnalyzing(true); setRoomAnalysis(null); setAnalysisError(null);
     try {
       const analysis = await aiService.analyze({ mode: "room-redesign", prompt: "تحلیل", referenceImage: image, room: style === "office" ? "فضای اداری" : "پذیرایی", style });
       setRoomAnalysis(analysis);
       rs.setRoomMeta({ detectedStyle: analysis.style, detectedColors: analysis.palette, roomType: analysis.roomType });
-    } catch {}
-    finally { setAnalyzing(false); }
+    } catch {
+      // باگ مالک ۲۰۲۶-۰۹-۱۶: شکست تحلیل ساکت بود و هیچی نشان داده نمی‌شد —
+      // حالا صادقانه اعلام می‌شود + دکمه تلاش دوباره (طراحی بدون تحلیل هم مجاز است).
+      setAnalysisError("تحلیل خودکار همین الان انجام نشد — می‌توانی دوباره امتحان کنی؛ طراحی بدون تحلیل هم کار می‌کند");
+    } finally { setAnalyzing(false); }
   }, [style, rs]);
 
   /**
@@ -388,9 +392,23 @@ export function useDesignStudio() {
         setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
         return;
       }
-      setError("خطا در پردازش — لطفاً دوباره تلاش کن");
+      if (result.reason === "rate_limited") {
+        const msg = result.error || "تعداد درخواست‌هایت زیاد است — کمی صبر کن";
+        setError(String(msg));
+        return toast(String(msg), "error");
+      }
+      // failed: پیام واقعی سرور (۴۰۱ ورود، سقف نرخ، …) — نه پیام مبهم
+      const err = result.error as (Error & { status?: number; code?: string }) | undefined;
+      if (err?.status === 401 || err?.code === "UNAUTHORIZED") {
+        setError("برای طراحی باید وارد حساب کاربری شوی");
+        toast("برای استفاده از طراحی هوشمند، اول وارد شو", "error");
+        router.push("/login?next=/ai/design");
+        return;
+      }
+      const msg = err?.message || "خطا در پردازش — لطفاً دوباره تلاش کن";
+      setError(msg);
       trackEvent("ai_failed", {});
-      return toast("خطا در پردازش AI — اعتبار برگردانده شد", "error");
+      return toast(msg, "error");
     }
 
     try {
@@ -503,7 +521,7 @@ export function useDesignStudio() {
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, placedProducts, designElements, presetProduct, prompt, style, budget, skuInput, rs, roomAnalysis, styleLabel, toast, saveSession, buildReplacement, fetchStudioReport]);
+  }, [imageBase64, placedProducts, designElements, presetProduct, prompt, style, budget, skuInput, rs, roomAnalysis, styleLabel, toast, saveSession, buildReplacement, fetchStudioReport, router]);
 
   const updatePlacement = useCallback((id: string, patch: Partial<Placement>) => {
     setPlacements((ps) => ps.map((pl) => (pl.product.id === id ? { ...pl, ...patch } : pl)));
@@ -595,8 +613,16 @@ export function useDesignStudio() {
         setError("درخواست تکراری — نتیجه قبلی در حال پردازش است");
         return;
       }
-      setError("خطا در پردازش");
-      return toast("خطا در جای‌گذاری — اعتبار برگردانده شد", "error");
+      const err = result.error as (Error & { status?: number; code?: string }) | undefined;
+      if (err?.status === 401 || err?.code === "UNAUTHORIZED") {
+        setError("برای جای‌گذاری محصول باید وارد حساب کاربری شوی");
+        toast("برای استفاده از هوش مصنوعی، اول وارد شو", "error");
+        router.push("/login?next=/ai/design");
+        return;
+      }
+      const msg = err?.message || "خطا در جای‌گذاری — دوباره تلاش کن";
+      setError(msg);
+      return toast(msg, "error");
     }
 
     try {
@@ -677,7 +703,7 @@ export function useDesignStudio() {
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession, buildReplacement, fetchStudioReport]);
+  }, [imageBase64, presetProduct, prompt, style, rs, placedProducts, toast, saveSession, buildReplacement, fetchStudioReport, router]);
 
   const buyTheLook = useCallback(() => { if (!placedProducts.length) return; placedProducts.forEach((p) => addToCart(p.id)); toast("چیدمان به سبد اضافه شد"); }, [placedProducts, addToCart, toast]);
   const handleSaveToWishlist = useCallback(() => {
@@ -695,6 +721,7 @@ export function useDesignStudio() {
     setPlacements([]);
     rs.reset();
     setRoomAnalysis(null);
+    setAnalysisError(null);
     setMatchedStoreProducts([]);
     setCompositeUrl(null);
     setShowComposite(true);
@@ -738,6 +765,7 @@ export function useDesignStudio() {
     handleSkuChange,
     // analysis
     roomAnalysis,
+    analysisError,
     analyzeRoom,
     applySuggestion,
     customizeSuggestion,
