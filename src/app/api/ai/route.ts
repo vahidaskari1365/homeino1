@@ -142,18 +142,25 @@ export async function POST(req: NextRequest) {
     // Sample/demo mode (no keys) stays open and free. The file-configured
     // Z-Image engine (sandbox/self-hosted) is ALSO sample mode; only its
     // env-configured flavor counts as a real provider here.
+    //
+    // Task 40 — ولی هویت فقط با DATABASE_URL معنا دارد: در دیپلوی دمو
+    // (موتور واقعی، بدون DB) لاگین وجود ندارد و گیتِ auth کل فیچر را
+    // می‌کُشت (۴۰۱ برای همه). پس گیت فقط وقتی بسته می‌شود که هم موتور
+    // واقعی باشد هم هویتِ واقعی ممکن — وگرنه محدودِ نرخِ IP کفایت می‌کند.
     const { isZEngineEnvConfigured } = await import("@/services/ai/engineConfig");
     const hasRealProvider = Boolean(
       process.env.GEMINI_API_KEY ||
         process.env.OPENAI_API_KEY ||
+        process.env.LLM_API_BASE_URL ||
         process.env.LLM_BASE_URL ||
         process.env.FREELLMAPI_API_KEY ||
         isZEngineEnvConfigured(),
     );
+    const identityAvailable = Boolean(process.env.DATABASE_URL);
     const AUTH_REQUIRED_ACTIONS = new Set([
       "generate", "edit", "inpaint", "pipeline", "chat", "agent", "understand", "recommend",
     ]);
-    if (process.env.AI_SERVER_CREDITS === "1" || (hasRealProvider && AUTH_REQUIRED_ACTIONS.has(action))) {
+    if (process.env.AI_SERVER_CREDITS === "1" || (hasRealProvider && identityAvailable && AUTH_REQUIRED_ACTIONS.has(action))) {
       try {
         const ctx = await requireUser(req);
         p.userId = ctx.user.id;
