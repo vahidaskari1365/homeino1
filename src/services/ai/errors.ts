@@ -17,6 +17,7 @@ export type AiErrorCode =
   | "INVALID_AI_OUTPUT"     // model returned unusable output (after retries)
   | "IMAGE_PROCESSING_ERROR" // image decode / encode / storage failure
   | "DUPLICATE_REQUEST"     // identical generation already in flight
+  | "AI_ENGINE_REQUIRED"    // Task 40 — no real image engine configured (deployed env)
   | "INTERNAL";             // anything unexpected — never leak details
 
 /** Safe, user-facing Persian messages per code. */
@@ -31,6 +32,9 @@ export const AI_ERROR_MESSAGE: Record<AiErrorCode, string> = {
   INVALID_AI_OUTPUT: "نتیجه‌ی AI قابل قبول نبود — دوباره تلاش کن.",
   IMAGE_PROCESSING_ERROR: "پردازش تصویر ممکن نشد — تصویر دیگری امتحان کن.",
   DUPLICATE_REQUEST: "همین درخواست در حال اجراست — کمی صبر کن.",
+  // Task 40 — پیام صادقانه به ادمین/کاربر: نتیجه‌ی فیک نمی‌دهیم، مسیر رفع را می‌گوییم
+  AI_ENGINE_REQUIRED:
+    "موتور ویرایش عکس هنوز به سرور وصل نشده — برای رندر واقعی، کلید رایگان Gemini را در تنظیمات سرور (Vercel → Environment Variables) اضافه کن و دوباره Deploy بگیر.",
   INTERNAL: "خطای سرور — کمی بعد دوباره تلاش کن.",
 };
 
@@ -81,6 +85,9 @@ export class AiError extends Error {
   static duplicate(message?: string) {
     return new AiError("DUPLICATE_REQUEST", message, { status: 409, retriable: false });
   }
+  static engineRequired() {
+    return new AiError("AI_ENGINE_REQUIRED", undefined, { status: 503, retriable: false });
+  }
 }
 
 function statusFor(code: AiErrorCode): number {
@@ -91,6 +98,7 @@ function statusFor(code: AiErrorCode): number {
     case "CATEGORY_SKU_CONFLICT": return 400;
     case "INSUFFICIENT_CREDITS": return 422;
     case "DUPLICATE_REQUEST": return 409;
+    case "AI_ENGINE_REQUIRED": return 503;
     case "TIMEOUT": return 504;
     case "INVALID_AI_OUTPUT":
     case "PROVIDER_ERROR":

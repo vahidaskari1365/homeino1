@@ -92,6 +92,22 @@ export function useDesignStudio() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+  // ---- Task 40 — وضعیت موتور تصویر (صداقت با کاربر) ----
+  // /api/ai/status می‌گوید موتور واقعی ویرایش (Gemini/…) وصل است یا نه؛
+  // نبودِ موتور یعنی ویرایشِ عکس فقط پیش‌نمایش دمو می‌تواند باشد — این را
+  // روی کانواس صادقانه نشان می‌دهیم تا کاربر نداند چرا «نتیجه فیک» است.
+  const [editCapable, setEditCapable] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/ai/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { editCapable?: boolean } | null) => {
+        if (alive && d && typeof d.editCapable === "boolean") setEditCapable(d.editCapable);
+      })
+      .catch(() => { /* fail-soft — بنر نشان داده نمی‌شود */ });
+    return () => { alive = false; };
+  }, []);
+
   const analyzeRoom = useCallback(async (image: string) => {
     setAnalyzing(true); setRoomAnalysis(null); setAnalysisError(null);
     try {
@@ -820,6 +836,8 @@ export function useDesignStudio() {
     analyzeRoom,
     applySuggestion,
     customizeSuggestion,
+    // engine status (Task 40 — honest demo badge)
+    editCapable,
     // derived cart of chosen items
     designElements,
     placedProducts,

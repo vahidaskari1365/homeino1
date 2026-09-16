@@ -46,6 +46,19 @@ export function imageDispatchPlan(action: ImageAction, primary: ProviderName): P
   return primary === "mock" ? ["mock"] : [primary, "mock"];
 }
 
+/**
+ * Task 40 — صداقت کامل روی محیط‌های دیپلوی‌شده: وقتی هیچ موتور واقعی
+ * تنظیم نشده، `edit`/`inpaint` نباید همان عکسِ ورودی را «نتیجه» جلوی
+ * کاربر بگذارد (بازخورد مالک: «عکس همان ماند — داغونه»). در dev/test
+ * و با opt-in صریح، پیش‌نمایش mock مثل قبل مجاز است؛ روی پروداکشن
+ * خطای عملیاتیِ AI_ENGINE_REQUIRED می‌دهیم تا مسیر رفع شفاف باشد.
+ */
+export function shouldBlockMockEdit(): boolean {
+  if (process.env.AI_ALLOW_MOCK_EDIT === "1") return false;
+  const env = (process.env.NODE_ENV || "").trim();
+  return env !== "development" && env !== "test";
+}
+
 export async function resolveProvider(): Promise<ResolvedProvider> {
   // کلید از پنل ادمین (DB رمزنگاری‌شده) یا env — settings.ts اولویت را حل می‌کند
   if ((await resolveGeminiConfig()).apiKey) {

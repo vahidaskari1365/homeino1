@@ -10,7 +10,7 @@
 //   هیچ مرحلهٔ مخفی یا جمع‌شونده‌ای وجود ندارد؛ تحلیل عکس همیشه
 //   زیر خود عکس و روی کانواس دیده می‌شود (اشکال نسخه‌های قبل).
 // ============================================================
-import { Wand2, Search, Sparkles } from "lucide-react";
+import { Wand2, Search, Sparkles, PlugZap } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
 import { SuggestAssistant } from "@/components/ai/SuggestAssistant";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,19 @@ export function DesignStudio({ studio }: { studio: Studio }) {
             min-content عکس‌های ذاتی‌بلند (۱۲۰۰px) کل صفحه را overflow می‌دهد. */}
         {tab === "design" && (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-12 lg:gap-5">
+            {/* Task 40 — بنر صداقت موتور: وقتی موتور ویرایش واقعی وصل نیست،
+                کاربر باید بداند نتیجه‌ها پیش‌نمایش دمو هستند و مسیر رفع چیست */}
+            {studio.editCapable === false && (
+              <div className="lg:col-span-12 flex items-start gap-3 rounded-xl border border-amber-300/70 bg-amber-50 px-4 py-3 text-sm text-ink">
+                <PlugZap size={18} className="mt-0.5 shrink-0 text-amber-600" />
+                <p className="leading-6">
+                  <b>موتور ویرایش عکس هنوز وصل نیست.</b> تا وقتی کلید رایگان Gemini در تنظیمات سرور
+                  (Vercel → Settings → Environment Variables → <code dir="ltr" className="rounded bg-amber-100 px-1">GEMINI_API_KEY</code>)
+                  اضافه و دوباره Deploy شود، نتیجه‌های ویرایش فقط پیش‌نمایش دمو هستند — نه رندر واقعی.
+                </p>
+              </div>
+            )}
+
             {/* DOM: کانواس اول — در موبایل آپلود/عکس اول دیده می‌شود.
                 دسکتاپ: با order تنظیمات می‌رود راست (order-1 در RTL اول است)
                 و کانواس می‌رود چپ (خواستهٔ مالک ۲۰۲۶-۰۹-۱۶). */}

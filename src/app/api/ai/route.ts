@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, type ImageAction } from "@/services/ai/provider";
+import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, shouldBlockMockEdit, type ImageAction } from "@/services/ai/provider";
 import { mockAiProvider } from "@/services/ai/mockAiService";
 import { sanitizeUserPrompt, ALL_ELEMENTS } from "@/services/ai/roomState";
 import { understandIntent } from "@/services/ai/llm";
@@ -7,7 +7,7 @@ import { runDesignPipeline } from "@/services/ai/pipeline";
 import type { GenerateDesignInput, ChatReplyInput } from "@/services/ai/types";
 import type { IntentRequest } from "@/services/ai/llm/types";
 import type { PipelineInput } from "@/services/ai/pipeline";
-import { classifyAiError, toPublicAiError } from "@/services/ai/errors";
+import { classifyAiError, toPublicAiError, AI_ERROR_MESSAGE } from "@/services/ai/errors";
 import { createRequestId, logAiRequest } from "@/services/ai/telemetry";
 import { ApiError } from "@/lib/api/errors";
 import { getClientIp, rateLimit } from "@/lib/api/rateLimit";
@@ -364,6 +364,14 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
     const { provider, name } = await resolveProvider();
     const imageAction = IMAGE_ACTIONS.has(action) ? (action as ImageAction) : null;
     const plan = imageAction ? imageDispatchPlan(imageAction, name) : [name];
+
+    // Task 40 — صداقت روی پروداکشن: با هیچ موتور واقعی، edit/inpaint نباید
+    // همان عکسِ ورودی را با 200 «نتیجه» برگرداند (بازخورد مالک: «عکس همان
+    // ماند — داغونه»). حالا خطای عملیاتیِ شفاف: مسیر رفع = کلید Gemini.
+    if (imageAction && imageAction !== "generate" && name === "mock" && shouldBlockMockEdit()) {
+      finish("error", { errorCode: "AI_ENGINE_REQUIRED" });
+      return json({ error: AI_ERROR_MESSAGE.AI_ENGINE_REQUIRED, code: "AI_ENGINE_REQUIRED" }, 503, requestId);
+    }
 
     let lastErr: unknown = null;
     for (const step of plan) {

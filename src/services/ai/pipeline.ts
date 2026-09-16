@@ -15,7 +15,7 @@
 // The pipeline is provider-agnostic: swap Orali or the LLM via
 // env vars — the UI contract (PipelineResult) never changes.
 // ============================================================
-import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, type ImageAction } from "./provider";
+import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, shouldBlockMockEdit, type ImageAction } from "./provider";
 import { mockAiProvider } from "./mockAiService";
 import type { GeneratedDesign } from "./types";
 import { resolveOrali, OraliNotConfiguredError } from "./orali";
@@ -681,6 +681,15 @@ async function generateVisual(
   const productReferenceImages = await collectProductReferenceImages(input, instruction);
   const useEdit = input.referenceImage && instruction.editMode !== "generate";
   const imageAction: ImageAction = useEdit ? "edit" : "generate";
+
+  // Task 40 — بدون موتور واقعی، ویرایشِ عکس کاربر نباید «نتیجه‌ی» فیک بدهد:
+  // روی پروداکشن کاربر همان عکسِ ورودی را با برچسب preview می‌دید (و کامپوزیت
+  // چسبانِ مرورگری کیفیت را فاجعه نشان می‌داد — «داغونه»). حالا صادقانه
+  // AI_ENGINE_REQUIRED می‌دهیم تا مسیر رفع (کلید Gemini) شفاف باشد.
+  // dev/test و AI_ALLOW_MOCK_EDIT=1 مستثنا هستند (پیش‌نمایش دمو مثل قبل).
+  if (imageAction === "edit" && name === "mock" && shouldBlockMockEdit()) {
+    throw AiError.engineRequired();
+  }
 
   let design: GeneratedDesign | null = null;
   let engine = name;
