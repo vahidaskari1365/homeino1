@@ -40,10 +40,15 @@ export type ImageAction = "generate" | "edit" | "inpaint";
  *   edit/inpaint: موتور واقعی → mock صادقانه (pollinations ویرایش ندارد)
  */
 export function imageDispatchPlan(action: ImageAction, primary: ProviderName): ProviderName[] {
+  // Task 40 — روی پروداکشن، فالبکِ mock برای edit/inpaint ممنوع است: وقتی
+  // موتور واقعی fail می‌کند (مثلاً 429 کوتا)، باید خطای صادقانه بالا برود نه
+  // «همان عکسِ ورودی» با برچسب preview. dev/test/AI_ALLOW_MOCK_EDIT مستثنا.
+  const blockMockEdit = action !== "generate" && shouldBlockMockEdit();
   if (action === "generate") {
     return primary === "mock" ? ["pollinations", "mock"] : [primary, "pollinations", "mock"];
   }
-  return primary === "mock" ? ["mock"] : [primary, "mock"];
+  if (primary === "mock") return blockMockEdit ? [] : ["mock"];
+  return blockMockEdit ? [primary] : [primary, "mock"];
 }
 
 /**

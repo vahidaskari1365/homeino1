@@ -18,6 +18,7 @@ export type AiErrorCode =
   | "IMAGE_PROCESSING_ERROR" // image decode / encode / storage failure
   | "DUPLICATE_REQUEST"     // identical generation already in flight
   | "AI_ENGINE_REQUIRED"    // Task 40 — no real image engine configured (deployed env)
+  | "AI_IMAGE_QUOTA"        // Task 40 — image quota exhausted / free tier has none
   | "INTERNAL";             // anything unexpected — never leak details
 
 /** Safe, user-facing Persian messages per code. */
@@ -35,6 +36,8 @@ export const AI_ERROR_MESSAGE: Record<AiErrorCode, string> = {
   // Task 40 — پیام صادقانه به ادمین/کاربر: نتیجه‌ی فیک نمی‌دهیم، مسیر رفع را می‌گوییم
   AI_ENGINE_REQUIRED:
     "موتور ویرایش عکس هنوز به سرور وصل نشده — برای رندر واقعی، کلید رایگان Gemini را در تنظیمات سرور (Vercel → Environment Variables) اضافه کن و دوباره Deploy بگیر.",
+  AI_IMAGE_QUOTA:
+    "کوتای تصویر گوگل فعلاً کامل است (پلن رایگان برای ساخت تصویر سهمیه ندارد). برای ویرایش واقعی، بیلینگ گوگل را در AI Studio فعال کن — تحلیل، چت و طراحی از صفر همچنان رایگان کار می‌کنند.",
   INTERNAL: "خطای سرور — کمی بعد دوباره تلاش کن.",
 };
 
@@ -99,6 +102,7 @@ function statusFor(code: AiErrorCode): number {
     case "INSUFFICIENT_CREDITS": return 422;
     case "DUPLICATE_REQUEST": return 409;
     case "AI_ENGINE_REQUIRED": return 503;
+    case "AI_IMAGE_QUOTA": return 429;
     case "TIMEOUT": return 504;
     case "INVALID_AI_OUTPUT":
     case "PROVIDER_ERROR":
@@ -109,7 +113,7 @@ function statusFor(code: AiErrorCode): number {
 }
 
 export function isRetriableCode(code: AiErrorCode): boolean {
-  return code === "PROVIDER_ERROR" || code === "TIMEOUT" || code === "RATE_LIMIT";
+  return code === "PROVIDER_ERROR" || code === "TIMEOUT" || code === "RATE_LIMIT" || code === "AI_IMAGE_QUOTA";
 }
 
 /** Normalize ANY thrown value into an AiError (never throws). */
@@ -130,6 +134,8 @@ export function classifyAiError(err: unknown): AiError {
     if (status === 422) return AiError.invalidRequest(message);
   }
   if (/rate.?limit|too many requests/i.test(message)) return AiError.rateLimit(message);
+  // Task 40 — کوتای صفر/اتمام تصویر گوگل: RESOURCE_EXHAUSTED قبل از map کلی provider
+  if (/resource_exhausted|quota/i.test(message)) return new AiError("AI_IMAGE_QUOTA", undefined, { status: 429, retriable: true });
   if (/not configured|unavailable|failed|error|5\d\d/i.test(message)) return AiError.provider(message);
   if (/json|parse|invalid|schema/i.test(message)) return AiError.invalidOutput(message);
   if (/image|base64|decode|encode/i.test(message)) return AiError.imageProcessing(message);
