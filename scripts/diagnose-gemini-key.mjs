@@ -40,7 +40,7 @@ if (list.s === 200) {
 }
 
 // 2) وضعیت واقعی generateContent روی مدل‌های تصویر کاندید (بدون عکس — فقط متن)
-const candidates = ["gemini-3.1-flash-image", "gemini-2.5-flash-image", "gemini-2.0-flash-exp", "imagen-4.0-fast-generate-001"];
+const candidates = ["gemini-3.1-flash-image", "gemini-2.5-flash-image", "gemini-2.0-flash-exp", "imagen-4.0-fast-generate-001", "gemini-3.1-flash-lite-image", "gemini-3-pro-image", "nano-banana-pro-preview"];
 for (const model of candidates) {
   const r = await fetch(`${API}/models/${model}:generateContent?key=${key}`, {
     method: "POST",
