@@ -13,20 +13,32 @@
 import type { AiProvider, GenerateDesignInput, GeneratedDesign } from "./types";
 import { uid } from "../../lib/utils";
 import { pollinationsImage } from "./pollinations";
+import { toEngineEnglish } from "./engineTranslate";
 
 const ERR = "IMAGE_UNAVAILABLE";
 
 export const pollinationsProvider: AiProvider = {
   async generateDesign(input: GenerateDesignInput): Promise<GeneratedDesign> {
-    const prompt = [
-      input.prompt,
-      input.style && `Decor style: ${input.style}`,
-      input.room && `Room type: ${input.room}`,
-      input.color && `Color palette: ${input.color}`,
-      input.mood && `Mood: ${input.mood}`,
+    // Task 41 — the free sana engine reads English only: raw Persian
+    // prompts yielded loose, wrong-room renders («نشیمن» → bedroom).
+    // Translate every Persian-capable field first — English fast-paths
+    // through unchanged (no LLM call) and translations are cached.
+    const [prompt, style, room, color, mood] = await Promise.all([
+      toEngineEnglish(input.prompt ?? ""),
+      toEngineEnglish(input.style ?? ""),
+      toEngineEnglish(input.room ?? ""),
+      toEngineEnglish(input.color ?? ""),
+      toEngineEnglish(input.mood ?? ""),
+    ]);
+    const full = [
+      prompt,
+      style && `Decor style: ${style}`,
+      room && `Room type: ${room}`,
+      color && `Color palette: ${color}`,
+      mood && `Mood: ${mood}`,
       "Professional interior design photograph, editorial quality, natural soft lighting, realistic materials, high detail, warm and inviting atmosphere.",
     ].filter(Boolean).join(". ");
-    const out = await pollinationsImage(prompt, { width: 1152, height: 864 });
+    const out = await pollinationsImage(full, { width: 1152, height: 864 });
     return {
       id: uid(),
       beforeImage: input.referenceImage,

@@ -98,25 +98,67 @@ function dictionaryTranslate(text: string): string {
 const cache = new Map<string, string>();
 const CACHE_MAX = 300;
 
-async function translateViaChat(text: string): Promise<string | null> {
+const TRANSLATE_SYSTEM =
+  "You translate Persian interior-design instructions into concise English for an image model. " +
+  "Output ONLY the English translation — no quotes, no explanations, no Persian. " +
+  "Keep furniture, colors, styles and 'keep everything else unchanged' constraints exact.";
+
+function asEnglish(out: string): string | null {
+  const clean = out.replace(/^[\"'\s]+|[\"'\s]+$/g, "").trim();
+  // The translation must be Persian-free; otherwise fall back.
+  return clean && !hasPersian(clean) ? clean.slice(0, 900) : null;
+}
+
+/** Z-engine chat (sandbox / self-hosted) — null when not configured or failed. */
+async function translateViaEngine(text: string): Promise<string | null> {
   try {
     const out = await engineChat(
       [
-        {
-          role: "system",
-          content:
-            "You translate Persian interior-design instructions into concise English for an image-editing model. Output ONLY the English translation — no quotes, no explanations, no Persian. Keep furniture, colors, styles and 'keep everything else unchanged' constraints exact.",
-        },
+        { role: "system", content: TRANSLATE_SYSTEM },
         { role: "user", content: text.slice(0, 800) },
       ],
       { temperature: 0.1 },
     );
-    const clean = out.replace(/^[\"'\s]+|[\"'\s]+$/g, "").trim();
-    // The translation must be Persian-free; otherwise fall back.
-    return clean && !hasPersian(clean) ? clean.slice(0, 900) : null;
+    return asEnglish(out);
   } catch {
     return null;
   }
+}
+
+/**
+ * Production path — the OpenAI-compatible LLM chain (LLM_API_BASE_URL,
+ * free GLM on Vercel). Task 41: without this, prod translations degraded
+ * to the offline dictionary because the Z-engine env is absent there.
+ */
+async function translateViaCompat(text: string): Promise<string | null> {
+  const base = (process.env.LLM_API_BASE_URL || "").replace(/\/+$/, "");
+  const key = process.env.LLM_API_KEY || "";
+  if (!base || !key) return null;
+  try {
+    const res = await fetch(`${base}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: process.env.LLM_MODEL || "auto",
+        messages: [
+          { role: "system", content: TRANSLATE_SYSTEM },
+          { role: "user", content: text.slice(0, 800) },
+        ],
+        temperature: 0.1,
+        max_tokens: 300,
+      }),
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    return asEnglish(data?.choices?.[0]?.message?.content ?? "");
+  } catch {
+    return null;
+  }
+}
+
+async function translateViaChat(text: string): Promise<string | null> {
+  return (await translateViaEngine(text)) ?? (await translateViaCompat(text));
 }
 
 /**
