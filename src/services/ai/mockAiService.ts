@@ -4,6 +4,7 @@ import { uid, formatPrice } from "../../lib/utils";
 import { validateResult, type ProductCatalogEntry } from "./roomState";
 import { products } from "../../data/products";
 import { detectAdviceTopic, buildProductAdvice } from "./productAdvice";
+import { normalizeRoomAnalysisFa } from "./analysisNormalize";
 
 type RealProduct = (typeof products)[number];
 
@@ -234,8 +235,9 @@ export const mockAiProvider: AiProvider = {
 
   async analyzeRoom(input) {
     await new Promise((r) => setTimeout(r, 1400));
-    const detectedStyle = input.style || "Scandinavian";
-    return {
+    const detectedStyle = input.style || "اسکاندیناوی";
+    // نرمال‌ساز مشترک: style id انگلیسی (modern) هم فارسی نمایش داده شود
+    return normalizeRoomAnalysisFa({
       roomType: input.room || "پذیرایی",
       style: input.style || "اسکاندیناوی",
       likelyStyle: {
@@ -294,7 +296,7 @@ export const mockAiProvider: AiProvider = {
         { id: "gs4", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
         { id: "gs5", title: "مبل متناسب با سبک", desc: "هماهنگ‌سازی رنگ و فرم مبلمان با سبک و پالت رنگی فضا.", impact: "high", creditCost: 5, category: "sofa" },
       ],
-    };
+    });
   },
 
   async recommendProducts(input) {
