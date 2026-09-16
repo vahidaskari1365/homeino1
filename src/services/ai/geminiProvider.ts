@@ -113,12 +113,20 @@ async function geminiImage(input: GenerateDesignInput): Promise<GeneratedDesign>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ role: "user", parts }] }),
   });
-  if (!res.ok) throw new Error("gemini_image_failed");
-  const data = (await res.json()) as { candidates?: { content?: { parts?: { inline_data?: { data?: string } }[] } }[] };
-  const imgPart = (data?.candidates?.[0]?.content?.parts ?? []).find(
-    (p: { inline_data?: { data?: string } }) => p.inline_data?.data
-  );
-  if (!imgPart) throw new Error("no_image");
+  // Task 40 — دیاگنوستیک صادقانه: status + کد گوگل در پیام می‌آید (بدون کلید/بدنه‌ی کامل)
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    let gcode = "";
+    try { const j = JSON.parse(body); gcode = String(j?.error?.status || j?.error?.code || "").slice(0, 40); } catch { /* keep empty */ }
+    throw new Error(`gemini_image_failed_${res.status}${gcode ? `_${gcode}` : ""}`);
+  }
+  const data = (await res.json()) as { candidates?: { content?: { parts?: ({ inline_data?: { data?: string } } | { text?: string })[] } }[] };
+  const cparts = (data?.candidates?.[0]?.content?.parts ?? []) as { inline_data?: { data?: string }; text?: string }[];
+  const imgPart = cparts.find((p) => p.inline_data?.data);
+  if (!imgPart) {
+    const snippet = cparts.find((p) => p.text)?.text?.slice(0, 60) ?? "empty";
+    throw new Error(`no_image(${snippet})`);
+  }
   return {
     id: uid(),
     beforeImage: input.referenceImage,

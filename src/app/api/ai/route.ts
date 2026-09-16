@@ -392,7 +392,14 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
         const degraded = step !== plan[0]; // fell back to a lesser engine
         finish(degraded ? "degraded" : "ok", { provider: step, errorCode: degraded && lastErr ? classifyAiError(lastErr).code : undefined });
         return json(
-          { ...(result as unknown as Record<string, unknown>), _provider: step, ...(degraded ? { _degraded: true } : {}) },
+          {
+            ...(result as unknown as Record<string, unknown>),
+            _provider: step,
+            ...(degraded
+              ? { _degraded: true, // Task 40 — علت فالبک برای دیاگنوستیک (بدون هیچ رازی)
+                  _fallbackError: String(lastErr instanceof Error ? lastErr.message : lastErr ?? "").slice(0, 90) }
+              : {}),
+          },
           200,
           requestId,
         );
