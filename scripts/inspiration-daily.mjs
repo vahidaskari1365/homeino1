@@ -16,6 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 import { callLlm } from "./lib/llm-chain.mjs";
+import { WRITING_CONTRACT, slopVerdict, buildSlopRetryHint } from "./lib/style-contract.mjs";
 import { PRODUCTS } from "./lib/homeino-categories.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -73,6 +74,9 @@ if (existsSync(envFile)) {
 const SYSTEM = `تو سردبیر ارشد نشریه «هومینو» هستی؛ مرجع فارسی طراحی خانه.
 از روی یک عکس چیدمان (توضیح عکس را می‌گیری) یک پین الهام‌بخش فارسی می‌سازی.
 اصول: بازنویسی اورجینال (هرگز کپی)، لحن گرم و حرفه‌ای، کاربردی برای خانه ایرانی، بدون تملق.
+
+${WRITING_CONTRACT}
+
 فقط JSON معتبر برگردان:
 {"title":"تیتر جذاب زیر ۶۰ نویسه","description":"۳-۵ جمله درباره چیدمان، نور، متریال و حس فضا","items":["۴ تا ۷ قلم وسایل کلیدی فارسی"],"styleNote":"۲-۳ جمله: چه چیزی این فضا را نماینده این سبک می‌کند","tags":["۳ تگ فارسی"]}`;
 
@@ -185,7 +189,17 @@ for (const [i, { style, space }] of combos.entries()) {
 
   const topic = `${space.en} in ${style.en} style — image description: ${pick.source}`;
   let meta = null, via = "llm";
-  try { meta = extractJson(await llm(topic)); } catch { meta = null; }
+  try {
+    meta = extractJson(await llm(topic));
+    // گیت نگارش انسانی — الگوی ماشینی؟ یک بازنویسی با تذکر؛ اگر ماند، قالب پایدار جایگزین می‌شود
+    if (meta?.title && meta?.description) {
+      const v1 = slopVerdict(`${meta.title}\n${meta.description}\n${meta.styleNote ?? ""}`);
+      if (v1.hard.length) {
+        meta = extractJson(await llm(`${topic}\n\nتذکر ویرایشی: ${buildSlopRetryHint(v1.hard)}`));
+        if (meta && slopVerdict(`${meta.title}\n${meta.description}\n${meta.styleNote ?? ""}`).hard.length) meta = null;
+      }
+    }
+  } catch { meta = null; }
   if (!meta || !meta.title || !meta.description) {
     via = "قالب";
     meta = {
@@ -262,7 +276,17 @@ for (const [k, { product, style }] of productJobs.entries()) {
     "یک پین الهام‌بخش تخصصی درباره انتخاب و استایل‌کردن این محصول بنویس: چه ویژگی‌هایی (متریال، فرم، رنگ، اندازه) در این نمونه دیده می‌شود، " +
     "چطور برای خانه ایرانی انتخاب و استایلش کنیم و با چه عناصر دیگری هماهنگ می‌شود.";
   let meta = null, via = "llm";
-  try { meta = extractJson(await llm(topic)); } catch { meta = null; }
+  try {
+    meta = extractJson(await llm(topic));
+    // گیت نگارش انسانی — الگوی ماشینی؟ یک بازنویسی با تذکر؛ اگر ماند، قالب پایدار جایگزین می‌شود
+    if (meta?.title && meta?.description) {
+      const v1 = slopVerdict(`${meta.title}\n${meta.description}\n${meta.styleNote ?? ""}`);
+      if (v1.hard.length) {
+        meta = extractJson(await llm(`${topic}\n\nتذکر ویرایشی: ${buildSlopRetryHint(v1.hard)}`));
+        if (meta && slopVerdict(`${meta.title}\n${meta.description}\n${meta.styleNote ?? ""}`).hard.length) meta = null;
+      }
+    }
+  } catch { meta = null; }
   if (!meta || !meta.title || !meta.description) {
     via = "قالب";
     meta = {

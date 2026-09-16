@@ -24,6 +24,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 import { callLlm } from "./lib/llm-chain.mjs";
+import { WRITING_CONTRACT, slopVerdict, buildSlopRetryHint } from "./lib/style-contract.mjs";
 import { CATEGORY_FEEDS, itemCategory } from "./lib/homeino-categories.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -372,7 +373,7 @@ const BRIEF_PROMPT = (item, sourceText, dateFa) => [
       "1) هرگز متن منبع را ترجمهٔ تحت‌اللفظی یا کپی نکن؛ فقط واقعیت‌ها و ایده‌ها را بردار و با روایت و واژگان خودت بنویس.\n" +
       "2) لحن مجله‌ای، گرم و دقیق؛ برای مخاطب فارسی‌زبان که می‌خواهد خانه‌اش را به‌روز کند.\n" +
       "3) مقادیر JSON را کامل و واقعی بنویس؛ هرگز «...» یا متن الگو به‌جای مقدار ننویس.\n" +
-      "4) خروجی نهایی فقط داخل یک بلوک ```json ``` باشد و هیچ متن خارج از آن ننویس.",
+      "4) خروجی نهایی فقط داخل یک بلوک ```json ``` باشد و هیچ متن خارج از آن ننویس.\n\n" + WRITING_CONTRACT,
   },
   {
     role: "user",
@@ -513,6 +514,27 @@ async function main() {
       console.log(`  skipped (no valid brief): ${item.title.slice(0, 60)}`);
       continue;
     }
+
+    // گیت نگارش انسانی (no-ai-slop بومی) — الگوی ماشینی؟ یک بازنویسی با تذکر؛ اگر ماند، بریف رد می‌شود
+    const briefSlopText = () => `${String(parsed.title)}\n${String(parsed.summary)}`;
+    let styleVerdict = slopVerdict(briefSlopText());
+    if (styleVerdict.hard.length) {
+      console.log(`  style retry (${styleVerdict.hard.length}): ${item.title.slice(0, 50)}`);
+      try {
+        const hint = buildSlopRetryHint(styleVerdict.hard);
+        const msgs = BRIEF_PROMPT(item, sourceText, dateFa);
+        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: `${msgs[msgs.length - 1].content}\n\nتذکر ویرایشی: ${hint}` };
+        const out2 = await callLlm(msgs);
+        const arr2 = extractJson(out2);
+        const parsed2 = Array.isArray(arr2) && arr2.length ? arr2[0] : arr2 && typeof arr2 === "object" ? arr2 : null;
+        if (parsed2?.title && parsed2?.summary && String(parsed2.summary).trim().length >= 200) parsed = parsed2;
+      } catch { /* بریف اول می‌ماند */ }
+      styleVerdict = slopVerdict(briefSlopText());
+      if (styleVerdict.hard.length) {
+        console.log(`  skipped (machine-style persists: ${styleVerdict.hard.map((h) => h.phrase).slice(0, 3).join(" | ")}): ${item.title.slice(0, 50)}`);
+        continue;
+      }
+    }
     const summary = String(parsed.summary).trim();
     if (summary.length < 200) {
       console.log(`  skipped (too short): ${item.title.slice(0, 60)}`);
@@ -626,7 +648,7 @@ const ARTICLE_PROMPT = (brief, sourceText, dateFa) => [
       "1) هرگز متن منبع را ترجمهٔ تحت‌اللفظی یا کپی نکن؛ فقط واقعیت‌ها و ایده‌ها را بردار و با روایت خودت بنویس.\n" +
       "2) لحن مجله‌ای گرم و دقیق؛ عمیق‌تر از یک بریف: چرایی ترند، پیش‌زمینه، کاربرد در خانه ایرانی، اشتباه‌های رایج.\n" +
       "3) مقادیر JSON را کامل و واقعی بنویس؛ هرگز «...» یا متن الگو به‌جای مقدار ننویس.\n" +
-      "4) خروجی نهایی فقط داخل یک بلوک ```json ``` باشد و هیچ متن خارج از آن ننویس.",
+      "4) خروجی نهایی فقط داخل یک بلوک ```json ``` باشد و هیچ متن خارج از آن ننویس.\n\n" + WRITING_CONTRACT,
   },
   {
     role: "user",
@@ -759,6 +781,27 @@ async function generateDailyArticle(leadCtx, { dateFa, today }) {
   if (!parsed || !parsed.title || !Array.isArray(parsed.paragraphs)) {
     console.log("[magazine-daily] article: invalid LLM output — skipped");
     return null;
+  }
+
+  // گیت نگارش انسانی مقاله — یک بازنویسی با تذکر؛ اگر الگوی ماشینی ماند، مقالهٔ امروز منتشر نمی‌شود
+  const articleSlopText = () => `${String(parsed.title)}\n${String(parsed.excerpt ?? "")}\n${parsed.paragraphs.join("\n")}`;
+  let styleVerdict = slopVerdict(articleSlopText());
+  if (styleVerdict.hard.length) {
+    console.log(`[magazine-daily] article: style retry (${styleVerdict.hard.length})`);
+    await new Promise((s) => setTimeout(s, 20_000)); // سهمیه نفس بکشد
+    try {
+      const hint = buildSlopRetryHint(styleVerdict.hard);
+      const msgs = ARTICLE_PROMPT(brief, leadCtx.sourceText, dateFa);
+      msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: `${msgs[msgs.length - 1].content}\n\nتذکر ویرایشی: ${hint}` };
+      const outS = await callLlm(msgs, { maxTokens: 3000 });
+      const parsedS = repairArticleJson(extractJson(outS) ?? extractJsonLenient(outS));
+      if (parsedS?.title && Array.isArray(parsedS.paragraphs) && parsedS.paragraphs.length >= 3) parsed = parsedS;
+    } catch { /* مقالهٔ اول می‌ماند */ }
+    styleVerdict = slopVerdict(articleSlopText());
+    if (styleVerdict.hard.length) {
+      console.log(`[magazine-daily] article: machine-style persists (${styleVerdict.hard.map((h) => h.phrase).slice(0, 3).join(" | ")}) — skipped`);
+      return null;
+    }
   }
 
   const paragraphs = parsed.paragraphs.map((p) => String(p).trim()).filter(Boolean);
