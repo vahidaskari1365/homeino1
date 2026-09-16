@@ -20,3 +20,8 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: prj_kN9XW4YXj4N7xVqy0gcxnPmE1dsQ
         run: node scripts/sync-llm-keys-to-vercel.mjs
+      - name: Diagnose Gemini key quotas (model names + status codes only)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          LLM_KEYS_JSON: ${{ secrets.LLM_KEYS_JSON }}
+        run: node scripts/diagnose-gemini-key.mjs
