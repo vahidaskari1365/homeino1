@@ -53,9 +53,13 @@ function dedupeKey(action: string, payload: Record<string, unknown>): string {
   const prompt = typeof payload.prompt === "string" ? payload.prompt : "";
   const img = typeof payload.referenceImage === "string" ? payload.referenceImage.slice(0, 80) : "";
   const mask = typeof payload.mask === "string" ? payload.mask.slice(0, 80) : "";
+  // Task 41 — style/room/color/mood are part of the visual identity of the
+  // request: cycling style tabs with the same prompt must NOT join the
+  // previous generation (observed live: luxury tab received the modern image).
+  const taste = ["style", "room", "color", "mood"].map((k) => (typeof payload[k] === "string" ? payload[k] : "")).join("~");
   // Per-user: user B must never join (or be joined by) user A's generation.
   const owner = typeof payload.userId === "string" ? payload.userId : "guest";
-  return `${action}:${owner}:${hashString(prompt)}:${hashString(img)}:${hashString(mask)}`;
+  return `${action}:${owner}:${hashString(prompt)}:${hashString(img)}:${hashString(mask)}:${hashString(taste)}`;
 }
 
 function json(data: Record<string, unknown>, status: number, requestId: string): NextResponse {

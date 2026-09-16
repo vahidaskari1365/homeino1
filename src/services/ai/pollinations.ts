@@ -35,15 +35,28 @@ export async function pollinationsImage(
     `?width=${width}&height=${height}&seed=${seed}&nologo=true&model=sana`;
   // 52s — زیر سقف 60s تابع Vercel تا پاسخ موفق برسد یا graceful به mock
   // برگردد؛ در Vercel نباید خودِ timeout تابع اول قطع کند (504 سرد).
-  const res = await fetch(url, { signal: AbortSignal.timeout(52_000) });
-  if (!res.ok) throw new Error(`POLLINATIONS_HTTP_${res.status}`);
-  const mime = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
-  if (!mime.startsWith("image/")) throw new Error("POLLINATIONS_NOT_IMAGE");
-  const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.length < 1_000) throw new Error("POLLINATIONS_EMPTY");
-  return {
-    dataUrl: `data:${mime};base64,${buf.toString("base64")}`,
-    model: "pollinations-sana",
-    latencyMs: Date.now() - started,
-  };
+  // Task 41 — فری‌تیر sana گاهی 500 لحظه‌ای می‌دهد (تست زنده): یک تلاش
+  // دوم با seed جدید، اکثر این خطاها را بدون هزینه اضافه جذب می‌کند.
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 800));
+    try {
+      const res = await fetch(attempt === 0 ? url : `${url}&seed=${(seed + 777) % 1_000_000}`, {
+        signal: AbortSignal.timeout(24_000),
+      });
+      if (!res.ok) throw new Error(`POLLINATIONS_HTTP_${res.status}`);
+      const mime = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+      if (!mime.startsWith("image/")) throw new Error("POLLINATIONS_NOT_IMAGE");
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length < 1_000) throw new Error("POLLINATIONS_EMPTY");
+      return {
+        dataUrl: `data:${mime};base64,${buf.toString("base64")}`,
+        model: "pollinations-sana",
+        latencyMs: Date.now() - started,
+      };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr ?? new Error("POLLINATIONS_FAILED");
 }
