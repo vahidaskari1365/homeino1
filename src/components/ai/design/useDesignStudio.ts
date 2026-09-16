@@ -406,8 +406,10 @@ export function useDesignStudio() {
       });
 
       // ---- HOMINO STUDIO REPLACEMENT ----
-      // Every selected product replaces its counterpart in the photo
-      // (analyzed spot + real size); luminaires project their light.
+      // Every selected product replaces its counterpart in the photo —
+      // buildReplacement is vision-first (detected counterparts cached per
+      // image); the SERVER additionally pixel-locks the render so outside
+      // the replaced object the user's own photo survives untouched.
       const { placements: replacementPlacements, plans: studioPlansOut, composite } = await buildReplacement(chosen, imageBase64);
       const renderedPlacements = replacementPlacements.length ? replacementPlacements : makePlacements(chosen);
       setStudioPlans(studioPlansOut);
@@ -488,7 +490,9 @@ export function useDesignStudio() {
       fetchStudioReport(chosen, finalTargets, budgetNum);
 
       if (realEngineImage) {
-        toast("چیدمان آماده شد");
+        toast(pipelineRes.pixelLocked
+          ? "مبلی که انتخاب کردی دقیقاً جای مبل عکس نشست — بقیه‌ی عکس، عکس خودت ماند"
+          : "چیدمان آماده شد");
       } else if (composite) {
         toast("محصولات جایگزین شدند — پیش‌نمایش ترکیب آماده است");
       } else {

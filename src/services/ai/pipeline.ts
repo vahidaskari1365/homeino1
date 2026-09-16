@@ -19,7 +19,6 @@ import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, type
 import { mockAiProvider } from "./mockAiService";
 import type { GeneratedDesign } from "./types";
 import { resolveOrali, OraliNotConfiguredError } from "./orali";
-import type { OverlayRegion } from "./orali";
 import { understandIntent } from "./llm";
 import type { IntentAnalysis, IntentRequest } from "./llm";
 import {
@@ -60,6 +59,14 @@ import { reserveCreditsForAi, finalizeCreditsForAi, refundCreditsForAi } from ".
 import { AiError } from "./errors";
 import { getProductBySkuOrCode } from "../../data/products";
 import { uid } from "../../lib/utils";
+import { detectCounterparts, type DetectedCounterpart } from "./roomObjects";
+import {
+  buildEngineMask,
+  padRect,
+  unionRects,
+  pixelLockComposite,
+  type NormRect,
+} from "../../lib/serverComposite";
 
 export type ChangeScope = "targeted" | "full";
 
@@ -131,6 +138,61 @@ export interface DesignInstruction {
   selectedProduct?: ContextSelectedProduct;
 }
 
+/** Where each target element actually sits in the user's photo. */
+export interface PipelineLocatedRegion {
+  element: RoomElement;
+  bbox: NormRect;
+  confidence: number;
+  source: "vision" | "heuristic";
+}
+
+/** RoomElement → the category vocabulary roomObjects.detectCounterparts speaks. */
+const ELEMENT_CATEGORY_ALIASES: Record<string, string[]> = {
+  sofa: ["sofa", "furniture"],
+  chair: ["chair"],
+  table: ["table", "dining"],
+  bed: ["bed"],
+  rug: ["rug", "carpet"],
+  curtain: ["curtain"],
+  lighting: ["lighting", "lamp"],
+  tv: ["tv"],
+  plant: ["plants"],
+  art: ["art", "decor"],
+  shelf: ["shelf", "bookcase"],
+};
+
+/**
+ * Locate every requested target via the shared vision module
+ * (roomObjects.detectCounterparts) and map the detected category regions
+ * back onto the canonical RoomElement vocabulary. No heuristic boxes here:
+ * a wrong mask would lock the WRONG region — elements the model cannot
+ * find simply get no mask (nothing is locked for them).
+ */
+async function locateTargets(referenceImage: string, targets: RoomElement[]): Promise<PipelineLocatedRegion[]> {
+  const wanted = [...new Set(targets)].filter((t) => ELEMENT_CATEGORY_ALIASES[t]);
+  if (!wanted.length || !referenceImage) return [];
+  const categories = [...new Set(wanted.flatMap((t) => ELEMENT_CATEGORY_ALIASES[t]))];
+  let detected: DetectedCounterpart[] = [];
+  try {
+    detected = await detectCounterparts(referenceImage, categories);
+  } catch {
+    detected = [];
+  }
+  const out: PipelineLocatedRegion[] = [];
+  for (const element of wanted) {
+    const aliases = ELEMENT_CATEGORY_ALIASES[element];
+    const hit = detected.find((d) => aliases.includes(d.type));
+    if (!hit) continue;
+    out.push({
+      element,
+      bbox: { x: hit.region.x, y: hit.region.y, width: hit.region.w, height: hit.region.h },
+      confidence: 0.85,
+      source: "vision",
+    });
+  }
+  return out;
+}
+
 export type PipelineOutcome = "completed" | "preview" | "failed";
 
 export interface PipelineResult {
@@ -150,6 +212,10 @@ export interface PipelineResult {
   matchedProducts?: MatchedStoreProduct[];
   selectedProduct?: ContextSelectedProduct;
   sku?: string;
+  /** Object localization: where each target actually sits in the photo. */
+  locatedRegions?: PipelineLocatedRegion[];
+  /** True when the outside-mask area is the user's ORIGINAL pixels. */
+  pixelLocked?: boolean;
   /** Debugging: compact context + request id (no secrets). */
   requestId?: string;
   contextSummary?: string;
@@ -490,27 +556,53 @@ async function collectProductReferenceImages(input: PipelineInput, instruction: 
   return out;
 }
 
+/**
+ * OBJECT-AWARE TARGETED EDIT (the «محصول سر جاش بشینه» guarantee):
+ *   locate the real object(s) in the photo → feathered mask → engine edit
+ *   with the mask attached → pixel-lock the result so everything outside
+ *   the mask stays the user's own pixels. Full redesigns skip all of it.
+ */
 async function generateVisual(
   input: PipelineInput,
   instruction: DesignInstruction,
-): Promise<{ design: GeneratedDesign; engine: string; degraded: boolean }> {
+): Promise<{ design: GeneratedDesign; engine: string; degraded: boolean; located: PipelineLocatedRegion[]; pixelLocked: boolean }> {
+  const isTargetedEdit = Boolean(input.referenceImage) && instruction.editMode !== "generate" && !isFullScope(instruction.scope);
+
+  // 1) LOCATE — vision (Gemini) finds where the actual sofa/rug/… sits.
+  //    No heuristic boxes: a wrong mask would lock the WRONG region —
+  //    undetected elements simply get no mask (nothing locked for them).
+  let located: PipelineLocatedRegion[] = [];
+  let maskRects: NormRect[] = [];
+  if (isTargetedEdit && input.referenceImage) {
+    const locatableTargets = instruction.targets.filter((t) => !STRUCTURAL_ELEMENTS.includes(t));
+    located = await locateTargets(input.referenceImage, locatableTargets);
+    maskRects = located.map((l) => padRect(l.bbox, 0.14));
+  }
+
+  // 2) MASK — engine-facing picture of the editable area (user mask wins when present).
+  const engineMask =
+    input.mask ?? (maskRects.length && input.referenceImage ? await buildEngineMask(input.referenceImage, maskRects) : null);
+  const locatedUnion = unionRects(maskRects);
+  const targetRegion = locatedUnion
+    ? { x: locatedUnion.x, y: locatedUnion.y, w: locatedUnion.width, h: locatedUnion.height }
+    : instruction.placement?.targetRegion
+      ? {
+          x: instruction.placement.targetRegion.x,
+          y: instruction.placement.targetRegion.y,
+          w: instruction.placement.targetRegion.width,
+          h: instruction.placement.targetRegion.height,
+        }
+      : undefined;
+
   const orali = resolveOrali();
   if (orali && input.referenceImage) {
     try {
       const productReferenceImages = await collectProductReferenceImages(input, instruction);
-      const targetRegion = instruction.placement?.targetRegion
-        ? {
-            x: instruction.placement.targetRegion.x,
-            y: instruction.placement.targetRegion.y,
-            w: instruction.placement.targetRegion.width,
-            h: instruction.placement.targetRegion.height,
-          }
-        : undefined;
       const out = await orali.generateEdit({
         image: input.referenceImage,
         referenceImages: productReferenceImages.length ? productReferenceImages : undefined,
         instruction: instruction.enginePrompt,
-        mask: input.mask,
+        mask: engineMask ?? undefined,
         preserveArchitecture: instruction.constraints.preserveArchitecture,
         protectedElements: instruction.protectedElements.map((e) => ELEMENT_LABELS[e]),
         targetRegion,
@@ -518,17 +610,20 @@ async function generateVisual(
         colors: instruction.colors,
         strength: instruction.strength,
       });
+      const locked = await lockAfterEngine(input.referenceImage, out.image, maskRects, input.mask);
       return {
         design: {
           id: uid(),
           beforeImage: input.referenceImage,
-          afterImage: out.image,
+          afterImage: locked.image,
           creditsUsed: creditsCostFor(instruction),
           products: [],
           regions: out.regions,
         },
-        engine: "orali",
+        engine: locked.locked ? "orali+pixel-lock" : "orali",
         degraded: false,
+        located,
+        pixelLocked: locked.locked,
       };
     } catch (err) {
       if (!(err instanceof OraliNotConfiguredError)) {
@@ -557,7 +652,7 @@ async function generateVisual(
         : mockAiProvider;
     if (!stepProvider) continue; // engine unavailable (e.g. no pollinations module)
     try {
-      const stepInput = { ...toProviderInput(input), prompt: instruction.enginePrompt, mask: input.mask, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined };
+      const stepInput = { ...toProviderInput(input), prompt: instruction.enginePrompt, mask: engineMask ?? undefined, productReferenceImages: productReferenceImages.length ? productReferenceImages : undefined };
       design = imageAction === "edit" ? await stepProvider.editImage(stepInput) : await stepProvider.generateDesign(stepInput);
       engine = step;
       break;
@@ -569,7 +664,47 @@ async function generateVisual(
   if (!design) {
     throw lastErr ?? new Error("NO_IMAGE_PROVIDER");
   }
-  return { design: { ...design, regions: estimateRegions(instruction) }, engine, degraded: false };
+
+  // 3) PIXEL-LOCK — outside the mask the user's photo survives byte-for-byte.
+  const locked = await lockAfterEngine(input.referenceImage ?? "", design.afterImage, maskRects, input.mask);
+  return {
+    design: { ...design, afterImage: locked.image },
+    engine: locked.locked ? `${engine}+pixel-lock` : engine,
+    degraded: false,
+    located,
+    pixelLocked: locked.locked,
+  };
+}
+
+/**
+ * The pixel-lock step: engine output shows through ONLY inside the mask;
+ * everywhere else the ORIGINAL photo remains. Fails soft — a failed lock
+ * returns the honest engine image unchanged (never a broken composite).
+ * A user-painted mask (input.mask) overrides the auto rect mask.
+ */
+async function lockAfterEngine(
+  originalDataUrl: string,
+  generatedDataUrl: string,
+  maskRects: NormRect[],
+  userMask?: string,
+): Promise<{ image: string; locked: boolean }> {
+  if (!originalDataUrl || !generatedDataUrl) return { image: generatedDataUrl, locked: false };
+  if (!maskRects.length && !userMask) return { image: generatedDataUrl, locked: false };
+  if (generatedDataUrl === originalDataUrl) return { image: generatedDataUrl, locked: false };
+  try {
+    const lock = await pixelLockComposite({
+      originalDataUrl,
+      generatedDataUrl,
+      rects: maskRects,
+      // A user-painted mask (MaskCanvas contract) overrides the auto rects.
+      maskOverrideDataUrl: userMask,
+    });
+    if (lock.ok) return { image: lock.dataUrl, locked: true };
+    console.warn("[ai-pipeline] pixel-lock skipped:", lock.reason);
+  } catch (err) {
+    console.warn("[ai-pipeline] pixel-lock error:", err instanceof Error ? err.message : err);
+  }
+  return { image: generatedDataUrl, locked: false };
 }
 
 function toProviderInput(input: PipelineInput) {
@@ -582,15 +717,6 @@ function toProviderInput(input: PipelineInput) {
     referenceImage: input.referenceImage,
     mask: input.mask,
   };
-}
-
-/**
- * Honest overlay metadata when no real overlay engine ran:
- * we do NOT invent fake boxes — regions stay empty and the UI shows
- * the scope as text. Real region boxes come from Orali only.
- */
-function estimateRegions(_instruction: DesignInstruction): OverlayRegion[] {
-  return [];
 }
 
 function creditsCostFor(instruction: DesignInstruction): number {
@@ -630,8 +756,9 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
         // 2) PLAN — compile the engine-facing instruction
         const instruction = buildDesignInstruction(input, intent);
 
-        // 3) GENERATE — Orali (real overlay) or base provider
-        const { design, engine } = await generateVisual(input, instruction);
+        // 3) GENERATE — Orali (real overlay) or base provider, with object
+        //    localization + pixel-lock for targeted edits
+        const { design, engine, located, pixelLocked } = await generateVisual(input, instruction);
 
         // 4) VALIDATE — never fake success
         const validation = validateResult({
@@ -714,6 +841,8 @@ export async function runDesignPipeline(input: PipelineInput): Promise<PipelineR
           matchedProducts,
           selectedProduct: instruction.selectedProduct,
           sku: rawSku || resolvedProduct?.sku,
+          locatedRegions: located,
+          pixelLocked,
           requestId,
           contextSummary: contextSummary(ctx),
         };

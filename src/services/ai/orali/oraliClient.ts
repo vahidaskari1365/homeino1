@@ -135,7 +135,7 @@ function buildEditPrompt(req: OraliEditRequest): string {
     parts.push(`Apply the change inside the region around (${Math.round((x + w / 2) * 100)}% from left, ${Math.round((y + h / 2) * 100)}% from top, ${Math.round(w * 100)}% width) and nowhere else.`);
   }
   if (req.mask) {
-    parts.push("Edit ONLY the user-highlighted mask area; everything outside it stays pixel-identical.");
+    parts.push("An EDIT MASK image is attached as the LAST image: its WHITE area is the ONLY region you may change — repaint it as instructed; the black area must remain exactly as in the room photo.");
   }
   if (req.style) parts.push(`Target decor style: ${req.style}.`);
   if (req.colors?.length) parts.push(`Palette to respect: ${req.colors.join(", ")}.`);
@@ -183,8 +183,12 @@ export const oraliClient: OraliClient = {
       const res = await postWithRetry(cfg, "/images/generations/edit", {
         prompt: enginePrompt,
         // engine contract: array of {url} — room first, then product
-        // reference photo(s) (data URL or remote URL accepted).
-        images: [{ url: req.image }, ...(req.referenceImages ?? []).map((url) => ({ url }))],
+        // reference photo(s), then the edit mask (white = editable area).
+        images: [
+          { url: req.image },
+          ...(req.referenceImages ?? []).map((url) => ({ url })),
+          ...(req.mask ? [{ url: req.mask }] : []),
+        ],
         size: pickSize(req.image),
       }, controller.signal);
       if (!res.ok) {

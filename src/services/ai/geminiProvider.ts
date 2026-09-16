@@ -17,17 +17,24 @@ const API = `https://generativelanguage.googleapis.com/v1beta/models`;
 function buildPrompt(input: GenerateDesignInput): string {
   return [
     input.prompt,
-    input.style && `Decor style: ${input.style}`,
+    input.style && `Decor style: ${input.style} — apply this style ONLY to the elements being edited, never restyle the rest of the scene.`,
     input.room && `Room: ${input.room}`,
     input.color && `Color palette: ${input.color}`,
     input.mood && `Mood: ${input.mood}`,
     // Golden rule (Phase 4/5): when editing an existing photo, only the
     // requested elements change; structure & untouched objects survive.
     input.referenceImage &&
-      "The uploaded image is the ORIGINAL room. Change ONLY what the user requested. Do NOT move, add or remove walls, windows, doors, the ceiling, the floor, or any object the user did not mention. Keep the exact same camera angle, perspective, room dimensions and lighting.",
-    input.mask && "Edit ONLY inside the highlighted mask region; everything outside the mask must remain pixel-identical.",
+      "The FIRST image is the ORIGINAL room photo. Change ONLY what the user requested. Do NOT move, add or remove walls, windows, doors, the ceiling, the floor, or any object the user did not mention. Keep the exact same camera angle, perspective, room dimensions and lighting. The rest of the photo must look identical to the original.",
+    input.mask && "An EDIT MASK image is attached: its WHITE area is the ONLY region you may change. Repaint the white area as requested; the black area must remain exactly as in the original photo.",
     "Professional interior design photograph, realistic, natural lighting, high detail.",
   ].filter(Boolean).join("\n");
+}
+
+/** Split a data URL into {mime, b64} for inline_data parts (null when remote). */
+function inlineData(dataUrl: string): { mime_type: string; data: string } | null {
+  const m = /^data:(image\/[\w.+-]+);base64,([\s\S]+)$/.exec(dataUrl);
+  if (!m) return null;
+  return { mime_type: m[1], data: m[2] };
 }
 
 async function geminiText(system: string, user: string): Promise<string> {
@@ -49,19 +56,27 @@ async function geminiText(system: string, user: string): Promise<string> {
 
 async function geminiImage(input: GenerateDesignInput): Promise<GeneratedDesign> {
   const parts: Record<string, unknown>[] = [{ text: buildPrompt(input) }];
-  // Multi-image fusion (nano-banana): room photo FIRST, then the exact
-  // product reference photo(s) — Gemini keeps the product's identity and
-  // renders it into the room (the foreign staging-site pattern).
+  // Multi-image fusion (nano-banana): room photo FIRST, then the edit mask
+  // (when present — white = the only editable area), then the exact product
+  // reference photo(s) — Gemini keeps the product's identity and renders it
+  // into the room at the masked spot.
   const refs = input.productReferenceImages ?? [];
   if (input.referenceImage) {
-    const b64 = input.referenceImage.replace(/^data:image\/\w+;base64,/, "");
-    parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
+    const room = inlineData(input.referenceImage);
+    if (room) parts.push({ inline_data: room });
+  }
+  if (input.mask) {
+    const mask = inlineData(input.mask);
+    if (mask) {
+      parts.push({ text: "EDIT MASK: the white area is the ONLY region to change — repaint it as instructed; keep the black area exactly as the original photo." });
+      parts.push({ inline_data: mask });
+    }
   }
   refs.slice(0, 3).forEach((ref, i) => {
-    const b64 = ref.replace(/^data:image\/\w+;base64,/, "");
-    if (b64 === ref) return; // not a data URL (remote) — skip, Gemini needs inline data
+    const product = inlineData(ref);
+    if (!product) return; // not a data URL (remote) — skip, Gemini needs inline data
     parts.push({ text: `Reference photo ${i + 1}: the EXACT product to place. Render it with identical design, color, material and proportions.` });
-    parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
+    parts.push({ inline_data: product });
   });
   const cfg = await resolveGeminiConfig();
   if (!cfg.apiKey) throw new Error("gemini_not_configured");
