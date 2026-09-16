@@ -26,6 +26,7 @@ import { ELEMENT_LABELS } from "@/services/ai/roomState";
 import type { DesignStudio } from "./useDesignStudio";
 import { GenerationProgress } from "./GenerationProgress";
 import { RoomUploader } from "./RoomUploader";
+import { STYLES } from "./constants";
 
 const AGENT_STATUS_STYLE: Record<string, string> = {
   ok: "bg-success/10 text-success",
@@ -57,6 +58,7 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
 
   const showPair = Boolean(compositeUrl && showComposite) && placements.length > 0;
   const glowPlans = studioPlans.filter((p) => p.glow);
+  const { style, regenerateInStyle } = studio;
   const hasResult = placements.length > 0 && !loading && !error;
   const busy = loading || Boolean(error && !loading);
 
@@ -134,6 +136,27 @@ export function ResultCanvas({ studio }: { studio: DesignStudio }) {
           <div className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg border border-gold/25 bg-gold/5 px-3 py-2 text-xs text-gold"><AlertCircle size={13} /> پیش‌نمایش — عکس اصلی حفظ شده</div>
         )}
       </div>
+
+      {/* Task 39 — حلقهٔ upsell مدل RemodelAI: همان اتاق، سبک دیگر، یک کلیک */}
+      {!busy && hasResult && (
+        <div className="rounded-2xl border border-gold/30 bg-gradient-to-l from-gold/8 via-cream to-cream p-3">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink"><Sparkles size={13} className="text-gold" /> کنجکاوی همین اتاق در سبک دیگه‌ست؟ با یک کلیک:</p>
+          <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+            {STYLES.filter((s) => s.id !== style).map((s) => (
+              <button
+                key={s.id}
+                onClick={() => regenerateInStyle(s.id)}
+                disabled={loading}
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-clay/40 bg-cream py-1 pl-3 pr-1 text-xs font-bold text-ink transition hover:border-gold hover:text-terracotta-deep disabled:opacity-50"
+                title={`همین نتیجه در سبک ${s.label}`}
+              >
+                <img src={s.image} alt="" width={24} height={24} className="h-6 w-6 rounded-full object-cover" />
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ================= ۲ تب جمع بعد از رندر ================= */}
       {!busy && hasResult && (

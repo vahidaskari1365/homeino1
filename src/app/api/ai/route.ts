@@ -40,7 +40,7 @@ const MAX_PAYLOAD_BYTES = 15 * 1024 * 1024; // 15 MB (image base64 can be large)
 // If the SAME generative request arrives twice (double-click / retry),
 // the second caller joins the first in-flight result instead of
 // spawning a second generation.
-const inflight = new Map<string, Promise<NextResponse>>();
+const inflight = new Map<string, Promise<{ status: number; body: Record<string, unknown> }>>();
 
 /** djb2 — stable 32-bit hash (no crypto needed for dedupe keys). */
 function hashString(s: string): string {
@@ -188,23 +188,29 @@ export async function POST(req: NextRequest) {
     }
 
     // ---- Duplicate-request protection for generative actions ----
+    // Task 39 — باگ ۵۰۰ واقعیِ پروداکشن: joinerِ دوم `res.clone()` روی
+    // پاسخی می‌زد که body‌اش توسط تماس‌کننده‌ی اول خوانده شده بود («Body is
+    // unusable») → INTERNAL. حالا status+body یک‌بار خوانده و کش می‌شود؛
+    // هر تماس‌کننده پاسخِ تازه‌ی خودش را می‌سازد.
     if (GENERATIVE_ACTIONS.has(action)) {
       const key = dedupeKey(action, p);
       const existing = inflight.get(key);
       if (existing) {
         // Join the in-flight result — no second generation is started.
-        const res = await existing;
-        const body = await res.clone().json().catch(() => ({}));
+        const { status, body } = await existing;
         finish("ok", { action, provider: "dedupe-join" });
-        return json({ ...body, _deduped: true }, res.status, requestId);
+        return json({ ...body, _deduped: true }, status, requestId);
       }
-      const run = handleAction(action, p, requestId).finally(() => {
-        // Keep the dedupe key briefly so a fast retry after completion
-        // does not double-run; then release.
-        setTimeout(() => inflight.delete(key), 5_000);
-      });
+      const run = handleAction(action, p, requestId)
+        .then(async (res) => ({ status: res.status, body: await res.json().catch(() => ({})) }))
+        .finally(() => {
+          // Keep the dedupe key briefly so a fast retry after completion
+          // does not double-run; then release.
+          setTimeout(() => inflight.delete(key), 5_000);
+        });
       inflight.set(key, run);
-      return run;
+      const { status, body } = await run;
+      return json({ ...body }, status, requestId);
     }
 
     return handleAction(action, p, requestId);
@@ -279,6 +285,15 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
         200,
         requestId,
       );
+    }
+
+    if (action === "analyze") {
+      // Task 39 — تحلیلِ واقعیِ عکس آپلودی: Gemini vision → z-ai رایگان → نمونه.
+      const { analyzeRoomWithFallback } = await import("@/services/ai/roomAnalysis");
+      const { analysis, source } = await analyzeRoomWithFallback(p as never);
+      const degraded = source === "sample" || source.endsWith("-degraded");
+      finish(degraded ? "degraded" : "ok", { provider: source });
+      return json({ ...analysis, _analysisSource: source, ...(degraded ? { _degraded: true } : {}) }, 200, requestId);
     }
 
     if (action === "detect-objects") {

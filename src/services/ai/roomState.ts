@@ -430,11 +430,18 @@ export function categoryToRoomElement(categorySlug: string, subTypeOrName?: stri
   if (cat === "lighting" || /light|lamp|chandelier|نور|چراغ|لوستر|آباژور|دیوارکوب/.test(full)) return "lighting";
   if (cat === "carpet" || cat === "rugs" || /rug|carpet|فرش|قالی|گلیم/.test(full)) return "rug";
   if (cat === "curtain" || /curtain|drape|پرده|تور|textile/.test(full)) return "curtain";
-  if (/chair|armchair|صندلی|پاف|پوف/.test(full)) return "chair";
-  if (cat === "dining" || /table|desk|dining|میز|جلومبلی|ناهارخوری|کنسول/.test(full)) return "table";
+  // Task 39 — ترتیبِ درست: TV و «صندلیِ خالص» قبل از میز، وگرنه
+  // «میز و صندلی ناهارخوری» (p4) به‌خاطر کلمه‌ی «صندلی» صندلی می‌شد →
+  // تداخل دسته → خطای ۴۰۰ که مالک در پروداکشن دید (تست چرخه‌ای ۲۰۲۶-۰۹-۱۶).
+  if (cat === "tv-console" || /tv|تلویزیون/.test(full)) return "tv";
+  // Task 39 — «میز کتابخانه‌ای» یک قفسه است نه میز ناهارخوری؛ shelf قبل از table
+  if (cat === "bookcase-shoe" || /bookcase|bookshelf|shelf|کتابخانه|قفسه|شلف|جاکفشی/.test(full)) return "shelf";
+  const hasChairCue = /chair|armchair|صندلی|پاف|پوف/.test(full);
+  const hasTableCue = /table|desk|میز|جلومبلی/.test(full);
+  if (hasChairCue && !hasTableCue) return "chair"; // صندلی راحتی، پاف — بدون هیچ میزی
+  if (cat === "dining" || hasTableCue || /dining|ناهارخوری|کنسول/.test(full)) return "table";
   if (/sofa|couch|sectional|مبل|کاناپه/.test(full)) return "sofa";
   if (cat === "bedding" || cat === "bedroom" || /bed|تخت|خواب/.test(full)) return "bed";
-  if (cat === "tv-console" || /tv|تلویزیون/.test(full)) return "tv";
   if (cat === "plants" || /plant|flower|گیاه|گلدان/.test(full)) return "plant";
   if (cat === "art" || cat === "decor" || cat === "accessories" || /art|painting|mirror|sculpture|candle|تابلو|آینه|مجسمه|شمع/.test(full)) return "art";
   if (cat === "bookcase-shoe" || /shelf|bookcase|wardrobe|organizer|قفسه|شلف|کمد|جاکفشی|نظم‌دهنده/.test(full)) return "shelf";

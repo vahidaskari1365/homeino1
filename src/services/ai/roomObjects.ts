@@ -9,10 +9,19 @@
 // and feeds real positions into the placement engine.
 //
 // Honest + deterministic degradation:
-//   • No GEMINI_API_KEY → [] (planner falls back to anchors)
+//   • No Gemini key (DB or env) → [] (planner falls back to anchors)
 //   • Any failure/timeout → [] — never blocks the studio flow
 //   • Boxes are clamped + shape-validated; garbage is dropped
+//
+// Task 39 — باگ پروداکشن: کلید فقط از process.env خوانده می‌شد؛ وقتی کلید
+// در پنل ادمین (DB رمزنگاری‌شده) بود، تشخیص ساکت [] برمی‌گرداند → ماسک صفر
+// → ویرایش تمام‌عکس («کل عکس عوض میشه»). حالا همان resolveGeminiConfig
+// (پنل ادمین > env) که بقیه‌ی پایپ‌لاین استفاده می‌کند.
 // ============================================================
+
+// "محصول باید دقیقاً جای معادلش در عکس بنشیند." — با کلید واحد resolveGeminiConfig
+import { resolveGeminiConfig } from "./settings";
+import { zaiVisionText } from "./zaiVision";
 
 export interface DetectedCounterpart {
   /** Element/category vocabulary key (sofa, rug, table, lamp…). */
@@ -27,10 +36,9 @@ const clamp01 = (v: unknown): number => {
   return Math.min(1, Math.max(0, n));
 };
 
-const key = () => process.env.GEMINI_API_KEY;
 const MODEL = () => process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash";
 const API = "https://generativelanguage.googleapis.com/v1beta/models";
-const TIMEOUT_MS = 9_000;
+const TIMEOUT_MS = 20_000;
 
 /** Canonical label set keeps the prompt tight and parsing deterministic. */
 export const DETECTABLE_TYPES = [
@@ -79,15 +87,22 @@ export function parseCounterparts(raw: string): DetectedCounterpart[] {
  * Returns [] on ANY failure — the caller's planner then falls back to
  * the deterministic category anchors (today's behavior).
  */
-export async function detectCounterparts(imageDataUrl: string, wanted: string[]): Promise<DetectedCounterpart[]> {
-  if (!key() || !imageDataUrl || wanted.length === 0) return [];
-  const b64 = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
-  // Remote URLs cannot be sent inline — vision needs the actual pixels.
-  if (!b64 || b64 === imageDataUrl) return [];
+/** MIME واقعی عکس را از data URL می‌خواند (webp/png/jpeg — نه همیشه jpeg). */
+function mimeOf(imageDataUrl: string): string {
+  const m = /^data:(image\/[\w.+-]+);base64,/.exec(imageDataUrl);
+  return m?.[1] ?? "image/jpeg";
+}
+
+/** پرامپت مشترک مکان‌یابی — Gemini و fallback رایگان هر دو همین را می‌خوانند. */
+function locatePrompt(wanted: string[]): string {
+  return `Locate the CURRENT position of each of these furniture categories in this room photo: ${wanted.join(", ")}. For every category that is actually visible, give the bounding box it occupies. Reply ONLY compact JSON: {"objects":[{"type":"<one of: ${DETECTABLE_TYPES.join("|")}","box":{"x":0..1,"y":0..1,"w":0..1,"h":0..1}}]} — coordinates normalized to the whole photo, origin top-left. Omit categories that are NOT visible. If nothing is visible reply {"objects":[]}.`;
+}
+
+async function geminiLocate(apiKey: string, b64: string, mime: string, wanted: string[]): Promise<DetectedCounterpart[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(`${API}/${MODEL()}:generateContent?key=${key()}`, {
+    const res = await fetch(`${API}/${MODEL()}:generateContent?key=${apiKey}`, {
       method: "POST",
       signal: controller.signal,
       headers: { "Content-Type": "application/json" },
@@ -95,8 +110,8 @@ export async function detectCounterparts(imageDataUrl: string, wanted: string[])
         contents: [{
           role: "user",
           parts: [
-            { text: `Locate the CURRENT position of each of these furniture categories in this room photo: ${wanted.join(", ")}. For every category that is actually visible, give the bounding box it occupies. Reply ONLY compact JSON: {"objects":[{"type":"<one of: ${DETECTABLE_TYPES.join("|")}","box":{"x":0..1,"y":0..1,"w":0..1,"h":0..1}}]} — coordinates normalized to the whole photo, origin top-left. Omit categories that are NOT visible. If nothing is visible reply {"objects":[]}.` },
-            { inline_data: { mime_type: "image/jpeg", data: b64 } },
+            { text: locatePrompt(wanted) },
+            { inline_data: { mime_type: mime, data: b64 } },
           ],
         }],
         generationConfig: { temperature: 0.1 },
@@ -111,4 +126,30 @@ export async function detectCounterparts(imageDataUrl: string, wanted: string[])
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Ask the vision model where each counterpart currently sits in the photo.
+ * Chain: Gemini (پنل ادمین/env) → z-ai vision رایگان → [] — the caller's
+ * planner then falls back to the deterministic category anchors.
+ */
+export async function detectCounterparts(imageDataUrl: string, wanted: string[]): Promise<DetectedCounterpart[]> {
+  if (!imageDataUrl || wanted.length === 0) return [];
+  const b64 = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
+  // Remote URLs cannot be sent inline — vision needs the actual pixels.
+  if (!b64 || b64 === imageDataUrl) return [];
+  const mime = mimeOf(imageDataUrl);
+
+  const { apiKey } = await resolveGeminiConfig();
+  if (apiKey) {
+    const located = await geminiLocate(apiKey, b64, mime, wanted);
+    if (located.length) return located;
+  }
+  // Task 39 — fallback رایگان: بدون کلید Gemini هم مکان‌یابی می‌شود.
+  const free = await zaiVisionText(
+    "You are a furniture-locating vision engine. Reply ONLY with the requested compact JSON — no prose.",
+    locatePrompt(wanted),
+    imageDataUrl,
+  );
+  return free ? parseCounterparts(free) : [];
 }

@@ -183,6 +183,11 @@ async function locateTargets(referenceImage: string, targets: RoomElement[]): Pr
     const aliases = ELEMENT_CATEGORY_ALIASES[element];
     const hit = detected.find((d) => aliases.includes(d.type));
     if (!hit) continue;
+    // Task 39 — باکس غیرواقعی: یک تکه مبلمان به‌ندرت بیش از ۴۰٪ عکس می‌شود؛
+    // باکس‌های بزرگ‌تر (مثلاً «میز» روی کل جزیره‌ی آشپزخانه) ماسکِ مهلک
+    // می‌سازند و موتور داخلش کل صحنه را از نو می‌سازد. دور بریز — اگر همه
+    // باکس‌ها غیرقابل‌اعتماد بودند، generateVisual به anchor می‌رسد.
+    if (hit.region.w * hit.region.h > 0.4) continue;
     out.push({
       element,
       bbox: { x: hit.region.x, y: hit.region.y, width: hit.region.w, height: hit.region.h },
@@ -237,8 +242,11 @@ export async function runIntentUnderstanding(input: PipelineInput): Promise<Inte
     resolvedProduct = getProductBySkuOrCode(input.productId);
   }
 
-  // Requirement 18: Category + SKU conflict detection
-  if (resolvedProduct && input.targets?.length) {
+  // Requirement 18: Category + SKU conflict detection.
+  // Task 39 — فقط برای SKUِ تایپ‌شده‌ی دست کاربر: محصولات UI زیر دسته‌های
+  // مختلفی لیست می‌شوند (کنسول زیر «میز TV»، کتابخانه‌ی «میز»دار، تختِ
+  // furniture) و productId منتخب UI نباید ۴۰۰ بدهد — همان «ارور داد»ِ مالک.
+  if (rawSku && resolvedProduct && input.targets?.length) {
     const conflict = detectCategorySkuConflict(input.selection?.category, input.targets, resolvedProduct);
     if (conflict.hasConflict) {
       throw AiError.categoryConflict(conflict.message);
@@ -577,6 +585,38 @@ async function generateVisual(
     const locatableTargets = instruction.targets.filter((t) => !STRUCTURAL_ELEMENTS.includes(t));
     located = await locateTargets(input.referenceImage, locatableTargets);
     maskRects = located.map((l) => padRect(l.bbox, 0.14));
+    // Task 39 — «کل عکس عوض میشه» ریشه‌ای: اگر vision شیء هدف را پیدا نکرد
+    // (مثلاً اتاق اصلاً میز ناهارخوری ندارد و کاربر می‌خواهد «اضافه» شود)،
+    // ماسک صفر یعنی موتور آزاد است کل صحنه را از نو بسازد. حالا به‌جای
+    // بی‌ماسک‌گذاشتن، ناحیه‌ی anchor همان دسته (planProductPlacement) ماسک
+    // می‌شود — با pixel-lock، بیرونِ آن ناحیه پیکسل‌های خودِ کاربر می‌ماند.
+    if (!maskRects.length && instruction.placement?.targetRegion) {
+      const r = instruction.placement.targetRegion;
+      const anchor: NormRect = { x: r.x, y: r.y, width: r.width, height: r.height };
+      maskRects = [padRect(anchor, 0.1)];
+      located = [{
+        element: locatableTargets[0] ?? "sofa",
+        bbox: anchor,
+        confidence: 0.4,
+        source: "heuristic",
+      }];
+    }
+    // سقف ایمنی ماسک (Task 39): union بیش از ~۳۰٪ عکس یعنی موتور داخل ماسک
+    // صحنه‌ی نو می‌سازد و قفل بی‌معنا می‌شود. حول مرکزِ union به سقف می‌رسیم —
+    // بیرونِ این پنجره پیکسل‌های خودِ کاربر دست‌نخورده می‌ماند.
+    if (maskRects.length) {
+      const union = unionRects(maskRects);
+      if (union && union.width * union.height > 0.3) {
+        const shrink = Math.sqrt(0.3 / (union.width * union.height));
+        const w = Math.min(1, union.width * shrink);
+        const h = Math.min(1, union.height * shrink);
+        const cx = union.x + union.width / 2;
+        const cy = union.y + union.height / 2;
+        const x = Math.min(Math.max(0, cx - w / 2), 1 - w);
+        const y = Math.min(Math.max(0, cy - h / 2), 1 - h);
+        maskRects = [{ x, y, width: w, height: h }];
+      }
+    }
   }
 
   // 2) MASK — engine-facing picture of the editable area (user mask wins when present).

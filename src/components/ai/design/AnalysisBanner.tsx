@@ -35,6 +35,19 @@ export function AnalysisBanner({ studio, embedded = false }: { studio: DesignStu
           </div>
         )}
       </div>
+      {/* Task 39 — «بگه چی کم داره»: نتیجهٔ مستقیم تحلیل Vision عکس (emptySpaces) */}
+      {roomAnalysis.emptySpaces && roomAnalysis.emptySpaces.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-clay/20 pt-2.5">
+          <span className="text-xs font-bold text-terracotta-deep">چی کم داری:</span>
+          {roomAnalysis.emptySpaces.slice(0, 4).map((sp, i) => <span key={i} className="rounded bg-ivory-2 px-2 py-0.5 text-xs text-ink ring-1 ring-terracotta/25">{sp}</span>)}
+        </div>
+      )}
+      {roomAnalysis.functionalIssues && roomAnalysis.functionalIssues.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <span className="text-xs text-ink-muted">مسئلهٔ کاربردی:</span>
+          {roomAnalysis.functionalIssues.slice(0, 3).map((f, i) => <span key={i} className="rounded bg-cream px-2 py-0.5 text-xs text-ink-muted ring-1 ring-clay/25">{f}</span>)}
+        </div>
+      )}
       {roomAnalysis.opportunities && roomAnalysis.opportunities.length > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-clay/20 pt-2.5">
           <span className="text-xs text-ink-muted">فرصت‌ها:</span>

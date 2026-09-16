@@ -58,16 +58,18 @@ function authHeaders(cfg: EngineConfig): Record<string, string> {
   return headers;
 }
 
-/** POST with a single 429-retry (quota blips) — bounded, never infinite. */
+/** POST with up to TWO 429-retries (9s, 14s backoff) — bounded, never infinite.
+ *  Task 39: پروب زنده ۲۰۲۶-۰۹-۱۶ نشان داد 429های متوالی رایج‌اند؛ یک retry
+ *  تنها معمولاً کافی نبود و پایپ‌لاین می‌افتاد روی fallback ضعیف‌تر. */
 async function postWithRetry(cfg: EngineConfig, path: string, body: unknown, signal: AbortSignal): Promise<Response> {
-  let res = await fetch(`${cfg.baseUrl}${path}`, {
-    method: "POST", signal, headers: authHeaders(cfg), body: JSON.stringify(body),
-  });
-  if (res.status === 429) {
-    await new Promise((r) => setTimeout(r, 9_000));
+  const waits = [0, 9_000, 14_000];
+  let res: Response = new Response(null, { status: 599 });
+  for (const wait of waits) {
+    if (wait) await new Promise((r) => setTimeout(r, wait));
     res = await fetch(`${cfg.baseUrl}${path}`, {
       method: "POST", signal, headers: authHeaders(cfg), body: JSON.stringify(body),
     });
+    if (res.status !== 429) return res;
   }
   return res;
 }
@@ -136,6 +138,10 @@ function buildEditPrompt(req: OraliEditRequest): string {
   }
   if (req.mask) {
     parts.push("An EDIT MASK image is attached as the LAST image: its WHITE area is the ONLY region you may change — repaint it as instructed; the black area must remain exactly as in the room photo.");
+    // Task 39 — پیوستگی سطوح: داخلِ ناحیه‌ی ماسک هم کف/دیوار باید دقیقاً
+    // ادامه‌ی همان سطوح بیرونِ ماسک باشد (تست چرخه‌ای: کف مرمری بیرون،
+    // پارکت دروغی داخل ماسک شده بود).
+    parts.push("Inside the white area, the floor, walls and lighting must EXACTLY continue the same surfaces visible around the mask — identical material, color, perspective and shadows; only the furniture/decor object itself is new.");
   }
   if (req.style) parts.push(`Target decor style: ${req.style}.`);
   if (req.colors?.length) parts.push(`Palette to respect: ${req.colors.join(", ")}.`);

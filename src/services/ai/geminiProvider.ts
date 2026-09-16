@@ -8,7 +8,7 @@
 //     the source image; degrades gracefully on any failure.
 // Keys NEVER reach the client. No FLUX / Veo / other models here.
 // ============================================================
-import type { AiProvider, GenerateDesignInput, GeneratedDesign, DecorSuggestion } from "./types";
+import type { AiProvider, GenerateDesignInput, GeneratedDesign, DecorSuggestion, RoomAnalysis } from "./types";
 import { uid } from "../../lib/utils";
 import { resolveGeminiConfig } from "./settings";
 import { normalizeRoomAnalysisFa, FA_ANALYSIS_DIRECTIVE } from "./analysisNormalize";
@@ -48,8 +48,35 @@ async function geminiText(system: string, user: string): Promise<string> {
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: "user", parts: [{ text: user }] }],
     }),
+    signal: AbortSignal.timeout(55_000),
   });
-  if (!res.ok) throw new Error("gemini_text_failed");
+  if (!res.ok) throw new Error(`gemini_text_failed_${res.status}`);
+  const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+  const parts = data?.candidates?.[0]?.content?.parts ?? [];
+  return parts.map((p: { text?: string }) => p.text ?? "").join("").trim();
+}
+
+/**
+ * VISION call — the ACTUAL photo goes to the model as inline_data.
+ * Task 39: analyzeRoom قبلاً فقط متن می‌فرستاد («Analyze this room photo/context:
+ * پذیرایی …») — یعنی عکس هرگز دیده نمی‌شد و تحلیل یک توهم عمومی بود.
+ */
+async function geminiVisionText(system: string, user: string, imageDataUrl: string): Promise<string> {
+  const cfg = await resolveGeminiConfig();
+  if (!cfg.apiKey) throw new Error("gemini_not_configured");
+  const inline = inlineData(imageDataUrl);
+  if (!inline) throw new Error("gemini_vision_bad_image");
+  const res = await fetch(`${API}/${cfg.textModel}:generateContent?key=${cfg.apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: user }, { inline_data: inline }] }],
+      generationConfig: { temperature: 0.2 },
+    }),
+    signal: AbortSignal.timeout(55_000),
+  });
+  if (!res.ok) throw new Error(`gemini_vision_failed_${res.status}`);
   const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   const parts = data?.candidates?.[0]?.content?.parts ?? [];
   return parts.map((p: { text?: string }) => p.text ?? "").join("").trim();
@@ -69,7 +96,7 @@ async function geminiImage(input: GenerateDesignInput): Promise<GeneratedDesign>
   if (input.mask) {
     const mask = inlineData(input.mask);
     if (mask) {
-      parts.push({ text: "EDIT MASK: the white area is the ONLY region to change — repaint it as instructed; keep the black area exactly as the original photo." });
+      parts.push({ text: "EDIT MASK: the white area is the ONLY region to change — repaint it as instructed; keep the black area exactly as the original photo. Inside the white area the floor, walls and lighting must EXACTLY continue the same surfaces visible around the mask (same material, color, perspective); only the requested object itself is new." });
       parts.push({ inline_data: mask });
     }
   }
@@ -112,11 +139,89 @@ function fallbackSuggest(room: string, style: string): DecorSuggestion {
   };
 }
 
+/* ---------------- Room analysis (shared with the free fallback) ---------------- */
+
+/** پرامپت سیستم تحلیل عکس — بین Gemini و fallback رایگان مشترک است.
+ *  emptySpaces دقیقاً همان «بگه چی کم داره» است. */
+export const ROOM_ANALYSIS_VISION_SYSTEM =
+  "You are Homeino's senior interior designer. You are looking at an ACTUAL photo of the user's room. " +
+  "Analyze ONLY what is really visible in THIS photo — never invent objects that are not there. " +
+  "Reply ONLY with compact JSON with these keys: " +
+  "roomType, style, likelyStyle({style, confidence}), palette[] (4-5 hex codes), mood, confidence(0..1), " +
+  "strengths[] (2-3, from the photo), opportunities[] (2-3, from the photo), suggestions[] (2-3), " +
+  "guidedSuggestions[] (exactly 4 items {id:'gs1'..'gs4', title, desc, impact:'high'|'medium'|'low', creditCost:1..5, category:'rug'|'lighting'|'art'|'plant'|'sofa'|'curtain'|'table'|'storage'}), " +
+  "architecture({walls, floor, ceiling, windows, doors}), lighting, furniture[] (every furniture piece you actually see), " +
+  "emptySpaces[] (WHAT IS MISSING in this room — e.g. no rug, no wall art, no floor lamp, no plant, empty corner — THIS is the 'چی کم داره' answer), " +
+  "functionalIssues[] (practical problems visible in the photo: bad lighting, cramped walkway, no seating for guests…), " +
+  "designOpportunities[] (concrete improvements). " +
+  FA_ANALYSIS_DIRECTIVE;
+
+export function roomAnalysisVisionUser(input: { room?: string; style?: string }): string {
+  return [
+    "این عکس، اتاقِ واقعی کاربر است. دقیقاً از روی همین عکس تحلیل کن.",
+    input.room && `کاربر گفته نوع فضا: ${input.room} (اگر با عکس میانه ندارد، عکس را مبنا بگیر).`,
+    input.style && `سبک هدف انتخابی کاربر: ${input.style} (فقط برای پیشنهادها؛ سبک «فعلی» را از عکس بگو).`,
+    "در emptySpaces صادقانه بگو چه چیزی در این اتاق کم است — چیزی که نبودنش حس می‌شود.",
+  ].filter(Boolean).join(" ");
+}
+
+/** پارس + نرمال‌سازی پاسخ تحلیل — با پیش‌فرض‌های صادقانه برای فیلدهای غایب. */
+export function parseRoomAnalysisFa(raw: string, input: { room?: string; style?: string }): RoomAnalysis {
+  try {
+    const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] ?? "{}");
+    // نرمال‌ساز مشترک: هر مقدار انگلیسیِ لیز خورده (سبک/رنگ/عبارت) فارسی می‌شود
+    return normalizeRoomAnalysisFa({
+      roomType: parsed.roomType || input.room || "پذیرایی",
+      style: parsed.style || input.style || "اسکاندیناوی",
+      likelyStyle: parsed.likelyStyle || { style: input.style || "Scandinavian", confidence: 0.78 },
+      palette: parsed.palette || ["#F4EFEA", "#D8C7B5", "#8C7A6B", "#3E443C"],
+      mood: parsed.mood || "آرام و دلنشین",
+      confidence: parsed.confidence || 0.8,
+      strengths: parsed.strengths || ["نور طبیعی مناسب از پنجره وارد فضا می‌شود", "تناسبات ابعادی فضا استاندارد است"],
+      opportunities: parsed.opportunities || ["دیوار اصلی خالی است و نیازمند تابلوی هنری است", "نشیمن بدون فرش تفکیک بصری ندارد"],
+      suggestions: parsed.suggestions || ["افزودن یک قالیچه برای تعریف ناحیه‌ی نشیمن", "استفاده از آباژور با نور گرم برای حس دنجی"],
+      guidedSuggestions: parsed.guidedSuggestions || [
+        { id: "gs1", title: "افزودن فرش برای تعریف فضا", desc: "یک قالیچه بزرگ زیر ناحیه‌ی نشیمن، فضا را گرم‌تر و منظم‌تر می‌کند.", impact: "high", creditCost: 3, category: "rug" },
+        { id: "gs2", title: "نور گرم و موضعی", desc: "افزودن آباژور یا چراغ رومیزی با نور گرم (۳۰۰۰K)، حس دنجی می‌آورد.", impact: "medium", creditCost: 2, category: "lighting" },
+        { id: "gs3", title: "نقطه کانونی با اثر هنری", desc: "نصب تابلوی مینیمال روی دیوار خالی برای ایجاد تعادل بصری.", impact: "medium", creditCost: 2, category: "art" },
+        { id: "gs4", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
+      ],
+      architecture: parsed.architecture || { walls: "رنگ خنثی", floor: "پارکت روشن", windows: 1, doors: 1 },
+      lighting: parsed.lighting || "نور طبیعی ملایم، نیازمند نور موضعی",
+      emptySpaces: parsed.emptySpaces || ["دیوار اصلی خالی", "گوشه دنج"],
+      functionalIssues: parsed.functionalIssues || ["کمبود نور موضعی"],
+      designOpportunities: parsed.designOpportunities || ["امکان افزودن فرش و تابلوی دیواری"],
+    });
+  } catch {
+    return {
+      roomType: input.room || "پذیرایی",
+      style: input.style || "اسکاندیناوی",
+      likelyStyle: { style: input.style || "Scandinavian", confidence: 0.78 },
+      palette: ["#F4EFEA", "#D8C7B5", "#8C7A6B", "#3E443C"],
+      mood: "گرم و دنج",
+      confidence: 0.4,
+      strengths: ["نور طبیعی مناسب از پنجره", "پلان منعطف فضا"],
+      opportunities: ["نبود فرش مناسب در نشیمن", "نورپردازی فقط متکی به سقف"],
+      suggestions: ["افزودن قالیچه برای تعریف ناحیه نشیمن", "نورپردازی لایه‌ای با آباژور"],
+      guidedSuggestions: [
+        { id: "gs1", title: "افزودن فرش برای تعریف فضا", desc: "یک قالیچه بزرگ زیر ناحیه‌ی نشیمن، فضا را گرم‌تر و منظم‌تر می‌کند.", impact: "high", creditCost: 3, category: "rug" },
+        { id: "gs2", title: "نور گرم و موضعی", desc: "افزودن آباژور یا چراغ رومیزی با نور گرم (۳۰۰۰K)، حس دنجی می‌آورد.", impact: "medium", creditCost: 2, category: "lighting" },
+        { id: "gs3", title: "نقطه کانونی با اثر هنری", desc: "نصب تابلوی مینیمال روی دیوار خالی برای ایجاد تعادل بصری.", impact: "medium", creditCost: 2, category: "art" },
+        { id: "gs4", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
+      ],
+      emptySpaces: ["دیوار اصلی خالی", "گوشه دنج"],
+      functionalIssues: ["کمبود نور موضعی"],
+      designOpportunities: ["امکان افزودن فرش و تابلوی دیواری"],
+    };
+  }
+}
+
 export const geminiProvider: AiProvider = {
-  async generateDesign(input: GenerateDesignInput): Promise<GeneratedDesign> {
-    try { return await geminiImage(input); }
-    catch { return { id: uid(), beforeImage: input.referenceImage, afterImage: input.referenceImage ?? "", creditsUsed: 5, products: [] }; }
-  },
+  // Task 39 — خطای صادقانه: قبلاً هر شکستِ Gemini بی‌صدا «عکس بدون تغییر»
+  // برمی‌گرداند؛ کلاینت آن را به‌عنوان رندر واقعی نمی‌پذیرفت و می‌افتاد روی
+  // کامپوزیت چسبانِ مرورگر («داغونه»). حالا خطا بالا می‌رود تا dispatch plan
+  // واقعی (pollinations برای تولید / preview صادقانه برای ویرایش) کار کند.
+  async generateDesign(input: GenerateDesignInput): Promise<GeneratedDesign> { return geminiImage(input); },
   async editImage(input: GenerateDesignInput): Promise<GeneratedDesign> { return this.generateDesign(input); },
   async inpaint(input: GenerateDesignInput): Promise<GeneratedDesign> { return this.generateDesign(input); },
   async chat({ message, context }) {
@@ -135,54 +240,15 @@ export const geminiProvider: AiProvider = {
     catch { return fallbackSuggest(room, style); }
   },
   async analyzeRoom(input) {
-    const raw = await geminiText(
-      "You are an interior designer. Reply ONLY compact JSON with keys: roomType, style, likelyStyle({style, confidence}), palette[], mood, strengths[], opportunities[], suggestions[], guidedSuggestions([{id, title, desc, impact, creditCost, category}]), architecture, lighting, furniture[], emptySpaces[], functionalIssues[], designOpportunities[]. Persian values for text, English for IDs/keys. " + FA_ANALYSIS_DIRECTIVE,
-      `Analyze this room photo/context: ${input.room ?? ""} ${input.style ?? ""}.`
-    );
-    try {
-      const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] ?? "{}");
-      // نرمال‌ساز مشترک: هر مقدار انگلیسیِ لیز خورده (سبک/رنگ/عبارت) فارسی می‌شود
-      return normalizeRoomAnalysisFa({
-        roomType: parsed.roomType || input.room || "پذیرایی",
-        style: parsed.style || input.style || "اسکاندیناوی",
-        likelyStyle: parsed.likelyStyle || { style: input.style || "Scandinavian", confidence: 0.78 },
-        palette: parsed.palette || ["#F4EFEA", "#D8C7B5", "#8C7A6B", "#3E443C"],
-        mood: parsed.mood || "آرام و دلنشین",
-        confidence: parsed.confidence || 0.8,
-        strengths: parsed.strengths || ["نور طبیعی مناسب از پنجره وارد فضا می‌شود", "تناسبات ابعادی فضا استاندارد است"],
-        opportunities: parsed.opportunities || ["دیوار اصلی خالی است و نیازمند تابلوی هنری است", "نشیمن بدون فرش تفکیک بصری ندارد"],
-        suggestions: parsed.suggestions || ["افزودن یک قالیچه برای تعریف ناحیه‌ی نشیمن", "استفاده از آباژور با نور گرم برای حس دنجی"],
-        guidedSuggestions: parsed.guidedSuggestions || [
-          { id: "gs1", title: "افزودن فرش برای تعریف فضا", desc: "یک قالیچه بزرگ زیر ناحیه‌ی نشیمن، فضا را گرم‌تر و منظم‌تر می‌کند.", impact: "high", creditCost: 3, category: "rug" },
-          { id: "gs2", title: "نور گرم و موضعی", desc: "افزودن آباژور یا چراغ رومیزی با نور گرم (۳۰۰۰K)، حس دنجی می‌آورد.", impact: "medium", creditCost: 2, category: "lighting" },
-          { id: "gs3", title: "نقطه کانونی با اثر هنری", desc: "نصب تابلوی مینیمال روی دیوار خالی برای ایجاد تعادل بصری.", impact: "medium", creditCost: 2, category: "art" },
-          { id: "gs4", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
-        ],
-        architecture: parsed.architecture || { walls: "رنگ خنثی", floor: "پارکت روشن", windows: 1, doors: 1 },
-        lighting: parsed.lighting || "نور طبیعی ملایم، نیازمند نور موضعی",
-        emptySpaces: parsed.emptySpaces || ["دیوار اصلی خالی", "گوشه دنج"],
-        functionalIssues: parsed.functionalIssues || ["کمبود نور موضعی"],
-        designOpportunities: parsed.designOpportunities || ["امکان افزودن فرش و تابلوی دیواری"],
-      });
-    } catch {
-      return {
-        roomType: input.room || "پذیرایی",
-        style: input.style || "اسکاندیناوی",
-        likelyStyle: { style: input.style || "Scandinavian", confidence: 0.78 },
-        palette: ["#F4EFEA", "#D8C7B5", "#8C7A6B", "#3E443C"],
-        mood: "گرم و دنج",
-        confidence: 0.8,
-        strengths: ["نور طبیعی مناسب از پنجره", "پلان منعطف فضا"],
-        opportunities: ["نبود فرش مناسب در نشیمن", "نورپردازی فقط متکی به سقف"],
-        suggestions: ["افزودن قالیچه برای تعریف ناحیه نشیمن", "نورپردازی لایه‌ای با آباژور"],
-        guidedSuggestions: [
-          { id: "gs1", title: "افزودن فرش برای تعریف فضا", desc: "یک قالیچه بزرگ زیر ناحیه‌ی نشیمن، فضا را گرم‌تر و منظم‌تر می‌کند.", impact: "high", creditCost: 3, category: "rug" },
-          { id: "gs2", title: "نور گرم و موضعی", desc: "افزودن آباژور یا چراغ رومیزی با نور گرم (۳۰۰۰K)، حس دنجی می‌آورد.", impact: "medium", creditCost: 2, category: "lighting" },
-          { id: "gs3", title: "نقطه کانونی با اثر هنری", desc: "نصب تابلوی مینیمال روی دیوار خالی برای ایجاد تعادل بصری.", impact: "medium", creditCost: 2, category: "art" },
-          { id: "gs4", title: "گیاه طبیعی برای طراوت", desc: "یک گیاه آپارتمانی در گوشه‌ی فضا، فضا را زنده و طبیعی می‌کند.", impact: "low", creditCost: 1, category: "plant" },
-        ],
-      };
-    }
+    // Task 39 — تحلیلِ واقعیِ همین عکس: عکس آپلودشده با inline_data به Gemini
+    // می‌رود و مدل از روی پیکسل‌های واقعی جواب می‌دهد («بگه چی کم داره»).
+    const raw = input.referenceImage
+      ? await geminiVisionText(ROOM_ANALYSIS_VISION_SYSTEM, roomAnalysisVisionUser(input), input.referenceImage)
+      : await geminiText(
+          "You are an interior designer. Reply ONLY compact JSON with keys: roomType, style, likelyStyle({style, confidence}), palette[], mood, strengths[], opportunities[], suggestions[], guidedSuggestions([{id, title, desc, impact, creditCost, category}]), architecture, lighting, furniture[], emptySpaces[], functionalIssues[], designOpportunities[]. Persian values for text, English for IDs/keys. " + FA_ANALYSIS_DIRECTIVE,
+          `Analyze this room description/context: ${input.room ?? ""} ${input.style ?? ""}. No photo was provided — answer generically but mark confidence 0.4.`
+        );
+    return parseRoomAnalysisFa(raw, input);
   },
   async recommendProducts() {
     const raw = await geminiText(

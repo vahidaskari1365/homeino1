@@ -212,14 +212,49 @@ export function useDesignStudio() {
     toast("طراحی ذخیره‌شده بازیابی شد — از همین‌جا ادامه بده");
   }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Task 39 — فشرده‌سازی سمت کلاینت: عکس موبایل ۳-۶MB بعد از base64 از سقف
+   * ~4.5MB بدنه‌ی ورکر Vercel رد نمی‌شود → 413 → همان «ارور داد» مالک.
+   * عکس به حداکثر 1600px و JPEG 0.85 می‌رسد (≈200-400KB) — برای مدل کافی و
+   * برای آپلود ایرانِ کم‌سرعت هم منصف.
+   */
+  const fileToDataUrl = useCallback(async (file: File): Promise<string> => {
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+      const w = Math.max(1, Math.round(bitmap.width * scale));
+      const h = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("canvas_unavailable");
+      ctx.drawImage(bitmap, 0, 0, w, h);
+      bitmap.close();
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch {
+      // فالبک صادقانه: همان فایل خام (در دسکتاپ با عکس‌های کوچک کار می‌کند)
+      return await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onerror = () => reject(new Error("read_failed"));
+        r.onload = () => resolve(r.result as string);
+        r.readAsDataURL(file);
+      });
+    }
+  }, []);
+
   const handleFile = useCallback((file: File, set: (v: string) => void = setImageBase64) => {
     if (!ALLOWED_TYPES.includes(file.type)) return toast("فقط JPG، PNG یا WEBP", "error");
     if (file.size > MAX_FILE_SIZE) return toast("حداکثر حجم تصویر ۱۰ مگابایت", "error");
-    const r = new FileReader();
-    r.onerror = () => toast("خطا در خواندن فایل", "error");
-    r.onload = () => { const d = r.result as string; if (typeof d !== "string" || d.length < 100) return toast("فایل نامعتبر", "error"); set(d); if (set === setImageBase64) { rs.loadRoom(d, style === "office" ? "فضای اداری" : "پذیرایی"); analyzeRoom(d); } };
-    r.readAsDataURL(file); trackEvent("room_uploaded", { metadata: { name: file.name, size: file.size } });
-  }, [toast, rs, style, analyzeRoom]);
+    trackEvent("room_uploaded", { metadata: { name: file.name, size: file.size } });
+    void fileToDataUrl(file)
+      .then((d) => {
+        if (!d.startsWith("data:image/") || d.length < 100) return toast("فایل نامعتبر", "error");
+        set(d);
+        if (set === setImageBase64) { rs.loadRoom(d, style === "office" ? "فضای اداری" : "پذیرایی"); analyzeRoom(d); }
+      })
+      .catch(() => toast("خطا در خواندن فایل", "error"));
+  }, [toast, rs, style, analyzeRoom, fileToDataUrl]);
 
   /** نمونهٔ آماده (الگوی رقبا: Decoratly) — عکس محلی را مثل آپلود عادی وارد جریان می‌کند. */
   const loadSample = useCallback(async (url: string) => {
@@ -523,6 +558,22 @@ export function useDesignStudio() {
     }
   }, [imageBase64, placedProducts, designElements, presetProduct, prompt, style, budget, skuInput, rs, roomAnalysis, styleLabel, toast, saveSession, buildReplacement, fetchStudioReport, router]);
 
+  // Task 39 — حلقهٔ upsell مدل RemodelAI: بعد از هر رندر، «همین اتاق در سبک X»
+  // با یک کلیک. setStyle سبک را عوض می‌کند و generate تازه (با سبک جدید، چون
+  // شناسه‌اش به style وابسته است) در افکتِ بعدی اجرا می‌شود.
+  const pendingRegen = useRef(false);
+  const regenerateInStyle = useCallback((nextStyle: string) => {
+    if (nextStyle === style) { void generate(); return; }
+    setStyle(nextStyle);
+    pendingRegen.current = true;
+    toast(`همین اتاق در سبک «${STYLES.find((s) => s.id === nextStyle)?.label ?? nextStyle}» — در حال طراحی…`);
+  }, [style, generate, toast]);
+  useEffect(() => {
+    if (!pendingRegen.current) return;
+    pendingRegen.current = false;
+    void generate();
+  }, [generate]);
+
   const updatePlacement = useCallback((id: string, patch: Partial<Placement>) => {
     setPlacements((ps) => ps.map((pl) => (pl.product.id === id ? { ...pl, ...patch } : pl)));
     // A moved/resized product invalidates the composite → switch to the live overlay.
@@ -779,6 +830,7 @@ export function useDesignStudio() {
     stage,
     error,
     generate,
+    regenerateInStyle,
     // studio replacement composite + agent crew
     compositeUrl,
     showComposite,
