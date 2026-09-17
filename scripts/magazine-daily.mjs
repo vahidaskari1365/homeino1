@@ -606,8 +606,9 @@ async function main() {
     const pageHtml = await fetchText(realUrl, 11000);
     const sourceText = stripHtml(pageHtml).slice(0, 3000);
     let parsed = null;
+    let out = null;
     try {
-      const out = await callLlm(BRIEF_PROMPT(item, sourceText, dateFa));
+      out = await callLlm(BRIEF_PROMPT(item, sourceText, dateFa));
       const arr = extractJson(out);
       if (Array.isArray(arr) && arr.length) parsed = arr[0];
       else if (arr && typeof arr === "object") parsed = arr;
@@ -616,7 +617,9 @@ async function main() {
     }
 
     if (!parsed || !parsed.title || !parsed.summary) {
-      console.log(`  skipped (no valid brief): ${item.title.slice(0, 60)}`);
+      // تشخیص‌پذیری: چرا خروجی LLM پارس نشد؟ (بریده؟ خالی؟ متن خارج JSON؟)
+      const head = String(out || "").replace(/\s+/g, " ").slice(0, 160);
+      console.log(`  skipped (no valid brief): ${item.title.slice(0, 60)} | llm-out[${String(out ?? "").length}]: ${head || "<empty>"}`);
       continue;
     }
 

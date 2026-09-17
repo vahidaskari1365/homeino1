@@ -43,6 +43,9 @@ export async function chatCompletion(base, model, apiKey, messages, maxTokens, t
   }
 }
 
+// فیوز ران — شمارش شکست پیاپی هر ارائه‌دهنده در این پروسه؛ روی موفقیت صفر می‌شود
+const attemptFailures = new Map();
+
 function parseAttempts() {
   const { LLM_KEYS_JSON, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OMNIROUTE_BASE_URL, OMNIROUTE_API_KEY } = process.env;
   const attempts = [];
@@ -77,6 +80,10 @@ function parseAttempts() {
   }
 
   // چرخش ساعتی نقطه شروع = توزیع بار بین کلیدها در طول روز
+  // + فیوز ران: ارائه‌دهنده‌ای که در این ران fail پیاپی خورده، ته صف می‌رود
+  if (attemptFailures.size) {
+    attempts.sort((a, b) => (attemptFailures.get(a.id) ?? 0) - (attemptFailures.get(b.id) ?? 0));
+  }
   if (attempts.length > 1) {
     const start = Math.floor(Date.now() / 3_600_000) % attempts.length;
     return [...attempts.slice(start), ...attempts.slice(0, start)];
@@ -94,8 +101,10 @@ export async function callLlm(messages, opts = {}) {
       if (r.content && r.content.trim()) {
         if (tryNo > 0 || a !== attempts[0]) console.log(`  llm via ${a.id}${tryNo ? " (retry)" : ""}`);
         callLlm.lastVia = a.id;
+        attemptFailures.set(a.id, 0);
         return r.content;
       }
+      attemptFailures.set(a.id, (attemptFailures.get(a.id) ?? 0) + 1);
       if (r.error && !r.retriable) {
         console.log(`  llm ${a.id}: ${r.error}`);
         break; // کلید بعدی
