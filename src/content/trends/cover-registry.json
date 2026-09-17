@@ -21,7 +21,11 @@
     "a184a7a5675b5aaa45397170d791c4f1": "2026-09-06-ofm9ph",
     "43ea6a65a09923a55f75bbe90f787b9d": "color-of-year-2026-brands",
     "2f37089550ecdcb3d58e6458bae34de6": "wood-kitchen-2026",
-    "cecf87dd870bfa26d4576091e6c60788": "chrome-dark-wood-2026"
+    "cecf87dd870bfa26d4576091e6c60788": "chrome-dark-wood-2026",
+    "a0f259d816899b49c693bc2a2973d09d": "2026-09-17-xl0e6r",
+    "fa2fdf8f1a7e95c40834bfc0c520adc5": "2026-09-17-aljc4k",
+    "95301e14406e04ce7c4faf00d09f66c0": "2026-09-17-p380a8",
+    "1e1895d823ce147950b85a957318a5e4": "2026-09-17-7xh1u3"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -45,7 +49,11 @@
     "/images/trends/src/2026-09-06-ofm9ph.jpg": "2026-09-06-ofm9ph",
     "/images/trends/src/color-of-year-2026-brands.jpg": "color-of-year-2026-brands",
     "/images/trends/src/wood-kitchen-2026.jpg": "wood-kitchen-2026",
-    "/images/trends/src/chrome-dark-wood-2026.jpg": "chrome-dark-wood-2026"
+    "/images/trends/src/chrome-dark-wood-2026.jpg": "chrome-dark-wood-2026",
+    "/images/trends/src/2026-09-17-xl0e6r.jpg": "2026-09-17-xl0e6r",
+    "/images/trends/src/2026-09-17-aljc4k.jpg": "2026-09-17-aljc4k",
+    "/images/trends/src/2026-09-17-p380a8.jpg": "2026-09-17-p380a8",
+    "/images/trends/src/2026-09-17-7xh1u3.jpg": "2026-09-17-7xh1u3"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -69,6 +77,10 @@
     "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=82569&nologo=true&model=flux": "2026-09-06-ofm9ph",
     "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=15283&nologo=true&model=flux": "color-of-year-2026-brands",
     "https://image.pollinations.ai/prompt/Modern%20wooden%20kitchen%20cabinets%20replacing%20white%20cabinetry%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=46955&nologo=true&model=flux": "wood-kitchen-2026",
-    "https://image.pollinations.ai/prompt/Dark%20wood%20chrome%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=61630&nologo=true&model=flux": "chrome-dark-wood-2026"
+    "https://image.pollinations.ai/prompt/Dark%20wood%20chrome%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=61630&nologo=true&model=flux": "chrome-dark-wood-2026",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=65171&nologo=true&model=flux": "2026-09-17-xl0e6r",
+    "https://design-milk.com/images/2026/09/RISING-TALENT_SIMPHIWE-MLAMBO_HALL5A_0919_MO_Sept2026_%C2%A9Anne-Emmanuelle-Thion.jpg": "2026-09-17-aljc4k",
+    "https://image.pollinations.ai/prompt/close-up%20of%20natural%20materials%20and%20textures%20in%20a%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=79936&nologo=true&model=flux": "2026-09-17-p380a8",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=72822&nologo=true&model=flux": "2026-09-17-7xh1u3"
   }
 }
