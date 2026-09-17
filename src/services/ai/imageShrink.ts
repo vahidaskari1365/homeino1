@@ -12,10 +12,26 @@
 // فقط فشرده‌سازی برای ارسال). sharp از قبل وابسته پروژه است.
 // ============================================================
 import "server-only";
-import sharp from "sharp";
 
 /** آستانه‌ی عبور بدون تغییر: زیر ~۹۰KB باینری عکس را دست نمی‌زنیم. */
 const PASS_THROUGH_B64 = 120_000;
+
+type SharpModule = typeof import("sharp")["default"];
+
+/**
+ * sharp را دینامیک و fault-tolerant لود می‌کنیم: اگر در محیط اجرا
+ * (مثلاً لامبدای ورسل) در دسترس نبود، عکس «بدون تغییر» رد می‌شود —
+ * دقیقاً رفتار قدیمی — و زنجیره هرگز به‌خاطر این بهینه‌سازی نمی‌شکند.
+ */
+async function loadSharp(): Promise<SharpModule | null> {
+  try {
+    const mod = await import("sharp");
+    return (mod.default ?? mod) as SharpModule;
+  } catch (err) {
+    console.error("[vision-shrink] sharp unavailable:", err instanceof Error ? err.message : err);
+    return null;
+  }
+}
 
 export async function shrinkForVision(
   dataUrl: string,
@@ -26,6 +42,8 @@ export async function shrinkForVision(
   if (!m) return dataUrl; // data URL نیست (remote/بد فرم) — همان بده
   const [, mime, b64] = m;
   if (b64.length < PASS_THROUGH_B64) return dataUrl;
+  const sharp = await loadSharp();
+  if (!sharp) return dataUrl;
   try {
     const buf = Buffer.from(b64, "base64");
     const out = await sharp(buf)

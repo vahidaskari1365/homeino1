@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
 
+  // Task 47 — native module sharp برای کوچک‌سازی عکس قبل از vision؛
+  // بدون external شدن، لامبدای ورسل باندلِ خراب می‌سازد و load می‌شکند.
+  serverExternalPackages: ["sharp"],
+
   images: {
     // Remote sources the app is allowed to optimize.
     remotePatterns: [
