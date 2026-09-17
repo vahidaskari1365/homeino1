@@ -16,7 +16,9 @@
  *   3) زنجیره رایگانِ بدون‌کلید OpenCode Zen (glm/kimi/qwen/deepseek-tier مدل‌های -free)
  * در سندباکس z-ai-web-dev-sdk هم امتحان می‌شود. اگر همه شکست خوردند: خروجی بدون تغییر، exit 0
  * و لاگ اجرا صادقانه علت را می‌نویسد.
- * کاور: اول og:image خودِ منبع؛ اگر نبود عکس واقعی وبِ هم‌موضوع (z-ai)؛ آخرِ کار استخر کاور با چرخشِ بدون‌تکرار.
+ * کاور (Task 43): og:image منبع → وب هم‌موضوع (z-ai) → Openverse (رایگان/Actions) →
+ * تولید رایگان Pollinations (دانلود محلی) → استخر جنریک فقط پناه آخر با پرچم pool.
+ * همه کاورها از رجیستری md5 می‌گذرند — هیچ عکسی دوبار روی سایت نمی‌نشیند.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -26,9 +28,16 @@ import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 import { callLlm } from "./lib/llm-chain.mjs";
 import { WRITING_CONTRACT, slopVerdict, buildSlopRetryHint } from "./lib/style-contract.mjs";
 import { CATEGORY_FEEDS, itemCategory } from "./lib/homeino-categories.mjs";
+import {
+  loadRegistry, saveRegistry, buildBytesIndex, registerCover,
+  downloadCoverImage, openverseImages, generatedCover, topicPromptEn, looksLikeNonPhoto,
+} from "./lib/cover-pipeline.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, "..");
+// رجیستری ضدتکرار کاورها (Task 43) — بین اجراها پایدار است و در گیت ذخیره می‌شود
+const coverReg = loadRegistry();
+let liveBytesIndex = null; // ایندکس بایتی کاورهای زنده — اول main پر می‌شود
 const DATA_FILE = path.join(REPO, "src", "content", "trends", "trends.json");
 // مقاله کامل روزانه مجله — مجله را زنده نگه می‌دارد (بریف فقط مال صفحه ترندهاست)
 const MAG_FILE = path.join(REPO, "src", "content", "magazine", "articles.json");
@@ -48,6 +57,17 @@ const FEEDS = [
   "https://www.design-milk.com/feed",
   "https://www.wallpaper.com/feeds.xml",
   "https://www.surfacemag.com/feed",
+  // منابع بیشتر (Task 43) — معتبرترین‌های باقی‌مانده + گوگل‌نیوز موضوعی (همیشه زنده)
+  "https://www.dezeen.com/feed/",
+  "https://www.designboom.com/feed/",
+  "https://www.archdaily.com/rss",
+  "https://news.google.com/rss/search?q=veranda+OR+%22elle+decor%22+OR+%22house+beautiful%22+interior+when:2d&hl=en-US&gl=US&ceid=US:en",
+  "https://news.google.com/rss/search?q=rug+OR+carpet+OR+lighting+OR+lamp+design+when:2d&hl=en-US&gl=US&ceid=US:en",
+  "https://news.google.com/rss/search?q=wallpaper+OR+curtain+OR+%22window+treatment%22+when:2d&hl=en-US&gl=US&ceid=US:en",
+  "https://news.google.com/rss/search?q=kitchen+OR+bathroom+renovation+trend+when:2d&hl=en-US&gl=US&ceid=US:en",
+  "https://news.google.com/rss/search?q=furniture+OR+sofa+OR+chair+design+trend+when:2d&hl=en-US&gl=US&ceid=US:en",
+  // کشف رایگان گوگل: ترندهای جست‌وجوی روز — نویز خودش با امتیاز کلیدواژه حذف می‌شود
+  "https://trends.google.com/trending/rss?geo=US",
   "https://news.google.com/rss/search?q=interior+design+trends+when:2d&hl=en-US&gl=US&ceid=US:en",
   "https://news.google.com/rss/search?q=home+decor+color+OR+kitchen+OR+furniture+when:2d&hl=en-US&gl=US&ceid=US:en",
   // فیدهای صنفی دسته‌های محصول (فرش، روشنایی، پرده، تابلو، گلدان، کف‌پوش، کمد، دیوارپوش…)
@@ -72,6 +92,14 @@ const KEYWORDS = [
   ["color of the year", 3], ["palett", 2], ["accent wall", 2],
   ["statement piece", 2], ["curved furniture", 2], ["vintage", 1], ["antique", 1],
   ["japandi", 2], ["quiet luxury", 2], [" maximal", 2], ["biophilic", 2],
+  // گسترش منابع/پوشش (Task 43) — دسته‌ها و وسایل پرتکرار جست‌وجوی کاربر ایرانی
+  ["backsplash", 2], ["vanity", 2], ["tile", 2], ["terrazzo", 2], ["marble", 2],
+  ["cushion", 2], ["pillow", 2], ["throw", 1], ["textile", 2], ["linen", 2],
+  ["coffee table", 2], ["side table", 2], ["dining", 2], ["console", 2],
+  ["shelf", 2], ["shelving", 2], ["bookcase", 2], ["cabinet", 2], ["sideboard", 2],
+  ["entryway", 2], ["hallway", 2], ["mudroom", 2], ["laundry", 1],
+  ["kids room", 2], ["nursery", 2], ["arched", 1], ["sage", 1], ["skirting", 1],
+  ["statement lighting", 3], ["sculptural", 1], ["handmade", 1], ["artisan", 2],
 ];
 
 // دسته‌های محتوایی — ۱۰ دسته محصول سایت + موضوع‌های عمومی دیزاین
@@ -245,6 +273,41 @@ async function topicCover(query, slug, usedUrls) {
       return cover;
     }
   }
+  return null;
+}
+
+/**
+ * زنجیره کامل کاور (Task 43) — با رجیستری ضدتکرار و ذخیره محلی (هات‌لین ممنوع):
+ *   ① og:image خود منبع ② جستجوی وب z-ai (سندباکس) ③ Openverse (رایگان — داخل Actions هم زنده)
+ *   ④ تولید رایگان Pollinations (عکس یکتا با seed خود slug — دانلود محلی)
+ *   ⑤ null → استخر جنریک با پرچم coverSource:"pool" (ناظر سایت آلارم می‌دهد)
+ */
+async function smartCover(title, category, slug, { og, usedUrls }) {
+  // ① og خود منبع
+  if (og && !looksLikeNonPhoto(og)) {
+    const r = await downloadCoverImage(og, slug, coverReg, liveBytesIndex);
+    if (!r.error) return { ...r, via: "source" };
+  }
+  // پرامپت انگلیسی هم‌موضوع — برای جستجو و تولید یکی
+  const prompt = await topicPromptEn(title, category, callLlm);
+  const query = prompt.split(", ").slice(0, 6).join(" ");
+  // ② + ③ کاندیدهای جستجو — وب اول، بعد Openverse رایگان
+  const cands = [
+    ...zAiImageSearch(`${query} interior design`).map((c) => ({ ...c, via: "web" })),
+    ...(await openverseImages(query)).map((c) => ({ ...c, via: "openverse" })),
+  ];
+  for (const c of cands) {
+    if (!c?.url || usedUrls.has(c.url) || looksLikeNonPhoto(c.url)) continue;
+    if ((c.w || 0) < 600 || (c.h || 0) < 360) continue;
+    const r = await downloadCoverImage(c.url, slug, coverReg, liveBytesIndex);
+    if (!r.error) {
+      usedUrls.add(c.url);
+      return { ...r, via: c.via };
+    }
+  }
+  // ④ تولید رایگان هم‌موضوع — یکتا و همیشه در دسترس
+  const gen = await generatedCover(prompt, slug, coverReg, liveBytesIndex);
+  if (gen) return { ...gen, via: "generated" };
   return null;
 }
 
@@ -482,6 +545,7 @@ async function main() {
   // چرخش کاور fallback — دو بریفِ یک‌روزه کاور تکراری نگیرند
   const usedCovers = new Set();
   const usedWebImgs = new Set();
+  liveBytesIndex = buildBytesIndex(existing); // ایندکس بایتی کاورهای زنده — ضدتکرار بین بریف‌ها (Task 43)
   const pickFallbackCover = (category) => {
     const values = [...new Set(Object.values(COVER_BY_CATEGORY))];
     const base = COVER_BY_CATEGORY[category] ?? DEFAULT_COVER;
@@ -546,11 +610,20 @@ async function main() {
 
     const category = CATEGORIES_FA.includes(parsed.category) ? parsed.category : "سبک زندگی";
     const slug = slugify(/[a-z]/i.test(parsed.title) ? parsed.title : title, today);
-    // کاور: اول خودِ منبع (og:image)، بعد عکس وبِ هم‌موضوع، آخر استخر بدون تکرار
-    const og = extractOgImage(pageHtml, realUrl);
-    let cover = og ? await downloadSourceImage(og, path.join(SRC_IMG_DIR, slug)) : null;
-    if (cover) console.log(`  cover ✓ از خود منبع (${og.slice(0, 90)}…)`);
-    if (!cover) cover = (await topicCover(`${item.title} interior design`, slug, usedWebImgs)) ?? pickFallbackCover(category);
+    // کاور (Task 43): og منبع → وب هم‌موضوع (z-ai) → Openverse → تولید رایگان → استخر (پناه آخر)
+    let cover = null;
+    let coverSource = "pool";
+    const smart = await smartCover(item.title, category, slug, { og: extractOgImage(pageHtml, realUrl), usedUrls: usedWebImgs });
+    if (smart) {
+      cover = smart.publicPath;
+      coverSource = smart.via;
+      registerCover({ md5: smart.md5, publicPath: smart.publicPath, url: smart.url, slug }, coverReg);
+      console.log(`  cover ✓ ${smart.via === "source" ? "از خود منبع" : smart.via === "web" ? "وب هم‌موضوع" : smart.via === "openverse" ? "Openverse" : "تولید رایگان"} → ${cover}`);
+    }
+    if (!cover) {
+      cover = pickFallbackCover(category);
+      console.log(`  cover ⚠ استخر جنریک (پناه آخر) — ناظر سایت آلارم می‌دهد: ${cover}`);
+    }
     created.push({
       slug,
       date: today,
@@ -560,6 +633,7 @@ async function main() {
       takeaway: String(parsed.takeaway || "").trim() || "با تغییرهای کوچک شروع کنید؛ اثرش بزرگ‌تر از هزینه‌اش است.",
       category,
       cover,
+      coverSource,
       source: { name: item.publisher, url: item.link },
       readTime: 2,
       tags: Array.isArray(parsed.tags) ? parsed.tags.map((t) => String(t).slice(0, 24)).slice(0, 4) : [],
@@ -603,6 +677,7 @@ async function main() {
     .filter((b) => Date.parse(`${b.date}T00:00:00Z`) >= Date.now() - RETENTION_DAYS * 24 * 3600 * 1000);
 
   fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs: merged }, null, 2)}\n`, "utf8");
+  saveRegistry(coverReg); // رجیستری ضدتکرار کاورها — همراه trends.json کامیت می‌شود
   console.log(`[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
 
   // 5) مقاله کامل روزانه مجله — صفحه مجله هم مثل ترندها هر روز نفس تازه دارد

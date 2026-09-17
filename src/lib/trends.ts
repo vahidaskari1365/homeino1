@@ -42,6 +42,8 @@ export interface TrendBrief {
   category: string;
   /** کاور (از منبع، عکس هم‌موضوع یا استخر کاور اختصاصی هومینو) */
   cover: string;
+  /** راهِ تأمین کاور — source/web/openverse/generated/pool (Task 43؛ pool = آلارم ناظر سایت) */
+  coverSource?: "source" | "web" | "openverse" | "generated" | "pool";
   /** منبع اصلی روایت */
   source: TrendSource;
   /** منابع مکمل (اختیاری) */

@@ -1,0 +1,57 @@
+name: site-watchdog
+
+# ناظر سایت هومینو (Task 43) — ایجنت سرپرستِ کل سایت و بقیه ایجنت‌ها.
+# دو بار در روز: صفحات و APIهای پروداکشن، پروب زنده AI، سلامت محتوا
+# (تکراری‌نبودن کاورها، تازگی بریف/پین/مقاله، استخر عکس)، وضعیت آخرین
+# اجرای هر ایجنت و تازگی دیپلوی. اگر مشکلی باشد ایسوی هشدار می‌سازد
+# و به‌محض رفع، خودش می‌بندد. گزارش در صفحه /agents منتشر می‌شود.
+# مستقل از توکن شخصی: فقط GITHUB_TOKEN داخلی (+ VERCEL_TOKEN اختیاری).
+
+on:
+  schedule:
+    - cron: "40 5 * * *"   # ۰۹:۱۰ تهران — بعد از نوبت صبح ایجنت‌ها
+    - cron: "40 16 * * *"  # ۲۰:۱۰ تهران — بعد از نوبت عصر
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: site-watchdog
+  cancel-in-progress: true
+
+jobs:
+  overseer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Overseer — full site & agents audit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PAT_EXPIRES_AT: ${{ vars.PAT_EXPIRES_AT }}
+        run: node scripts/site-watchdog.mjs
+
+      - name: Commit and push report if changed
+        if: always()
+        run: |
+          git config user.name "homeino-site-watchdog"
+          git config user.email "watchdog@homeino.ir"
+          if [[ -n "$(git status --porcelain src/data/agent-runs)" ]]; then
+            git add src/data/agent-runs
+            git commit -m "watchdog: site audit report (auto)"
+            for i in 1 2 3; do
+              if git pull --rebase origin main; then git push && break; fi
+              git rebase --abort 2>/dev/null || true
+              echo "push retry $i failed — re-pulling"; sleep 15
+            done
+          else
+            echo "No report change."
+          fi

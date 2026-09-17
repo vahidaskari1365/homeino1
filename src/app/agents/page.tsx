@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import inspirationRuns from "@/data/agent-runs/inspiration-curator.json";
 import magazineRuns from "@/data/agent-runs/magazine-editor.json";
+import siteWatchdogRuns from "@/data/agent-runs/site-watchdog.json";
 import { relativeFa } from "@/components/AgentRunStatus";
 
 export const metadata: Metadata = {
@@ -44,6 +45,13 @@ const AGENTS: { key: string; label: string; blurb: string; schedule: string }[] 
       "روی چرخه سبک × فضا حرکت می‌کند، عکس‌های چیدمان واقعی پیدا می‌کند، اعتبار منبع را چک می‌کند و پین‌های فارسی اورجینال به گالری الهام اضافه می‌کند.",
     schedule: "روزی ۳ بار — ۷:۰۰، ۱۲:۰۰ و ۱۷:۰۰ به وقت تهران",
   },
+  {
+    key: "site-watchdog",
+    label: "ناظر سایت — سرپرست کل ایجنت‌ها",
+    blurb:
+      "کل سایت را مثل یک کاربر واقعی می‌سنجد: صفحات و APIها، پروب زندهٔ هوش مصنوعی، سلامت محتوا (تکراری‌نبودن و مرتبط‌بودن کاورها، تازگی بریف/پین/مقاله)، وضعیت آخرین اجرای همهٔ ایجنت‌ها و تازگی دیپلوی. اگر مشکلی باشد خودش ایسو می‌سازد و بعد از رفع، تأیید نهایی را صادر می‌کند.",
+    schedule: "روزی ۲ بار — ۹:۱۰ و ۲۰:۱۰ به وقت تهران",
+  },
 ];
 
 function faDateTime(iso: string): string {
@@ -64,7 +72,7 @@ function StatusDot({ ok }: { ok: boolean }) {
 
 export default function AgentsStatusPage() {
   const byAgent = new Map<string, AgentRunRow[]>();
-  for (const file of [inspirationRuns, magazineRuns] as RunFile[]) {
+  for (const file of [inspirationRuns, magazineRuns, siteWatchdogRuns] as RunFile[]) {
     for (const run of file.runs ?? []) {
       const list = byAgent.get(run.agentKey) ?? [];
       list.push(run);
