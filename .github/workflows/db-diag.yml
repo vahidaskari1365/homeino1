@@ -26,7 +26,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
         run: |
-          cat > /tmp/diag.mjs << 'EOF'
+          cat > diag.mjs << 'EOF'
           import pg from "pg";
           const base = process.env.DATABASE_URL;
           const variants = [
@@ -49,4 +49,4 @@ jobs:
             }
           }
           EOF
-          node /tmp/diag.mjs
+          node diag.mjs
