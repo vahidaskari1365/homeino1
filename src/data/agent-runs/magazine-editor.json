@@ -1,7 +1,21 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-17T07:52:35.759Z",
+  "updatedAt": "2026-09-17T08:10:54.623Z",
   "runs": [
+    {
+      "id": "run-1789632654623-b6q44",
+      "at": "2026-09-17T08:10:54.623Z",
+      "agentKey": "magazine-editor",
+      "ok": false,
+      "durationMs": 792347,
+      "summary": "هیچ مسیر LLM در دسترس نبود (زنجیره رایگان شکست خورد) — در اجرای بعدی دوباره تلاش می‌شود",
+      "detail": {
+        "added": 0,
+        "total": 61,
+        "reason": "llm_unreachable",
+        "via": null
+      }
+    },
     {
       "id": "run-1789631555759-k74pn",
       "at": "2026-09-17T07:52:35.759Z",
