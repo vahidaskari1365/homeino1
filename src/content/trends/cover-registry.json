@@ -25,7 +25,9 @@
     "a0f259d816899b49c693bc2a2973d09d": "2026-09-17-xl0e6r",
     "fa2fdf8f1a7e95c40834bfc0c520adc5": "2026-09-17-aljc4k",
     "95301e14406e04ce7c4faf00d09f66c0": "2026-09-17-p380a8",
-    "1e1895d823ce147950b85a957318a5e4": "2026-09-17-7xh1u3"
+    "1e1895d823ce147950b85a957318a5e4": "2026-09-17-7xh1u3",
+    "1ec272d3d18e6bdf7ece1120d64e7e30": "2026-09-17-fa16if",
+    "bf98c43222b85c249d8dd0c85f1c0a3d": "2026-09-17-55xuok"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -53,7 +55,9 @@
     "/images/trends/src/2026-09-17-xl0e6r.jpg": "2026-09-17-xl0e6r",
     "/images/trends/src/2026-09-17-aljc4k.jpg": "2026-09-17-aljc4k",
     "/images/trends/src/2026-09-17-p380a8.jpg": "2026-09-17-p380a8",
-    "/images/trends/src/2026-09-17-7xh1u3.jpg": "2026-09-17-7xh1u3"
+    "/images/trends/src/2026-09-17-7xh1u3.jpg": "2026-09-17-7xh1u3",
+    "/images/trends/src/2026-09-17-fa16if.jpg": "2026-09-17-fa16if",
+    "/images/trends/src/2026-09-17-55xuok.jpg": "2026-09-17-55xuok"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -81,6 +85,8 @@
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=65171&nologo=true&model=flux": "2026-09-17-xl0e6r",
     "https://design-milk.com/images/2026/09/RISING-TALENT_SIMPHIWE-MLAMBO_HALL5A_0919_MO_Sept2026_%C2%A9Anne-Emmanuelle-Thion.jpg": "2026-09-17-aljc4k",
     "https://image.pollinations.ai/prompt/close-up%20of%20natural%20materials%20and%20textures%20in%20a%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=79936&nologo=true&model=flux": "2026-09-17-p380a8",
-    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=72822&nologo=true&model=flux": "2026-09-17-7xh1u3"
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=72822&nologo=true&model=flux": "2026-09-17-7xh1u3",
+    "https://cdn.mos.cms.futurecdn.net/C7boAmWTPXCCDoBoc5JoKZ-1600-80.jpg": "2026-09-17-fa16if",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=80487&nologo=true&model=flux": "2026-09-17-55xuok"
   }
 }

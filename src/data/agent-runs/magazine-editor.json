@@ -1,7 +1,29 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-17T08:26:04.932Z",
+  "updatedAt": "2026-09-17T09:04:56.007Z",
   "runs": [
+    {
+      "id": "run-1789635896007-jjiti",
+      "at": "2026-09-17T09:04:56.007Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 369202,
+      "summary": "2 بریف ترند جدید (رنگ، آشپزخانه) — از طریق zai-2",
+      "detail": {
+        "added": 2,
+        "articlesAdded": 0,
+        "total": 67,
+        "via": "zai-2",
+        "titles": [
+          "اتاق نشیمن کلاسیک با پالت بژ و کرم",
+          "رنگ سال کابینت ۲۰۲۷: طلایی مات و خاکستری سرد"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ]
+      }
+    },
     {
       "id": "run-1789633564932-d44th",
       "at": "2026-09-17T08:26:04.932Z",
