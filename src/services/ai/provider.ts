@@ -23,7 +23,7 @@ import { isOpenAiCompatConfigured } from "./llm/openaiCompatLlm";
 import { isZEngineConfigured } from "./engineConfig";
 import { resolveGeminiConfig } from "./settings";
 
-export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat" | "pollinations";
+export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat" | "pollinations" | "cloudflare";
 export interface ResolvedProvider { provider: AiProvider; name: ProviderName }
 
 export type ImageAction = "generate" | "edit" | "inpaint";
@@ -36,16 +36,25 @@ export type ImageAction = "generate" | "edit" | "inpaint";
  * نظریِ «خطا → pollinations → mock» هرگز فعال نمی‌شد و تولید عکس همیشه
  * عکس استوک pexels می‌داد. pollinations باید **قبل از** mock امتحان شود.
  *
- *   generate: موتور واقعی → pollinations (کلید-کمتر) → mock صادقانه
+ *   generate: موتور واقعی → pollinations (کلید-کمتر) → [cloudflare ورکر] → mock صادقانه
  *   edit/inpaint: موتور واقعی → mock صادقانه (pollinations ویرایش ندارد)
+ *
+ * Task 42 — پارامتر اختیاری freeChain: زنجیره‌ی رایگانِ تولید را بیرون
+ * تزریق می‌کند (پیش‌فرض همان [pollinations] تا تست‌های طلایی ثابت بمانند).
+ * روتر وقتی ورکر free-image-generation-api تنظیم باشد cloudflare را
+ * اضافه می‌کند؛ اینجا هیچ env خوانده نمی‌شود تا تابع کاملاً تست‌پذیر بماند.
  */
-export function imageDispatchPlan(action: ImageAction, primary: ProviderName): ProviderName[] {
+export function imageDispatchPlan(
+  action: ImageAction,
+  primary: ProviderName,
+  freeChain: ProviderName[] = ["pollinations"],
+): ProviderName[] {
   // Task 40 — روی پروداکشن، فالبکِ mock برای edit/inpaint ممنوع است: وقتی
   // موتور واقعی fail می‌کند (مثلاً 429 کوتا)، باید خطای صادقانه بالا برود نه
   // «همان عکسِ ورودی» با برچسب preview. dev/test/AI_ALLOW_MOCK_EDIT مستثنا.
   const blockMockEdit = action !== "generate" && shouldBlockMockEdit();
   if (action === "generate") {
-    return primary === "mock" ? ["pollinations", "mock"] : [primary, "pollinations", "mock"];
+    return primary === "mock" ? [...freeChain, "mock"] : [primary, ...freeChain, "mock"];
   }
   if (primary === "mock") return blockMockEdit ? [] : ["mock"];
   return blockMockEdit ? [primary] : [primary, "mock"];
@@ -98,6 +107,26 @@ export async function resolveFreeGenerationFallback(): Promise<AiProvider | null
   try {
     const m = await import("./pollinationsProvider");
     return m.pollinationsProvider;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Task 42 — ورکر رایگان free-image-generation-api (کلادفلر SDXL):
+ * فقط وقتی CF_IMG_WORKER_URL + CF_IMG_WORKER_KEY ست باشد در زنجیره
+ * می‌آید. جدا از pollinations تا خرابی یکی، دیگری را نکُشد.
+ */
+export function isCfImageWorkerConfigured(): boolean {
+  const url = (process.env.CF_IMG_WORKER_URL || "").trim();
+  return Boolean(url && /^https:\/\//i.test(url) && process.env.CF_IMG_WORKER_KEY);
+}
+
+export async function resolveCfGenerationFallback(): Promise<AiProvider | null> {
+  if (!isCfImageWorkerConfigured()) return null;
+  try {
+    const m = await import("./cloudflareProvider");
+    return m.cloudflareProvider;
   } catch {
     return null;
   }

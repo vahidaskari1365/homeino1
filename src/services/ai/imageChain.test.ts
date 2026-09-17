@@ -56,6 +56,20 @@ describe("زنجیره تصویر بدون کلید (باگ: تولید عکس �
     expect(imageDispatchPlan("edit", "gemini")).toEqual(["gemini", "mock"]);
     expect(imageDispatchPlan("inpaint", "zai")).toEqual(["zai", "mock"]);
   });
+
+  it("Task 42 — freeChain تزریقی: وقتی ورکر کلادفلر تنظیم است بعد از pollinations می‌آید", () => {
+    expect(imageDispatchPlan("generate", "mock", ["pollinations", "cloudflare"])).toEqual([
+      "pollinations", "cloudflare", "mock",
+    ]);
+    expect(imageDispatchPlan("generate", "gemini", ["pollinations", "cloudflare"])).toEqual([
+      "gemini", "pollinations", "cloudflare", "mock",
+    ]);
+  });
+
+  it("Task 42 — پیش‌فرض freeChain=[pollinations] است تا رفتار قبلی ثابت بماند", () => {
+    expect(imageDispatchPlan("generate", "mock")).toEqual(["pollinations", "mock"]);
+    expect(imageDispatchPlan("edit", "mock", ["pollinations", "cloudflare"])).toEqual(["mock"]);
+  });
 });
 
 describe("مسیر کاهش صادقانه بدون هیچ env کلیدی (الگوی تست ۴ چک‌لیست)", () => {

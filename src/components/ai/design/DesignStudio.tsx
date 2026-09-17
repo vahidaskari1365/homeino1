@@ -18,9 +18,10 @@ import type { DesignStudio as Studio } from "./useDesignStudio";
 import { StudioSettings } from "./StudioSettings";
 import { ResultCanvas } from "./ResultCanvas";
 import { InspirationTab } from "./InspirationTab";
+import { RealInspirationStrip } from "./RealInspirationStrip";
 
 export function DesignStudio({ studio }: { studio: Studio }) {
-  const { tab, setTab, selectStyle, setBudget, toast } = studio;
+  const { tab, setTab, selectStyle, setBudget, toast, styleLabel } = studio;
   return (
     <div className="min-h-screen bg-ivory">
       <Container className="py-6 sm:py-8">
@@ -72,6 +73,12 @@ export function DesignStudio({ studio }: { studio: Studio }) {
 
             <div className="lg:order-1 lg:col-span-5">
               <StudioSettings studio={studio} />
+            </div>
+
+            {/* Task 42 — نوار الهام واقعی از وب (serper): فقط با کلیک کاربر
+                fetch می‌شود؛ تزئینی است و هیچ‌وقت جلوی طراحی را نمی‌گیرد. */}
+            <div className="lg:col-span-12">
+              <RealInspirationStrip styleLabel={styleLabel} />
             </div>
           </div>
         )}

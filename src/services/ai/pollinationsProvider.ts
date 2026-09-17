@@ -14,6 +14,7 @@ import type { AiProvider, GenerateDesignInput, GeneratedDesign } from "./types";
 import { uid } from "../../lib/utils";
 import { pollinationsImage } from "./pollinations";
 import { toEngineEnglish } from "./engineTranslate";
+import { buildGenerationPrompt } from "./domainGuard";
 
 const ERR = "IMAGE_UNAVAILABLE";
 
@@ -30,14 +31,9 @@ export const pollinationsProvider: AiProvider = {
       toEngineEnglish(input.color ?? ""),
       toEngineEnglish(input.mood ?? ""),
     ]);
-    const full = [
-      prompt,
-      style && `Decor style: ${style}`,
-      room && `Room type: ${room}`,
-      color && `Color palette: ${color}`,
-      mood && `Mood: ${mood}`,
-      "Professional interior design photograph, editorial quality, natural soft lighting, realistic materials, high detail, warm and inviting atmosphere.",
-    ].filter(Boolean).join(". ");
+    // Task 42 — پرامپت نهایی از گارد دامنه + وفاداری می‌گذرد: خروجی همیشه
+    // دکوراسیون داخلی و واقع‌گرا می‌ماند و فقط عناصر توضیح‌داده‌شده ساخته می‌شوند.
+    const full = buildGenerationPrompt({ prompt, style, room, color, mood });
     const out = await pollinationsImage(full, { width: 1152, height: 864 });
     return {
       id: uid(),

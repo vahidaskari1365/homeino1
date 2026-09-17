@@ -110,8 +110,12 @@ export const aiService = {
   /** Full design pipeline: understand → instruct → generate → validate. */
   pipeline: (input: PipelineInput) => callAiServer<PipelineResult>("pipeline", input),
   /** Vision: where does each counterpart ACTUALLY sit in the room photo?
-   *  Returns [] when the key is absent / detection fails — planner falls back. */
+   * Returns [] when the key is absent / detection fails — planner falls back. */
   detectObjects: (input: { referenceImage: string; categories: string[] }) =>
     callAiServer<{ objects: { type: string; region: { x: number; y: number; w: number; h: number } }[] }>("detect-objects", input),
+  /** Task 42 — عکس‌های واقعی گوگل (serper.dev) هم‌راستای دکوراسیون:
+   *  سرور کوئری را ترجمه + گارد دامنه می‌کند و کش ۶ساعته دارد. */
+  searchImages: (input: { query: string; num?: number }) =>
+    callAiServer<{ images: { imageUrl: string; title: string; source: string; link?: string; width?: number; height?: number }[]; configured: boolean }>("search-images", input),
 };
 

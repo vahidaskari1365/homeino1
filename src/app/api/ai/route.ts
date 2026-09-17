@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider, resolveFreeGenerationFallback, imageDispatchPlan, shouldBlockMockEdit, type ImageAction } from "@/services/ai/provider";
+import { resolveProvider, resolveFreeGenerationFallback, resolveCfGenerationFallback, imageDispatchPlan, shouldBlockMockEdit, isCfImageWorkerConfigured, type ImageAction } from "@/services/ai/provider";
+import type { ProviderName } from "@/services/ai/provider";
 import { mockAiProvider } from "@/services/ai/mockAiService";
 import { sanitizeUserPrompt, ALL_ELEMENTS } from "@/services/ai/roomState";
 import { understandIntent } from "@/services/ai/llm";
@@ -30,7 +31,7 @@ import { requireUser } from "@/lib/api/auth";
 // enough to fall back gracefully instead of a cold 504 (Hobby allows 60s).
 export const maxDuration = 60;
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice", "detect-objects"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice", "detect-objects", "search-images"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -182,7 +183,7 @@ export async function POST(req: NextRequest) {
         p[key] = sanitizeUserPrompt(p[key] as string);
       }
     }
-    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU", "sessionId", "agentKey", "scenario", "slug", "topic"]) {
+    for (const key of ["style", "room", "color", "mood", "sku", "productCode", "productId", "previousProductId", "previousSKU", "sessionId", "agentKey", "scenario", "slug", "topic", "query"]) {
       if (key in p && typeof p[key] === "string") {
         p[key] = (p[key] as string).replace(/<[^>]+>/g, "").slice(0, 200);
       }
@@ -298,6 +299,32 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
       );
     }
 
+    if (action === "search-images") {
+      // Task 42 — عکس‌های واقعی گوگل (serper.dev) برای الهام در استودیو.
+      // خواندنیِ ارزان و کش‌شده — rate-limit سراسری کفایت می‌کند و کلید/کوتا
+      // هرگز به کلاینت لو نمی‌رود. هر شکست → پاسخ degraded خالی (UI نمی‌سوزد).
+      const raw = typeof p.query === "string" ? p.query : "";
+      if (!raw.trim()) {
+        finish("error", { errorCode: "INVALID_REQUEST" });
+        return json({ error: "جست‌وجو خالی است", code: "INVALID_REQUEST" }, 400, requestId);
+      }
+      const { isSerperConfigured, searchRealImages, buildImageQuery } = await import("@/services/ai/serperProvider");
+      if (!isSerperConfigured()) {
+        finish("degraded", { provider: "serper", errorCode: "SERPER_NOT_CONFIGURED" });
+        return json({ images: [], configured: false }, 200, requestId);
+      }
+      try {
+        const q = await buildImageQuery(raw);
+        const num = typeof p.num === "number" ? Math.floor(p.num) : 8;
+        const images = await searchRealImages(q, Number.isFinite(num) ? num : 8);
+        finish("ok", { provider: "serper" });
+        return json({ images, configured: true, query: q }, 200, requestId);
+      } catch (err) {
+        finish("degraded", { provider: "serper", errorCode: "SERPER_UNAVAILABLE" });
+        return json({ images: [], configured: true, _degraded: true }, 200, requestId);
+      }
+    }
+
     if (action === "analyze") {
       // Task 39 — تحلیلِ واقعیِ عکس آپلودی: Gemini vision → z-ai رایگان → نمونه.
       const { analyzeRoomWithFallback } = await import("@/services/ai/roomAnalysis");
@@ -374,7 +401,11 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
     // «تولید عکس» همیشه عکس استوک pexels می‌داد (پروداکشن Vercel).
     const { provider, name } = await resolveProvider();
     const imageAction = IMAGE_ACTIONS.has(action) ? (action as ImageAction) : null;
-    const plan = imageAction ? imageDispatchPlan(imageAction, name) : [name];
+    // Task 42 — زنجیره رایگانِ تولید: pollinations + (وقتی تنظیم باشد) ورکر
+    // کلادفلر free-image-generation-api. اگر ورکر ست نباشد plan مثل قبل می‌ماند.
+    const freeChain: ProviderName[] = ["pollinations"];
+    if (isCfImageWorkerConfigured()) freeChain.push("cloudflare");
+    const plan = imageAction ? imageDispatchPlan(imageAction, name, freeChain) : [name];
 
     // Task 40 — صداقت روی پروداکشن: با هیچ موتور واقعی، edit/inpaint نباید
     // همان عکسِ ورودی را با 200 «نتیجه» برگرداند (بازخورد مالک: «عکس همان
@@ -389,6 +420,7 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
       const stepProvider =
         step === name ? provider
           : step === "pollinations" ? await resolveFreeGenerationFallback()
+          : step === "cloudflare" ? await resolveCfGenerationFallback()
           : mockAiProvider;
       if (!stepProvider) continue;
       try {
