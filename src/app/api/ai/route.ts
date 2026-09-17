@@ -9,6 +9,7 @@ import type { GenerateDesignInput, ChatReplyInput } from "@/services/ai/types";
 import type { IntentRequest } from "@/services/ai/llm/types";
 import type { PipelineInput } from "@/services/ai/pipeline";
 import { classifyAiError, toPublicAiError, AI_ERROR_MESSAGE } from "@/services/ai/errors";
+import { attachImageUrl } from "@/services/storage/r2";
 import { createRequestId, logAiRequest } from "@/services/ai/telemetry";
 import { ApiError } from "@/lib/api/errors";
 import { getClientIp, rateLimit } from "@/lib/api/rateLimit";
@@ -427,9 +428,13 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
         const result = await dispatch(stepProvider, action, p as never);
         const degraded = step !== plan[0]; // fell back to a lesser engine
         finish(degraded ? "degraded" : "ok", { provider: step, errorCode: degraded && lastErr ? classifyAiError(lastErr).code : undefined });
+        // R2 persistence — real engines only (mock previews stay base64)
+        const stored = step === "mock"
+          ? (result as unknown as Record<string, unknown>)
+          : await attachImageUrl(result as unknown as Record<string, unknown>);
         return json(
           {
-            ...(result as unknown as Record<string, unknown>),
+            ...stored,
             _provider: step,
             ...(degraded
               ? { _degraded: true, // Task 40 — علت فالبک برای دیاگنوستیک (بدون هیچ رازی)
