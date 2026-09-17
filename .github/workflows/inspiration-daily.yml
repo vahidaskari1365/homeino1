@@ -36,20 +36,38 @@ jobs:
         with:
           node-version: 20
 
+      - name: OmniRoute gateway (free keyless LLM fallback)
+        run: |
+          npm i -g omniroute >/dev/null 2>&1 || echo "omniroute install failed — skip"
+          nohup omniroute >/tmp/omniroute.log 2>&1 &
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:20128/v1/models >/dev/null && { echo "omniroute is up"; break; }
+            sleep 3
+          done || true
+          curl -sf http://localhost:20128/v1/models >/dev/null || echo "omniroute not reachable — chain continues without it"
+        timeout-minutes: 5
+
+      - name: Top-up starved image pools (serper.dev)
+        env:
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        run: node scripts/serper-pool-topup.mjs --min 12 --max-add 40
+
       - name: Collect & publish inspiration pins
         env:
           LLM_KEYS_JSON: ${{ secrets.LLM_KEYS_JSON }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          OMNIROUTE_BASE_URL: http://localhost:20128/v1
         run: node scripts/inspiration-daily.mjs --pins=${{ github.event.inputs.pins || '6' }}
 
       - name: Commit and push if changed
         run: |
           git config user.name "homeino-inspiration-bot"
           git config user.email "bot@homeino.ir"
-          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json src/data/agent-runs)" ]]; then
-            git add src/data/inspirations.generated.json src/data/agent-runs
+          if [[ -n "$(git status --porcelain src/data/inspirations.generated.json scripts/inspiration-pool.json src/data/agent-runs)" ]]; then
+            git add src/data/inspirations.generated.json scripts/inspiration-pool.json src/data/agent-runs
             git commit -m "inspiration: daily agent pins (auto)"
             # ایجنت مجله ممکن است هم‌زمان کامیت زده باشد → ری‌بیس و تلاش مجدد
             for i in 1 2 3; do

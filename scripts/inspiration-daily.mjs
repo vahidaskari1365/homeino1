@@ -16,6 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
 import { callLlm } from "./lib/llm-chain.mjs";
+import { serperKey, serperTopicImages } from "./lib/serper.mjs";
 import { WRITING_CONTRACT, slopVerdict, buildSlopRetryHint } from "./lib/style-contract.mjs";
 import { PRODUCTS } from "./lib/homeino-categories.mjs";
 
@@ -138,6 +139,17 @@ function searchImage(query) {
   } catch { return []; }
 }
 
+// جستجوی زنده serper (گوگل‌ایمیج) — در Actions هم زنده است (کلید رایگان: SERPER_API_KEY)
+const STOCK_DOMAINS = /(dreamstime|shutterstock|gettyimages|istockphoto|123rf|alamy|depositphotos|stock\.adobe|freepik|bigstockphoto|colourbox|agefotostock|photos\.com|stockcake|vecteezy)\.?/i;
+async function serperLiveImage(query) {
+  if (!serperKey()) return null;
+  try {
+    const hits = await serperTopicImages(`${query} interior design`, { num: 10 });
+    return hits.find((p) => p.w >= 600 && !seenImgs.has(p.url) && !STOCK_DOMAINS.test(p.source || "")) || null;
+  } catch { return null;
+  }
+}
+
 // ---------- اجرا ----------
 const RUN_STARTED = Date.now();
 const gen = existsSync(GEN_FILE) ? JSON.parse(readFileSync(GEN_FILE, "utf8")) : [];
@@ -184,7 +196,8 @@ for (const [i, { style, space }] of combos.entries()) {
     const imgs = searchImage(`${style.en} ${space.en} layout`);
     pick = imgs.find((p) => !seenImgs.has(p.url) && p.w >= 600) || null;
   }
-  if (!pick) pick = poolImage(style.slug, space.slug); // اجرای ابری بدون z-ai
+  if (!pick) pick = await serperLiveImage(`${style.en} ${space.en} layout`); // ابر: serper (گوگل‌ایمیج)
+  if (!pick) pick = poolImage(style.slug, space.slug); // آخرین فال‌بک: استخر
   if (!pick) { console.log("✗ عکس تازه پیدا نشد"); continue; }
 
   const topic = `${space.en} in ${style.en} style — image description: ${pick.source}`;

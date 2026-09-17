@@ -16,9 +16,12 @@
  *   3) زنجیره رایگانِ بدون‌کلید OpenCode Zen (glm/kimi/qwen/deepseek-tier مدل‌های -free)
  * در سندباکس z-ai-web-dev-sdk هم امتحان می‌شود. اگر همه شکست خوردند: خروجی بدون تغییر، exit 0
  * و لاگ اجرا صادقانه علت را می‌نویسد.
- * کاور (Task 43): og:image منبع → وب هم‌موضوع (z-ai) → Openverse (رایگان/Actions) →
+ * کاور (Task 43): og:image منبع → serper.dev (گوگل‌ایمیج — داخل Actions هم زنده، با SERPER_API_KEY) →
+ * وب هم‌موضوع (z-ai/سندباکس) → Openverse (رایگان/Actions) →
  * تولید رایگان Pollinations (دانلود محلی) → استخر جنریک فقط پناه آخر با پرچم pool.
  * همه کاورها از رجیستری md5 می‌گذرند — هیچ عکسی دوبار روی سایت نمی‌نشیند.
+ *
+ * منبع خبری کمکی: گوگل‌نیوز از طریق serper.dev (هر ران ۲ کوئری چرخشی — سقف رایگان ۲,۵۰۰)
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -32,6 +35,7 @@ import {
   loadRegistry, saveRegistry, buildBytesIndex, registerCover,
   downloadCoverImage, openverseImages, generatedCover, topicPromptEn, looksLikeNonPhoto,
 } from "./lib/cover-pipeline.mjs";
+import { serperKey, serperNews, serperTopicImages } from "./lib/serper.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, "..");
@@ -136,6 +140,14 @@ const COVER_BY_CATEGORY = {
   "وسایل ترند": "/images/trends/trends-chrome-wood.png",
 };
 const DEFAULT_COVER = "/images/trends/trends-guide-2026.png";
+
+// منابع خبری serper — هر ران ۲ کوئری چرخشی (صرفه‌جویی در سقف رایگان ۲,۵۰۰ کوئری)
+const SERPER_NEWS_QUERIES = [
+  "interior design trends",
+  "home decor trends kitchen bathroom",
+  "furniture design trends color",
+  "architecture home renovation trends",
+];
 
 // ---------- عکسِ خودِ منبع (og:image) — عکس تکراری ممنوع ----------
 const SRC_IMG_DIR = path.join(REPO, "public", "images", "trends", "src");
@@ -278,9 +290,10 @@ async function topicCover(query, slug, usedUrls) {
 
 /**
  * زنجیره کامل کاور (Task 43) — با رجیستری ضدتکرار و ذخیره محلی (هات‌لین ممنوع):
- *   ① og:image خود منبع ② جستجوی وب z-ai (سندباکس) ③ Openverse (رایگان — داخل Actions هم زنده)
- *   ④ تولید رایگان Pollinations (عکس یکتا با seed خود slug — دانلود محلی)
- *   ⑤ null → استخر جنریک با پرچم coverSource:"pool" (ناظر سایت آلارم می‌دهد)
+ *   ① og:image خود منبع ② serper.dev (گوگل‌ایمیج — با SERPER_API_KEY در Actions هم زنده)
+ *   ③ جستجوی وب z-ai (سندباکس) ④ Openverse (رایگان — داخل Actions هم زنده)
+ *   ⑤ تولید رایگان Pollinations (عکس یکتا با seed خود slug — دانلود محلی)
+ *   ⑥ null → استخر جنریک با پرچم coverSource:"pool" (ناظر سایت آلارم می‌دهد)
  */
 async function smartCover(title, category, slug, { og, usedUrls }) {
   // ① og خود منبع
@@ -291,8 +304,9 @@ async function smartCover(title, category, slug, { og, usedUrls }) {
   // پرامپت انگلیسی هم‌موضوع — برای جستجو و تولید یکی
   const prompt = await topicPromptEn(title, category, callLlm);
   const query = prompt.split(", ").slice(0, 6).join(" ");
-  // ② + ③ کاندیدهای جستجو — وب اول، بعد Openverse رایگان
+  // ② + ③ کاندیدهای جستجو — serper (گوگل‌ایمیج، داخل Actions هم زنده) اول، بعد وبِ z-ai، بعد Openverse رایگان
   const cands = [
+    ...(await serperTopicImages(`${query} interior design`)).map((c) => ({ ...c, via: "serper" })),
     ...zAiImageSearch(`${query} interior design`).map((c) => ({ ...c, via: "web" })),
     ...(await openverseImages(query)).map((c) => ({ ...c, via: "openverse" })),
   ];
@@ -502,6 +516,33 @@ async function main() {
     }
   }
   console.log(`  candidates: ${candidates.length}`);
+
+  // 1-ب) منبع کمکی: گوگل‌نیوز از طریق serper.dev (فقط با کلید — هر ران ۲ کوئری چرخشی)
+  if (serperKey()) {
+    const dayIdx = Math.floor(Date.now() / 86_400_000);
+    const qs = [SERPER_NEWS_QUERIES[dayIdx % SERPER_NEWS_QUERIES.length],
+                SERPER_NEWS_QUERIES[(dayIdx + 1) % SERPER_NEWS_QUERIES.length]];
+    let serperNewsAdded = 0;
+    for (const q of [...new Set(qs)]) {
+      const news = await serperNews(q, { when: "1w", num: 10 });
+      if (!news) { console.log(`  serper news failed: ${q}`); continue; }
+      for (const n of news) {
+        const link = String(n?.link || "");
+        const title = String(n?.title || "").trim();
+        if (!link || !title || existingUrls.has(link)) continue;
+        candidates.push({
+          title, link,
+          pub: String(n?.date || ""),
+          desc: String(n?.snippet || "").slice(0, 600),
+          publisher: String(n?.source || "google-news"),
+          score: scoreItem({ title, desc: n?.snippet ?? "" }) + 1, // منبع مکمل تازه → بوست کم
+          date: now,
+        });
+        serperNewsAdded++;
+      }
+    }
+    console.log(`  candidates (serper news): +${serperNewsAdded}`);
+  }
 
   // 2) انتخاب متنوع‌بین‌دسته — هر بریف یک دسته؛ پوشش دسته‌های محصول
   //    (فرش/روشنایی/پرده/تابلو/گلدان/کمد/کف‌پوش/دیوارپوش…) در طول روز
