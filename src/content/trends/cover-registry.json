@@ -30,7 +30,9 @@
     "bf98c43222b85c249d8dd0c85f1c0a3d": "2026-09-17-55xuok",
     "41792a32b474976e76a1af30d028d843": "2026-09-17-1ff4ts",
     "fbbc6c36e483c47e221dfecd6069c49d": "2026-09-17-v9r1a2",
-    "ec9be9c1e61f17e9516161083e87901c": "2026-09-17-kx9ibg"
+    "ec9be9c1e61f17e9516161083e87901c": "2026-09-17-kx9ibg",
+    "f0bcff95d54a988d7cfb14351033014a": "2026-09-17-vb2ryy",
+    "49459b08df2a48c2c31f2053374a1079": "2026-09-17-9e10sk"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -63,7 +65,9 @@
     "/images/trends/src/2026-09-17-55xuok.jpg": "2026-09-17-55xuok",
     "/images/trends/src/2026-09-17-1ff4ts.jpg": "2026-09-17-1ff4ts",
     "/images/trends/src/2026-09-17-v9r1a2.jpg": "2026-09-17-v9r1a2",
-    "/images/trends/src/2026-09-17-kx9ibg.jpg": "2026-09-17-kx9ibg"
+    "/images/trends/src/2026-09-17-kx9ibg.jpg": "2026-09-17-kx9ibg",
+    "/images/trends/src/2026-09-17-vb2ryy.jpg": "2026-09-17-vb2ryy",
+    "/images/trends/src/2026-09-17-9e10sk.jpg": "2026-09-17-9e10sk"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -96,6 +100,8 @@
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=80487&nologo=true&model=flux": "2026-09-17-55xuok",
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=17872&nologo=true&model=flux": "2026-09-17-1ff4ts",
     "https://cdn.mos.cms.futurecdn.net/rKSNR9qBS4bSoWKAZhuytk-2560-80.jpg": "2026-09-17-v9r1a2",
-    "https://cdn.mos.cms.futurecdn.net/sjT663mUhghNSAFa63DaMF-2560-80.jpg": "2026-09-17-kx9ibg"
+    "https://cdn.mos.cms.futurecdn.net/sjT663mUhghNSAFa63DaMF-2560-80.jpg": "2026-09-17-kx9ibg",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=45818&nologo=true&model=flux": "2026-09-17-vb2ryy",
+    "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=44753&nologo=true&model=flux": "2026-09-17-9e10sk"
   }
 }
