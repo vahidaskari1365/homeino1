@@ -95,9 +95,16 @@ export async function callLlm(messages, opts = {}) {
   const attempts = parseAttempts();
 
   for (const a of attempts) {
-    const maxTokens = opts.maxTokens ?? a.maxTokens;
-    for (let tryNo = 0; tryNo < 2; tryNo++) {
+    let maxTokens = opts.maxTokens ?? a.maxTokens;
+    for (let tryNo = 0; tryNo < 4; tryNo++) {
       const r = await chatCompletion(a.base, a.model, a.key, messages, maxTokens);
+      // JSON بریده (finish=length) موفقیت نیست — بودجه توکن را دوبرابر کن و دوباره بگیر
+      if (r.content && r.content.trim() && r.finish === "length") {
+        maxTokens = Math.min(maxTokens * 2, 8_000);
+        console.log(`  llm ${a.id}: truncated (finish=length) → retry with maxTokens=${maxTokens}`);
+        attemptFailures.set(a.id, (attemptFailures.get(a.id) ?? 0) + 1);
+        continue;
+      }
       if (r.content && r.content.trim()) {
         if (tryNo > 0 || a !== attempts[0]) console.log(`  llm via ${a.id}${tryNo ? " (retry)" : ""}`);
         callLlm.lastVia = a.id;
