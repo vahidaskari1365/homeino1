@@ -11,6 +11,7 @@
 import type { AiProvider, GenerateDesignInput, GeneratedDesign, DecorSuggestion, RoomAnalysis } from "./types";
 import { uid } from "../../lib/utils";
 import { resolveGeminiConfig } from "./settings";
+import { shrinkForVision } from "./imageShrink";
 import { normalizeRoomAnalysisFa, FA_ANALYSIS_DIRECTIVE } from "./analysisNormalize";
 
 const API = `https://generativelanguage.googleapis.com/v1beta/models`;
@@ -83,6 +84,13 @@ async function geminiVisionText(system: string, user: string, imageDataUrl: stri
 }
 
 async function geminiImage(input: GenerateDesignInput): Promise<GeneratedDesign> {
+  // Task 47 — عکس‌های بزرگ در مدل‌های Gemini شکست می‌خورند؛ عکس و ماسک
+  // با همین تنظیم کوچک می‌شوند تا نسبت ابعادی‌شان حفظ شود.
+  if (input.referenceImage) input.referenceImage = await shrinkForVision(input.referenceImage, 1024, 85);
+  if (input.mask) input.mask = await shrinkForVision(input.mask, 1024, 85);
+  input.productReferenceImages = await Promise.all(
+    (input.productReferenceImages ?? []).map((r) => shrinkForVision(r, 1024, 85)),
+  );
   const parts: Record<string, unknown>[] = [{ text: buildPrompt(input) }];
   // Multi-image fusion (nano-banana): room photo FIRST, then the edit mask
   // (when present — white = the only editable area), then the exact product

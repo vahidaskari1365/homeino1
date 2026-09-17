@@ -15,6 +15,7 @@
 // هرگز نمی‌پرد؛ «منبع» همیشه در _analysisSource می‌آید.
 // ============================================================
 import type { GenerateDesignInput, RoomAnalysis } from "./types";
+import { shrinkForVision } from "./imageShrink";
 import { zaiVisionText } from "./zaiVision";
 import { ROOM_ANALYSIS_VISION_SYSTEM, roomAnalysisVisionUser, parseRoomAnalysisFa } from "./geminiProvider";
 
@@ -25,11 +26,16 @@ export async function analyzeRoomWithFallback(
   const { provider, name } = await resolveProvider();
 
   if (input.referenceImage) {
+    // Task 47 — عکس‌های بزرگ در vision شکست بی‌صدا می‌خوردند؛ اول کوچک می‌شود.
+    input.referenceImage = await shrinkForVision(input.referenceImage);
     // 1) Gemini — vision بومی (عکس inline به مدل می‌رود).
     if (name === "gemini") {
       try {
         return { analysis: await provider.analyzeRoom(input), source: name };
-      } catch { /* fall through to the free vision engine */ }
+      } catch (err) {
+        // Task 47 — دیگر بی‌صدا نیست: دلیل واقعی در لاگ ورسل می‌آید.
+        console.error("[analyze] gemini vision failed:", err instanceof Error ? err.message : err);
+      }
     }
     // 2) fallback رایگان — z-ai vision روی همین عکس.
     const raw = await zaiVisionText(ROOM_ANALYSIS_VISION_SYSTEM, roomAnalysisVisionUser(input), input.referenceImage);
