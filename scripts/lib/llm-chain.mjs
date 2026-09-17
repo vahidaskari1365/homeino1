@@ -22,16 +22,21 @@ export async function chatCompletion(base, model, apiKey, messages, maxTokens, t
   try {
     const headers = { "Content-Type": "application/json" };
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    const body = { model, messages, temperature: 0.7, max_tokens: maxTokens };
+    // GLM (z.ai / bigmodel) به‌صورت پیش‌فرض «فکر می‌کند» → بودجه توکن می‌سوزد و
+    // یا content خالی می‌ماند و یا JSON وسط راه بریده می‌شود (ریشه خاموشی ۴ روزه بریف‌ها).
+    // برای هاست‌های GLM فکر را صریحاً خاموش می‌کنیم (الگوی خود سایت: zaiVision.ts).
+    if (/z\.ai|bigmodel\.cn|zai\.top/i.test(base)) body.thinking = { type: "disabled" };
     const res = await fetch(`${base.replace(/\/+$/, "")}/chat/completions`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: maxTokens }),
+      body: JSON.stringify(body),
       signal: ctrl.signal,
     });
     if (!res.ok) {
       const retriable = res.status === 429 || res.status >= 500;
-      const body = await res.text().catch(() => "");
-      return { error: `HTTP ${res.status}: ${body.slice(0, 140)}`, retriable };
+      const errText = await res.text().catch(() => "");
+      return { error: `HTTP ${res.status}: ${errText.slice(0, 140)}`, retriable };
     }
     const json = await res.json();
     const content = json?.choices?.[0]?.message?.content ?? "";
