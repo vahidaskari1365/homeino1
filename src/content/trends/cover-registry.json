@@ -27,7 +27,10 @@
     "95301e14406e04ce7c4faf00d09f66c0": "2026-09-17-p380a8",
     "1e1895d823ce147950b85a957318a5e4": "2026-09-17-7xh1u3",
     "1ec272d3d18e6bdf7ece1120d64e7e30": "2026-09-17-fa16if",
-    "bf98c43222b85c249d8dd0c85f1c0a3d": "2026-09-17-55xuok"
+    "bf98c43222b85c249d8dd0c85f1c0a3d": "2026-09-17-55xuok",
+    "41792a32b474976e76a1af30d028d843": "2026-09-17-1ff4ts",
+    "fbbc6c36e483c47e221dfecd6069c49d": "2026-09-17-v9r1a2",
+    "ec9be9c1e61f17e9516161083e87901c": "2026-09-17-kx9ibg"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -57,7 +60,10 @@
     "/images/trends/src/2026-09-17-p380a8.jpg": "2026-09-17-p380a8",
     "/images/trends/src/2026-09-17-7xh1u3.jpg": "2026-09-17-7xh1u3",
     "/images/trends/src/2026-09-17-fa16if.jpg": "2026-09-17-fa16if",
-    "/images/trends/src/2026-09-17-55xuok.jpg": "2026-09-17-55xuok"
+    "/images/trends/src/2026-09-17-55xuok.jpg": "2026-09-17-55xuok",
+    "/images/trends/src/2026-09-17-1ff4ts.jpg": "2026-09-17-1ff4ts",
+    "/images/trends/src/2026-09-17-v9r1a2.jpg": "2026-09-17-v9r1a2",
+    "/images/trends/src/2026-09-17-kx9ibg.jpg": "2026-09-17-kx9ibg"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -87,6 +93,9 @@
     "https://image.pollinations.ai/prompt/close-up%20of%20natural%20materials%20and%20textures%20in%20a%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=79936&nologo=true&model=flux": "2026-09-17-p380a8",
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=72822&nologo=true&model=flux": "2026-09-17-7xh1u3",
     "https://cdn.mos.cms.futurecdn.net/C7boAmWTPXCCDoBoc5JoKZ-1600-80.jpg": "2026-09-17-fa16if",
-    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=80487&nologo=true&model=flux": "2026-09-17-55xuok"
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=80487&nologo=true&model=flux": "2026-09-17-55xuok",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=17872&nologo=true&model=flux": "2026-09-17-1ff4ts",
+    "https://cdn.mos.cms.futurecdn.net/rKSNR9qBS4bSoWKAZhuytk-2560-80.jpg": "2026-09-17-v9r1a2",
+    "https://cdn.mos.cms.futurecdn.net/sjT663mUhghNSAFa63DaMF-2560-80.jpg": "2026-09-17-kx9ibg"
   }
 }
