@@ -204,10 +204,10 @@ try {
 // ---------- ⑤ آخرین اجرای ورک‌فلوها ----------
 {
   const repo = process.env.GITHUB_REPOSITORY || "vahidaskari1365/homeino1";
+  // ناظر خودش را چک نمی‌کند (پارادوکس اولین اجرا) — سلامتش را خروجی ورک‌فلو نشان می‌دهد
   const WORKFLOWS = [
     { id: "magazine-daily.yml", name: "ایجنت مجله/ترند", maxAgeH: 36 },
     { id: "inspiration-daily.yml", name: "ایجنت الهام", maxAgeH: 36 },
-    { id: "site-watchdog.yml", name: "ناظر سایت", maxAgeH: 36 },
     { id: "agentshield-weekly.yml", name: "سپر هفتگی AI", maxAgeH: 24 * 9 },
   ];
   for (const wf of WORKFLOWS) {
@@ -239,7 +239,11 @@ if (process.env.VERCEL_TOKEN) {
     const j = await res.json();
     const d = j?.deployments?.[0];
     const ageH = d ? Math.floor((now - d.createdAt) / 36e5) : null;
-    add("زیرساخت", "دیپلوی پروداکشن", Boolean(d && d.state === "READY" && ageH <= 72), d ? `آخرین دیپلوی ${ageH} ساعت پیش — ${d.state}` : "دیپلویی یافت نشد", "ورسل → deployments را چک کنید");
+    // دیپلوی تازه‌ی در حال بیلد هم یعنی خط لوله سالم است — فقط خطا/رکود آلارم است
+    const state = d?.state || "?";
+    const building = ["BUILDING", "INITIALIZING", "QUEUED"].includes(state);
+    const ok = Boolean(d) && (state === "READY" || (building && ageH !== null && ageH <= 2)) && ageH !== null && ageH <= 72;
+    add("زیرساخت", "دیپلوی پروداکشن", ok, d ? `آخرین دیپلوی ${ageH} ساعت پیش — ${state}` : "دیپلویی یافت نشد", "ورسل → deployments را چک کنید");
   } catch (e) {
     add("زیرساخت", "دیپلوی پروداکشن", false, "خطا: " + e.message, "اعتبار VERCEL_TOKEN را چک کنید");
   }
