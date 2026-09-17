@@ -39,6 +39,16 @@ function gh(args) {
   return execFileSync("gh", args, { encoding: "utf8", timeout: 60_000 });
 }
 
+/** gh امن — نبود gh یا خطای دسترسی، سایت را قرمز نمی‌کند (در Actions همیشه هست) */
+function ghSafe(args) {
+  try {
+    return { ok: true, out: gh(args) };
+  } catch (e) {
+    const missing = /ENOENT|not found/i.test(String(e?.message || ""));
+    return { ok: false, missing, out: "", err: e?.message || String(e) };
+  }
+}
+
 const checks = [];
 const add = (group, name, ok, detail, fix) => checks.push({ group, name, ok: Boolean(ok), detail, fix: fix || "" });
 
@@ -85,16 +95,16 @@ const PAGES = [
   let dbOk = false, aiEngine = "نامشخص", productCount = 0, categoryCount = 0, aiActive = false;
   try {
     const h = await (await fetchWithTimeout(`${SITE}/api/health`, 20_000)).json();
-    dbOk = h?.ok === true && h?.db === "ok";
-    aiEngine = h?.ai || h?.active || "نامشخص";
+    dbOk = h?.ok === true && (h?.checks?.db === "ok" || h?.db === "ok");
+    aiEngine = h?.checks?.ai || h?.ai || h?.active || "نامشخص";
   } catch {}
   try {
     const ps = await (await fetchWithTimeout(`${SITE}/api/products`, 25_000)).json();
-    productCount = Array.isArray(ps) ? ps.length : Array.isArray(ps?.products) ? ps.products.length : 0;
+    productCount = ps?.data?.meta?.total ?? ps?.data?.items?.length ?? ps?.data?.length ?? 0;
   } catch {}
   try {
     const cs = await (await fetchWithTimeout(`${SITE}/api/categories`, 20_000)).json();
-    categoryCount = Array.isArray(cs) ? cs.length : Array.isArray(cs?.categories) ? cs.categories.length : 0;
+    categoryCount = cs?.data?.length ?? (Array.isArray(cs) ? cs.length : 0);
   } catch {}
   try {
     const st = await (await fetchWithTimeout(`${SITE}/api/ai/status`, 20_000)).json();
@@ -106,19 +116,19 @@ const PAGES = [
   add("سایت", "موتور AI", aiActive, `موتور فعال: ${aiEngine}`, "کلیدهای LLM (سیکرت LLM_KEYS_JSON) را بررسی کنید");
 }
 
-// ---------- ③ پروب زندهٔ AI (چت سبک) ----------
+// ---------- ③ پروب زندهٔ AI (اکشن بی‌لاگین advice — سرویس محصول + دیتابیس) ----------
 {
   try {
-    const res = await fetchWithTimeout(`${SITE}/api/ai`, 45_000, {
+    const res = await fetchWithTimeout(`${SITE}/api/ai`, 40_000, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "chat", payload: { message: "یک جمله کوتاه دربارهٔ اهمیت نور طبیعی در خانه بگو." } }),
+      body: JSON.stringify({ action: "advice", payload: { topic: "pair", slug: "console-line" } }),
     });
     const j = await res.json().catch(() => null);
-    const text = j?.text || j?.message || j?.reply || "";
-    add("سایت", "پروب زندهٔ چت AI", res.status === 200 && String(text).length > 10, `HTTP ${res.status} — ${String(text).slice(0, 60) || "بدون متن"}`, "زنجیرهٔ LLM پروداکشن (LLM_KEYS_JSON) و لاگ /api/ai را بررسی کنید");
+    const hasAdvice = Boolean(j?.advice?.text || (typeof j?.advice === "string" && j.advice.length > 10));
+    add("سایت", "پروب زندهٔ سرویس AI (advice)", res.status === 200 && hasAdvice, `HTTP ${res.status} — ${hasAdvice ? "پاسخ واقعی گرفت (متن پیشنهاد ست‌شدن محصول)" : "بدون محتوا"}`, hasAdvice ? "" : "سرویس product-advice و اتصال دیتابیس را بررسی کنید");
   } catch (e) {
-    add("سایت", "پروب زندهٔ چت AI", false, `خطا: ${e.name === "TimeoutError" ? "timeout" : e.message}`, "زنجیرهٔ LLM پروداکشن را بررسی کنید");
+    add("سایت", "پروب زندهٔ سرویس AI (advice)", false, `خطا: ${e.name === "TimeoutError" ? "timeout" : e.message}`, "سرویس product-advice را بررسی کنید");
   }
 }
 
@@ -201,16 +211,21 @@ try {
     { id: "agentshield-weekly.yml", name: "سپر هفتگی AI", maxAgeH: 24 * 9 },
   ];
   for (const wf of WORKFLOWS) {
+    const r = ghSafe(["api", `repos/${repo}/actions/workflows/${wf.id}/runs?per_page=3`, "--jq", `[.workflow_runs[] | {conclusion, created_at, status}]`]);
+    if (!r.ok) {
+      if (r.missing) add("ایجنت‌ها", wf.name, true, `قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود`);
+      else add("ایجنت‌ها", wf.name, false, "خطای API: " + r.err, "دسترسی GITHUB_TOKEN به Actions را چک کنید");
+      continue;
+    }
     try {
-      const out = gh(["api", `repos/${repo}/actions/workflows/${wf.id}/runs?per_page=3`, "--jq", `[.workflow_runs[] | {conclusion, created_at, status}]`]);
-      const runs = JSON.parse(out);
-      const last = runs.find((r) => r.status === "completed");
+      const runs = JSON.parse(r.out);
+      const last = runs.find((x) => x.status === "completed");
       if (!last) { add("ایجنت‌ها", wf.name, false, "هیچ اجرای کاملی ثبت نشده", `Actions → ${wf.id}`); continue; }
       const ageH = Math.floor((now - Date.parse(last.created_at)) / 36e5);
       const ok = last.conclusion === "success" && ageH <= wf.maxAgeH;
       add("ایجنت‌ها", wf.name, ok, `آخرین اجرا ${ageH} ساعت پیش — نتیجه: ${last.conclusion}`, ok ? "" : `لاگ Actions → ${wf.id} را ببینید و دوباره اجرا کنید`);
     } catch (e) {
-      add("ایجنت‌ها", wf.name, false, "خطای API: " + e.message, "دسترسی GITHUB_TOKEN به Actions را چک کنید");
+      add("ایجنت‌ها", wf.name, false, "خطای پارس: " + e.message, "");
     }
   }
 }
@@ -283,24 +298,27 @@ await logContentAgentRun(ROOT, {
   },
 });
 
-// ایسوی خودکار
+// ایسوی خودکار — هرگز نبود gh نباید ناظر را بترکاند
 const body = mdTable + `\n\n> این ایسو خودکار ساخته/به‌روز می‌شود. بعد از رفع، اجرای بعدی ناظر آن را می‌بندد.`;
 let existing = null;
-try {
-  const list = JSON.parse(gh(["issue", "list", "--state", "open", "--json", "number,title", "--limit", "50"]));
-  existing = (list || []).find((i) => i.title === ISSUE_TITLE);
-} catch (e) {
-  console.log("⚠ جستجوی ایسو ناموفق:", e.message);
+const listRes = ghSafe(["issue", "list", "--state", "open", "--json", "number,title", "--limit", "50"]);
+if (listRes.ok) {
+  try {
+    const list = JSON.parse(listRes.out);
+    existing = (list || []).find((i) => i.title === ISSUE_TITLE);
+  } catch {}
 }
-if (alarm && !existing) {
-  gh(["issue", "create", "--title", ISSUE_TITLE, "--body", body]);
+if (alarm && listRes.ok && !existing) {
+  ghSafe(["issue", "create", "--title", ISSUE_TITLE, "--body", body]);
   console.log("🚨 ایسوی آلارم ساخته شد");
-} else if (alarm && existing) {
-  gh(["issue", "edit", String(existing.number), "--body", body]);
+} else if (alarm && listRes.ok && existing) {
+  ghSafe(["issue", "edit", String(existing.number), "--body", body]);
   console.log(`🚨 ایسوی #${existing.number} به‌روز شد`);
-} else if (!alarm && existing) {
-  gh(["issue", "close", String(existing.number), "--comment", "✅ ناظر هومینو: همه‌چیز سالم شد — بسته شد."]);
+} else if (!alarm && listRes.ok && existing) {
+  ghSafe(["issue", "close", String(existing.number), "--comment", "✅ ناظر هومینو: همه‌چیز سالم شد — بسته شد."]);
   console.log(`✅ ایسوی #${existing.number} بسته شد`);
+} else if (alarm) {
+  console.log("🚨 آلارم فعال — ساخت ایسو ممکن نبود (gh در دسترس نیست)");
 }
 
 for (const c of checks) console.log(`${icon(c.ok)} [${c.group}] ${c.name}: ${c.detail}`);

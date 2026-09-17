@@ -25,7 +25,9 @@ import type { Sharp } from "sharp";
  * sharp loads on first use; if the binary is unavailable the pixel-lock
  * degrades honestly (returns null / ok:false) and the route STAYS ALIVE.
  */
-type SharpFactory = typeof import("sharp").default;
+// تایپ مقاوم: بعضی نسخه‌های تایپ sharp توی namespace ‏default ندارند (سندباکس/ورسل فرق دارند)
+type SharpModule = typeof import("sharp");
+type SharpFactory = SharpModule extends { default: infer D } ? D : SharpModule;
 let sharpPromise: Promise<SharpFactory | null> | null = null;
 async function loadSharp(): Promise<SharpFactory | null> {
   sharpPromise ??= import("sharp")

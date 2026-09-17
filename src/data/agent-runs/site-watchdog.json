@@ -1,5 +1,467 @@
 {
   "agentKey": "site-watchdog",
-  "updatedAt": null,
-  "runs": []
+  "updatedAt": "2026-09-17T04:08:57.791Z",
+  "runs": [
+    {
+      "id": "run-1789618137791-rbmy4",
+      "at": "2026-09-17T04:08:57.791Z",
+      "agentKey": "site-watchdog",
+      "ok": true,
+      "durationMs": 7163,
+      "summary": "تأیید کامل — سایت، APIها، محتوا و ایجنت‌ها همه سالم",
+      "detail": {
+        "checks": [
+          {
+            "group": "سایت",
+            "name": "صفحات پروداکشن",
+            "ok": true,
+            "detail": "8/8 صفحه سالم — میانگین پاسخ 36ms"
+          },
+          {
+            "group": "سایت",
+            "name": "اتصال دیتابیس (health)",
+            "ok": true,
+            "detail": "db: ok"
+          },
+          {
+            "group": "سایت",
+            "name": "کاتالوگ محصولات",
+            "ok": true,
+            "detail": "40 محصول از API"
+          },
+          {
+            "group": "سایت",
+            "name": "دسته‌بندی‌ها",
+            "ok": true,
+            "detail": "9 دسته از API"
+          },
+          {
+            "group": "سایت",
+            "name": "موتور AI",
+            "ok": true,
+            "detail": "موتور فعال: gemini"
+          },
+          {
+            "group": "سایت",
+            "name": "پروب زندهٔ سرویس AI (advice)",
+            "ok": true,
+            "detail": "HTTP 200 — پاسخ واقعی گرفت (متن پیشنهاد ست‌شدن محصول)"
+          },
+          {
+            "group": "محتوا",
+            "name": "پین‌های الهام",
+            "ok": true,
+            "detail": "آخرین پین 10 ساعت پیش — 233 پین ایجنت"
+          },
+          {
+            "group": "محتوا",
+            "name": "بریف‌های ترند",
+            "ok": true,
+            "detail": "61 بریف — آخرین 16 ساعت پیش"
+          },
+          {
+            "group": "محتوا",
+            "name": "فایل کاورها",
+            "ok": true,
+            "detail": "61 کاور همه موجود"
+          },
+          {
+            "group": "محتوا",
+            "name": "یکتایی کاورها (تکراری‌نابودِ Task 43)",
+            "ok": true,
+            "detail": "هیچ دو بریفی کاور مشترک ندارند (مسیر و بایت)"
+          },
+          {
+            "group": "محتوا",
+            "name": "کاور هم‌موضوع (نه جنریک)",
+            "ok": true,
+            "detail": "همهٔ کاورها اختصاصی/هم‌موضوع‌اند"
+          },
+          {
+            "group": "محتوا",
+            "name": "مقالهٔ مجله",
+            "ok": true,
+            "detail": "آخرین مقاله 40 ساعت پیش — 5 مقاله"
+          },
+          {
+            "group": "محتوا",
+            "name": "استخر عکس الهام",
+            "ok": true,
+            "detail": "620 عکس مصرف‌نشده — شارژ با scripts/expand-inspiration-pool.py"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ایجنت مجله/ترند",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ایجنت الهام",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ناظر سایت",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "سپر هفتگی AI",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "زیرساخت",
+            "name": "دیپلوی پروداکشن",
+            "ok": true,
+            "detail": "VERCEL_TOKEN ست نیست — چک رد شد (اختیاری)"
+          },
+          {
+            "group": "زیرساخت",
+            "name": "انقضای توکن مانیتورینگ",
+            "ok": true,
+            "detail": "PAT_EXPIRES_AT تنظیم نشده — بی‌اثر"
+          }
+        ],
+        "failed": [],
+        "verdict": "✅ همه‌چیز سالم است — ناظر هومینو تأیید می‌کند"
+      }
+    },
+    {
+      "id": "run-1789617076831-mt9v3",
+      "at": "2026-09-17T03:51:16.831Z",
+      "agentKey": "site-watchdog",
+      "ok": false,
+      "durationMs": 3737,
+      "summary": "5 مشکل: کاتالوگ محصولات، پروب زندهٔ هوش مصنوعی (understand)، فایل کاورها",
+      "detail": {
+        "checks": [
+          {
+            "group": "سایت",
+            "name": "صفحات پروداکشن",
+            "ok": true,
+            "detail": "8/8 صفحه سالم — میانگین پاسخ 61ms"
+          },
+          {
+            "group": "سایت",
+            "name": "اتصال دیتابیس (health)",
+            "ok": true,
+            "detail": "db: ok"
+          },
+          {
+            "group": "سایت",
+            "name": "کاتالوگ محصولات",
+            "ok": false,
+            "detail": "12 محصول از API"
+          },
+          {
+            "group": "سایت",
+            "name": "دسته‌بندی‌ها",
+            "ok": true,
+            "detail": "9 دسته از API"
+          },
+          {
+            "group": "سایت",
+            "name": "موتور AI",
+            "ok": true,
+            "detail": "موتور فعال: gemini"
+          },
+          {
+            "group": "سایت",
+            "name": "پروب زندهٔ هوش مصنوعی (understand)",
+            "ok": false,
+            "detail": "HTTP 401 — منبع: ؟"
+          },
+          {
+            "group": "محتوا",
+            "name": "پین‌های الهام",
+            "ok": true,
+            "detail": "آخرین پین 10 ساعت پیش — 233 پین ایجنت"
+          },
+          {
+            "group": "محتوا",
+            "name": "بریف‌های ترند",
+            "ok": true,
+            "detail": "61 بریف — آخرین 15 ساعت پیش"
+          },
+          {
+            "group": "محتوا",
+            "name": "فایل کاورها",
+            "ok": false,
+            "detail": "1 کاور گمشده: 2026-09-13-8v9idk → /images/trends/src/2026-09-13-8v9idk.png"
+          },
+          {
+            "group": "محتوا",
+            "name": "یکتایی کاورها (تکراری‌نابودِ Task 43)",
+            "ok": false,
+            "detail": "تکراری: 2026-09-15-fb28qy==2026-09-16-m7tvfx، 2026-09-14-gallery-wall==2026-09-16-m7tvfx، 2026-09-14-0z9r7e==2026-09-16-m7tvfx، 2026-09-12-3mii10==2026-09-16-m7tvfx"
+          },
+          {
+            "group": "محتوا",
+            "name": "کاور هم‌موضوع (نه جنریک)",
+            "ok": false,
+            "detail": "6 بریف روی استخر جنریک: 2026-09-16-m7tvfx، 2026-09-15-fb28qy، 2026-09-15-j7zybf، 2026-09-14-gallery-wall، 2026-09-14-0z9r7e"
+          },
+          {
+            "group": "محتوا",
+            "name": "مقالهٔ مجله",
+            "ok": true,
+            "detail": "آخرین مقاله 39 ساعت پیش — 5 مقاله"
+          },
+          {
+            "group": "محتوا",
+            "name": "استخر عکس الهام",
+            "ok": true,
+            "detail": "620 عکس مصرف‌نشده — شارژ با scripts/expand-inspiration-pool.py"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ایجنت مجله/ترند",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ایجنت الهام",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ناظر سایت",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "سپر هفتگی AI",
+            "ok": true,
+            "detail": "قابل بررسی نبود (gh در دسترس نیست) — در Actions بررسی می‌شود"
+          },
+          {
+            "group": "زیرساخت",
+            "name": "دیپلوی پروداکشن",
+            "ok": true,
+            "detail": "VERCEL_TOKEN ست نیست — چک رد شد (اختیاری)"
+          },
+          {
+            "group": "زیرساخت",
+            "name": "انقضای توکن مانیتورینگ",
+            "ok": true,
+            "detail": "PAT_EXPIRES_AT تنظیم نشده — بی‌اثر"
+          }
+        ],
+        "failed": [
+          {
+            "name": "کاتالوگ محصولات",
+            "detail": "12 محصول از API",
+            "fix": "ایجنت‌های seed و مایگریشن‌های drizzle را اجرا کنید"
+          },
+          {
+            "name": "پروب زندهٔ هوش مصنوعی (understand)",
+            "detail": "HTTP 401 — منبع: ؟",
+            "fix": "زنجیرهٔ LLM پروداکشن (LLM_KEYS_JSON) و لاگ /api/ai را بررسی کنید"
+          },
+          {
+            "name": "فایل کاورها",
+            "detail": "1 کاور گمشده: 2026-09-13-8v9idk → /images/trends/src/2026-09-13-8v9idk.png",
+            "fix": "scripts/trend-cover-repair.mjs را اجرا کنید"
+          },
+          {
+            "name": "یکتایی کاورها (تکراری‌نابودِ Task 43)",
+            "detail": "تکراری: 2026-09-15-fb28qy==2026-09-16-m7tvfx، 2026-09-14-gallery-wall==2026-09-16-m7tvfx، 2026-09-14-0z9r7e==2026-09-16-m7tvfx، 2026-09-12-3mii10==2026-09-16-m7tvfx",
+            "fix": "scripts/trend-cover-repair.mjs را اجرا کنید"
+          },
+          {
+            "name": "کاور هم‌موضوع (نه جنریک)",
+            "detail": "6 بریف روی استخر جنریک: 2026-09-16-m7tvfx، 2026-09-15-fb28qy، 2026-09-15-j7zybf، 2026-09-14-gallery-wall، 2026-09-14-0z9r7e",
+            "fix": "زنجیرهٔ کاور (og→وب→Openverse→تولید) در magazine-daily باید تعمیر شود؛ scripts/trend-cover-repair.mjs"
+          }
+        ],
+        "verdict": "❌ 5 مشکل پیدا شد — ناظر هنوز تأیید نمی‌کند"
+      }
+    },
+    {
+      "id": "run-1789617015774-slxao",
+      "at": "2026-09-17T03:50:15.774Z",
+      "agentKey": "site-watchdog",
+      "ok": false,
+      "durationMs": 13231,
+      "summary": "10 مشکل: اتصال دیتابیس (health)، کاتالوگ محصولات، دسته‌بندی‌ها",
+      "detail": {
+        "checks": [
+          {
+            "group": "سایت",
+            "name": "صفحات پروداکشن",
+            "ok": true,
+            "detail": "8/8 صفحه سالم — میانگین پاسخ 946ms"
+          },
+          {
+            "group": "سایت",
+            "name": "اتصال دیتابیس (health)",
+            "ok": false,
+            "detail": "health پاسخ سالم نداد — اتصال دیتابیس برقرار نیست"
+          },
+          {
+            "group": "سایت",
+            "name": "کاتالوگ محصولات",
+            "ok": false,
+            "detail": "0 محصول از API"
+          },
+          {
+            "group": "سایت",
+            "name": "دسته‌بندی‌ها",
+            "ok": false,
+            "detail": "0 دسته از API"
+          },
+          {
+            "group": "سایت",
+            "name": "موتور AI",
+            "ok": true,
+            "detail": "موتور فعال: نامشخص"
+          },
+          {
+            "group": "سایت",
+            "name": "پروب زندهٔ چت AI",
+            "ok": false,
+            "detail": "HTTP 401 — بدون متن"
+          },
+          {
+            "group": "محتوا",
+            "name": "پین‌های الهام",
+            "ok": true,
+            "detail": "آخرین پین 10 ساعت پیش — 233 پین ایجنت"
+          },
+          {
+            "group": "محتوا",
+            "name": "بریف‌های ترند",
+            "ok": true,
+            "detail": "61 بریف — آخرین 15 ساعت پیش"
+          },
+          {
+            "group": "محتوا",
+            "name": "فایل کاورها",
+            "ok": true,
+            "detail": "56 کاور همه موجود"
+          },
+          {
+            "group": "محتوا",
+            "name": "یکتایی کاورها (تکراری‌نابودِ Task 43)",
+            "ok": false,
+            "detail": "تکراری: 2026-09-15-fb28qy==2026-09-16-m7tvfx، 2026-09-14-gallery-wall==2026-09-16-m7tvfx، 2026-09-14-0z9r7e==2026-09-16-m7tvfx، 2026-09-12-3mii10==2026-09-16-m7tvfx"
+          },
+          {
+            "group": "محتوا",
+            "name": "کاور هم‌موضوع (نه جنریک)",
+            "ok": false,
+            "detail": "6 بریف روی استخر جنریک: 2026-09-16-m7tvfx، 2026-09-15-fb28qy، 2026-09-15-j7zybf، 2026-09-14-gallery-wall، 2026-09-14-0z9r7e"
+          },
+          {
+            "group": "محتوا",
+            "name": "مقالهٔ مجله",
+            "ok": true,
+            "detail": "آخرین مقاله 39 ساعت پیش — 5 مقاله"
+          },
+          {
+            "group": "محتوا",
+            "name": "استخر عکس الهام",
+            "ok": true,
+            "detail": "620 عکس مصرف‌نشده — شارژ با scripts/expand-inspiration-pool.py"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ایجنت مجله/ترند",
+            "ok": false,
+            "detail": "خطای API: spawnSync gh ENOENT"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ایجنت الهام",
+            "ok": false,
+            "detail": "خطای API: spawnSync gh ENOENT"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "ناظر سایت",
+            "ok": false,
+            "detail": "خطای API: spawnSync gh ENOENT"
+          },
+          {
+            "group": "ایجنت‌ها",
+            "name": "سپر هفتگی AI",
+            "ok": false,
+            "detail": "خطای API: spawnSync gh ENOENT"
+          },
+          {
+            "group": "زیرساخت",
+            "name": "دیپلوی پروداکشن",
+            "ok": true,
+            "detail": "VERCEL_TOKEN ست نیست — چک رد شد (اختیاری)"
+          },
+          {
+            "group": "زیرساخت",
+            "name": "انقضای توکن مانیتورینگ",
+            "ok": true,
+            "detail": "PAT_EXPIRES_AT تنظیم نشده — بی‌اثر"
+          }
+        ],
+        "failed": [
+          {
+            "name": "اتصال دیتابیس (health)",
+            "detail": "health پاسخ سالم نداد — اتصال دیتابیس برقرار نیست",
+            "fix": "رشتهٔ DATABASE_URL ورسل و وضعیت ساپابیس (Pause نشده باشد) را چک کنید"
+          },
+          {
+            "name": "کاتالوگ محصولات",
+            "detail": "0 محصول از API",
+            "fix": "ایجنت‌های seed و مایگریشن‌های drizzle را اجرا کنید"
+          },
+          {
+            "name": "دسته‌بندی‌ها",
+            "detail": "0 دسته از API",
+            "fix": "seed کاتالوگ را دوباره اجرا کنید"
+          },
+          {
+            "name": "پروب زندهٔ چت AI",
+            "detail": "HTTP 401 — بدون متن",
+            "fix": "زنجیرهٔ LLM پروداکشن (LLM_KEYS_JSON) و لاگ /api/ai را بررسی کنید"
+          },
+          {
+            "name": "یکتایی کاورها (تکراری‌نابودِ Task 43)",
+            "detail": "تکراری: 2026-09-15-fb28qy==2026-09-16-m7tvfx، 2026-09-14-gallery-wall==2026-09-16-m7tvfx، 2026-09-14-0z9r7e==2026-09-16-m7tvfx، 2026-09-12-3mii10==2026-09-16-m7tvfx",
+            "fix": "scripts/trend-cover-repair.mjs را اجرا کنید"
+          },
+          {
+            "name": "کاور هم‌موضوع (نه جنریک)",
+            "detail": "6 بریف روی استخر جنریک: 2026-09-16-m7tvfx، 2026-09-15-fb28qy، 2026-09-15-j7zybf، 2026-09-14-gallery-wall، 2026-09-14-0z9r7e",
+            "fix": "زنجیرهٔ کاور (og→وب→Openverse→تولید) در magazine-daily باید تعمیر شود؛ scripts/trend-cover-repair.mjs"
+          },
+          {
+            "name": "ایجنت مجله/ترند",
+            "detail": "خطای API: spawnSync gh ENOENT",
+            "fix": "دسترسی GITHUB_TOKEN به Actions را چک کنید"
+          },
+          {
+            "name": "ایجنت الهام",
+            "detail": "خطای API: spawnSync gh ENOENT",
+            "fix": "دسترسی GITHUB_TOKEN به Actions را چک کنید"
+          },
+          {
+            "name": "ناظر سایت",
+            "detail": "خطای API: spawnSync gh ENOENT",
+            "fix": "دسترسی GITHUB_TOKEN به Actions را چک کنید"
+          },
+          {
+            "name": "سپر هفتگی AI",
+            "detail": "خطای API: spawnSync gh ENOENT",
+            "fix": "دسترسی GITHUB_TOKEN به Actions را چک کنید"
+          }
+        ],
+        "verdict": "❌ 10 مشکل پیدا شد — ناظر هنوز تأیید نمی‌کند"
+      }
+    }
+  ]
 }

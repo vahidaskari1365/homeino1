@@ -23,6 +23,9 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 
 export const __coverDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const REPO_ROOT = __coverDir;
@@ -194,10 +197,36 @@ export async function generatedCover(promptEn, slug, reg, extraBytesIndex) {
     const u = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptEn)}?width=1152&height=864&seed=${seeds[i]}&nologo=true&model=flux`;
     // پن سرویس رایگان گاهی خروجی ۸۸۶×۶۶۵ می‌دهد — گیت ملایم‌تر برای تولید
     const r = await downloadCoverImage(u, slug, reg, extraBytesIndex, { minW: 760, minH: 560 });
-    if (!r.error) return { ...r, url: u, generated: true };
+    if (!r.error) {
+      // حذف واترمارک گوشهٔ پایین (پن سرویس رایگان nologo را رعایت نمی‌کند)
+      const cropped = await cropBottomStrip(path.join(REPO_ROOT, "public", r.publicPath));
+      if (cropped) {
+        r.md5 = md5File(path.join(REPO_ROOT, "public", r.publicPath));
+        r.dims = cropped;
+      }
+      return { ...r, url: u, generated: true };
+    }
     console.log(`  generate seed=${seeds[i]} رد شد: ${r.error}`);
   }
   return null;
+}
+
+/** نوار پایین عکس تولیدی را می‌بُرد (واترمارک) — اگر sharp در دسترس باشد */
+async function cropBottomStrip(absPath) {
+  try {
+    const sharp = require("sharp");
+    const meta = await sharp(absPath).metadata();
+    if (!meta.width || !meta.height || meta.height < 500) return null;
+    const cut = Math.max(28, Math.round(meta.height * 0.075)); // ~۷٫۵٪ پایین
+    const buf = await sharp(absPath)
+      .extract({ left: 0, top: 0, width: meta.width, height: meta.height - cut })
+      .jpeg({ quality: 84 })
+      .toBuffer();
+    fs.writeFileSync(absPath, buf);
+    return { w: meta.width, h: meta.height - cut };
+  } catch {
+    return null;
+  }
 }
 
 // ---------- پرامپت انگلیسی برای تولید کاور هم‌موضوع ----------
