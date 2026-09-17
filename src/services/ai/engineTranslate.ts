@@ -14,6 +14,11 @@
 import { engineChat } from "./orali/oraliClient";
 
 const PERSIAN_RE = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+// Task 42 — نسخه global: replace بدون /g فقط اولین حرف فارسی را حذف می‌کرد
+// (برای همین «دکوراسیون» → «کوراسیون» می‌شد). عبارت با lookaround /در/
+// هم فقط «در» مستقل را می‌گیرد نه «درِ» داخل «مدرن» (باگ: مدرن → door).
+const PERSIAN_RE_G = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g;
+const PERSIAN_WORD = "[\\u0600-\\u06FF\\u0750-\\u077F\\uFB50-\\uFDFF\\uFE70-\\uFEFF]";
 
 export function hasPersian(text: string): boolean {
   return PERSIAN_RE.test(text);
@@ -45,7 +50,10 @@ const DICT: [RegExp, string][] = [
   [/کف|پارکت|سرامیک/, "flooring"],
   [/سقف/, "ceiling"],
   [/پنجره/, "window"],
-  [/در/, "door"],
+  // Task 42 — «در» مستقل (نه داخل مدرن/مدرنیزاسیون و...):
+  [new RegExp(`(?<!${PERSIAN_WORD})در(?!${PERSIAN_WORD})`), "door"],
+  [/دکوراسیون|تزئین/, "decor"],
+  [/خانه|منزل/, "home"],
   [/پذیرایی|نشیمن|اتاق نشیمن/, "living room"],
   [/اتاق خواب|خواب/, "bedroom"],
   [/آشپزخانه|کابینت/, "kitchen"],
@@ -84,13 +92,14 @@ const DICT: [RegExp, string][] = [
   [/همینطوری بمونه|بقیه.*(بمونه|همون)|دست نزن/, "keep everything else unchanged"],
 ];
 
-function dictionaryTranslate(text: string): string {
+/** Exported for tests — deterministic offline path (no LLM, no network). */
+export function dictionaryTranslate(text: string): string {
   let out = text;
   for (const [re, en] of DICT) {
     if (re.test(out)) out = out.replace(re, ` ${en} `);
   }
   // Strip any leftover Persian characters + collapse whitespace.
-  const stripped = out.replace(PERSIAN_RE, " ").replace(/\s+/g, " ").trim();
+  const stripped = out.replace(PERSIAN_RE_G, " ").replace(/\s+/g, " ").trim();
   return stripped || "interior design edit";
 }
 
