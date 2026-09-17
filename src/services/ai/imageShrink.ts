@@ -16,7 +16,15 @@ import "server-only";
 /** آستانه‌ی عبور بدون تغییر: زیر ~۹۰KB باینری عکس را دست نمی‌زنیم. */
 const PASS_THROUGH_B64 = 120_000;
 
-type SharpModule = typeof import("sharp")["default"];
+// sharp's type surface differs across versions/modes (CJS callable vs ESM
+// default). Model only the chain we use — runtime stays `(mod.default ?? mod)`.
+interface SharpChain {
+  rotate(): SharpChain;
+  resize(opts: { width: number; height: number; fit: "inside"; withoutEnlargement: boolean }): SharpChain;
+  jpeg(opts: { quality: number; mozjpeg: boolean }): SharpChain;
+  toBuffer(): Promise<Buffer>;
+}
+type SharpModule = (input: Buffer) => SharpChain;
 
 /**
  * sharp را دینامیک و fault-tolerant لود می‌کنیم: اگر در محیط اجرا
