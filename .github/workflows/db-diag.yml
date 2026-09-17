@@ -1,0 +1,52 @@
+# Task 42 diag — exact replica of the app's DB connection (pg 8.20 +
+# connectionString only) run from CI network. Prints ONLY error codes and
+# short messages — never the URL/password.
+name: db-diag
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: db-diag
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pg (same major as app)
+        run: npm i pg@8.20.0 --no-save --silent
+
+      - name: Connection matrix
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          cat > /tmp/diag.mjs << 'EOF'
+          import pg from "pg";
+          const base = process.env.DATABASE_URL;
+          const variants = [
+            ["app-exact (sslmode=require)", base],
+            ["uselibpqcompat=true", base + (base.includes("?") ? "&" : "?") + "uselibpqcompat=true"],
+            ["sslmode=no-verify", base.replace("sslmode=require", "sslmode=no-verify")],
+            ["ssl root CA accept-all", base], // with explicit ssl option below
+          ];
+          for (const [label, url] of variants) {
+            const opts = { connectionString: url, connectionTimeoutMillis: 5000, query_timeout: 5000 };
+            if (label.startsWith("ssl root")) opts.ssl = { rejectUnauthorized: false };
+            try {
+              const pool = new pg.Pool(opts);
+              const r = await pool.query("select count(*)::int as n from products where status='active' and deleted_at is null");
+              console.log(`OK   | ${label} | active products: ${r.rows[0].n}`);
+              await pool.end();
+            } catch (err) {
+              console.log(`FAIL | ${label} | code=${err.code || "-"} | ${String(err.message).slice(0, 120)}`);
+              try { await pool.end(); } catch {}
+            }
+          }
+          EOF
+          node /tmp/diag.mjs
