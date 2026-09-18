@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-18T08:35:08.332Z",
+  "updatedAt": "2026-09-18T13:16:19.566Z",
   "runs": [
+    {
+      "id": "run-1789737379566-bgch7",
+      "at": "2026-09-18T13:16:19.566Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 607218,
+      "summary": "6 پین الهام جدید (بازنویسی LLM؛ 2 پین محصول‌محور)",
+      "detail": {
+        "added": 6,
+        "productPins": 2,
+        "total": 265,
+        "via": "llm",
+        "poolRemaining": 596,
+        "productPoolRemaining": 56,
+        "skippedStarved": 0,
+        "combos": [
+          "روستیک × ناهارخوری",
+          "معاصر × پذیرایی",
+          "آرت دکو × فضای کار",
+          "مدرن × حیاط و محوطه"
+        ],
+        "productJobs": [
+          "روشنایی و لوستر",
+          "کمد و ذخیره‌سازی"
+        ]
+      }
+    },
     {
       "id": "run-1789720508332-3e6kx",
       "at": "2026-09-18T08:35:08.332Z",
