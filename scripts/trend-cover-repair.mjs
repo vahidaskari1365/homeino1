@@ -26,9 +26,19 @@ const pExecFile = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(REPO_ROOT, "src", "content", "trends", "trends.json");
 const QA_REPORT = path.join(__dirname, "trend-cover-qa-report.json");
+// گردآوری پیشین پرامپت/کاندیدها — تماس‌های چت/جستجو از حلقهٔ داغ بیرون (۴۲۹ — Task 50)
+const COLLECTED_FILE = path.join(__dirname, "cover-collected-t50.json");
+const COLLECT = process.argv.includes("--collect");
 const QA_ONLY = process.argv.includes("--qa-only");
+// اجرای تکه‌ای — سندباکس پروسهٔ طولانی را می‌کشد؛ هر بار فقط N بریف (Task 50)
+const LIMIT_IDX = process.argv.indexOf("--limit");
+const REPLACE_LIMIT = LIMIT_IDX > -1 ? Math.max(1, Number(process.argv[LIMIT_IDX + 1]) || 1) : Infinity;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// قاعدهٔ یکدست پذیرش کاور (Task 50): ارتباط ≥۸ بدون قید، یا ≥۶ بدون پرمتن.
+// textHeavy تنها نباید کاور ۸–۹ را بکشد — کالیبراسیون GLM-V روی عکس تولیدی گاهی پرمتنِ کاذب می‌دهد.
+const coverQaOk = (v) => Boolean(v) && (v.score >= 8 || (v.score >= 6 && !v.textHeavy));
 
 // ---------- z-ai CLI ----------
 async function zAiVision(imagePath, prompt, tries = 4) {
@@ -60,7 +70,7 @@ function zAiImageSearchSync(query, count = 6, tries = 3) {
       const raw = execFileSync(
         "z-ai",
         ["image-search", "-q", query, "--count", String(count), "--gl", "us", "--no-rank"],
-        { timeout: 150_000, encoding: "utf8" }
+        { timeout: 60_000, encoding: "utf8" }
       );
       const j = JSON.parse(raw.slice(raw.indexOf("{")));
       const STOCK = /(dreamstime|shutterstock|gettyimages|istockphoto|123rf|alamy|depositphotos|stock\.adobe|freepik|bigstockphoto|colourbox|agefotostock|photos\.com|stockcake|vecteezy)\.?/i;
@@ -144,7 +154,7 @@ for (const [cover, group] of byPath) {
 for (const [slug, v] of Object.entries(qa)) {
   if (v.error) continue;
   const b = briefs.find((x) => x.slug === slug);
-  if (b && b.cover === v.cover && (v.score <= 5 || v.textHeavy)) toReplace.add(slug);
+  if (b && b.cover === v.cover && !coverQaOk(v)) toReplace.add(slug);
 }
 
 // بریف‌هایی که قبلاً md5 تکراری ثبت شده؟ (دو فایل یک‌بایت در دو بریف زنده)
@@ -159,24 +169,62 @@ for (const b of [...briefs].sort((a, z) => (a.date < z.date ? 1 : -1))) {
 }
 
 console.log(`تعویض: ${toReplace.size} بریف → ${[...toReplace].join(", ")}`);
+const replaceQueueArr = [...toReplace].slice(0, REPLACE_LIMIT);
+if (replaceQueueArr.length < toReplace.size) console.log(`(اجرای تکه‌ای: فقط ${replaceQueueArr.length} از ${toReplace.size} — باقی با اجرای بعدی)`);
+
+// ---------- فاز B2: گردآوری ملایم پرامپت/کاندید (--collect، قابل ادامه) ----------
+if (COLLECT) {
+  const prev = fs.existsSync(COLLECTED_FILE) ? JSON.parse(fs.readFileSync(COLLECTED_FILE, "utf8")) : {};
+  const collected = prev;
+  let n = 0;
+  for (const slug of [...toReplace]) {
+    if (collected[slug]?.prompt && (collected[slug]?.candidates?.length || collected[slug]?.searched)) {
+      continue; // قبلاً کامل جمع شده
+    }
+    n++;
+    const b = briefs.find((x) => x.slug === slug);
+    if (!b) continue;
+    console.log(`\n⟳ گردآوری [${n}] ${slug} — ${b.title.slice(0, 50)}`);
+    const prompt = await topicPromptEn(b.title, b.category, callLlm);
+    await sleep(15_000); // آرام بین تماس‌های چت
+    const query = prompt.split(", ").slice(0, 6).join(" ");
+    const web = zAiImageSearchSync(`${query} interior design`, 6, 1); // تک‌تلاش — سهمیهٔ داغ هدر نرود
+    await sleep(10_000);
+    const ov = await openverseImages(query);
+    collected[slug] = { prompt, query, searched: true, candidates: [...web.map((c) => ({ ...c, via: "web" })), ...ov.map((c) => ({ ...c, via: "openverse" }))] };
+    console.log(`  prompt: ${prompt.slice(0, 70)}… | کاندید: ${collected[slug].candidates.length}`);
+    fs.writeFileSync(COLLECTED_FILE, JSON.stringify(collected, null, 2) + "\n", "utf8"); // ذخیرهٔ تدریجی
+    await sleep(8_000);
+  }
+  console.log(`\nگردآوری تمام شد — ${Object.keys(collected).length} اسلاگ در ${COLLECTED_FILE}`);
+  process.exit(0);
+}
 
 // ---------- فاز C: تعویض هوشمند ----------
 let replaced = 0;
 const usedUrls = new Set();
 let bi = 0;
+const replaceQueue = new Set(replaceQueueArr);
+const runSalt = Date.now() % 99991; // seed متفاوت در هر اجرا — تلاش مجدد روی بریف‌های سرسخت تصویر تازه بدهد
 for (const b of briefs) {
-  if (!toReplace.has(b.slug)) continue;
+  if (!replaceQueue.has(b.slug)) continue;
   bi++;
   console.log(`\n→ [${bi}/${toReplace.size}] ${b.slug} [${b.category}] ${b.title.slice(0, 55)}`);
   const oldCover = b.cover;
-  const prompt = await topicPromptEn(b.title, b.category, callLlm);
-  const query = prompt.split(", ").slice(0, 6).join(" ");
+  const collected = (() => { try { return JSON.parse(fs.readFileSync(COLLECTED_FILE, "utf8")); } catch { return {}; } })();
+  const coll = collected[b.slug];
+  const prompt = coll?.prompt || await topicPromptEn(b.title, b.category, callLlm);
+  const query = (coll?.query || prompt.split(", ").slice(0, 6).join(" "));
   console.log(`  query: ${query}`);
-  const cands = [
-    ...zAiImageSearchSync(`${query} interior design`).map((c) => ({ ...c, via: "web" })),
-    ...(await openverseImages(query)).map((c) => ({ ...c, via: "openverse" })),
-  ];
+  const cands = coll?.candidates
+    ? coll.candidates.map((c) => ({ ...c }))
+    : [
+        ...zAiImageSearchSync(`${query} interior design`).map((c) => ({ ...c, via: "web" })),
+        ...(await openverseImages(query)).map((c) => ({ ...c, via: "openverse" })),
+      ];
+  console.log(`  کاندید: ${cands.length} عدد (وب+Openverse)`);
   let accepted = null;
+  let acceptedQa = null; // QA کاندید پذیرفته‌شده — در گزارش ثبت می‌شود (Task 50)
   for (const c of cands) {
     if (!c?.url || usedUrls.has(c.url)) continue;
     if ((c.w || 0) < 600 || (c.h || 0) < 360) continue;
@@ -185,13 +233,14 @@ for (const b of briefs) {
       console.log(`  · دانلود رد شد (${r.error}): ${c.url.slice(0, 90)}`);
       continue;
     }
-    // گیت نهایی: QA بصری کاندید — ارتباط ≥۶ و بدون کلاژ متنی
+    // گیت نهایی: QA بصری کاندید — قاعدهٔ coverQaOk
     const v = await zAiVision(
       path.join(REPO_ROOT, "public", r.publicPath),
       `این عکس باید کاور مقالهٔ ترند دکوراسیون «${b.title}» باشد. فقط JSON: {"score": ۰تا۱۰ ارتباط با موضوع, "textHeavy": کلاژ/بنر پر از متن یا لوگو؟}`
     );
-    if (v && v.score >= 6 && !v.textHeavy) {
+    if (coverQaOk(v)) {
       accepted = { ...r, via: c.via };
+      acceptedQa = { score: v.score, textHeavy: Boolean(v.textHeavy) };
       usedUrls.add(c.url);
       console.log(`  ✓ ${c.via} (QA=${v.score}) → ${r.publicPath}`);
       break;
@@ -199,10 +248,32 @@ for (const b of briefs) {
     console.log(`  ✕ رد شد (QA=${v ? v.score : "?"}${v?.textHeavy ? ", پر از متن" : ""}): ${c.url.slice(0, 80)}`);
   }
   if (!accepted) {
-    const gen = await generatedCover(prompt, b.slug, reg, liveBytes);
-    if (gen) {
-      accepted = { ...gen, via: "generated" };
-      console.log(`  ✓ تولید رایگان → ${gen.publicPath}`);
+    // تولید با گیت QA — ۳ راند با پرامپت و seed متفاوت؛ قاعدهٔ coverQaOk (Task 50)
+    let best = null;
+    for (let round = 0; round < 3 && !accepted; round++) {
+      const genPrompt = round === 0
+        ? prompt
+        : await topicPromptEn(`${b.title} — ${String(b.excerpt || "").slice(0, 120)}`, b.category, callLlm);
+      const gen = await generatedCover(genPrompt, b.slug, reg, liveBytes, { seedOffset: round * 5000 + runSalt });
+      if (!gen) break;
+      const v = await zAiVision(
+        path.join(REPO_ROOT, "public", gen.publicPath),
+        `این عکس باید کاور مقالهٔ ترند دکوراسیون «${b.title}» باشد. فقط JSON: {"score": ۰تا۱۰ ارتباط با موضوع, "textHeavy": کلاژ/بنر پر از متن یا لوگو؟}`
+      );
+      const verdict = v && !v.error ? { score: v.score, textHeavy: Boolean(v.textHeavy) } : null;
+      if (!best || (verdict?.score ?? -1) > (best.verdict?.score ?? -1)) best = { gen, verdict };
+      if (coverQaOk(verdict)) {
+        accepted = { ...gen, via: "generated" };
+        acceptedQa = verdict;
+        console.log(`  ✓ تولید رایگان (QA=${verdict.score}) → ${gen.publicPath}`);
+      } else {
+        console.log(`  · تولید راند ${round + 1} قابل قبول نبود (QA=${verdict?.score ?? "?"}${verdict?.textHeavy ? " پرمتن" : ""})`);
+      }
+    }
+    if (!accepted && best) {
+      accepted = { ...best.gen, via: "generated" };
+      acceptedQa = best.verdict;
+      console.log(`  ⚠ بهترین تولید پذیرفته شد (QA=${best.verdict?.score ?? "?"}) — ناظر سایت پرچم می‌زند`);
     }
   }
   if (!accepted) {
@@ -212,15 +283,17 @@ for (const b of briefs) {
   b.cover = accepted.publicPath;
   b.coverSource = accepted.via;
   registerCover({ md5: accepted.md5, publicPath: accepted.publicPath, url: accepted.url, slug: b.slug }, reg);
+  if (acceptedQa) qa[b.slug] = { cover: accepted.publicPath, title: b.title, ...acceptedQa }; // گزارش QA هم‌گام کاور جدید (Task 50)
   // فایل قبلی اگر مال همین بریف بود و دیگر هیچ بریفی ارجاع ندارد → حذف
   if (oldCover.includes("/trends/src/") && !briefs.some((x) => x.cover === oldCover)) {
     try { fs.rmSync(path.join(REPO_ROOT, "public", oldCover)); } catch {}
   }
   replaced++;
-  await sleep(6000); // نفس بین بریف‌ها — سهمیه‌ها خنک شوند
+  await sleep(20000); // نفس بین بریف‌ها — سهمیه‌ها خنک شوند (۴۲۹ در اجرای فشرده — Task 50)
 }
 
 // ---------- ذخیره ----------
 fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs }, null, 2)}\n`, "utf8");
 saveRegistry(reg);
+fs.writeFileSync(QA_REPORT, JSON.stringify(qa, null, 2) + "\n", "utf8"); // QA کاورهای تعویضی هم ثبت شد (Task 50)
 console.log(`\nخلاصه: ${replaced}/${toReplace.size} کاور تعویض شد | رجیستری: ${Object.keys(reg.byMd5).length} md5 یکتا`);

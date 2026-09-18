@@ -134,10 +134,11 @@ const PAGES = [
 
 // ---------- ④ سلامت محتوا (فایل‌های ریپو) ----------
 let pinImages = new Set();
+let pinList = [];
 try {
-  const pins = JSON.parse(readFileSync(join(ROOT, "src/data/inspirations.generated.json"), "utf8"));
-  for (const p of pins) pinImages.add(p.image);
-  const agentPins = pins.filter((p) => p.author?.type === "agent" && p.createdAt);
+  pinList = JSON.parse(readFileSync(join(ROOT, "src/data/inspirations.generated.json"), "utf8"));
+  for (const p of pinList) pinImages.add(p.image);
+  const agentPins = pinList.filter((p) => p.author?.type === "agent" && p.createdAt);
   const last = agentPins.length ? Math.max(...agentPins.map((p) => Date.parse(p.createdAt))) : 0;
   const hours = Math.floor((now - last) / 36e5);
   add("محتوا", "پین‌های الهام", hours <= 36, `آخرین پین ${hours} ساعت پیش — ${agentPins.length} پین ایجنت`, "ورک‌فلوی inspiration-daily را دستی اجرا و لاگش را ببینید");
@@ -177,6 +178,68 @@ try {
   add("محتوا", "یکتایی کاورها (تکراری‌نابودِ Task 43)", dupPath.length === 0 && dupMd5.length === 0, dupPath.length || dupMd5.length ? `تکراری: ${[...dupPath, ...dupMd5].slice(0, 4).join("، ")}` : "هیچ دو بریفی کاور مشترک ندارند (مسیر و بایت)", "scripts/trend-cover-repair.mjs را اجرا کنید");
   add("محتوا", "کاور هم‌موضوع (نه جنریک)", pool.length === 0, pool.length ? `${pool.length} بریف روی استخر جنریک: ${pool.slice(0, 5).join("، ")}` : "همهٔ کاورها اختصاصی/هم‌موضوع‌اند", "زنجیرهٔ کاور (og→وب→Openverse→تولید) در magazine-daily باید تعمیر شود؛ scripts/trend-cover-repair.mjs");
   if (hotlink.length) add("محتوا", "هات‌لین ممنوع", false, `${hotlink.length} بریف کاور خارجی دارد: ${hotlink.slice(0, 4).join("، ")}`, "کاور باید دانلود و داخل ریپو ذخیره شود");
+}
+
+// ارتباط بصری کاورها — QA ثبت‌شدهٔ مدل بینایی: کاور کم‌ارتباط = آلارم (Task 50).
+// قاعدهٔ یکدست با trend-cover-repair: نامقبول = ≤۷، یا ۶–۷ همراه پرمتن (textHeavy تنها ۸–۹ را نمی‌کشد).
+try {
+  const qa = JSON.parse(readFileSync(join(ROOT, "scripts/trend-cover-qa-report.json"), "utf8"));
+  const bad = [];
+  let verified = 0, unverified = 0;
+  for (const b of briefs) {
+    if (!b?.cover || !b.cover.includes("/trends/src/")) continue; // کاور استخر جنریک جداگانه آلارم دارد
+    const v = qa[b.slug];
+    if (v && !v.error && v.cover === b.cover) {
+      if (v.score <= 7 && (v.score < 6 || v.textHeavy)) bad.push(`${b.slug} (QA=${v.score}${v.textHeavy ? "+پرمتن" : ""})`);
+      else verified++;
+    } else {
+      unverified++; // کاور تازه یا بازبینی‌نشده — اطلاعاتی، آلارم نه
+    }
+  }
+  add("محتوا", "ارتباط بصری کاورها (QA بینایی)", bad.length === 0,
+    bad.length ? `${bad.length} کاور کم‌ارتباط/پرمتن: ${bad.slice(0, 4).join("، ")}` : `${verified} کاور تأیید بصری دارد — همه هم‌موضوع`,
+    "scripts/trend-cover-repair.mjs را اجرا کنید (تعویض خودکار با گیت QA)");
+  add("محتوا", "پوشش QA کاورها", true,
+    unverified.length ? `${unverified.length} کاور هنوز تأیید بصری ندارد (تازه): ${unverified.slice(0, 5).join("، ")}` : "همهٔ کاورها بازبینی بصری شده‌اند",
+    unverified.length ? "scripts/trend-cover-repair.mjs --qa-only را در سندباکس اجرا کنید" : "");
+} catch (e) {
+  add("محتوا", "ارتباط بصری کاورها (QA بینایی)", false, "خطا: " + e.message, "trend-cover-qa-report.json را بررسی کنید");
+}
+
+// یکتایی عکس پین‌های الهام — هیچ عکسی نباید بین دو پین مشترک باشد (Task 50)
+{
+  const seenPin = new Map();
+  const pinDups = [];
+  for (const p of pinList || []) {
+    if (!p?.image) continue;
+    if (seenPin.has(p.image)) pinDups.push(`${p.id || "?"}==${seenPin.get(p.image)}`);
+    else seenPin.set(p.image, p.id || "?");
+  }
+  add("محتوا", "یکتایی پین‌های الهام", pinDups.length === 0,
+    pinDups.length ? `${pinDups.length} عکس مشترک: ${pinDups.slice(0, 4).join("، ")}` : `${seenPin.size} پین همه یکتا`,
+    "ایجنت الهام (inspiration-daily) را بازبینی کنید — انتخاب عکس باید از استخر بدون تکرار باشد");
+}
+
+// کاور نباید بایت‌به‌بایت عکس یک پین محصول باشد (استخر جنریک نباید خود را قایم کند — Task 50)
+{
+  const pinMd5 = new Map();
+  for (const img of pinImages) {
+    if (!img?.startsWith("/images/")) continue;
+    const p = join(ROOT, "public", img);
+    if (!existsSync(p)) continue;
+    pinMd5.set(md5(p), img);
+  }
+  const clash = [];
+  for (const b of briefs) {
+    if (!b?.cover?.startsWith("/images/")) continue;
+    const p = join(ROOT, "public", b.cover);
+    if (!existsSync(p)) continue;
+    const owner = pinMd5.get(md5(p));
+    if (owner && owner !== b.cover) clash.push(`${b.slug}==${owner}`);
+  }
+  add("محتوا", "کاور ≠ عکس پین محصول", clash.length === 0,
+    clash.length ? `${clash.length} کاور روی فایل پین: ${clash.slice(0, 4).join("، ")}` : "هیچ کاوری عکس پین محصول را مصرف نکرده",
+    "زنجیرهٔ کاور باید عکس یکتا و هم‌موضوع بسازد — scripts/trend-cover-repair.mjs");
 }
 
 // مقالهٔ مجله

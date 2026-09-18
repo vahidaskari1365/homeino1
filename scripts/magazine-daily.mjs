@@ -583,14 +583,22 @@ async function main() {
   const dateFa = toJalaliFa(now);
   const today = isoDay(now);
 
-  // چرخش کاور fallback — دو بریفِ یک‌روزه کاور تکراری نگیرند
-  const usedCovers = new Set();
+  // چرخش کاور fallback — هیچ دو بریفی (در این ران یا ران‌های قبلی) کاور مشترک نگیرند.
+  // باگ Task 50: usedCovers فقط همین ران را می‌دید و دو ران مجله در یک روز → همان
+  // کاور استخر به دو بریف رسید. کاورهای زندهٔ قبلی از ابتدا اشغال حساب می‌شوند.
+  const usedCovers = new Set(existing.map((b) => b?.cover).filter(Boolean));
   const usedWebImgs = new Set();
   liveBytesIndex = buildBytesIndex(existing); // ایندکس بایتی کاورهای زنده — ضدتکرار بین بریف‌ها (Task 43)
   const pickFallbackCover = (category) => {
-    const values = [...new Set(Object.values(COVER_BY_CATEGORY))];
     const base = COVER_BY_CATEGORY[category] ?? DEFAULT_COVER;
-    const candidates = [base, ...values.filter((v) => v !== base), DEFAULT_COVER].filter(Boolean);
+    // واریانت‌های همان دسته از استخر عکس محصول (c*-01…c*-10) — فال‌بک هم تا ۱۰ بریف یکتا می‌ماند
+    const m = base.match(/^\/images\/product-pins\/(c\d+)-\d+\.jpg$/);
+    const variants = m
+      ? Array.from({ length: 10 }, (_, i) => `/images/product-pins/${m[1]}-${String(i + 1).padStart(2, "0")}.jpg`)
+          .filter((p) => p === base || fs.existsSync(path.join(REPO, "public", p)))
+      : [];
+    const values = [...new Set(Object.values(COVER_BY_CATEGORY))];
+    const candidates = [...variants, base, ...values.filter((v) => v !== base && !variants.includes(v)), DEFAULT_COVER].filter(Boolean);
     const pick = candidates.find((c) => !usedCovers.has(c))
       ?? candidates[(existing.length + usedCovers.size) % candidates.length];
     usedCovers.add(pick);

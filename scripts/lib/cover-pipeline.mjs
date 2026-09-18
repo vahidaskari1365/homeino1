@@ -189,11 +189,12 @@ function slugSeed(slug) {
   return h % 100000;
 }
 
-export async function generatedCover(promptEn, slug, reg, extraBytesIndex) {
-  const base = slugSeed(slug);
-  const seeds = [base, base + 777, base + 313];
+export async function generatedCover(promptEn, slug, reg, extraBytesIndex, opts = {}) {
+  const base = slugSeed(slug) + (opts.seedOffset || 0); // seedOffset — راند دوم تولید تصویر متفاوت بدهد (Task 50)
+  // ۵ seed با فاصلهٔ بیشتر — هرچه دیرتر به استخر جنریک بیفتیم بهتر (Task 50)
+  const seeds = [base, base + 777, base + 313, base + 991, base + 456];
   for (let i = 0; i < seeds.length; i++) {
-    if (i > 0) await new Promise((r) => setTimeout(r, 6000)); // نفس برای سهمیه رایگان
+    if (i > 0) await new Promise((r) => setTimeout(r, 8000)); // نفس برای سهمیه رایگان
     const u = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptEn)}?width=1152&height=864&seed=${seeds[i]}&nologo=true&model=flux`;
     // پن سرویس رایگان گاهی خروجی ۸۸۶×۶۶۵ می‌دهد — گیت ملایم‌تر برای تولید
     const r = await downloadCoverImage(u, slug, reg, extraBytesIndex, { minW: 760, minH: 560 });
@@ -254,13 +255,17 @@ const CATEGORY_PROMPT = {
   "سبک زندگی": "warm inviting home interior with lived-in charm, interior design photography",
 };
 
-/** با LLM یک پرامپت انگلیسیِ کاور می‌سازد؛ شکست → دیکشنری دسته */
+/** با LLM یک پرامپت انگلیسیِ کاور می‌سازد؛ شکست → دیکشنری دسته.
+ *  مسیر z-ai تا ۳ بار بازتلاش می‌شود — زیر فشار ناپایدار است و افتادن به
+ *  پرامپت جنریک دسته یعنی کاور کم‌ارتباط (Task 50). */
 export async function topicPromptEn(title, category, callLlmFn) {
   const fallback = CATEGORY_PROMPT[category] || CATEGORY_PROMPT["سبک‌ها"];
   // مسیر ۱ — z-ai CLI (سندباکس): سریع، رایگان، هم‌موضوع با خودِ تیتر
-  try {
-    const has = spawnSync("which", ["z-ai"], { encoding: "utf8" }).status === 0;
-    if (has) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 20_000 * attempt)); // سهمیهٔ چت داغ — خنک شود (Task 50)
+      const has = spawnSync("which", ["z-ai"], { encoding: "utf8" }).status === 0;
+      if (!has) break;
       const raw = execFileSync(
         "z-ai",
         [
@@ -273,8 +278,8 @@ export async function topicPromptEn(title, category, callLlmFn) {
       const j = JSON.parse(raw.slice(raw.indexOf("{")));
       const line = String(j?.choices?.[0]?.message?.content || "").replace(/["\n\r]/g, " ").trim();
       if (line.length > 20 && /^[A-Za-z0-9 ,'\-]+$/.test(line)) return line + ", professional interior design photography";
-    }
-  } catch {}
+    } catch {}
+  }
   // مسیر ۲ — زنجیرهٔ LLM (داخل Actions با کلیدها کار می‌کند)
   if (typeof callLlmFn === "function") {
     try {
