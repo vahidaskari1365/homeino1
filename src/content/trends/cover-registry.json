@@ -72,7 +72,10 @@
     "d9433470a3dace6f0e17cca42fcab00d": "2026-09-18-the-shade-store-kips-bay",
     "470663ade6363b200b18057c6d7df25a": "2026-09-18-gqk4f1",
     "45c6c6c98bc9a63fb8277e7091238571": "2026-09-18-rlvgv1",
-    "792b81b9afc2ed832515f844897af117": "2026-09-18-wj6ltf"
+    "792b81b9afc2ed832515f844897af117": "2026-09-18-wj6ltf",
+    "2765457ebc2fa946ca5d8a51e6e6a4b8": "2026-09-18-urban-utility-suv",
+    "c126975b11ec728f3d0829b760d8fa81": "2026-09-18-ci5t88",
+    "ff1cbb700f680d1644dd4db3273ee1cd": "2026-09-18-k7vdcq"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -116,7 +119,10 @@
     "/images/trends/src/2026-09-18-the-shade-store-kips-bay.jpg": "2026-09-18-the-shade-store-kips-bay",
     "/images/trends/src/2026-09-18-gqk4f1.jpg": "2026-09-18-gqk4f1",
     "/images/trends/src/2026-09-18-rlvgv1.jpg": "2026-09-18-rlvgv1",
-    "/images/trends/src/2026-09-18-wj6ltf.jpg": "2026-09-18-wj6ltf"
+    "/images/trends/src/2026-09-18-wj6ltf.jpg": "2026-09-18-wj6ltf",
+    "/images/trends/src/2026-09-18-urban-utility-suv.jpg": "2026-09-18-urban-utility-suv",
+    "/images/trends/src/2026-09-18-ci5t88.jpg": "2026-09-18-ci5t88",
+    "/images/trends/src/2026-09-18-k7vdcq.jpg": "2026-09-18-k7vdcq"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -191,6 +197,9 @@
     "https://image.pollinations.ai/prompt/flowing%20linen%20curtains%20in%20a%20sunlit%20living%20room%2C%20soft%20textures%2C%20interior%20design%20photography?width=1152&height=864&seed=43011&nologo=true&model=flux": "2026-09-18-the-shade-store-kips-bay",
     "https://images.adsttc.com/media/images/6aa8/2f24/069c/1b01/89fb/75fb/large_jpg/how-architectural-fabrics-are-expanding-the-role-of-the-building-envelope_16.jpg?1789407067": "2026-09-18-gqk4f1",
     "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=89811&nologo=true&model=flux": "2026-09-18-rlvgv1",
-    "https://www.designboom.com/twitterimages/uploads/2026/09/gunia-assouline-visual-history-ukrainian-folk-art-naive-my-love-designboom-1200.jpg": "2026-09-18-wj6ltf"
+    "https://www.designboom.com/twitterimages/uploads/2026/09/gunia-assouline-visual-history-ukrainian-folk-art-naive-my-love-designboom-1200.jpg": "2026-09-18-wj6ltf",
+    "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=79243&nologo=true&model=flux": "2026-09-18-urban-utility-suv",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=56146&nologo=true&model=flux": "2026-09-18-ci5t88",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=35733&nologo=true&model=flux": "2026-09-18-k7vdcq"
   }
 }
