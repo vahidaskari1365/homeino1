@@ -68,7 +68,11 @@
     "25e469553a264b565f4f61ccae407b8c": "2026-09-07-cdypxq",
     "026fff413bf6518fe098f0c7e793ebb0": "2026-09-17-k6wlox",
     "ee4485d30a162a6702231215e4168d3d": "2026-09-13-8v9idk",
-    "d547449fd28ad0502ab9dd250f25848b": "2026-09-18-m645pn"
+    "d547449fd28ad0502ab9dd250f25848b": "2026-09-18-m645pn",
+    "d9433470a3dace6f0e17cca42fcab00d": "2026-09-18-the-shade-store-kips-bay",
+    "470663ade6363b200b18057c6d7df25a": "2026-09-18-gqk4f1",
+    "45c6c6c98bc9a63fb8277e7091238571": "2026-09-18-rlvgv1",
+    "792b81b9afc2ed832515f844897af117": "2026-09-18-wj6ltf"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -108,7 +112,11 @@
     "/images/trends/src/2026-09-18-hqmfy1.jpg": "2026-09-18-hqmfy1",
     "/images/trends/src/2026-09-18-x5g03j.jpg": "2026-09-18-x5g03j",
     "/images/trends/src/2026-09-17-x8mqbm.jpg": "2026-09-17-x8mqbm",
-    "/images/trends/src/2026-09-17-k6wlox.jpg": "2026-09-17-k6wlox"
+    "/images/trends/src/2026-09-17-k6wlox.jpg": "2026-09-17-k6wlox",
+    "/images/trends/src/2026-09-18-the-shade-store-kips-bay.jpg": "2026-09-18-the-shade-store-kips-bay",
+    "/images/trends/src/2026-09-18-gqk4f1.jpg": "2026-09-18-gqk4f1",
+    "/images/trends/src/2026-09-18-rlvgv1.jpg": "2026-09-18-rlvgv1",
+    "/images/trends/src/2026-09-18-wj6ltf.jpg": "2026-09-18-wj6ltf"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -179,6 +187,10 @@
     "https://image.pollinations.ai/prompt/elegant%20floral%20mural%20painting%20as%20focal%20point%20on%20a%20kitchen%20wall%2C%20romantic%20hand-painted%20botanical%20artwork%20above%20open%20shelves%2C%20styled%20interior%20photography?width=1152&height=864&seed=82285&nologo=true&model=flux": "2026-09-07-cdypxq",
     "https://image.pollinations.ai/prompt/colorful%20patterned%20runner%20rug%20with%20playful%20bold%20geometric%20design%20lying%20in%20a%20bright%20kitchen%20hallway%2C%20the%20rug%20as%20clear%20focal%20point%2C%20interior%20design%20photography?width=1152&height=864&seed=101156&nologo=true&model=flux": "2026-09-17-k6wlox",
     "https://image.pollinations.ai/prompt/Mushroom-colored%20interior%2C%20elegant%20alternative%20to%20beige%20and%20gray%2C%20realistic%20decor%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=62772&nologo=true&model=flux": "2026-09-13-8v9idk",
-    "https://image.pollinations.ai/prompt/modern%20welded%20aluminum%20side%20table%20with%20visible%20craft%20joinery%20in%20a%20styled%20living%20room%2C%20industrial%20designer%20furniture%20piece%20as%20focal%20point%2C%20interior%20design%20photography?width=1152&height=864&seed=157670&nologo=true&model=flux": "2026-09-18-m645pn"
+    "https://image.pollinations.ai/prompt/modern%20welded%20aluminum%20side%20table%20with%20visible%20craft%20joinery%20in%20a%20styled%20living%20room%2C%20industrial%20designer%20furniture%20piece%20as%20focal%20point%2C%20interior%20design%20photography?width=1152&height=864&seed=157670&nologo=true&model=flux": "2026-09-18-m645pn",
+    "https://image.pollinations.ai/prompt/flowing%20linen%20curtains%20in%20a%20sunlit%20living%20room%2C%20soft%20textures%2C%20interior%20design%20photography?width=1152&height=864&seed=43011&nologo=true&model=flux": "2026-09-18-the-shade-store-kips-bay",
+    "https://images.adsttc.com/media/images/6aa8/2f24/069c/1b01/89fb/75fb/large_jpg/how-architectural-fabrics-are-expanding-the-role-of-the-building-envelope_16.jpg?1789407067": "2026-09-18-gqk4f1",
+    "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=89811&nologo=true&model=flux": "2026-09-18-rlvgv1",
+    "https://www.designboom.com/twitterimages/uploads/2026/09/gunia-assouline-visual-history-ukrainian-folk-art-naive-my-love-designboom-1200.jpg": "2026-09-18-wj6ltf"
   }
 }
