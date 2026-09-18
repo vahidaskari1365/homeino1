@@ -141,6 +141,19 @@ const COVER_BY_CATEGORY = {
 };
 const DEFAULT_COVER = "/images/trends/trends-guide-2026.png";
 
+// کاورهای ایدیتوریال AI-تولید (سندباکس، گیت QA بینایی در build-cover-pool.mjs)
+// در فال‌بک قبل از کاورهای قدیمی استفاده می‌شوند — هر دسته ۲ شاخص، ضدتکرار با usedCovers
+const AI_TREND_COVERS = {
+  "رنگ": ["/images/trends/covers/trends-c-rang-1.jpg", "/images/trends/covers/trends-c-rang-2.jpg"],
+  "مبلمان": ["/images/trends/covers/trends-c-mobleman-1.jpg", "/images/trends/covers/trends-c-mobleman-2.jpg"],
+  "آشپزخانه": ["/images/trends/covers/trends-c-ashpazkhaneh-1.jpg", "/images/trends/covers/trends-c-ashpazkhaneh-2.jpg"],
+  "حمام": ["/images/trends/covers/trends-c-hamam-1.jpg", "/images/trends/covers/trends-c-hamam-2.jpg"],
+  "متریال": ["/images/trends/covers/trends-c-material-1.jpg", "/images/trends/covers/trends-c-material-2.jpg"],
+  "سبک زندگی": ["/images/trends/covers/trends-c-zendegi-1.jpg", "/images/trends/covers/trends-c-zendegi-2.jpg"],
+  "سبک‌ها": ["/images/trends/covers/trends-c-sabkha-1.jpg", "/images/trends/covers/trends-c-sabkha-2.jpg"],
+  "هوشمند": ["/images/trends/covers/trends-c-hooshmand-1.jpg", "/images/trends/covers/trends-c-hooshmand-2.png"],
+};
+
 // منابع خبری serper — هر ران ۲ کوئری چرخشی (صرفه‌جویی در سقف رایگان ۲,۵۰۰ کوئری)
 const SERPER_NEWS_QUERIES = [
   "interior design trends",
@@ -479,6 +492,50 @@ function slugify(title, date) {
   return `${date}-${suffix}`;
 }
 
+// ────────────────────────────────────────────────────────────
+// گیت QA محتوایی بریف — خروجی نامناسب LLM همین‌جا رد می‌شود، نه بعد از انتشار.
+// چک‌ها: نسبت فارسی، جای‌گذار/الگوی الکی، طول‌ها، تعداد جمله، تگ‌های فارسی،
+// شباهت موضوعی با بریف‌های اخیر (ضد بازگوییِ همان مطلب با تیتر متفاوت).
+// ────────────────────────────────────────────────────────────
+const PLACEHOLDER_PAT = /(^|\s)(\.\.\.|…|``|\bTODO\b|\bJSON\b|عنوان:|خلاصه:|متن شما|اینجا بنویس)/;
+const faLetter = (s) => (String(s).match(/[\u0600-\u06FF]/g) || []).length;
+const wordSet = (s) =>
+  new Set(
+    String(s)
+      .toLowerCase()
+      .replace(/[^\u0600-\u06FF\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+  );
+
+function jaccard(a, b) {
+  let inter = 0;
+  for (const w of a) if (b.has(w)) inter++;
+  return a.size + b.size === 0 ? 0 : inter / (a.size + b.size - inter);
+}
+
+function runBriefQa({ title, summary, takeaway, tags }, existingBriefs) {
+  const text = `${title} ${summary}`;
+  const letters = text.replace(/[^\u0600-\u06FFa-zA-Z]/g, "");
+  if (letters.length < 40) return { ok: false, reason: "متن خیلی کوتاه است" };
+  const faRatio = faLetter(letters) / letters.length;
+  if (faRatio < 0.6) return { ok: false, reason: `خروجی فارسی نیست (نسبت فارسی ${(faRatio * 100) | 0}٪)` };
+  if (PLACEHOLDER_PAT.test(text)) return { ok: false, reason: "الگوی الکی/جای‌گذار در متن" };
+  if (title.length < 15 || title.length > 110) return { ok: false, reason: `طول تیتر نامعتبر (${title.length})` };
+  if (summary.length < 200 || summary.length > 1200) return { ok: false, reason: `طول خلاصه نامعتبر (${summary.length})` };
+  const sentences = summary.split(/[.؟!?…]+/).filter((s) => s.trim().length > 10);
+  if (sentences.length < 3) return { ok: false, reason: `خلاصه کمتر از ۳ جمله است (${sentences.length})` };
+  if ((takeaway || "").trim().length < 20) return { ok: false, reason: "پیام کاربردی خیلی کوتاه است" };
+  const cleanTags = (tags || []).filter((t) => faLetter(t) >= 2 && t.length >= 2 && t.length <= 24);
+  if (cleanTags.length < 2) return { ok: false, reason: "تگ‌های فارسی کافی نیست" };
+  const cand = wordSet(`${title} ${summary}`);
+  for (const b of existingBriefs.slice(0, 30)) {
+    const sim = jaccard(cand, wordSet(`${b.title} ${b.summary}`));
+    if (sim >= 0.55) return { ok: false, reason: `موضوع تکراری (شباهت ${(sim * 100) | 0}٪ با «${(b.title || "").slice(0, 40)}»)` };
+  }
+  return { ok: true, tags: cleanTags };
+}
+
 async function main() {
   console.log(`[magazine-daily] ${new Date().toISOString()} — starting`);
   const RUN_STARTED = Date.now();
@@ -598,7 +655,8 @@ async function main() {
           .filter((p) => p === base || fs.existsSync(path.join(REPO, "public", p)))
       : [];
     const values = [...new Set(Object.values(COVER_BY_CATEGORY))];
-    const candidates = [...variants, base, ...values.filter((v) => v !== base && !variants.includes(v)), DEFAULT_COVER].filter(Boolean);
+    const ai = AI_TREND_COVERS[category] || [];
+    const candidates = [...variants, ...ai, base, ...values.filter((v) => v !== base && !variants.includes(v)), DEFAULT_COVER].filter(Boolean);
     const pick = candidates.find((c) => !usedCovers.has(c))
       ?? candidates[(existing.length + usedCovers.size) % candidates.length];
     usedCovers.add(pick);
@@ -607,6 +665,7 @@ async function main() {
 
   // 3) تولید بریف‌ها
   const created = [];
+  const qaRejected = []; // گیت QA محتوایی — هر رد با علت، در لاگ ایجنت ثبت می‌شود
   let leadCtx = null; // زمینه مقاله روزانه — از بریف اول
   for (const item of selected) {
     // لینک‌های گوگل‌نیوز اول به آدرس واقعی ناشر حل می‌شوند — هم متن بهتر، هم og:image واقعی
@@ -660,6 +719,20 @@ async function main() {
     const normTitle = title.replace(/\s+/g, "");
     if (existingTitles.has(normTitle)) continue;
 
+    // ── گیت QA محتوایی (قبل از هر کار پرهزینهٔ کاور) — بریف بد اصلاً منتشر نمی‌شود ──
+    const qaIn = {
+      title,
+      summary,
+      takeaway: String(parsed.takeaway || "").trim(),
+      tags: Array.isArray(parsed.tags) ? parsed.tags.map((t) => String(t).slice(0, 24)) : [],
+    };
+    const qa = runBriefQa(qaIn, [...created, ...existing]);
+    if (!qa.ok) {
+      qaRejected.push({ title: title.slice(0, 60), reason: qa.reason });
+      console.log(`  QA رد کرد: ${qa.reason} — «${title.slice(0, 50)}»`);
+      continue;
+    }
+
     const category = CATEGORIES_FA.includes(parsed.category) ? parsed.category : "سبک زندگی";
     const slug = slugify(/[a-z]/i.test(parsed.title) ? parsed.title : title, today);
     // کاور (Task 43): og منبع → وب هم‌موضوع (z-ai) → Openverse → تولید رایگان → استخر (پناه آخر)
@@ -688,7 +761,7 @@ async function main() {
       coverSource,
       source: { name: item.publisher, url: item.link },
       readTime: 2,
-      tags: Array.isArray(parsed.tags) ? parsed.tags.map((t) => String(t).slice(0, 24)).slice(0, 4) : [],
+      tags: qa.tags.slice(0, 4),
       // GEO — عبارت‌های جستجو و پرسش‌وپاسخ؛ پایه FAQPage JSON-LD و استناد دستیارهای هوشمند
       ...(Array.isArray(parsed.keywords) && parsed.keywords.length
         ? { keywords: parsed.keywords.map((k) => String(k).trim().slice(0, 60)).filter((k) => k.length > 1).slice(0, 4) }
@@ -718,7 +791,7 @@ async function main() {
       ok: false,
       durationMs: Date.now() - RUN_STARTED,
       summary,
-      detail: { added: 0, total: existing.length, reason: via ? "no_valid_briefs" : "llm_unreachable", via },
+      detail: { added: 0, total: existing.length, reason: via ? "no_valid_briefs" : "llm_unreachable", via, qaRejected },
     });
     return;
   }
@@ -753,7 +826,7 @@ async function main() {
     agentKey: "magazine-editor",
     ok: true,
     durationMs: Date.now() - RUN_STARTED,
-    summary: `${created.length} بریف ترند جدید (${created.map((b) => b.category).join("، ")})${articleNote}${callLlm.lastVia ? ` — از طریق ${callLlm.lastVia}` : ""}`,
+    summary: `${created.length} بریف ترند جدید (${created.map((b) => b.category).join("، ")})${articleNote}${callLlm.lastVia ? ` — از طریق ${callLlm.lastVia}` : ""}${qaRejected.length ? ` — QA ${qaRejected.length} رد` : ""}`,
     detail: {
       added: created.length,
       articlesAdded: articleAdded,
@@ -761,6 +834,7 @@ async function main() {
       via: callLlm.lastVia ?? "unknown",
       titles: created.map((b) => b.title).slice(0, 4),
       sources: [...new Set(created.map((b) => b.source?.name).filter(Boolean))].slice(0, 4),
+      qaRejected,
     },
   });
 }

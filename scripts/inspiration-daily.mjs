@@ -11,7 +11,7 @@
 // اجرا:  node scripts/inspiration-daily.mjs [--pins=6] [--dry]
 // ============================================================
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { logContentAgentRun } from "./lib/agent-runs-log.mjs";
@@ -109,19 +109,21 @@ let POOL = null;
 try { POOL = JSON.parse(readFileSync(POOL_FILE, "utf8")).pool; } catch { POOL = null; }
 
 function poolImage(styleSlug, spaceSlug) {
+  // وفاداری سخت‌گیرانه: فقط دقیقاً همان (سبک × فضا) — فال‌بک خواهر حذف شد
+  // (عکس پذیرایی در پین «اتاق خواب» = عکس نامرتبط)؛ alias همان فضا با نام دیگر است، مجاز
   if (!POOL) return null;
   const alias = SPACE_POOL_ALIAS[spaceSlug];
   const direct = POOL[styleSlug]?.[spaceSlug] || (alias ? POOL[styleSlug]?.[alias] || [] : []);
-  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug && s !== alias).flatMap(([, v]) => v);
-  const cands = [...direct, ...siblings];
-  return cands.find((p) => !seenImgs.has(p.url)) || null; // صادقانه: بدون تکرار
+  const hit = direct.find((p) => !seenImgs.has(p.url));
+  return hit ? { ...hit, _prov: `pool:${styleSlug}:${spaceSlug}` } : null;
 }
 
 // استخر اختصاصی دسته‌های محصول (کلید _products در inspiration-pool.json)
 function productPoolImage(productSlug) {
   if (!POOL) return null;
   const cands = POOL._products?.[productSlug] || [];
-  return cands.find((p) => !seenImgs.has(p.url)) || null;
+  const hit = cands.find((p) => !seenImgs.has(p.url));
+  return hit ? { ...hit, _prov: `products:${productSlug}` } : null;
 }
 function productPoolRemaining() {
   if (!POOL?._products) return 0;
@@ -150,6 +152,29 @@ async function serperLiveImage(query) {
   }
 }
 
+// ---------- سلف-هاست + وفاداری ----------
+// لینک‌های z-cdn/chatglm بعد از مدتی منقضی می‌شوند → عکس را همین حالا (زنده)
+// دانلود و داخل ریپو ذخیره می‌کنیم؛ آدرس دائمی /images/pins/ می‌ماند.
+async function persistPinImage(pinId, url) {
+  try {
+    const dir = join(ROOT, "public", "images", "pins");
+    mkdirSync(dir, { recursive: true });
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 25000);
+    const res = await fetch(url, { headers: UA, signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length < 15000) return null;
+    const ext = (res.headers.get("content-type") || "").includes("png") || url.includes(".png") ? "png" : "jpg";
+    const dest = join(dir, `${pinId}.${ext}`);
+    writeFileSync(dest, buf);
+    return `/images/pins/${pinId}.${ext}`;
+  } catch {
+    return null;
+  }
+}
+
 // ---------- اجرا ----------
 const RUN_STARTED = Date.now();
 const gen = existsSync(GEN_FILE) ? JSON.parse(readFileSync(GEN_FILE, "utf8")) : [];
@@ -157,13 +182,11 @@ const seenImgs = new Set(gen.map((p) => p.image));
 
 // ---------- چرخش هوشمند: فقط ترکیب‌هایی که عکس مصرف‌نشده دارند ----------
 function unusedCount(styleSlug, spaceSlug) {
+  // مطابق وفاداری سخت‌گیرانه: فقط مستقیم (و alias همان فضا)
   if (!POOL) return 0;
   const alias = SPACE_POOL_ALIAS[spaceSlug];
   const direct = POOL[styleSlug]?.[spaceSlug] || (alias ? POOL[styleSlug]?.[alias] || [] : []);
-  const n = direct.filter((p) => !seenImgs.has(p.url)).length;
-  if (n > 0) return n;
-  const siblings = Object.entries(POOL[styleSlug] || {}).filter(([s]) => s !== spaceSlug && s !== alias).flatMap(([, v]) => v);
-  return siblings.filter((p) => !seenImgs.has(p.url)).length;
+  return direct.filter((p) => !seenImgs.has(p.url)).length;
 }
 const MATRIX = STYLES.length * SPACES.length;
 // هدف پین‌های سبک×فضا = باقی سهمیه بعد از پین‌های محصول
@@ -191,14 +214,28 @@ if (!process.env.LLM_KEYS_JSON && !process.env.LLM_API_KEY && !process.env.OMNIR
 for (const [i, { style, space }] of combos.entries()) {
   const label = `${style.name} × ${space.slug}`;
   process.stdout.write(`[${i + 1}/${combos.length}] ${label} ... `);
-  let pick = null;
+  let pick = null, pickProv = null;
   if (which("z-ai")) {
     const imgs = searchImage(`${style.en} ${space.en} layout`);
     pick = imgs.find((p) => !seenImgs.has(p.url) && p.w >= 600) || null;
+    if (pick) pickProv = `search:${style.slug}:${space.slug}`;
   }
-  if (!pick) pick = await serperLiveImage(`${style.en} ${space.en} layout`); // ابر: serper (گوگل‌ایمیج)
-  if (!pick) pick = poolImage(style.slug, space.slug); // آخرین فال‌بک: استخر
-  if (!pick) { console.log("✗ عکس تازه پیدا نشد"); continue; }
+  if (!pick) {
+    const sp = await serperLiveImage(`${style.en} ${space.en} layout`); // ابر: serper (گوگل‌ایمیج)
+    if (sp) { pick = sp; pickProv = `serper:${style.slug}:${space.slug}`; }
+  }
+  if (!pick) {
+    const pp = poolImage(style.slug, space.slug); // آخرین فال‌بک: استخر (فقط دقیقاً هم‌موضوع)
+    if (pp) { pick = pp; pickProv = pp._prov; }
+  }
+  if (!pick) { console.log("✗ عکس تازه همموضوع پیدا نشد"); continue; }
+
+  // سلف-هاست: ضد انقضای لینک — اگر دانلود نشد، همان URL می‌ماند (بدترین حالت مثل قبل)
+  const pinIdBase = `ag-${today.replace(/-/g, "")}-${String(cursor + i).padStart(2, "0")}`;
+  if (pick.url?.startsWith("http")) {
+    const local = await persistPinImage(pinIdBase, pick.url);
+    if (local) { pick = { ...pick, url: local }; pickProv = `local|${pickProv}`; }
+  }
 
   const topic = `${space.en} in ${style.en} style — image description: ${pick.source}`;
   let meta = null, via = "llm";
@@ -228,8 +265,13 @@ for (const [i, { style, space }] of combos.entries()) {
     };
   }
 
+  // ضدتکرار id — ران‌های هم‌روز نباید پین هم‌شناسه بسازند (باگ ۲۰ پین تکراری ناظر)
+  if (gen.some((g) => g.id === pinIdBase)) {
+    console.log("✗ id تکراری — پین رد شد");
+    continue;
+  }
   const pin = {
-    id: `ag-${today.replace(/-/g, "")}-${String(cursor + i).padStart(2, "0")}`,
+    id: pinIdBase,
     title: String(meta.title).slice(0, 80),
     image: pick.url,
     styleSlug: style.slug,
@@ -243,6 +285,7 @@ for (const [i, { style, space }] of combos.entries()) {
     author: { name: "ایجنت هومینو", type: "agent" },
     createdAt: new Date().toISOString(),
     _via: via,
+    _prov: pickProv, // مایننگاشت منبع عکس برای ممیزی وفاداری در ناظر سایت
   };
   gen.unshift(pin);
   seenImgs.add(pick.url);
@@ -277,12 +320,23 @@ for (const [k, { product, style }] of productJobs.entries()) {
   const label = `${product.slug} × ${style.name}`;
   process.stdout.write(`[${k + 1}/${productJobs.length}] ${label} ... `);
   let pick = productPoolImage(product.slug); // اول استخر کامیت‌شده (اجرای ابری)
+  let pickProv = pick?._prov || null;
   if (!pick && which("z-ai")) {
     const imgs = searchImage(`${product.en} ${style.en.split(" ")[0]}`).filter((p) => p.w >= 600 && !seenImgs.has(p.url));
     pick = imgs[0] || null;
+    if (pick) pickProv = `search-products:${product.slug}`;
   }
-  if (!pick) pick = poolImage(style.slug, product.room); // آخرین فال‌بک: عکس فضای هماهنگ
+  if (!pick) {
+    const pp = poolImage(style.slug, product.room); // آخرین فال‌بک: عکس فضای هماهنگ
+    if (pp) { pick = pp; pickProv = pp._prov; }
+  }
   if (!pick) { console.log("✗ عکس تازه پیدا نشد"); continue; }
+
+  // سلف-هاست محصول هم مثل پین سبک×فضا — ضد انقضای لینک
+  if (pick.url?.startsWith("http")) {
+    const local = await persistPinImage(productPinId, pick.url);
+    if (local) { pick = { ...pick, url: local }; pickProv = `local|${pickProv || ""}`; }
+  }
 
   const topic =
     `عکس یک «${product.slug}» در فضای ${product.room} با حال‌وهوای سبک ${style.name} (منبع تصویر: ${pick.source}). ` +
@@ -311,8 +365,14 @@ for (const [k, { product, style }] of productJobs.entries()) {
     };
   }
 
+  const productPinId = `ag-${today.replace(/-/g, "")}-p${String(prodCursor).padStart(2, "0")}-${k}`;
+  // ضدتکرار id — مثل پین سبک×فضا
+  if (gen.some((g) => g.id === productPinId)) {
+    console.log("✗ id تکراری — پین محصول رد شد");
+    continue;
+  }
   const pin = {
-    id: `ag-${today.replace(/-/g, "")}-p${String(prodCursor).padStart(2, "0")}-${k}`,
+    id: productPinId,
     title: String(meta.title).slice(0, 80),
     image: pick.url,
     styleSlug: style.slug,
@@ -326,6 +386,7 @@ for (const [k, { product, style }] of productJobs.entries()) {
     author: { name: "ایجنت هومینو", type: "agent" },
     createdAt: new Date().toISOString(),
     _via: via,
+    _prov: pickProv, // products:… = عکس محصول (طراحی همین است) — ناظر این کلاس را مجاز می‌داند
   };
   gen.unshift(pin);
   seenImgs.add(pick.url);

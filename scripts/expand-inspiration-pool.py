@@ -51,10 +51,21 @@ for style in pool.values():
             seen.add(it.get("url"))
 
 def _parse(d):
+    # فقط دامنه‌های پایدار — لینک‌های z-cdn/chatglm منقضی می‌شوند و استخر را می‌پوسانند (Task 51)
+    stable = ("images.pexels.com", "images.unsplash.com", "cdn.pixabay.com",
+              "upload.wikimedia.org", "live.staticflickr.com", "images.adsttc.com",
+              "cdn.home-designing.com")
     out = []
     for res in d.get("results", []):
         url = res.get("original_url") or ""
         if not url or not url.startswith("http"):
+            continue
+        try:
+            from urllib.parse import urlparse
+            host = urlparse(url).hostname or ""
+        except Exception:
+            continue
+        if not any(host == d2 or host.endswith("." + d2) for d2 in stable):
             continue
         w = int(str(res.get("original_width", "1200")).replace("px", "") or 0)
         out.append({"url": url, "source": (res.get("source") or "وب")[:60], "w": w})

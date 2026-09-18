@@ -220,6 +220,105 @@ try {
     "ایجنت الهام (inspiration-daily) را بازبینی کنید — انتخاب عکس باید از استخر بدون تکرار باشد");
 }
 
+// وفاداری موضوع پین‌ها — عکس هر پین باید از دقیقاً همان سبک×فضای اعلام‌شده باشد (Task 51)
+try {
+  const SPACE_ALIAS = { "حیاط و محوطه": "بیرونی" }; // هم‌گام با SPACE_POOL_ALIAS در inspiration-daily
+  const poolDoc = JSON.parse(readFileSync(join(ROOT, "scripts/inspiration-pool.json"), "utf8")).pool || {};
+  const urlPlaces = new Map();
+  for (const [st, spaces] of Object.entries(poolDoc)) {
+    for (const [sp, items] of Object.entries(spaces)) {
+      for (const it of items) {
+        if (!urlPlaces.has(it.url)) urlPlaces.set(it.url, []);
+        urlPlaces.get(it.url).push(`${st}:${sp}`);
+      }
+    }
+  }
+  let mismatch = 0;
+  const examples = [];
+  const spOf = (s) => s.split(":").slice(1).join(":"); // "style:space" → "space"
+  for (const p of pinList || []) {
+    if (!p?.image || !p.styleSlug || !p.room) continue;
+    // پین محصول‌محور: عکس از استخر محصول (کلاس _products) — طراحی همین است، وفاداریش با _prov سنجیده می‌شود
+    const provIsProduct = typeof p._prov === "string" && (p._prov.startsWith("products:") || p._prov.startsWith("local|products:"));
+    const roomOk = (sp) => sp === p.room || sp === SPACE_ALIAS[p.room]; // alias = همان فضا با نام دیگر
+    if (p.image.startsWith("/images/")) {
+      // سلف-هاست: با provenance داخلی ممیزی می‌شود
+      if (typeof p._prov === "string" && p._prov.startsWith("local|")) {
+        const inner = p._prov.slice(6);
+        const innerOk = inner.startsWith("pool:")
+          ? (() => { const [, st, sp] = inner.split(":"); return st === p.styleSlug && roomOk(sp); })()
+          : !inner || (inner.includes(p.styleSlug) && inner.includes(p.room));
+        if (!innerOk) {
+          mismatch++;
+          if (examples.length < 4) examples.push(`${p.id} (${p.styleSlug}/${p.room}): ناسازگار (${p._prov})`);
+        }
+      }
+      continue;
+    }
+    const places = urlPlaces.get(p.image);
+    // عکس‌های جستجوی زنده در استخر نیستند → ساختاراً وفادار (کوئری شامل سبک+فضاست)
+    if (places && !places.some((s) => roomOk(spOf(s))) && !places.every((sp) => sp.startsWith("_products:")) && !provIsProduct) {
+      mismatch++;
+      if (examples.length < 4) examples.push(`${p.id} (${p.styleSlug}/${p.room}): عکس متعلق به ${places.join(" ، ")}`);
+    }
+    if (typeof p._prov === "string" && p._prov.startsWith("pool:")) {
+      const [, st, sp] = p._prov.split(":");
+      if (st === p.styleSlug && !roomOk(sp)) {
+        mismatch++;
+        if (examples.length < 4) examples.push(`${p.id}: provenance ناسازگار (${p._prov})`);
+      }
+    }
+  }
+  add("محتوا", "وفاداری موضوع پین‌ها", mismatch === 0,
+    mismatch ? `${mismatch} پین با عکس نامرتبط: ${examples.join(" | ")}` : "همهٔ پین‌ها با موضوع اعلام‌شده هماهنگ‌اند",
+    "فال‌بک خواهر در poolImage حذف شده — پین‌های خراب با scripts/qa-repair-pins.mjs ترمیم شوند");
+} catch (e) {
+  add("محتوا", "وفاداری موضوع پین‌ها", false, "خطا: " + e.message, "inspiration-pool.json را بررسی کنید");
+}
+
+// سلامت عکس‌ها — نمونهٔ پین‌های اخیر ایجنت + نمونهٔ استخر نباید مرده باشند (Task 51)
+try {
+  const isLocal = (u) => typeof u === "string" && u.startsWith("/images/");
+  const headDead = async (u) => {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch(u, { method: "HEAD", signal: ctrl.signal, redirect: "follow" });
+      clearTimeout(t);
+      return !r.ok;
+    } catch {
+      return true;
+    }
+  };
+  // ① نمونهٔ ۶ پین اخیر ایجنت
+  const samplePins = (pinList || []).filter((p) => p.author?.type === "agent" && p.image).slice(0, 6);
+  let deadPins = 0;
+  await Promise.all(samplePins.map(async (p) => {
+    const dead = isLocal(p.image) ? !existsSync(join(ROOT, "public", p.image)) : await headDead(p.image);
+    if (dead) deadPins++;
+  }));
+  add("محتوا", "سلامت عکس پین‌ها (نمونه)", deadPins < 2,
+    deadPins ? `${deadPins} عکس مرده از ${samplePins.length} پین اخیر` : `${samplePins.length} عکس اخیر همگی زنده`,
+    "لینک‌های z-cdn منقضی می‌شوند — scripts/qa-repair-pins.mjs (سلف-هاست) را اجرا کنید");
+  // ② نمونهٔ پوسیدگی استخر (۱۲ URL تصادفی مصرف‌نشده)
+  const poolDoc2 = JSON.parse(readFileSync(join(ROOT, "scripts/inspiration-pool.json"), "utf8")).pool || {};
+  const unused = [];
+  for (const spaces of Object.values(poolDoc2)) {
+    for (const items of Object.values(spaces)) {
+      for (const it of items) if (!pinImages.has(it.url)) unused.push(it.url);
+    }
+  }
+  const poolSample = unused.sort(() => Math.random() - 0.5).slice(0, 12);
+  let poolDead = 0;
+  await Promise.all(poolSample.map(async (u) => { if (await headDead(u)) poolDead++; }));
+  const rotten = poolSample.length > 0 && poolDead / poolSample.length >= 0.25;
+  add("محتوا", "سلامت استخر عکس (نمونه)", !rotten,
+    poolSample.length ? `${poolSample.length - poolDead}/${poolSample.length} زنده — ${unused.length} عکس مصرف‌نشده${rotten ? " ⚠ استخر در حال پوسیدن" : ""}` : "استخر خالی است",
+    rotten ? "شارژ با scripts/expand-inspiration-pool.py (فقط دامنه‌های پایدار)" : "");
+} catch (e) {
+  add("محتوا", "سلامت عکس پین‌ها (نمونه)", false, "خطا: " + e.message, "");
+}
+
 // کاور نباید بایت‌به‌بایت عکس یک پین محصول باشد (استخر جنریک نباید خود را قایم کند — Task 50)
 {
   const pinMd5 = new Map();

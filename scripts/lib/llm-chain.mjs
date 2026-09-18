@@ -127,17 +127,22 @@ export async function callLlm(messages, opts = {}) {
   }
 
   // 4) سندباکس: z-ai-web-dev-sdk (بیرون از Actions در دسترس نیست — بی‌ضرر می‌گذرد)
-  try {
-    const mod = await import("z-ai-web-dev-sdk");
-    const ZAI = mod.default ?? mod;
-    const zai = await ZAI.create();
-    const res = await zai.chat.completions.create({ messages, temperature: 0.7 });
-    const out = res?.choices?.[0]?.message?.content ?? "";
-    if (out) {
-      callLlm.lastVia = "zai-sdk";
-      return out;
-    }
-  } catch { /* LLM در دسترس نیست */ }
+  //    مسیرهای کاندید: پکیج معمول، مسیر env، نصب گلوبال bun در سندباکس
+  const sdkPaths = ["z-ai-web-dev-sdk", process.env.ZAI_SDK_PATH, "/home/z/.bun/install/global/node_modules/z-ai-web-dev-sdk/dist/index.js"].filter(Boolean);
+  for (const sdkPath of sdkPaths) {
+    try {
+      const mod = await import(sdkPath);
+      const ZAI = mod.default ?? mod;
+      const zai = await ZAI.create();
+      const res = await zai.chat.completions.create({ messages, temperature: 0.7 });
+      const out = res?.choices?.[0]?.message?.content ?? "";
+      if (out) {
+        callLlm.lastVia = "zai-sdk";
+        return out;
+      }
+      break;
+    } catch { /* مسیر بعدی */ }
+  }
 
   callLlm.lastVia = null;
   return null;

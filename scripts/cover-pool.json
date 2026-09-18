@@ -1,0 +1,59 @@
+{
+  "رنگ": [
+    "/images/trends/trends-colors-persian.png",
+    "/images/trends/trends-color-year.png",
+    "/images/trends/covers/trends-c-rang-1.jpg",
+    "/images/trends/covers/trends-c-rang-2.jpg"
+  ],
+  "مبلمان": [
+    "/images/trends/trends-neo-deco.png",
+    "/images/trends/covers/trends-c-mobleman-1.jpg",
+    "/images/trends/covers/trends-c-mobleman-2.jpg"
+  ],
+  "آشپزخانه": [
+    "/images/trends/trends-kitchen-wood.png",
+    "/images/trends/covers/trends-c-ashpazkhaneh-1.jpg",
+    "/images/trends/covers/trends-c-ashpazkhaneh-2.jpg"
+  ],
+  "حمام": [
+    "/images/trends/trends-wetroom.png",
+    "/images/trends/covers/trends-c-hamam-1.jpg",
+    "/images/trends/covers/trends-c-hamam-2.jpg"
+  ],
+  "متریال": [
+    "/images/trends/trends-chrome-wood.png",
+    "/images/trends/covers/trends-c-material-1.jpg",
+    "/images/trends/covers/trends-c-material-2.jpg"
+  ],
+  "سبک زندگی": [
+    "/images/trends/trends-zoning.png",
+    "/images/trends/covers/trends-c-zendegi-1.jpg",
+    "/images/trends/covers/trends-c-zendegi-2.jpg"
+  ],
+  "سبک‌ها": [
+    "/images/trends/trends-guide-2026.png",
+    "/images/trends/covers/trends-c-sabkha-1.jpg",
+    "/images/trends/covers/trends-c-sabkha-2.jpg"
+  ],
+  "هوشمند": [
+    "/images/trends/covers/trends-c-hooshmand-1.jpg"
+  ],
+  "ویلا و باغ": [],
+  "حیاط و بیرونی": [],
+  "محیط کار": [
+    "/images/trends/trends-patterns-story.png"
+  ],
+  "وسایل ترند": [
+    "/images/trends/trends-gem-maxxing.png"
+  ],
+  "_default": [
+    "/images/trends/trends-guide-2026.png",
+    "/images/trends/trends-color-year.png",
+    "/images/trends/trends-colors-persian.png",
+    "/images/trends/trends-neo-deco.png",
+    "/images/trends/trends-kitchen-wood.png",
+    "/images/trends/trends-wetroom.png",
+    "/images/trends/trends-chrome-wood.png",
+    "/images/trends/trends-zoning.png"
+  ]
+}

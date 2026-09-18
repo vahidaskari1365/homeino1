@@ -64,7 +64,7 @@
   {
     "id": "ag-20260918-46",
     "title": "کاشتن رنگ در فضای باز: راز دکوراسیون مدرن کوچه ایرانی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8c46c98a2c99.jpg",
+    "image": "/images/pins/ag-20260918-46.jpg",
     "styleSlug": "modern",
     "room": "حیاط و محوطه",
     "tags": [
@@ -90,7 +90,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-18T13:14:36.969Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:modern:حیاط و محوطه"
   },
   {
     "id": "ag-20260918-45",
@@ -432,7 +433,7 @@
   {
     "id": "ag-20260917-44",
     "title": "فضای کاری مدرن در دکوراسیون زنده",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/99b6cfbe5264.png",
+    "image": "/images/pins/ag-20260917-44.jpg",
     "styleSlug": "modern",
     "room": "فضای کار",
     "tags": [
@@ -457,7 +458,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-17T17:47:38.135Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:modern:فضای کار"
   },
   {
     "id": "ag-20260917-43",
@@ -703,7 +705,7 @@
   {
     "id": "ag-20260917-40",
     "title": "پنجره‌های بلند در مقابل دیوار آجری: تعادل درون‌گرایی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d0b5ffd288a3.jpg",
+    "image": "/images/pins/ag-20260917-40.jpg",
     "styleSlug": "rustic",
     "room": "پذیرایی",
     "tags": [
@@ -728,7 +730,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-17T13:42:57.143Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:rustic:پذیرایی"
   },
   {
     "id": "ag-20260917-p00-1",
@@ -823,7 +826,7 @@
   {
     "id": "ag-20260917-42",
     "title": "پشت‌بام مدرن؛ جایی برای میان‌برهای آپارتمانی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/45ad7dd22f77.jpg",
+    "image": "/images/pins/ag-20260917-42.jpg",
     "styleSlug": "contemporary",
     "room": "حیاط و محوطه",
     "tags": [
@@ -848,12 +851,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-17T08:56:43.600Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:contemporary:حیاط و محوطه"
   },
   {
     "id": "ag-20260917-41",
     "title": "ساختن فضای کاری مدرن در سبک مدیترانه‌ای",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ee5a2f2ad616.jpg",
+    "image": "/images/pins/ag-20260917-41.jpg",
     "styleSlug": "mediterranean",
     "room": "فضای کار",
     "tags": [
@@ -878,37 +882,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-17T08:55:51.697Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260917-40",
-    "title": "تلفیق سنگ و چوب در دکوراسیون روستیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e28871bdea21.jpg",
-    "styleSlug": "rustic",
-    "room": "پذیرایی",
-    "tags": [
-      "دکوراسیون روستیک",
-      "نورپردازی محیطی",
-      "متریال‌های طبیعی"
-    ],
-    "productIds": [],
-    "description": "ستون‌های چوبی تیره و دانه‌بندی‌شده در سقف، جرم‌های سنگی خشن را در کنار هم قرار می‌دهند و با وجود سادگی، وزن و گرمای خاصی به فضا می‌بخشند. نورپردازی نرم و محیطی، با سایه‌روشن‌های بلند، حس آرامش و اصالت را تقویت می‌کند و فرم‌های ساده‌ی مبلمان چوبی، این ترکیب سنگین را با الگوهای نرم و هندسی باقی می‌ماند.",
-    "items": [
-      "میز صندلی‌های چوبی دانه‌بندی‌شده",
-      "آتش‌سوزی سنگی خشن با پله‌های چوبی",
-      "ستون‌های سقفی چوبی با دانه‌بندی تیره",
-      "شمع‌های سینی فلزی و گلدان‌های خاکی"
-    ],
-    "styleNote": "تمرکز این فضا بر روی متریال‌های خام و طبیعی است؛ استفاده از سنگ خشن در آتش‌سوزی و چوب درختان قدیمی در ستون‌ها، حس یک خانه روستایی قدیمی را به خوبی منتقل می‌کند.",
-    "source": {
-      "label": "House Beautiful"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-17T08:53:55.115Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:mediterranean:فضای کار"
   },
   {
     "id": "ag-20260916-p08-1",
@@ -1167,7 +1142,7 @@
   {
     "id": "ag-20260916-40",
     "title": "هنر دیکو و طلایی در فضای داخلی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d7dfaa682cc8.png",
+    "image": "/images/pins/ag-20260916-40.jpg",
     "styleSlug": "art-deco",
     "room": "ناهارخوری",
     "tags": [
@@ -1194,12 +1169,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-16T13:40:11.977Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:art-deco:ناهارخوری"
   },
   {
     "id": "ag-20260916-39",
     "title": "تمرکز بر خطوط صاف و نورپردازی مدرن",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d91a3c2ef407.jpg",
+    "image": "/images/pins/ag-20260916-39.png",
     "styleSlug": "contemporary",
     "room": "اتاق خواب",
     "tags": [
@@ -1225,12 +1201,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-16T13:39:42.677Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:contemporary:اتاق خواب"
   },
   {
     "id": "ag-20260916-38",
     "title": "چیدمان حیاط و محوطه به سبک روستیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/951d8adbfbf3.jpg",
+    "image": "/images/pins/ag-20260916-38.jpg",
     "styleSlug": "rustic",
     "room": "حیاط و محوطه",
     "tags": [
@@ -1257,7 +1234,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-16T13:39:11.345Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:rustic:حیاط و محوطه"
   },
   {
     "id": "ag-20260916-37",
@@ -1382,69 +1360,6 @@
       "type": "agent"
     },
     "createdAt": "2026-09-16T08:48:50.517Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260916-39",
-    "title": "اتاق خواب مدرن با پنل‌های سفید و مبلمان ساده",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/20a99a2ea14c.jpg",
-    "styleSlug": "contemporary",
-    "room": "اتاق خواب",
-    "tags": [
-      "مدرن",
-      "ساده",
-      "دکوراسیون داخلی"
-    ],
-    "productIds": [],
-    "description": "پنل‌های سفید گچی تمام دیوار را پوشش داده‌اند و کف اتاق از مرمر کرم‌رنگ استفاده شده است. تخت خواب با بالش‌های سفید و سوزنی و رومیزی پشت سر تخت طراحی شده است. نورپردازی از طریق سقف و پنل‌های داخلی انجام می‌شود که حس آرامش را تقویت می‌کند.",
-    "items": [
-      "تخت خواب مدرن",
-      "رومیزی پشت سر",
-      "پنل گچی",
-      "مبلمان تک",
-      "شیرآلات کروم"
-    ],
-    "styleNote": "سبک طراحی بر پایه سادگی و خطوط مستقیم بنا شده است. استفاده از پنل‌های گچی و متریال‌های طبیعی نظیر مرمر، حس خنکی و نظم را القا می‌کند. مبلمان ساده بدون حاشیه‌های اضافی، فضای اتاق را باز و پویا نگه می‌دارد.",
-    "source": {
-      "label": "Hommés Studio"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-16T08:48:11.755Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260916-38",
-    "title": "فضای سبک با چوب و سنگ",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cb07abe2021a.jpg",
-    "styleSlug": "rustic",
-    "room": "حیاط و محوطه",
-    "tags": [
-      "طراحی فضای سبز",
-      "سبک رستوریکال",
-      "دکوراسیون بیرون"
-    ],
-    "productIds": [],
-    "description": "استفاده از تیرچه‌های چوبی در سقف فضای سبز، سایه‌های طبیعی دلنشینی ایجاد می‌کند. جایگاه آتش‌سوزی سنگی در مرکز محوطه، نقطه تمرکز و گرمای خانه را دوچندان می‌کند. ترکیب سنگ طبیعی و چوب کوبیده، حس آرامش را در فضای باز تقویت می‌کند.",
-    "items": [
-      "آتش‌سوزی سنگی",
-      "تیرچه‌های چوبی",
-      "کف‌پوش سنگی",
-      "گلدان‌های بزرگ",
-      "نورپردازی داخلی",
-      "صندلی‌های چوبی"
-    ],
-    "styleNote": "سبک رستوریکال با استفاده از المان‌های طبیعی، مرز بین خانه و باغ را نرم می‌کند. طراحی باید با اقلیم منطقه هماهنگ باشد تا استفاده از فضای بیرون در طول سال مطلوب باشد.",
-    "source": {
-      "label": "House Beautiful"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-16T08:47:34.202Z",
     "_via": "llm"
   },
   {
@@ -1644,7 +1559,7 @@
   {
     "id": "ag-20260915-35",
     "title": "شادابی و آرامش در فضای کابویی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/159d52f65db1.png",
+    "image": "/images/pins/ag-20260915-35.jpg",
     "styleSlug": "boho",
     "room": "پذیرایی",
     "tags": [
@@ -1670,7 +1585,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-15T17:44:48.952Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:boho:پذیرایی"
   },
   {
     "id": "ag-20260915-p04-1",
@@ -1737,7 +1653,7 @@
   {
     "id": "ag-20260915-37",
     "title": "رویایی با طلایی و مخمل: دکوراسیون آرت دکو",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b37e038d99c7.jpg",
+    "image": "/images/pins/ag-20260915-37.jpg",
     "styleSlug": "art-deco",
     "room": "پذیرایی",
     "tags": [
@@ -1764,7 +1680,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-15T13:46:43.269Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:art-deco:پذیرایی"
   },
   {
     "id": "ag-20260915-36",
@@ -1832,7 +1749,7 @@
   {
     "id": "ag-20260915-34",
     "title": "چیدمان حیاط و محوطه به سبک صنعتی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3d78a205dddb.jpg",
+    "image": "/images/pins/ag-20260915-34.jpg",
     "styleSlug": "industrial",
     "room": "حیاط و محوطه",
     "tags": [
@@ -1859,7 +1776,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-15T13:44:35.437Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:industrial:حیاط و محوطه"
   },
   {
     "id": "ag-20260915-p04-1",
@@ -1928,38 +1846,6 @@
     "_via": "llm"
   },
   {
-    "id": "ag-20260915-37",
-    "title": "جادوی طلایی آرت دکو: فضایی لوکس و مدرن",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/79157362e257.png",
-    "styleSlug": "art-deco",
-    "room": "پذیرایی",
-    "tags": [
-      "دکوراسیون داخلی",
-      "هنر دکو",
-      "طراحی داخلی مدرن"
-    ],
-    "productIds": [],
-    "description": "ترکیب شیکِ سلطنتیِ ولوتر طلایی و نقوش هندسی آرت دکو، حس شکوه و مدرن بودن را به خانه‌تان هدیه می‌دهد. پارچه‌های نخی با بافت‌های گرم و رنگ‌های طلایی یا کرمی، نمایانگرِ تمیزی و لوکس بودن فضا هستند. انتخاب مبلمان با خطوط ساده و نیمکت‌های ایستاده، همزمان زیبایی و کارایی را برای زندگی روزمره تضمین می‌کند.",
-    "items": [
-      "صندلی ولوتر طلایی",
-      "آینه طلایی با قاب چوبی",
-      "فرش هندسی و گلد",
-      "چراغ معلق کلاسیک",
-      "تابلو دیواری هندسی",
-      "میز صندلی فلزی"
-    ],
-    "styleNote": "پرستیژ آرت دکو از ترکیب هنر مدرن و معماری باستانی می‌آید؛ جایی که خطوط تیز و نقوش هندسی بر زیبایی حکم‌فرمایی می‌کنند. استفاده از فلزات گرانبها و بافت‌های نرم، تعادل میان حس تاریخی و شیک بودن امروزی را در این فضاسازی برقرار می‌کند.",
-    "source": {
-      "label": "Wallpics"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-15T08:56:41.993Z",
-    "_via": "llm"
-  },
-  {
     "id": "ag-20260915-36",
     "title": "آرامش نیلگون؛ چیدمان ناهارخوری به سبک مدیترانه‌ای",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b93171a3250a.jpg",
@@ -2020,39 +1906,6 @@
       "type": "agent"
     },
     "createdAt": "2026-09-15T08:54:58.665Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260915-34",
-    "title": "ترکیب هنر صنعتی و طبیعت در طراحی حیاط",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ddf0b7e8ffc9.jpg",
-    "styleSlug": "industrial",
-    "room": "حیاط و محوطه",
-    "tags": [
-      "طراحی فضای باز",
-      "سبک صنعتی",
-      "دکوراسیون حیاط"
-    ],
-    "productIds": [],
-    "description": "ترکیب متریال‌های خام و کلاسیک مانند آجر و فلز، فضای این حیاط را با ظرافت مدرن پر می‌کند. نورپردازی هوشمند و گیاهان آپارتمانی، سردیِ صنعتی را به گرمایی چشم‌نواز تبدیل کرده است. این سبک، تعادل زیبایی میان مصالح سخت و طبیعت را در فضای باز نمایش می‌دهد.",
-    "items": [
-      "صندلی فلزی زین‌دار",
-      "میز چوبی تخت",
-      "دیگ آجری",
-      "دیوار آجری برجسته",
-      "چراغ فلزی آویز",
-      "گلدان مسی",
-      "کابینت فلزی"
-    ],
-    "styleNote": "این چیدمان با بهره‌گیری از خطوط خشک و مصالح سخت، هویتی اصیل و بی‌پیرایه دارد. وجود گیاهان سبز، نقطه تضاد جذابی ایجاد کرده و فضای را برای زندگی بهینه می‌کند.",
-    "source": {
-      "label": "TheCoolist"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-15T08:54:42.392Z",
     "_via": "llm"
   },
   {
@@ -2217,7 +2070,7 @@
   {
     "id": "ag-20260914-32",
     "title": "اداری صنعتی: ترکیب آجر و فلز در فضای کار",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/82ad34664fdd.jpg",
+    "image": "/images/pins/ag-20260914-32.jpg",
     "styleSlug": "industrial",
     "room": "فضای کار",
     "tags": [
@@ -2243,7 +2096,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-14T18:47:40.714Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:فضای کار"
   },
   {
     "id": "ag-20260914-p01-1",
@@ -2408,7 +2262,7 @@
   {
     "id": "ag-20260914-31",
     "title": "چیدمان اتاق خواب به سبک صنعتی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/df466da8f537.jpg",
+    "image": "/images/pins/ag-20260914-31.jpg",
     "styleSlug": "industrial",
     "room": "اتاق خواب",
     "tags": [
@@ -2434,7 +2288,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-14T15:09:44.986Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:industrial:اتاق خواب"
   },
   {
     "id": "ag-20260914-p01-1",
@@ -2592,38 +2447,6 @@
     },
     "createdAt": "2026-09-14T09:16:33.906Z",
     "_via": "قالب"
-  },
-  {
-    "id": "ag-20260914-31",
-    "title": "خواب راحت به سبک لافت: تلاقی آجر، فلز و آرامش",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/77dcbe882ff1.jpg",
-    "styleSlug": "industrial",
-    "room": "اتاق خواب",
-    "tags": [
-      "دکوراسیون صنعتی",
-      "اتاق خواب لافت",
-      "چیدمان مدرن"
-    ],
-    "productIds": [],
-    "description": "دیوار آجری کهنه‌نما در ترکیب با خطوط مشکی و فلزی، پیش‌زمینه‌ای قدرتمند برای این اتاق خواب صنعتی فراهم کرده است. تخت‌خواب پارچه‌ای با تشک راحت، سختی و زبری متریال‌های بتنی و آجری را به تعادل رسانده و حس دنجی فضا را تضمین می‌کند. نورپردازی ملایم با حباب‌ها و پایه‌های مات، گرمای مطبوعی به سراسر اتاق پخش می‌کند. هارمونی طیف طوسی و رنگ طبیعی آجر، چیدمانی خلوت و در عین حال عمیق پدید آورده است.",
-    "items": [
-      "تخت‌خواب مدرن با لمسه‌کوبی پارچه‌ای طوسی",
-      "پاتختی فلزی مینیمال با پوشش مشکی مات",
-      "دیوارپوش با نمای آجر قزاقی یا سفال روستیک",
-      "چراغ مطالعه فلزی بازویی با نور گرم",
-      "منسوجات خواب از جنس کتان ارگانیک خنثی",
-      "فرش تخت‌بافت یا وینتیج با نقش ملایم"
-    ],
-    "styleNote": "شاخصه اصلی سبک لافت در این فضا، عریان گذاشتن المان‌های ساختاری مثل آجر و تیرک‌های فلزی است. راز موفقیت این ترکیب، متعادل کردن حس خام و صنعتی فضا با منسوجات نرم و نورهای گرم خانگی است.",
-    "source": {
-      "label": "Sonno Beds"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-14T09:11:13.430Z",
-    "_via": "llm"
   },
   {
     "id": "ag-20260913-p09-1",
@@ -2786,7 +2609,7 @@
   {
     "id": "ag-20260913-29",
     "title": "ترکیب نئوکلاسیک و مدرن در فضای باز: هنر شکوه",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d79af6be9a2c.jpg",
+    "image": "/images/pins/ag-20260913-29.jpg",
     "styleSlug": "neoclassic",
     "room": "حیاط و محوطه",
     "tags": [
@@ -2813,7 +2636,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-13T17:01:07.841Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:neoclassic:حیاط و محوطه"
   },
   {
     "id": "ag-20260913-p08-1",
@@ -2942,38 +2766,6 @@
     },
     "createdAt": "2026-09-13T13:27:48.104Z",
     "_via": "llm"
-  },
-  {
-    "id": "ag-20260913-29",
-    "title": "چیدمان پذیرایی به سبک بوهو",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/eba30d0c2fe4.jpg",
-    "styleSlug": "boho",
-    "room": "پذیرایی",
-    "tags": [
-      "بوهو",
-      "پذیرایی",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی پذیرایی با زبان طراحی بوهو: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "کاناپه",
-      "میز جلومبلی",
-      "فرش",
-      "آباژور",
-      "تابلو",
-      "کوسن‌های هماهنگ"
-    ],
-    "styleNote": "سبک بوهو با تکیه بر bohemian interior colorful شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "DigsDigs"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-13T13:25:50.657Z",
-    "_via": "قالب"
   },
   {
     "id": "ag-20260913-28",
@@ -3133,38 +2925,6 @@
       "type": "agent"
     },
     "createdAt": "2026-09-13T08:32:18.505Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260913-29",
-    "title": "جادوی بافت و گیاهان سبز در نشیمن به سبک بوهو",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a914da9311d7.jpg",
-    "styleSlug": "boho",
-    "room": "پذیرایی",
-    "tags": [
-      "دکوراسیون_بوهو",
-      "نشیمن_دنج",
-      "چیدمان_گیاهان"
-    ],
-    "productIds": [],
-    "description": "تلفیق منسوجات پرنقش‌ونگار با چوب طبیعی و حضور پررنگ گیاهان آپارتمانی، به این فضا روحی سرزنده و بی‌تکلف بخشیده است. نفوذ آزادانه نور طبیعی روی لایه‌های مختلف بافت، کنتراست زیبایی میان رنگ‌های گرم اخرایی و سبزی برگ‌ها ایجاد می‌کند. این چیدمان غیررسمی، بدون تحمیل الگوهای قرینه و سخت‌گیرانه، نشیمنی دنج و بسیار کاربردی برای لم‌دادن و استراحت خلق کرده است.",
-    "items": [
-      "شال مبل و کوسن‌های سوزن‌دوزی با تنالیته گرم",
-      "گیاهان برگ‌پهن آپارتمانی مانند مونسترا و فیکوس",
-      "گلیم یا فرش وینتیج دست‌بافت با پترن سنتی",
-      "میز جلو مبلی چوب روستیک با فرم لبه‌طبیعی",
-      "پاف کنفی یا پوف‌های نشیمن حصیری",
-      "آویزهای مکرومه یا روشنایی‌های بافته‌شده از الیاف طبیعی"
-    ],
-    "styleNote": "اصالت سبک بوهمین در لایه‌بندی بی‌پروای رنگ‌ها و متریال‌های ارگانیک نهفته است؛ فضایی که به جای قوانین سفت‌وسخت دکوراسیون، بر آزادی فرم و صنایع دستی تکیه دارد. ترکیب گلدان‌های سرامیکی، الیاف حصیری و پارچه‌های دست‌دوز، شناسنامه غیرقابل‌انکار این سبک پرانرژی است.",
-    "source": {
-      "label": "ELLE Decor"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-13T08:31:21.760Z",
     "_via": "llm"
   },
   {
@@ -3520,7 +3280,7 @@
   {
     "id": "ag-20260912-26",
     "title": "کانون خلاقیت: فضای کاری صنعتی با روحیه آجر و فلز",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2859e4b74f58.jpg",
+    "image": "/images/pins/ag-20260912-26.jpg",
     "styleSlug": "industrial",
     "room": "فضای کار",
     "tags": [
@@ -3547,7 +3307,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-12T12:19:08.296Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:فضای کار"
   },
   {
     "id": "ag-20260912-25",
@@ -3707,37 +3468,6 @@
     },
     "createdAt": "2026-09-12T10:34:43.304Z",
     "_via": "llm"
-  },
-  {
-    "id": "ag-20260912-26",
-    "title": "چیدمان فضای کار به سبک صنعتی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/724060d1f268.jpg",
-    "styleSlug": "industrial",
-    "room": "فضای کار",
-    "tags": [
-      "صنعتی",
-      "فضای کار",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی فضای کار با زبان طراحی صنعتی: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "میز کار چوبی",
-      "صندلی ارگونومیک",
-      "قفسه دیواری",
-      "چراغ رومیزی",
-      "گلدان سبز"
-    ],
-    "styleNote": "سبک صنعتی با تکیه بر industrial interior brick شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "Decorilla"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-12T10:34:18.485Z",
-    "_via": "قالب"
   },
   {
     "id": "ag-20260912-25",
@@ -3966,7 +3696,7 @@
   {
     "id": "ag-20260911-28",
     "title": "طلایی و ویلت: رویایی در دایرینگ",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3af21ee55d50.jpg",
+    "image": "/images/pins/ag-20260911-28.jpg",
     "styleSlug": "art-deco",
     "room": "ناهارخوری",
     "tags": [
@@ -3992,12 +3722,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-11T17:16:26.196Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:art-deco:ناهارخوری"
   },
   {
     "id": "ag-20260911-27",
     "title": "سکوتِ مدرن و شیک در اتاق خواب",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3372dd0b4359.jpg",
+    "image": "/images/pins/ag-20260911-27.png",
     "styleSlug": "contemporary",
     "room": "اتاق خواب",
     "tags": [
@@ -4023,7 +3754,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-11T17:13:41.547Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:contemporary:اتاق خواب"
   },
   {
     "id": "ag-20260911-26",
@@ -4283,7 +4015,7 @@
   {
     "id": "ag-20260911-23",
     "title": "وینای مدرن حیاط: ترکیب کلاسیک و مدرن",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/280d65d63e6a.jpg",
+    "image": "/images/pins/ag-20260911-23.jpg",
     "styleSlug": "neoclassic",
     "room": "حیاط و محوطه",
     "tags": [
@@ -4310,7 +4042,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-11T12:56:50.289Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:neoclassic:حیاط و محوطه"
   },
   {
     "id": "ag-20260911-22",
@@ -4472,40 +4205,9 @@
     "_via": "llm"
   },
   {
-    "id": "ag-20260911-23",
-    "title": "ترکیب کلاسیک و مدرن در باغچه",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d6cc3742a08c.jpg",
-    "styleSlug": "neoclassic",
-    "room": "حیاط و محوطه",
-    "tags": [
-      "طراحی باغچه",
-      "سبک مدرن",
-      "فضای باز"
-    ],
-    "productIds": [],
-    "description": "ترکیب خطوط دقیق سبک کلاسیک با تمیزی مدرن، فضایی پیچیده اما خوانا می‌سازد. استفاده از سنگ‌های طبیعی و چمن‌کاری مدرن، حس گرمایی را با ظرافت آشتی می‌دهد. این چیدمان به شما یادآوری می‌کند که حتی در فضای باز، تعادل و سادگی حرف اول را می‌زند.",
-    "items": [
-      "ست‌های سنگی",
-      "باغچه‌ی طراحی شده",
-      "نرده‌های فلزی",
-      "چمن‌کاری مدرن",
-      "آبنمای کوچک"
-    ],
-    "styleNote": "این سبک با حفظ شکوه معماری کلاسیک، آن را با سادگی مدرن آشتی می‌دهد. سنگ‌کاری‌های دقیق و استفاده از درختان سایه‌بان، حس آرامش و طول عمر را القا می‌کند. فضا نماینده‌ای از زیبایی‌شناسی اصیل ایرانی است که از فرهنگ اروپایی الهام گرفته اما با هویت محلی سیلوئت شده است.",
-    "source": {
-      "label": "Zillow"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-11T08:15:48.374Z",
-    "_via": "llm"
-  },
-  {
     "id": "ag-20260911-22",
     "title": "فضای کاری شیک و کلاسیک برای تمرکز",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5c8e0bdabe41.jpg",
+    "image": "/images/pins/ag-20260911-22.jpg",
     "styleSlug": "classic",
     "room": "فضای کار",
     "tags": [
@@ -4532,7 +4234,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-11T08:14:39.320Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:classic:فضای کار"
   },
   {
     "id": "ag-20260911-26",
@@ -4631,37 +4334,6 @@
     "_via": "llm"
   },
   {
-    "id": "ag-20260911-23",
-    "title": "فضای آرامش‌بخشِ رنگارنگِ بوهمی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/aaec52bb227a.png",
-    "styleSlug": "boho",
-    "room": "پذیرایی",
-    "tags": [
-      "#بوهمی",
-      "#طراحی_داخلی",
-      "#دکوراسیون_خانه"
-    ],
-    "productIds": [],
-    "description": "ترکیب بافت‌های مخملی و پارچه‌های رنگی، این فضا را به یک نقطه توقف برای استراحت تبدیل کرده است. گیاهان آپارتمانی، حس گرما و طبیعت را در خانه شما تقویت می‌کنند. نورپردازی ملایم، تمام جزئیات هنری این چیدمان را به نمایش می‌گذارد.",
-    "items": [
-      "مبل نخی",
-      "کوسن‌های توری",
-      "قالیچه دستباف",
-      "گیاهان آپارتمانی",
-      "آباژور معلق"
-    ],
-    "styleNote": "این سبک با تمرکز بر ترکیب رنگ‌های زنده و بافت‌های متنوع، فضایی پرانرژی اما همزمان آرامش‌بخش ایجاد می‌کند.",
-    "source": {
-      "label": "ReimagineHome"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-11T05:15:57.415Z",
-    "_via": "llm"
-  },
-  {
     "id": "ag-20260911-22",
     "title": "هارمونی نئوکلاسیک؛ وقار مدرن در اتاق غذاخوری",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/722514bb6be6.jpg",
@@ -4696,7 +4368,7 @@
   {
     "id": "ag-20260911-21",
     "title": "شکوه و وقار؛ بازآفرینی اتاق خواب کلاسیک و مجلل",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5867a8870403.jpg",
+    "image": "/images/pins/ag-20260911-21.jpg",
     "styleSlug": "classic",
     "room": "اتاق خواب",
     "tags": [
@@ -4723,7 +4395,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-11T05:11:54.025Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:classic:اتاق خواب"
   },
   {
     "id": "ag-20260911-cy00",
@@ -4920,7 +4593,7 @@
   {
     "id": "ag-20260910-25",
     "title": "هنر دکو: درخشش طلایی و مخمل",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/765a4520e91a.jpg",
+    "image": "/images/pins/ag-20260910-25.jpg",
     "styleSlug": "art-deco",
     "room": "پذیرایی",
     "tags": [
@@ -4947,7 +4620,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-10T17:08:48.846Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:art-deco:پذیرایی"
   },
   {
     "id": "ag-20260910-24",
@@ -5015,7 +4689,7 @@
   {
     "id": "ag-20260910-22",
     "title": "بالکن صنعتی: تلفیق آجر و فلز برای فضایی گرم",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b3443290bcc6.png",
+    "image": "/images/pins/ag-20260910-22.jpg",
     "styleSlug": "industrial",
     "room": "بیرونی",
     "tags": [
@@ -5042,12 +4716,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-10T17:06:38.758Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:بیرونی"
   },
   {
     "id": "ag-20260910-21",
     "title": "دفتر کار مدرن با ظرافت نئوکلاسیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/344aa491d71b.jpg",
+    "image": "/images/pins/ag-20260910-21.jpg",
     "styleSlug": "neoclassic",
     "room": "فضای کار",
     "tags": [
@@ -5075,12 +4750,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-10T17:05:34.829Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:neoclassic:فضای کار"
   },
   {
     "id": "ag-20260910-20",
     "title": "جادوی فضای کلاسیک با جزئیات ظریف",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d78b88287874.jpg",
+    "image": "/images/pins/ag-20260910-20.png",
     "styleSlug": "classic",
     "room": "پذیرایی",
     "tags": [
@@ -5106,7 +4782,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-10T17:04:57.215Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:classic:پذیرایی"
   },
   {
     "id": "ag-20260910-24",
@@ -5239,7 +4916,7 @@
     "id": "ag-20260910-20",
     "title": "چیدمان اتاق خواب به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7bc910793b5c.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "اتاق خواب",
     "tags": [
       "نئوکلاسیک",
@@ -5430,7 +5107,7 @@
     "id": "ag-20260910-20",
     "title": "چیدمان اتاق خواب به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/46749cf46b4f.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "اتاق خواب",
     "tags": [
       "نئوکلاسیک",
@@ -5649,7 +5326,7 @@
   {
     "id": "ag-20260909-17",
     "title": "آرامش در دفتر کار ژاندی با چوب گرم",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b8621b65386a.jpg",
+    "image": "/images/pins/ag-20260909-17.png",
     "styleSlug": "japandi",
     "room": "فضای کار",
     "tags": [
@@ -5676,7 +5353,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-09T17:13:35.623Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:japandi:فضای کار"
   },
   {
     "id": "ag-20260909-21",
@@ -6161,7 +5839,7 @@
     "id": "ag-20260909-17",
     "title": "چیدمان بیرونی به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f52d35841ba8.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "بیرونی",
     "tags": [
       "نئوکلاسیک",
@@ -6191,7 +5869,7 @@
   {
     "id": "ag-20260909-16",
     "title": "چیدمان فضای کار به سبک کلاسیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c396d4304d1c.webp",
+    "image": "/images/pins/ag-20260909-16.jpg",
     "styleSlug": "classic",
     "room": "فضای کار",
     "tags": [
@@ -6217,12 +5895,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-09T07:03:54.847Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:classic:فضای کار"
   },
   {
     "id": "ag-20260909-15",
     "title": "آرامش شرقی با چوب گرم؛ رازهای نشیمن به سبک ژاپندی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/84402ac25f07.jpg",
+    "image": "/images/pins/ag-20260909-15.jpg",
     "styleSlug": "japandi",
     "room": "پذیرایی",
     "tags": [
@@ -6248,12 +5927,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-09T07:01:22.397Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:japandi:پذیرایی"
   },
   {
     "id": "ag-20260908-16",
     "title": "چیدمان بیرونی به سبک صنعتی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e0b9a6656a46.jpg",
+    "image": "/images/pins/ag-20260908-16.jpg",
     "styleSlug": "industrial",
     "room": "بیرونی",
     "tags": [
@@ -6279,12 +5959,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-08T08:19:07.048Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:industrial:بیرونی"
   },
   {
     "id": "ag-20260907-14",
     "title": "فضای کار صنعتی با الهام از آهن و آجر",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f89de88706c9.jpeg",
+    "image": "/images/pins/ag-20260907-14.jpg",
     "styleSlug": "industrial",
     "room": "فضای کار",
     "tags": [
@@ -6311,12 +5992,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-07T18:19:54.235Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:فضای کار"
   },
   {
     "id": "ag-20260907-12",
     "title": "جذابیتِ آرامش‌بخشِ سبک ژاپندی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/19b13b008743.png",
+    "image": "/images/pins/ag-20260907-12.jpg",
     "styleSlug": "japandi",
     "room": "ناهارخوری",
     "tags": [
@@ -6342,12 +6024,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-07T18:19:18.154Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:japandi:ناهارخوری"
   },
   {
     "id": "ag-20260907-13",
     "title": "تلفیق آهن و آجر برای خوابی گرم",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b271b031e32d.jpg",
+    "image": "/images/pins/ag-20260907-13.jpg",
     "styleSlug": "industrial",
     "room": "اتاق خواب",
     "tags": [
@@ -6375,12 +6058,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-07T14:22:26.827Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:اتاق خواب"
   },
   {
     "id": "ag-20260907-11",
     "title": "دفتر کار ژاپندی: ترکیب سادگی و گرما",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/526748b658c6.jpg",
+    "image": "/images/pins/ag-20260907-11.png",
     "styleSlug": "japandi",
     "room": "فضای کار",
     "tags": [
@@ -6408,39 +6092,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-07T14:21:47.501Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260907-13",
-    "title": "بازنمایی اتاق خواب صنعتی با متریال آجر و فلز",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f35493317778.jpeg",
-    "styleSlug": "industrial",
-    "room": "اتاق خواب",
-    "tags": [
-      "طراحی صنعتی",
-      "سبک لوفت",
-      "متریال آجر"
-    ],
-    "productIds": [],
-    "description": "ترکیب آجر و فلز در این چیدمان، حس و حالی صنعتی و آشنا را به اتاق خواب بازمی‌گرداند. استفاده از پنجره‌های بلند و نورپردازی طبیعی، تضاد سرد متریال‌ها را با گرمای محیط متعادل می‌کند. مبلمان ساده و بدون اغراق، فضایی را باقی می‌گذارد که هم خنک است و هم شیک. این سبک برای کسانی که به دنبال تضادهای بصری جذاب و فضایی باز هستند، انتخابی هوشمندانه است.",
-    "items": [
-      "دیوار آجر",
-      "قاب تخت فلزی",
-      "لامپ صنعتی",
-      "کف بتنی",
-      "شیشه‌بندی بلند",
-      "مبلمان ساده"
-    ],
-    "styleNote": "این فضای نمونه، تعادل بی‌نظیری میان خامی متریال‌ها و زیبایی طراحی دارد. استفاده از المان‌های صنعتی به شکلی کاربردی، سبکی منحصر‌به‌فرد را در اتاق خواب رقم می‌زند که هم تندرست است و هم به چشم می‌آید.",
-    "source": {
-      "label": "Walmart"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-07T08:36:26.117Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:japandi:فضای کار"
   },
   {
     "id": "ag-20260907-11",
@@ -6476,7 +6129,7 @@
   {
     "id": "ag-20260907-10",
     "title": "اسکاندیناوی: سادگی با رویای گرم",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ba71aec0be7d.jpeg",
+    "image": "/images/pins/ag-20260907-10.jpg",
     "styleSlug": "scandinavian",
     "room": "پذیرایی",
     "tags": [
@@ -6503,7 +6156,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-07T08:34:50.302Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:scandinavian:پذیرایی"
   },
   {
     "id": "ag-20260907-12",
@@ -6571,7 +6225,7 @@
   {
     "id": "ag-20260907-09",
     "title": "طراحی بالکن مینیمال؛ خلوتگاهی مدرن با خطوط آرامش‌بخش",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/adc846e0196d.png",
+    "image": "/images/pins/ag-20260907-09.jpg",
     "styleSlug": "minimal",
     "room": "بیرونی",
     "tags": [
@@ -6597,7 +6251,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-07T07:33:22.128Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:minimal:بیرونی"
   },
   {
     "id": "ag-20260907-12",
@@ -6663,41 +6318,10 @@
     "_via": "قالب"
   },
   {
-    "id": "ag-20260907-09",
-    "title": "چیدمان بیرونی به سبک مینیمال",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e25617273820.jpg",
-    "styleSlug": "minimal",
-    "room": "بیرونی",
-    "tags": [
-      "مینیمال",
-      "بیرونی",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی بیرونی با زبان طراحی مینیمال: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "صندلی باغی",
-      "گلدان کاشته",
-      "چراغ محوطه",
-      "نیمکت چوبی",
-      "فرش بیرونی"
-    ],
-    "styleNote": "سبک مینیمال با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "House Beautiful"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-07T06:24:58.944Z",
-    "_via": "قالب"
-  },
-  {
     "id": "ag-20260906-11",
     "title": "چیدمان بیرونی به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/027037d90f9d.png",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "بیرونی",
     "tags": [
       "نئوکلاسیک",
@@ -6759,7 +6383,7 @@
   {
     "id": "ag-20260906-08",
     "title": "چیدمان ناهارخوری به سبک مینیمال",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8794675f2b50.jpg",
+    "image": "/images/pins/ag-20260906-08.jpg",
     "styleSlug": "minimal",
     "room": "ناهارخوری",
     "tags": [
@@ -6785,13 +6409,14 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T16:22:22.840Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:minimal:ناهارخوری"
   },
   {
     "id": "ag-20260906-10",
     "title": "چیدمان ناهارخوری به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3f6a399ef107.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "ناهارخوری",
     "tags": [
       "نئوکلاسیک",
@@ -6821,7 +6446,7 @@
   {
     "id": "ag-20260906-09",
     "title": "چیدمان اتاق خواب به سبک کلاسیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cb65d1176442.jpg",
+    "image": "/images/pins/ag-20260906-09.jpg",
     "styleSlug": "classic",
     "room": "اتاق خواب",
     "tags": [
@@ -6847,43 +6472,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T12:39:59.226Z",
-    "_via": "قالب"
-  },
-  {
-    "id": "ag-20260906-08",
-    "title": "چیدمان بیرونی به سبک اسکاندیناوی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f1d86bf8e014.jpg",
-    "styleSlug": "scandinavian",
-    "room": "بیرونی",
-    "tags": [
-      "اسکاندیناوی",
-      "بیرونی",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی بیرونی با زبان طراحی اسکاندیناوی: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "صندلی باغی",
-      "گلدان کاشته",
-      "چراغ محوطه",
-      "نیمکت چوبی",
-      "فرش بیرونی"
-    ],
-    "styleNote": "سبک اسکاندیناوی با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "100+ Home Decorating Ideas & Interior Design Blog - Buyer Select"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T12:39:59.222Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:classic:اتاق خواب"
   },
   {
     "id": "ag-20260906-07",
     "title": "چیدمان فضای کار به سبک مینیمال",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e031674713c7.jpg",
+    "image": "/images/pins/ag-20260906-07.png",
     "styleSlug": "minimal",
     "room": "فضای کار",
     "tags": [
@@ -6909,7 +6504,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T12:39:59.219Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:minimal:فضای کار"
   },
   {
     "id": "ag-20260906-12",
@@ -6946,7 +6542,7 @@
     "id": "ag-20260906-10",
     "title": "چیدمان ناهارخوری به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a4a2a7aaaeaf.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "ناهارخوری",
     "tags": [
       "نئوکلاسیک",
@@ -6971,99 +6567,6 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T12:28:05.226Z",
-    "_via": "قالب"
-  },
-  {
-    "id": "ag-20260906-09",
-    "title": "چیدمان اتاق خواب به سبک کلاسیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e316d2d979b4.jpg",
-    "styleSlug": "classic",
-    "room": "اتاق خواب",
-    "tags": [
-      "کلاسیک",
-      "اتاق خواب",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی اتاق خواب با زبان طراحی کلاسیک: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "تخت چوبی",
-      "پشه‌پوش بافت",
-      "آباژور کنار تخت",
-      "فرش دستباف",
-      "میز کنسول"
-    ],
-    "styleNote": "سبک کلاسیک با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "Persian Rugs Carpet, Wool Carpet Rug, Persian Rugs And Carpets - Fanyo"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T12:28:05.222Z",
-    "_via": "قالب"
-  },
-  {
-    "id": "ag-20260906-08",
-    "title": "چیدمان بیرونی به سبک اسکاندیناوی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7399957001ac.jpg",
-    "styleSlug": "scandinavian",
-    "room": "بیرونی",
-    "tags": [
-      "اسکاندیناوی",
-      "بیرونی",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی بیرونی با زبان طراحی اسکاندیناوی: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "صندلی باغی",
-      "گلدان کاشته",
-      "چراغ محوطه",
-      "نیمکت چوبی",
-      "فرش بیرونی"
-    ],
-    "styleNote": "سبک اسکاندیناوی با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "Hello Hayley"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T12:28:05.219Z",
-    "_via": "قالب"
-  },
-  {
-    "id": "ag-20260906-07",
-    "title": "چیدمان فضای کار به سبک مینیمال",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a95631950f11.jpg",
-    "styleSlug": "minimal",
-    "room": "فضای کار",
-    "tags": [
-      "مینیمال",
-      "فضای کار",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی فضای کار با زبان طراحی مینیمال: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "میز کار چوبی",
-      "صندلی ارگونومیک",
-      "قفسه دیواری",
-      "چراغ رومیزی",
-      "گلدان سبز"
-    ],
-    "styleNote": "سبک مینیمال با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "Oakywood"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T12:28:05.215Z",
     "_via": "قالب"
   },
   {
@@ -7101,7 +6604,7 @@
     "id": "ag-20260906-10",
     "title": "چیدمان ناهارخوری به سبک نئوکلاسیک",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c5292e81ae03.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "ناهارخوری",
     "tags": [
       "نئوکلاسیک",
@@ -7126,68 +6629,6 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T12:13:34.034Z",
-    "_via": "قالب"
-  },
-  {
-    "id": "ag-20260906-09",
-    "title": "چیدمان اتاق خواب به سبک کلاسیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/128e2eaf2b09.png",
-    "styleSlug": "classic",
-    "room": "اتاق خواب",
-    "tags": [
-      "کلاسیک",
-      "اتاق خواب",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی اتاق خواب با زبان طراحی کلاسیک: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "تخت چوبی",
-      "پشه‌پوش بافت",
-      "آباژور کنار تخت",
-      "فرش دستباف",
-      "میز کنسول"
-    ],
-    "styleNote": "سبک کلاسیک با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "The Rug Decor"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T12:13:34.031Z",
-    "_via": "قالب"
-  },
-  {
-    "id": "ag-20260906-08",
-    "title": "چیدمان بیرونی به سبک اسکاندیناوی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/16a0583333f3.jpg",
-    "styleSlug": "scandinavian",
-    "room": "بیرونی",
-    "tags": [
-      "اسکاندیناوی",
-      "بیرونی",
-      "ایده چیدمان"
-    ],
-    "productIds": [],
-    "description": "یک چیدمان واقعی بیرونی با زبان طراحی اسکاندیناوی: ترکیب عناصر شاخص این سبک با نورپردازی لایه‌ای و متریال هماهنگ، فضایی می‌سازد که هم چشم‌نواز است و هم زندگی‌پذیر. این پین از منابع بین‌المللی دیزاین انتخاب شده و برای خانه‌های ایرانی بازخوانی شده است. با کلیک روی پین می‌توانید ویژگی‌های سبک و وسایل کلیدی این چیدمان را ببینید.",
-    "items": [
-      "صندلی باغی",
-      "گلدان کاشته",
-      "چراغ محوطه",
-      "نیمکت چوبی",
-      "فرش بیرونی"
-    ],
-    "styleNote": "سبک اسکاندیناوی با ترکیب عناصر شاخص و پالت هماهنگ شناخته می‌شود؛ در این فضا پالت رنگی هماهنگ، متریال بافت‌دار و تعادل میان فرم و کارکرد، هویت سبک را به‌وضوح نشان می‌دهد.",
-    "source": {
-      "label": "Livingetc"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T12:13:34.028Z",
     "_via": "قالب"
   },
   {
@@ -7797,7 +7238,7 @@
   {
     "id": "ag-20260906-bf015",
     "title": "فضای کار خانگی با حس اسکاندیناوی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1895d5f5f669.jpg",
+    "image": "/images/pins/ag-20260906-bf015.jpg",
     "styleSlug": "scandinavian",
     "room": "فضای کار",
     "tags": [
@@ -7823,7 +7264,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T08:42:19.048Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:scandinavian:فضای کار"
   },
   {
     "id": "ag-20260906-bf014",
@@ -7860,7 +7302,7 @@
   {
     "id": "ag-20260906-bf013",
     "title": "باغچه کوچک در خانه",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/bbd82e730151.jpg",
+    "image": "/images/pins/ag-20260906-bf013.jpg",
     "styleSlug": "minimal",
     "room": "بیرونی",
     "tags": [
@@ -7888,12 +7330,13 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T08:41:55.103Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:minimal:بیرونی"
   },
   {
     "id": "ag-20260906-bf012",
     "title": "سادگی در سفره",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/28a77f46aed7.jpg",
+    "image": "/images/pins/ag-20260906-bf012.jpg",
     "styleSlug": "minimal",
     "room": "ناهارخوری",
     "tags": [
@@ -7920,7 +7363,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T08:41:55.103Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:minimal:ناهارخوری"
   },
   {
     "id": "ag-20260906-bf011",
@@ -8019,7 +7463,7 @@
   {
     "id": "ag-20260906-bf008",
     "title": "اتاق غذاخوری مدرن با روح ایرانی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e49a113f896d.png",
+    "image": "/images/pins/ag-20260906-bf008.jpg",
     "styleSlug": "modern",
     "room": "ناهارخوری",
     "tags": [
@@ -8047,39 +7491,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T08:40:37.294Z",
-    "_via": "llm"
-  },
-  {
-    "id": "ag-20260906-bf008",
-    "title": "فضای کاری مدرن در دکوراسیون خانه",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/835cc47887e7.jpg",
-    "styleSlug": "modern",
-    "room": "فضای کار",
-    "tags": [
-      "فضای کاری",
-      "سبک مینیمال",
-      "طراحی داخلی"
-    ],
-    "productIds": [],
-    "description": "این فضای کاری که با دقت در سبک زندگی مدرن طراحی شده، با نور طبیعی و رنگ‌های ملایم، حس آرامش و تمرکز را القا می‌کند. استفاده از متریال طبیعی و ساده، این فضا را به مکانی دلنشین برای کار تبدیل کرده است.",
-    "items": [
-      "میز کار مینیمال با طراحی ارگونومیک",
-      "صندلی راحت با پشتیبانی مناسب برای طولانی مدت",
-      "قفسه‌های دیواری برای سازماندهی کتاب‌ها و وسایل",
-      "گیاهان آپارتمانی برای تازگی و طراوت فضا",
-      "نورپردازی لایه‌لایه با چراغ رومیزی و نور مورب",
-      "تابلو هنری کوچک برای الهام بخشیدن"
-    ],
-    "styleNote": "سبک مینیمال مدرن با تمرکز بر عملکرد و زیبایی ساده، استفاده از خطوط تمیز و رنگ‌های خنثی، و ترکیب متریال طبیعی مانند چوب با فلزات براق، این فضا را نماینده طراحی مدرن و کاربردی می‌کند.",
-    "source": {
-      "label": "Livingetc"
-    },
-    "author": {
-      "name": "ایجنت هومینو",
-      "type": "agent"
-    },
-    "createdAt": "2026-09-06T08:40:37.294Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:modern:ناهارخوری"
   },
   {
     "id": "ag-20260906-bf008",
@@ -8180,7 +7593,7 @@
     "id": "ag-20260906-09",
     "title": "دفتر کار کلاسیک با لمس مدرن",
     "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c3b695a896b1.jpg",
-    "styleSlug": "neoclassical",
+    "styleSlug": "neoclassic",
     "room": "فضای کار",
     "tags": [
       "دفتر کار کلاسیک",
@@ -8211,7 +7624,7 @@
   {
     "id": "ag-20260906-08",
     "title": "کلاسیک مدرن: شکوهی در فضای زندگی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ba3b60f735fd.jpg",
+    "image": "/images/pins/ag-20260906-08.png",
     "styleSlug": "classic",
     "room": "پذیرایی",
     "tags": [
@@ -8238,7 +7651,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T07:07:29.136Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:classic:پذیرایی"
   },
   {
     "id": "ag-20260906-07",
@@ -8274,7 +7688,7 @@
   {
     "id": "ag-20260906-06",
     "title": "اتاق خواب مینیمال با خطوط پاک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ff4d0d93b4c2.jpg",
+    "image": "/images/pins/ag-20260906-06.jpg",
     "styleSlug": "minimal",
     "room": "اتاق خواب",
     "tags": [
@@ -8301,7 +7715,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T07:06:59.246Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:minimal:اتاق خواب"
   },
   {
     "id": "pin-20260914-01",
