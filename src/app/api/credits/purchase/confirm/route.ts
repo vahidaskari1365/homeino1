@@ -45,7 +45,19 @@ export const POST = guard(async (req) => {
     eventType: "payment.succeeded",
     amount: 0, // ledger math uses credits, not the dev amount
     currency: "IRR",
-    metadata: { kind: "credits", userId: user.id, credits },
+    // Coupon fields come from the SERVER-ISSUED intent metadata (never the client).
+    metadata: {
+      kind: "credits",
+      userId: user.id,
+      credits,
+      ...(meta.couponCode && meta.couponId
+        ? {
+            couponCode: String(meta.couponCode),
+            couponId: String(meta.couponId),
+            amountOffIrr: Number(meta.amountOffIrr ?? 0),
+          }
+        : {}),
+    },
     raw: { paymentId: input.paymentId },
   });
   if (!result.ok) throw ApiError.badRequest("تأیید پرداخت ناموفق بود");

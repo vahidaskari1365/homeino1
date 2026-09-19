@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Sparkles, CheckCircle2, XCircle, Info, X, GitCompare, ArrowUp } from "lucide-react";
 import { useUi, useCredits } from "@/stores/useApp";
 import { useCompare } from "@/stores/useShop";
+import { ActivityToast } from "@/components/marketing/ActivityToast";
+import { ExitIntentPopup } from "@/components/marketing/ExitIntentPopup";
 import { toFa } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 
@@ -83,6 +85,10 @@ export function GlobalChrome() {
       <Link href="/account/credits" className="fixed right-4 top-20 z-30 hidden items-center gap-1.5 rounded-full border border-clay/50 bg-cream/90 px-3 py-1.5 text-xs font-medium text-ink shadow-sm backdrop-blur transition hover:border-ink lg:flex">
         <Sparkles size={13} className="text-terracotta-deep" /> {toFa(hydratedBalance)} اعتبار
       </Link>
+
+      {/* Live activity toast (real, anonymized DB events) + exit-intent offer */}
+      <ActivityToast />
+      <ExitIntentPopup />
 
     </>
   );

@@ -28,6 +28,8 @@ import { articles } from "@/data/content";
 import { latestTrendBriefs } from "@/lib/trends";
 import { IMG } from "@/data/media";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { PromoBanner } from "@/components/marketing/PromoBanner";
+import { LiveProofStrip } from "@/components/marketing/LiveProofStrip";
 import { toFa } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -45,6 +47,9 @@ export default function HomePage() {
     <>
       {/* ===== CINEMATIC HERO (client island) ===== */}
       <HomeHero productCount={allProducts.length} storeCount={stores.length} />
+
+      {/* ===== LAUNCH CAMPAIGN (live countdown — real DB coupon) ===== */}
+      <PromoBanner />
 
       {/* ===== VALUE STRIP ===== */}
       <section className="surface-emerald border-y border-gold/15 py-5 text-cream">
@@ -206,6 +211,7 @@ export default function HomePage() {
       {/* ===== FINAL CTA ===== */}
       <section className="pb-8 sm:pb-12">
         <Container>
+          <Reveal className="mb-4"><LiveProofStrip /></Reveal>
           <div className="overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-l from-terracotta-deep to-ink p-6 text-cream shadow-[var(--shadow-card)] sm:p-10">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="max-w-2xl"><div className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-soft"><Rating value={4.9} count={2840} /> انتخاب هزاران خانه‌دوست</div><h2 className="text-balance text-2xl font-black text-cream sm:text-3xl">برای خانه‌ای که مدت‌ها در ذهنت بوده، همین امروز شروع کن.</h2><p className="mt-3 text-sm text-cream/65">بدون سردرگمی؛ اول الهام، بعد طراحی، مقایسه و خرید مطمئن.</p></div><div className="flex flex-col gap-3 sm:flex-row"><ButtonLink href="/products" variant="gold" size="lg"><Search size={17} /> کشف محصولات</ButtonLink><ButtonLink href="/ai/design" variant="ghost" size="lg" className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"><Wand2 size={17} /> طراحی با هومینو استودیو</ButtonLink></div></div>
           </div>

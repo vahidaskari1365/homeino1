@@ -1,15 +1,45 @@
 "use client";
-import { Sparkles, Check, TrendingDown, TrendingUp, Zap } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Check, TrendingDown, TrendingUp, Zap, Ticket, X } from "lucide-react";
 import { Button, Badge } from "@/components/ui/primitives";
 import { useCredits, useUi } from "@/stores/useApp";
 import { CREDIT_DISPLAY } from "@/services/credits/ledger";
 import { AI_MODES } from "@/services/ai";
-import { purchaseCredits, confirmCreditsPurchase, fetchCreditsBalance } from "@/lib/commerceClient";
-import { toFa, cn } from "@/lib/utils";
+import { purchaseCredits, confirmCreditsPurchase, fetchCreditsBalance, validateCoupon } from "@/lib/commerceClient";
+import { PromoBanner } from "@/components/marketing/PromoBanner";
+import { toFa, cn, formatPrice } from "@/lib/utils";
+
+interface AppliedCoupon { code: string; percentOff: number }
+
+const discountedPrice = (price: number, percentOff: number) =>
+  Math.max(1, price - Math.round((price * percentOff) / 100));
 
 export default function CreditsPage() {
   const { balance, history, purchase, setBalance } = useCredits();
   const { toast } = useUi();
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+
+  async function applyCoupon() {
+    if (!couponInput.trim() || couponBusy) return;
+    setCouponBusy(true);
+    try {
+      const res = await validateCoupon(couponInput, CREDIT_DISPLAY.buyPackages[0]?.id ?? "popular");
+      if (!res.ok) {
+        toast(res.message ?? "بررسی کد ممکن نشد", "error");
+        return;
+      }
+      if (res.data.valid && res.data.percentOff) {
+        setCoupon({ code: res.data.code ?? couponInput.toUpperCase(), percentOff: res.data.percentOff });
+        toast(`${toFa(res.data.percentOff)}٪ تخفیف اعمال شد — موقع پرداخت نهایی می‌شود`, "success");
+      } else {
+        toast(res.data.reason ?? "کد تخفیف معتبر نیست", "error");
+      }
+    } finally {
+      setCouponBusy(false);
+    }
+  }
 
   /** Local demo purchase — used only when the server is unavailable. */
   function applyLocalPurchase(credits: number, price: number) {
@@ -37,6 +67,9 @@ export default function CreditsPage() {
         </div>
       </div>
 
+      {/* launch campaign — real countdown from DB */}
+      <PromoBanner compact />
+
       {/* cost table */}
       <div className="card-surface p-6">
         <h3 className="mb-4 font-display font-bold text-ink">هزینه هر عملیات</h3>
@@ -57,6 +90,33 @@ export default function CreditsPage() {
       {/* buy credits */}
       <div className="card-surface p-6">
         <h3 className="mb-4 font-display font-bold text-ink">خرید اعتبار</h3>
+
+        {/* coupon input — server validates authoritatively at intent time */}
+        <div className="mb-5 rounded-2xl border border-dashed border-terracotta/50 bg-terracotta/5 p-3">
+          <label htmlFor="coupon-code" className="mb-2 block text-xs font-bold text-ink">کد تخفیف داری؟ اینجا وارد کن</label>
+          {coupon ? (
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-sage/10 px-3 py-2">
+              <span className="flex items-center gap-1.5 text-sm font-bold text-success"><Ticket size={15} /> {coupon.code} — {toFa(coupon.percentOff)}٪ تخفیف</span>
+              <button onClick={() => setCoupon(null)} aria-label="حذف کد تخفیف" className="text-ink-muted transition hover:text-ink"><X size={15} /></button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                id="coupon-code"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                placeholder="مثلاً LAUNCH20"
+                className="min-w-0 flex-1 rounded-xl border border-clay/50 bg-cream px-3 py-2 text-sm font-bold tracking-wider text-ink outline-none transition focus:border-terracotta"
+                maxLength={40}
+              />
+              <Button variant="ghost" disabled={couponBusy || !couponInput.trim()} onClick={applyCoupon}>
+                {couponBusy ? "..." : "اعمال"}
+              </Button>
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {CREDIT_DISPLAY.buyPackages.map((pk) => (
             <div key={pk.id} className={cn("relative rounded-2xl border p-5 text-center transition hover:-translate-y-1", pk.popular ? "border-terracotta bg-terracotta/5 shadow-[var(--shadow-soft)]" : "border-clay/50")}>
@@ -64,10 +124,22 @@ export default function CreditsPage() {
               <Sparkles size={24} className="mx-auto text-gold" />
               <div className="mt-2 font-display text-2xl font-black text-ink">{toFa(pk.credits)}</div>
               <div className="text-xs text-ink-muted">اعتبار</div>
-              <div className="mt-3 font-bold text-ink">{toFa(pk.price.toLocaleString("fa-IR"))} <span className="text-xs text-ink-muted">تومان</span></div>
+              <div className="mt-3 font-bold text-ink">
+                {coupon ? (
+                  <>
+                    <span className="text-ink-muted line-through">{toFa(pk.price.toLocaleString("fa-IR"))}</span>
+                    <span className="text-terracotta-deep"> {formatPrice(discountedPrice(pk.price, coupon.percentOff))}</span>
+                    <span className="text-xs text-ink-muted"> تومان</span>
+                  </>
+                ) : (
+                  <>
+                    {toFa(pk.price.toLocaleString("fa-IR"))} <span className="text-xs text-ink-muted">تومان</span>
+                  </>
+                )}
+              </div>
               <Button className="mt-3 w-full" variant={pk.popular ? "accent" : "ghost"} onClick={async () => {
                 // Real backend first: intent → dev confirm → authoritative balance.
-                const intent = await purchaseCredits(pk.id);
+                const intent = await purchaseCredits(pk.id, coupon?.code);
                 if (intent.ok && intent.data.confirmable) {
                   const confirmed = await confirmCreditsPurchase(intent.data.paymentId, pk.id);
                   if (confirmed.ok) {

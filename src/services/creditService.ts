@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { creditAccounts, creditTransactions, aiPricing } from "@/db/schema";
+import { creditAccounts, creditTransactions, creditBonusGrants, aiPricing } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 
 /**
@@ -22,7 +22,71 @@ export async function ensureAccount(userId: string) {
   return (await db.select().from(creditAccounts).where(eq(creditAccounts.userId, userId)))[0];
 }
 
+/**
+ * EXPIRING BONUS SWEEP — subtract unused welcome-gift credits whose 48h
+ * window has passed. Runs lazily on balance reads/spends; idempotent via
+ * the ledger's `bonus-expire:<grantId>` key. Expiration is a balance loss,
+ * NOT a spend → lifetimeSpent stays untouched. Fail-safe: any problem is
+ * logged and ignored so the caller never breaks.
+ */
+export async function sweepExpiredBonuses(userId: string): Promise<void> {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    const db = getDb();
+    const open = await db
+      .select()
+      .from(creditBonusGrants)
+      .where(eq(creditBonusGrants.userId, userId))
+      .limit(20);
+    const now = new Date();
+    const expired = open.filter((g) => !g.expiredAt && g.expiresAt < now);
+    for (const g of expired) {
+      try {
+        await db.transaction(async (tx) => {
+          const [acc] = await tx
+            .select()
+            .from(creditAccounts)
+            .where(eq(creditAccounts.userId, userId))
+            .limit(1)
+            .for("update");
+          const balance = acc?.balance ?? 0;
+          const expiredAmount = Math.min(g.amount, Math.max(0, balance));
+          if (expiredAmount > 0) {
+            await tx.insert(creditTransactions).values({
+              userId,
+              type: "expiration",
+              amount: -expiredAmount,
+              balanceAfter: balance - expiredAmount,
+              operation: "bonus:expire",
+              referenceType: "bonus_grant",
+              referenceId: g.id,
+              idempotencyKey: `bonus-expire:${g.id}`,
+              status: "committed",
+              note: "انقضای اعتبار هدیه",
+            });
+            await tx
+              .update(creditAccounts)
+              .set({ balance: balance - expiredAmount, version: (acc?.version ?? 0) + 1 })
+              .where(eq(creditAccounts.userId, userId));
+          }
+          await tx
+            .update(creditBonusGrants)
+            .set({ expiredAt: now, expiredAmount })
+            .where(eq(creditBonusGrants.id, g.id));
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/duplicate|unique/i.test(msg)) continue; // concurrent sweep already handled it
+        console.warn("[credits] bonus sweep row failed:", msg);
+      }
+    }
+  } catch (err) {
+    console.warn("[credits] bonus sweep unavailable:", err instanceof Error ? err.message : err);
+  }
+}
+
 export async function getBalance(userId: string) {
+  await sweepExpiredBonuses(userId);
   const acc = await ensureAccount(userId);
   return { balance: acc.balance, lifetimeEarned: acc.lifetimeEarned, lifetimeSpent: acc.lifetimeSpent };
 }
@@ -55,8 +119,8 @@ export async function spendCredits(
 ): Promise<{ balanceAfter: number }> {
   const db = getDb();
   if (!Number.isInteger(amount) || amount <= 0) throw ApiError.badRequest("مقدار نامعتبر است");
+  await sweepExpiredBonuses(userId);
   return db.transaction(async (tx) => {
-    // lock the account row to serialize concurrent spends
     let [acc] = await tx
       .select()
       .from(creditAccounts)

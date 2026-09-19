@@ -1,4 +1,5 @@
 import { grantCredits } from "@/services/creditService";
+import { recordCouponRedemption } from "@/services/coupons";
 import { updateOrderStatus } from "@/services/orderService";
 import type { PaymentWebhookEvent } from "@/services/payments";
 
@@ -22,6 +23,9 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
     userId?: string;
     credits?: number;
     orderId?: string;
+    couponCode?: string;
+    couponId?: string;
+    amountOffIrr?: number;
   };
 
   if (event.eventType === "refund.succeeded") {
@@ -44,6 +48,24 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
         idempotencyKey: `pay:${event.provider}:${event.providerPaymentId}`,
         note: `خرید اعتبار (${event.provider})`,
       });
+      // Record the coupon redemption AFTER the grant succeeded. Idempotent
+      // per (coupon, paymentRef); a failure here must NEVER block credits,
+      // so it is logged and swallowed.
+      if (meta.couponCode && meta.couponId) {
+        try {
+          await recordCouponRedemption({
+            couponId: meta.couponId,
+            userId: meta.userId,
+            paymentRef: `${event.provider}:${event.providerPaymentId}`,
+            amountOffIrr: Number(meta.amountOffIrr ?? 0),
+          });
+        } catch (err) {
+          console.warn(
+            "[fulfillment] coupon redemption not recorded:",
+            err instanceof Error ? err.message : err,
+          );
+        }
+      }
       return { ok: true, kind: "credits", balanceAfter: res.balanceAfter, duplicate: false };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

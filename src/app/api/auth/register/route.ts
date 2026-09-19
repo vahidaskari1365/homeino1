@@ -27,6 +27,18 @@ export const POST = guard(async (req) => {
   }
   if (!data.user) throw ApiError.badRequest("ثبت‌نام انجام نشد");
 
+  // Welcome gift — 5 credits, 48h expiry. Fail-safe: a bonus problem must
+  // never break registration (idempotent via ledger idempotency key).
+  try {
+    const { grantWelcomeBonus } = await import("@/services/marketing");
+    await grantWelcomeBonus(data.user.id);
+  } catch (err) {
+    console.warn(
+      "[auth:register] welcome gift skipped:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   const res = NextResponse.json({ ok: true, data: { id: data.user.id, email: data.user.email, role: "customer", emailConfirmationRequired: !data.session } }, { status: 201 });
   if (data.session) {
     const secure = process.env.NODE_ENV === "production";

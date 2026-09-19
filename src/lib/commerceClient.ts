@@ -102,13 +102,43 @@ export interface PurchaseIntent {
   pack: string;
   credits: number;
   amount: number;
+  amountIrr?: number;
+  discountIrr?: number;
+  coupon?: { code: string; percentOff: number } | null;
   paymentId: string;
   provider: string;
   confirmable: boolean;
 }
 
-export function purchaseCredits(pack: string) {
-  return call<PurchaseIntent>(`/api/credits/purchase?pack=${encodeURIComponent(pack)}`, { method: "POST" });
+export function purchaseCredits(pack: string, couponCode?: string) {
+  const q = new URLSearchParams({ pack });
+  if (couponCode) q.set("coupon", couponCode);
+  return call<PurchaseIntent>(`/api/credits/purchase?${q.toString()}`, { method: "POST" });
+}
+
+export function validateCoupon(code: string, pack: string) {
+  return call<{ valid: boolean; reason?: string; code?: string; couponId?: string; percentOff?: number; label?: string }>(
+    "/api/coupons/validate",
+    { method: "POST", body: JSON.stringify({ code, pack }) },
+  );
+}
+
+export interface MarketingStats {
+  todayDesigns: number;
+  totalDesigns: number;
+  recent: { roomType: string | null; style: string | null; minutesAgo: number }[];
+  campaign: {
+    active: boolean;
+    code: string;
+    percentOff: number;
+    label: string;
+    endsAt: string | null;
+    remaining: number | null;
+  } | null;
+}
+
+export function fetchMarketingStats() {
+  return call<MarketingStats>("/api/marketing/stats");
 }
 
 export function confirmCreditsPurchase(paymentId: string, pack: string) {

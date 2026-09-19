@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/api/errors";
 import { ok } from "@/lib/api/response";
 import { guard } from "@/lib/api/http";
 import { paymentGateway } from "@/services/payments";
+import { validateCouponForPack, couponDiscountIrr, couponFinalIrr } from "@/services/coupons";
 import { getDb } from "@/db";
 import { creditPackages } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -30,6 +31,7 @@ export const PACKS: Record<string, { credits: number; amount: number }> = {
 export const POST = guard(async (req) => {
   const { user } = await requireUser(req);
   const key = req.nextUrl.searchParams.get("pack") ?? "popular";
+  const rawCoupon = req.nextUrl.searchParams.get("coupon") ?? "";
 
   let credits = 0;
   let amountToman = 0;
@@ -59,21 +61,49 @@ export const POST = guard(async (req) => {
     amountToman = pack.amount;
   }
 
+  // ---- COUPON (server-authoritative) ----
+  // The client may SEND a code, but the discount is always recomputed here
+  // from the DB coupon row — client echoes never decide the amount.
+  let coupon: { couponId: string; code: string; percentOff: number } | null = null;
+  if (rawCoupon) {
+    const v = await validateCouponForPack(rawCoupon, key, user.id);
+    if (!v.valid) throw ApiError.badRequest(v.reason);
+    coupon = { couponId: v.couponId, code: v.code, percentOff: v.percentOff };
+  }
+
+  const baseAmountIrr = amountToman * 10; // Toman → IRR (gateway settlement unit)
+  const discountIrr = coupon ? couponDiscountIrr(baseAmountIrr, coupon.percentOff) : 0;
+  const finalAmountIrr = coupon ? couponFinalIrr(baseAmountIrr, coupon.percentOff) : baseAmountIrr;
+  if (coupon && finalAmountIrr <= 0) {
+    throw ApiError.badRequest("مقدار تخفیف نامعتبر است");
+  }
+
   const gateway = paymentGateway();
   const intent = await gateway.createIntent({
-    amount: amountToman * 10, // Toman → IRR (gateway settlement unit)
+    amount: finalAmountIrr,
     currency: "IRR",
     orderId: `credits-${user.id}-${Date.now().toString(36)}`,
-    description: `خرید ${credits} اعتبار هومینو استودیو`,
-    metadata: { userId: user.id, credits, kind: "credits" },
+    description: coupon
+      ? `خرید ${credits} اعتبار هومینو استودیو — با کد ${coupon.code}`
+      : `خرید ${credits} اعتبار هومینو استودیو`,
+    metadata: {
+      userId: user.id,
+      credits,
+      kind: "credits",
+      ...(coupon
+        ? { couponCode: coupon.code, couponId: coupon.couponId, amountOffIrr: discountIrr }
+        : {}),
+    },
   });
 
   // NOTE: credits are granted ONLY in the webhook/confirm fulfillment path.
   return ok({
     pack: key,
     credits,
-    amount: amountToman,
-    amountIrr: amountToman * 10,
+    amount: Math.round(finalAmountIrr / 10),
+    amountIrr: finalAmountIrr,
+    discountIrr,
+    coupon: coupon ? { code: coupon.code, percentOff: coupon.percentOff } : null,
     paymentId: intent.paymentId,
     provider: intent.provider,
     confirmable: intent.provider === "dev",
