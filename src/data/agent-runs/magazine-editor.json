@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-19T08:30:56.187Z",
+  "updatedAt": "2026-09-19T13:25:31.029Z",
   "runs": [
+    {
+      "id": "run-1789824331029-qzkxu",
+      "at": "2026-09-19T13:25:31.029Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 694047,
+      "summary": "4 بریف ترند جدید (روشنایی و لوستر، مبلمان، سبک‌ها، آشپزخانه) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 93,
+        "via": "zai-2",
+        "titles": [
+          "طراحی پایدار، فراتر از ترندهای کوتاه‌مدت",
+          "ترند صندلی سفید سال ۲۰۲۷؛ الگوی ساده و گرم دکوراسیون",
+          "ماندگاری دکوراسیون مینیمال در خانه چهره‌های سرشناس",
+          "ترند آشپزخانه‌ی نیمه‌تاریک و چوبی"
+        ],
+        "sources": [
+          "livingetc.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1789806656187-ehutv",
       "at": "2026-09-19T08:30:56.187Z",
