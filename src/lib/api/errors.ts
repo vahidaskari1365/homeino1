@@ -15,6 +15,7 @@ export type ErrorCode =
   | "OUT_OF_STOCK"
   | "PAYMENT_REQUIRED"
   | "PROVIDER_ERROR"
+  | "GATEWAY_NOT_CONFIGURED"
   | "INTERNAL";
 
 export class ApiError extends Error {

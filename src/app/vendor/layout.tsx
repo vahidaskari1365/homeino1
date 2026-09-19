@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Store, BarChart3, PlusCircle, Info, CheckCircle2 } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Store, BarChart3, PlusCircle, Info, CheckCircle2, Crown } from "lucide-react";
 import { DashboardLayout, type NavItem } from "@/components/layout/DashboardLayout";
 import { PLATFORM } from "@/config/platform";
 import { vendorStoreProfile } from "@/data/vendorSession";
@@ -14,6 +14,7 @@ const NAV: NavItem[] = [
   { label: "سفارش‌ها", href: "/vendor/orders", icon: ShoppingCart },
   { label: "فروشگاه", href: "/vendor/store", icon: Store },
   { label: "تحلیل و گزارش", href: "/vendor/analytics", icon: BarChart3 },
+  { label: "خرید پکیج", href: "/vendor/package", icon: Crown }, // فقط در پنل فروشنده — Task 58
 ];
 
 type BannerMode = "unknown" | "demo" | "real";

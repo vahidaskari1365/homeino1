@@ -7,7 +7,9 @@ export const CREDIT_CONFIG = {
   startingBalance: 120,
   // Single price list — mirrors PACKS in /api/credits/purchase and the
   // `credit_packages` DB seed (amounts in Toman; DB stores IRR ×10).
+  // «mini» = دروازهٔ ورود بی‌ریسک (۲ طراحی کامل) — Task 58، درخواست مالک.
   buyPackages: [
+    { id: "mini", credits: 10, price: 22500, label: "۱۰ اعتبار", popular: false },
     { id: "starter", credits: 50, price: 100000, label: "۵۰ اعتبار", popular: false },
     { id: "popular", credits: 120, price: 220000, label: "۱۲۰ اعتبار", popular: true },
     { id: "pro", credits: 300, price: 500000, label: "۳۰۰ اعتبار", popular: false },

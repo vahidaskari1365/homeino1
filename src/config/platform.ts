@@ -47,10 +47,19 @@ export const PLATFORM = {
   // Single source for every commission/settlement figure — the vendor panels
   // and the settlement service import from here, never hardcode.
   vendor: {
-    commissionRatePercent: 8,   // کمیسیون پیش‌فرض پلتفرم از هر فروش (قابل بازنویسی per-vendor در DB)
+    commissionRatePercent: 9,   // کمیسیون پایهٔ پلتفرم از هر فروش (سیاست مالک، Task 58) — قابل بازنویسی per-vendor در DB
     minPayoutToman: 500_000,    // حداقل مبلغ درخواست تسویه
     payoutScheduleLabel: "تسویه هفتگی", // برچسب نمایشی
     demoStoreId: "st1",         // فروشگاه نمونهٔ پنل فروشنده
+    // پکیج فروشنده (اشتراک ماهانه) — تنها راه کاهش کارمزد؛ فقط در پنل فروشنده.
+    // فعال‌سازی واقعی: با پرداخت موفق، subscription در DB ثبت و نرخ مؤثر
+    // کمیسیون روی ۵٪ قفل می‌شود (vendorSubscriptions + effectiveCommissionBp).
+    proPackage: {
+      priceToman: 2_280_000,          // ماهانه
+      durationDays: 30,
+      commissionRatePercent: 5,       // کارمزد حین اشتراک فعال
+      slug: "pro-monthly",
+    },
     demo: {
       enabled: true,
       label: "حالت دمو — این پنل با دادهٔ آزمایشی و بدون اتصال به پایگاه‌داده اجرا می‌شود.",

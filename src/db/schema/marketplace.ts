@@ -167,3 +167,45 @@ export const vendorPayoutItems = pgTable(
 
 export type VendorEarning = typeof vendorEarnings.$inferSelect;
 export type VendorPayout = typeof vendorPayouts.$inferSelect;
+
+export const vendorSubscriptionStatusEnum = pgEnum("vendor_subscription_status", [
+  /** Paid and inside the validity window. */
+  "active",
+  /** Vendor/admin cancelled before expiry. */
+  "cancelled",
+]);
+
+/**
+ * پکیج فروشنده — one row per successful package payment (Task 58).
+ * While the newest row's window covers `now`, the vendor's EFFECTIVE
+ * commission rate is PLATFORM.vendor.proPackage.commissionRatePercent (۵٪).
+ * Rate is computed at accrual time (never denormalized), so expiry is
+ * automatic and history stays honest.
+ */
+export const vendorSubscriptions = pgTable(
+  "vendor_subscriptions",
+  {
+    id: id(),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => vendors.id, { onDelete: "cascade" }),
+    /** Buyer (the owner/manager who paid). */
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    packageSlug: varchar("package_slug", { length: 60 }).notNull().default("pro-monthly"),
+    priceToman: integer("price_toman").notNull(),
+    status: vendorSubscriptionStatusEnum("status").notNull().default("active"),
+    provider: varchar("provider", { length: 40 }).notNull(),
+    providerPaymentId: varchar("provider_payment_id", { length: 120 }).notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    /** Webhook/confirm idempotency — one activation per gateway payment. */
+    idempotencyKey: varchar("idempotency_key", { length: 200 }).notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("vendor_subscriptions_idempotency_unique").on(t.idempotencyKey),
+    index("vendor_subscriptions_vendor_idx").on(t.vendorId, t.expiresAt),
+  ],
+);
+
+export type VendorSubscription = typeof vendorSubscriptions.$inferSelect;

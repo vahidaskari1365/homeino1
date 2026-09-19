@@ -48,10 +48,10 @@ export default function AccountOverview() {
 
   const stats = [
     { label: "جایزه‌ها", value: "چرخ و استریک", icon: Gift, color: "text-gold", href: "/account/rewards" },
-    { label: "اعتبار AI", value: toFa(balance), icon: Sparkles, color: "text-gold" },
-    { label: "سفارش‌ها", value: toFa(ordersCount), icon: Package, color: "text-terracotta-deep" },
-    { label: "آگهی‌های من", value: toFa(adsCount), icon: Tag, color: "text-sage" },
-    { label: "علاقه‌مندی", value: toFa(wish), icon: Heart, color: "text-danger" },
+    { label: "اعتبار AI", value: toFa(balance), icon: Sparkles, color: "text-gold", href: "/account/credits" },
+    { label: "سفارش‌ها", value: toFa(ordersCount), icon: Package, color: "text-terracotta-deep", href: "/account/orders" },
+    { label: "آگهی‌های من", value: toFa(adsCount), icon: Tag, color: "text-sage", href: "/account/ads" },
+    { label: "علاقه‌مندی", value: toFa(wish), icon: Heart, color: "text-danger", href: "/wishlist" },
   ];
 
   return (
@@ -67,11 +67,11 @@ export default function AccountOverview() {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-surface p-5">
+          <Link key={s.label} href={s.href} className="card-surface block p-5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]">
             <s.icon size={22} className={s.color} />
             <div className="mt-2 font-display text-2xl font-black text-ink">{s.value}</div>
             <div className="text-xs text-ink-muted">{s.label}</div>
-          </div>
+          </Link>
         ))}
       </div>
 

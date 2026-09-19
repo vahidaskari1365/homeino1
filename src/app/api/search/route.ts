@@ -3,6 +3,7 @@ import { demoUnavailable, ok } from "@/lib/api/response";
 import { guard, parsePagination } from "@/lib/api/http";
 import { optionalUser } from "@/lib/api/auth";
 import { recordEvent } from "@/services/workflows/triggers";
+import { parseToman } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -16,8 +17,11 @@ export const GET = guard(async (req) => {
     categorySlug: sp.get("category") ?? undefined,
     vendorSlug: sp.get("vendor") ?? undefined,
     styleSlug: sp.get("style") ?? undefined,
-    minPrice: sp.get("minPrice") ? Number(sp.get("minPrice")) : undefined,
-    maxPrice: sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined,
+    // Price params accept every human format: «۵۰٬۰۰۰٬۰۰۰», «50,000,000»,
+    // «۵۰،۰۰۰،۰۰۰» (keyboard comma) — parseToman never yields NaN, so a bad
+    // value can no longer silently drop the price filter.
+    minPrice: parseToman(sp.get("minPrice")),
+    maxPrice: parseToman(sp.get("maxPrice")),
     inStockOnly: sp.get("inStock") === "true",
     sort: (sp.get("sort") as never) ?? undefined,
     page,

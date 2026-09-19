@@ -8,6 +8,7 @@ import {
   vendorPayoutItems,
 } from "@/db/schema";
 import { PLATFORM } from "@/config/platform";
+import { activeProVendorIds, effectiveCommissionBp } from "@/services/vendorPackage";
 
 // ============================================================
 // HOMEINO — Vendor settlement engine
@@ -32,6 +33,16 @@ export function commissionBpFor(vendorRateBp: number | null | undefined): number
   if (vendorRateBp === null || vendorRateBp === undefined) return DEFAULT_COMMISSION_BP;
   if (vendorRateBp < 0 || vendorRateBp > 10_000) return DEFAULT_COMMISSION_BP;
   return vendorRateBp;
+}
+
+/**
+ * Snapshot rate for accrual: the PRO package (پکیج فروشنده) overrides the
+ * per-vendor/platform rate while its window covers now. Kept as a tiny
+ * wrapper so the effective-rate contract lives in ONE place.
+ */
+export async function effectiveBpForVendor(vendorId: string, vendorRateBp: number | null | undefined): Promise<number> {
+  const pro = await activeProVendorIds([vendorId]);
+  return effectiveCommissionBp(vendorRateBp, pro.has(vendorId));
 }
 
 export function commissionFor(grossToman: number, bp: number): { commissionToman: number; netToman: number } {
@@ -60,11 +71,15 @@ export async function accrueOrderEarnings(orderId: string): Promise<{ created: n
     .innerJoin(vendors, eq(vendors.id, orderItems.vendorId))
     .where(eq(orderItems.orderId, orderId));
 
+  // ONE query for the whole order: which of these vendors hold an active
+  // پکیج فروشنده window right now → their effective rate is ۵٪.
+  const proActive = await activeProVendorIds([...new Set(items.map((i) => i.vendorId))]);
+
   let created = 0;
   for (const item of items) {
     const gross = Math.max(0, item.total - (item.refundedAmount ?? 0));
     if (gross <= 0) continue;
-    const bp = commissionBpFor(item.vendorRateBp);
+    const bp = effectiveCommissionBp(item.vendorRateBp, proActive.has(item.vendorId));
     const { commissionToman, netToman } = commissionFor(gross, bp);
     const deliveredEarly = item.itemStatus === "delivered";
     const result = await db

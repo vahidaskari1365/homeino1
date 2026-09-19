@@ -2,11 +2,13 @@ import { grantCredits } from "@/services/creditService";
 import { recordCouponRedemption } from "@/services/coupons";
 import { updateOrderStatus } from "@/services/orderService";
 import { accrueOrderEarnings, reverseOrderEarnings } from "@/services/vendorSettlement";
+import { activateVendorPackage } from "@/services/vendorPackage";
 import type { PaymentWebhookEvent } from "@/services/payments";
 
 export type FulfillmentResult =
   | { ok: true; kind: "credits"; balanceAfter: number; duplicate: boolean }
   | { ok: true; kind: "order"; orderId: string; status: string }
+  | { ok: true; kind: "vendor_package"; vendorId: string; expiresAt: string; duplicate: boolean }
   | { ok: false; reason: string };
 
 /**
@@ -24,6 +26,8 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
     userId?: string;
     credits?: number;
     orderId?: string;
+    vendorId?: string;
+    amountToman?: number;
     couponCode?: string;
     couponId?: string;
     amountOffIrr?: number;
@@ -89,6 +93,31 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
       if (msg.includes("duplicate key") || msg.includes("unique")) {
         // Already fulfilled — this is the webhook retry case, not an error.
         return { ok: true, kind: "credits", balanceAfter: -1, duplicate: true };
+      }
+      throw err;
+    }
+  }
+
+  if (meta.kind === "vendor_package") {
+    if (!meta.userId) return { ok: false, reason: "invalid_package_metadata" };
+    try {
+      const res = await activateVendorPackage({
+        userId: meta.userId,
+        provider: event.provider,
+        providerPaymentId: event.providerPaymentId,
+        priceToman: Number(meta.amountToman ?? 0) || undefined,
+      });
+      return {
+        ok: true,
+        kind: "vendor_package",
+        vendorId: res.vendorId,
+        expiresAt: res.expiresAt.toISOString(),
+        duplicate: res.duplicate,
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("duplicate key") || msg.includes("unique")) {
+        return { ok: true, kind: "vendor_package", vendorId: meta.vendorId ?? "", expiresAt: "", duplicate: true };
       }
       throw err;
     }

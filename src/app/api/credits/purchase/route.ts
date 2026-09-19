@@ -15,6 +15,7 @@ export const runtime = "nodejs";
  * unreachable. The DB (seeded in 202609060001) is the single price list.
  */
 export const PACKS: Record<string, { credits: number; amount: number }> = {
+  mini: { credits: 10, amount: 22_500 },
   starter: { credits: 50, amount: 100_000 },
   popular: { credits: 120, amount: 220_000 },
   pro: { credits: 300, amount: 500_000 },
@@ -78,7 +79,17 @@ export const POST = guard(async (req) => {
     throw ApiError.badRequest("مقدار تخفیف نامعتبر است");
   }
 
-  const gateway = paymentGateway();
+  // بدون درگاهِ پیکربندی‌شده در پروداکشن، پیام صادقانهٔ فارسی — نه استک‌تریس.
+  let gateway;
+  try {
+    gateway = paymentGateway();
+  } catch {
+    throw new ApiError(
+      "GATEWAY_NOT_CONFIGURED",
+      "درگاه پرداخت هنوز فعال نشده است — پس از فعال‌سازی درگاه بانکی، خرید اعتبار به‌صورت خودکار کار می‌کند.",
+      503,
+    );
+  }
   const intent = await gateway.createIntent({
     amount: finalAmountIrr,
     currency: "IRR",

@@ -83,6 +83,10 @@ export async function GET(req: Request) {
     const orderNumber = await getOrderNumber(result.orderId).catch(() => null);
     return NextResponse.redirect(`${origin}/account/orders?payment=success&order=${encodeURIComponent(orderNumber ?? result.orderId)}&ref=${verified.refId ?? ""}`, 302);
   }
+  if (result.kind === "vendor_package") {
+    // پکیج فروشنده — بازگشت به همان پنل فروشنده (تنها جای خرید پکیج).
+    return NextResponse.redirect(`${origin}/vendor/package?payment=success&ref=${verified.refId ?? ""}`, 302);
+  }
   return NextResponse.redirect(`${origin}/account/credits?payment=success&ref=${verified.refId ?? ""}`, 302);
 }
 

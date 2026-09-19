@@ -12,7 +12,7 @@
 import type { AgentRunResult, WorkflowRunResult } from "./types";
 import { ensureSeeded, storeMode, storeModeReason } from "./store";
 import { runAgentByKey, cancelAgentRun, localAgentRuntime } from "./runtime";
-import { extractShoppingIntent } from "./nlu";
+import { extractShoppingIntent, toLatinDigits } from "./nlu";
 import { llmStatus } from "./llmGateway";
 import { browserProviderStatus, resolveBrowserRuntime } from "./integrations/browserRuntime";
 import { difyAgentRuntime, langflowAgentRuntime, difyWorkflowRuntime, langflowWorkflowRuntime, runWorkflowOnDify, runWorkflowOnLangflow } from "./integrations/externalRuntimes";
@@ -118,7 +118,9 @@ function lowerBudgetClause(text: string): string {
   return text.replace(
     /(زیر|کمتر از|حداکثر|نه بیشتر از|تا)\s*([۰-۹0-9][۰-۹0-9٬,،]*(?:\.\d+)?)\s*(میلیون|میلیارد|تومان|هزار)/g,
     (_m, pre: string, numStr: string, unit: string) => {
-      const digits = Number(numStr.replace(/[۰-۹٠-٩]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/[٬,،\s]/g, ""));
+      // toLatinDigits maps Persian AND Arabic digits correctly (the old shared
+      // indexOf over the concatenated table gave Arabic ٠→"۱۰" — a real bug).
+      const digits = Number(toLatinDigits(numStr).replace(/[٬,،\s]/g, ""));
       if (!Number.isFinite(digits) || digits <= 0) return _m;
       const next = Math.max(1, Math.round((digits * 0.8) / (unit === "هزار" ? 100 : 1)) * (unit === "هزار" ? 100 : 1));
       return `${pre} ${next.toLocaleString("fa-IR")} ${unit}`;

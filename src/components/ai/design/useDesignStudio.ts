@@ -15,6 +15,7 @@ import type { PlacementProduct, ProductPlacementPlan } from "@/services/ai/place
 import { parseProductDimensions } from "@/services/ai/placement";
 import { planReplacementPlacements, type StudioPlacementPlan, type DetectedCounterpart } from "@/services/ai/studioPlacement";
 import { compositeRoomImage } from "@/lib/studioComposite";
+import { parseToman } from "@/lib/utils";
 import type { StudioAgentsReport } from "@/services/agents/studio";
 import type { RoomElement } from "@/services/ai/roomState";
 import {
@@ -364,7 +365,9 @@ export function useDesignStudio() {
       dimensions: parseProductDimensions(p.dimensions),
     }));
 
-    const budgetNum = Number(budget.replace(/[^\d]/g, "")) || undefined;
+    // بودجه می‌تواند عدد («۵۰،۰۰۰٬۰۰۰») یا آیدی پریست («low») باشد؛ parseToman
+    // فقط عدد واقعی را برمی‌گرداند و هرگز NaN تولید نمی‌کند.
+    const budgetNum = parseToman(budget);
 
     const resolvedSkuProduct = skuInput.trim() ? getProductBySkuOrCode(skuInput.trim()) : undefined;
     const categoryTargets = designElements.map((e) => categoryToRoomElement(e.catSlug, e.label));

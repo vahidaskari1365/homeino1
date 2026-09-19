@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck, ShieldCheck, Info, LogIn, Percent, Wallet, Store as StoreIcon, RefreshCw } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck, ShieldCheck, Info, LogIn, Percent, Wallet, Store as StoreIcon, RefreshCw, Crown } from "lucide-react";
 import { Button, Badge, LogoBlock, Spinner } from "@/components/ui/primitives";
-import { toFa, formatCompactFa, formatPrice } from "@/lib/utils";
+import { toFa, formatCompactFa, formatPrice, cn } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useVendorSessionVersion } from "@/lib/useVendorSessionVersion";
 import { useUi } from "@/stores/useApp";
@@ -103,7 +103,9 @@ export default function VendorDashboard() {
 
 function RealDashboard({ me }: { me: VendorMe }) {
   const { vendor, summary } = me;
-  const rate = vendor.commissionRatePercent ?? PLATFORM.vendor.commissionRatePercent;
+  // نرخ مؤثر همین لحظه (حین اشتراک پکیج = ۵٪) — نه نرخ پایه.
+  const rate = vendor.effectiveCommissionPercent ?? PLATFORM.vendor.commissionRatePercent;
+  const proActive = me.package?.active ?? false;
   // Ledger rows → exact gross/commission sums. The summary endpoint only
   // carries NET numbers; the ledger fetch is real data, never derived math.
   const [ledger, setLedger] = useState<{ items: VendorEarningRow[]; summary: EarningsSummary } | null>(null);
@@ -140,6 +142,7 @@ function RealDashboard({ me }: { me: VendorMe }) {
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <Badge tone={VENDOR_STATUS_TONE[vendor.status] ?? "neutral"}>{VENDOR_STATUS_LABEL[vendor.status] ?? vendor.status}</Badge>
               <Badge tone={vendor.verificationStatus === "verified" ? "success" : "gold"}>{VERIFICATION_LABEL[vendor.verificationStatus] ?? vendor.verificationStatus}</Badge>
+              {proActive && <Badge tone="accent"><Crown size={12} className="ml-0.5 inline" /> پلاس</Badge>}
               <Badge tone="accent">کمیسیون {toFa(rate)}٪</Badge>
             </div>
           </div>
@@ -155,6 +158,22 @@ function RealDashboard({ me }: { me: VendorMe }) {
             <div className="text-xs text-ink-muted">{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* پکیج فروشنده — کارت وضعیت (فقط بخش فروشنده) */}
+      <div className={cn("card-surface flex flex-wrap items-center justify-between gap-3 p-5", proActive && "border-gold/50 bg-gold/5")}>
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold/12 text-gold"><Crown size={19} /></span>
+          <div>
+            <div className="text-sm font-bold text-ink">پکیج فروشنده پلاس</div>
+            <div className="text-xs text-ink-muted">
+              {proActive
+                ? `فعال تا ${faDate(me.package.expiresAt)} — کارمزد فروش ${toFa(rate)}٪ (به‌جای ${toFa(me.package.baseCommissionPercent)}٪)`
+                : `کارمزد فروش را به ${toFa(me.package.commissionPercent)}٪ برسان — ماهانه ${toFa(me.package.priceToman.toLocaleString("en-US"))} تومان`}
+            </div>
+          </div>
+        </div>
+        <Link href="/vendor/package"><Button variant={proActive ? "ghost" : "accent"}>{proActive ? "مشاهدهٔ پکیج" : "خرید پکیج"}</Button></Link>
       </div>
 
       <div className="flex flex-wrap gap-2 text-2xs text-ink-muted">

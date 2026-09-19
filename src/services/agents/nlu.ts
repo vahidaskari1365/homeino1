@@ -207,12 +207,15 @@ export function extractBudget(input: string): BudgetRange | null {
   const text = normalize(input);
   if (!/\d/.test(text)) return null;
 
-  // find every number token with an optional multiplier word right after it
+  // find every number token with an optional multiplier word right after it.
+  // Separators accepted: Latin comma (,), Persian thousands separator (٬ U+066C),
+  // Persian keyboard comma (، U+060C — the one users actually type for
+  // «۵۰،۰۰۰،۰۰۰»), dot (decimal in en-US groups) and spaces.
   const numbers: { value: number; index: number }[] = [];
-  const numberRe = /(\d[\d,٬.\s]*\d|\d+)/g;
+  const numberRe = /(\d[\d,٬،.\s]*\d|\d+)/g;
   let match: RegExpExecArray | null;
   while ((match = numberRe.exec(text))) {
-    const rawNumber = match[1].replace(/[,٬.\s]/g, "");
+    const rawNumber = match[1].replace(/[,٬،.\s]/g, "");
     if (!rawNumber) continue;
     const value = Number(rawNumber);
     if (!Number.isFinite(value) || value <= 0) continue;

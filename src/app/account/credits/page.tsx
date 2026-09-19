@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, Check, TrendingDown, TrendingUp, Zap, Ticket, X } from "lucide-react";
 import { Button, Badge } from "@/components/ui/primitives";
 import { useCredits, useUi } from "@/stores/useApp";
@@ -20,6 +20,26 @@ export default function CreditsPage() {
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
+
+  // Return from the REAL gateway (Zarinpal callback redirects here with
+  // ?payment=success): the credits were granted server-side — adopt the
+  // authoritative balance once. Idempotent per mount (never double-toast).
+  const paymentReturnHandled = useRef(false);
+  useEffect(() => {
+    if (paymentReturnHandled.current) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") !== "success") return;
+    paymentReturnHandled.current = true;
+    window.history.replaceState(null, "", window.location.pathname);
+    void fetchCreditsBalance().then((res) => {
+      if (res.ok) {
+        setBalance(res.data.balance);
+        toast("پرداخت موفق بود — اعتبار به حساب‌ات اضافه شد", "success");
+      } else {
+        toast("پرداخت ثبت شد؛ برای دیدن موجودی صفحه را دوباره باز کن", "info");
+      }
+    });
+  }, [setBalance, toast]);
 
   async function applyCoupon() {
     if (!couponInput.trim() || couponBusy) return;
@@ -117,13 +137,14 @@ export default function CreditsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {CREDIT_DISPLAY.buyPackages.map((pk) => (
             <div key={pk.id} className={cn("relative rounded-2xl border p-5 text-center transition hover:-translate-y-1", pk.popular ? "border-terracotta bg-terracotta/5 shadow-[var(--shadow-soft)]" : "border-clay/50")}>
               {pk.popular && <span className="absolute -top-2.5 right-1/2 translate-x-1/2 rounded-full bg-terracotta px-3 py-0.5 text-2xs font-bold text-white">محبوب‌ترین</span>}
+              {pk.id === "mini" && <span className="absolute -top-2.5 right-1/2 translate-x-1/2 rounded-full bg-sage px-3 py-0.5 text-2xs font-bold text-white">شروع بدون ریسک</span>}
               <Sparkles size={24} className="mx-auto text-gold" />
               <div className="mt-2 font-display text-2xl font-black text-ink">{toFa(pk.credits)}</div>
-              <div className="text-xs text-ink-muted">اعتبار</div>
+              <div className="text-xs text-ink-muted">اعتبار{pk.id === "mini" ? " — معادل ۲ طراحی کامل" : ""}</div>
               <div className="mt-3 font-bold text-ink">
                 {coupon ? (
                   <>
@@ -140,7 +161,16 @@ export default function CreditsPage() {
               <Button className="mt-3 w-full" variant={pk.popular ? "accent" : "ghost"} onClick={async () => {
                 // Real backend first: intent → dev confirm → authoritative balance.
                 const intent = await purchaseCredits(pk.id, coupon?.code);
-                if (intent.ok && intent.data.confirmable) {
+                if (!intent.ok) {
+                  // Demo fallback ONLY on 503+DEMO_MODE (DB-less) or dead network;
+                  // every OTHER failure (401/gateway/500…) = honest error — never a
+                  // fake local purchase.
+                  const demoFallback = (intent.status === 503 && intent.code === "DEMO_MODE") || intent.status === 0;
+                  if (demoFallback) applyLocalPurchase(pk.credits, pk.price);
+                  else toast(intent.message ?? "خرید ممکن نشد — بعداً تلاش کن", "error");
+                  return;
+                }
+                if (intent.data.confirmable) {
                   const confirmed = await confirmCreditsPurchase(intent.data.paymentId, pk.id);
                   if (confirmed.ok) {
                     const bal = await fetchCreditsBalance();
@@ -152,12 +182,7 @@ export default function CreditsPage() {
                   toast(confirmed.message ?? "تأیید پرداخت ناموفق بود", "error");
                   return;
                 }
-                if (intent.ok && !intent.data.confirmable) {
-                  toast("پرداخت واقعی فعال است — از درگاه بانکی ادامه بده", "info");
-                  return;
-                }
-                // Demo fallback (no DB): local ledger purchase.
-                applyLocalPurchase(pk.credits, pk.price);
+                toast("پرداخت واقعی فعال است — از درگاه بانکی ادامه بده", "info");
               }}>خرید</Button>
             </div>
           ))}

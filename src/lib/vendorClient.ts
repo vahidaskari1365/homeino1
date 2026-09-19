@@ -104,8 +104,10 @@ export interface VendorMe {
     verificationStatus: string; // unverified | pending | verified
     city: string | null;
     description: string | null;
-    /** null → پلتفرم از نرخ پیش‌فرض استفاده می‌کند (PLATFORM.vendor). */
+    /** نرخ پایهٔ per-vendor — null → پلتفرم از نرخ پیش‌فرض استفاده می‌کند. */
     commissionRatePercent: number | null;
+    /** نرخ مؤثرِ همین لحظه (حین اشتراک پکیج = ۵٪). */
+    effectiveCommissionPercent: number;
     contactEmail: string | null;
     contactPhone: string | null;
   };
@@ -117,6 +119,14 @@ export interface VendorMe {
     paid: number;
     totalNet: number;
     itemCount: number;
+  };
+  /** پکیج فروشنده — وضعیت اشتراک فعال + نرخ کارمزد حین اشتراک. */
+  package: {
+    active: boolean;
+    expiresAt: string | null;
+    priceToman: number;
+    commissionPercent: number;
+    baseCommissionPercent: number;
   };
   payoutSettings: { shaba: string | null; cardNumber: string | null; accountHolderName: string | null; payoutsEnabled: boolean } | null;
   verificationLog: { action: string; note: string | null; createdAt: string }[];
@@ -291,6 +301,38 @@ export function uploadProductImage(
     }
     return first;
   })();
+}
+
+/* ---------------- PRO PACKAGE (پکیج فروشنده — /api/vendor/package) ---------------- */
+
+export interface VendorPackagePurchaseDTO {
+  paymentId: string;
+  provider: string;
+  paymentUrl: string | null;
+  confirmable: boolean; // dev gateway → confirm locally
+  amountToman: number;
+  renewsAt?: string | null; // تمدید: پنجرهٔ جدید از انتهای اشتراک فعلی
+}
+
+export interface VendorPackageStateDTO {
+  active: boolean;
+  expiresAt: string | null;
+  priceToman: number;
+  commissionPercent: number;
+  baseCommissionPercent: number;
+}
+
+/** خرید پکیج فروشنده — intent واقعی؛ با درگاه بانکی paymentUrl می‌آید. */
+export function purchaseVendorPackage() {
+  return call<VendorPackagePurchaseDTO>("/api/vendor/package/purchase", { method: "POST" });
+}
+
+/** تأیید پرداخت دمو (فقط DevPaymentProvider) — فعال‌سازی از مسیر fulfillment واحد. */
+export function confirmVendorPackage(paymentId: string) {
+  return call<{ ok: true; duplicate: boolean; package: VendorPackageStateDTO }>("/api/vendor/package/confirm", {
+    method: "POST",
+    body: JSON.stringify({ paymentId }),
+  });
 }
 
 /* ---------------- ORDERS (/api/vendor/orders) ---------------- */

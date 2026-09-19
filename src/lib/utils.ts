@@ -30,6 +30,33 @@ export const faGroup = (input: string | number): string => {
 export const fromFa = (input: string): string =>
   input.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
 
+/**
+ * Normalize ANY user-typed amount to a clean ASCII digit string:
+ * Persian ۰-۹ AND Arabic ٠-٩ digits → Latin, every thousands separator
+ * (Latin «,» / Persian «٬» U+066C / keyboard comma «،» U+060C) and spaces
+ * removed. «۵۰،۰۰۰٬۰۰۰» → "50000000", "50,000,000" → "50000000".
+ */
+export function normalizeAmount(input: string): string {
+  return (input ?? "")
+    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[,٬،\s]/g, "");
+}
+
+/**
+ * Parse a user-typed Toman amount into a safe positive integer — the one
+ * gateway for price inputs (API query params, studio budget, AI budget).
+ * Returns undefined for empty/garbage/non-numeric input (never NaN), so
+ * «عدد نیست» stays silently ignorable exactly like the old code paths.
+ */
+export function parseToman(input: string | null | undefined): number | undefined {
+  if (input === null || input === undefined) return undefined;
+  const digits = normalizeAmount(String(input));
+  if (!/^\d+$/.test(digits)) return undefined;
+  const n = Number(digits);
+  return Number.isSafeInteger(n) && n > 0 ? n : undefined;
+}
+
 /** Persian digits */
 export function toFa(input: number | string): string {
   const map = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
