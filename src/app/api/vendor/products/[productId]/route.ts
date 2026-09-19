@@ -3,7 +3,7 @@ import { guard, readBody } from "@/lib/api/http";
 import { validate, isOptionalString, isOptionalInt, isOptionalEnum } from "@/lib/api/validate";
 import { and, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
-import { products, inventory } from "@/db/schema";
+import { products, inventory, productImages } from "@/db/schema";
 import { requireVendorMember, requireVendorManager } from "@/lib/api/vendorAuth";
 import { ApiError } from "@/lib/api/errors";
 
@@ -29,6 +29,7 @@ export const PATCH = guard(async (req, { params }: Params) => {
     compareAtPrice: isOptionalInt(0, 100_000_000_000),
     quantity: isOptionalInt(0, 1_000_000),
     status: isOptionalEnum(["draft", "active", "out_of_stock", "archived"]),
+    imageUrl: isOptionalString(1000),
   });
 
   const db = getDb();
@@ -52,6 +53,25 @@ export const PATCH = guard(async (req, { params }: Params) => {
 
     if (input.quantity !== undefined) {
       await tx.update(inventory).set({ quantity: input.quantity, updatedAt: new Date() }).where(eq(inventory.productId, productId));
+    }
+
+    // تعویض عکس اصلی (خروجی ایجنت استانداردسازی یا URL دستی) — in-place تا
+    // سطر product_images و ترتیب گالری دست‌نخورده بماند.
+    if (input.imageUrl !== undefined) {
+      const url = input.imageUrl.trim();
+      if (url) {
+        await tx.update(productImages).set({ isPrimary: false }).where(eq(productImages.productId, productId));
+        const [primary] = await tx
+          .select({ id: productImages.id })
+          .from(productImages)
+          .where(and(eq(productImages.productId, productId), eq(productImages.isPrimary, true)))
+          .limit(1);
+        if (primary) {
+          await tx.update(productImages).set({ url }).where(eq(productImages.id, primary.id));
+        } else {
+          await tx.insert(productImages).values({ productId, url, isPrimary: true, position: 0 });
+        }
+      }
     }
     return ok(updated);
   });

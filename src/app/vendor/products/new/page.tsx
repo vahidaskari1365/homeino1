@@ -7,6 +7,7 @@ import { useUi } from "@/stores/useApp";
 import { categories } from "@/data/categories";
 import { addVendorProduct } from "@/data/vendorSession";
 import { fetchVendorMeCached, createVendorProduct, isDemoFallback } from "@/lib/vendorClient";
+import ProductImageUploader from "@/components/vendor/ProductImageUploader";
 
 const input = "w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink";
 
@@ -22,6 +23,8 @@ export default function NewProductPage() {
   const { toast } = useUi();
   const [mode, setMode] = useState<Mode>({ kind: "loading" });
   const [loading, setLoading] = useState(false);
+  // تصویر محصول در حالت واقعی — خروجی ایجنت استانداردسازی (URL نهایی)
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   // Same honest gate as the rest of the vendor panel: real API first, demo
   // store only on 503 DEMO_MODE / network failure.
@@ -52,7 +55,7 @@ export default function NewProductPage() {
       quantity,
       brand: String(fd.get("brand") ?? "").trim() || undefined,
       description: String(fd.get("description") ?? "").trim() || undefined,
-      imageUrl: String(fd.get("imageUrl") ?? "").trim() || undefined,
+      imageUrl: imageUrl ?? undefined,
     }).then((res) => {
       if (res.ok) {
         toast(`محصول «${title}» ثبت شد (وضعیت: پیش‌نویس)`, "success");
@@ -116,10 +119,16 @@ export default function NewProductPage() {
       )}
       <form onSubmit={isReal ? submitReal : submitDemo} className="card-surface grid gap-5 p-6 lg:grid-cols-2">
         <div className="lg:col-span-2">
-          <label className="mb-2 block text-sm font-medium text-ink">تصاویر محصول</label>
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 py-10 text-center hover:border-ink">
-            <span className="text-sm text-ink-muted">{isReal ? "فعلاً آدرس تصویر را در فرم زیر وارد کن — آپلود مستقیم به‌زودی." : "در این دمو، تصویر پیش‌فرض مجموعه برای محصول جدید استفاده می‌شود."}</span><input type="file" multiple className="hidden" disabled />
-          </label>
+          {isReal ? (
+            <ProductImageUploader value={imageUrl} onChange={setImageUrl} />
+          ) : (
+            <>
+              <label className="mb-2 block text-sm font-medium text-ink">تصاویر محصول</label>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-clay/60 bg-ivory-2 py-10 text-center hover:border-ink">
+                <span className="text-sm text-ink-muted">در این دمو، تصویر پیش‌فرض مجموعه برای محصول جدید استفاده می‌شود.</span><input type="file" multiple className="hidden" disabled />
+              </label>
+            </>
+          )}
         </div>
         <div><label className="mb-1.5 block text-sm font-medium text-ink">نام محصول</label><input name="title" required minLength={3} placeholder="مثلاً میز تلویزیون گردو" className={input} /></div>
         <div><label className="mb-1.5 block text-sm font-medium text-ink">برند</label><input name="brand" placeholder={isReal ? "نام برند فروشگاه" : "نور مبلمان"} className={input} /></div>
@@ -127,7 +136,6 @@ export default function NewProductPage() {
           <>
             <div><label className="mb-1.5 block text-sm font-medium text-ink">قیمت (تومان)</label><input name="price" inputMode="numeric" required placeholder="مثلاً 12500000" className={input} /></div>
             <div><label className="mb-1.5 block text-sm font-medium text-ink">موجودی</label><input name="quantity" inputMode="numeric" defaultValue="5" className={input} /></div>
-            <div className="lg:col-span-2"><label className="mb-1.5 block text-sm font-medium text-ink">آدرس تصویر (اختیاری)</label><input name="imageUrl" dir="ltr" placeholder="https://…" className={input} /></div>
           </>
         ) : (
           <>

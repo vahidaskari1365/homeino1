@@ -200,7 +200,7 @@ export function createVendorProduct(input: {
 
 export function updateVendorProduct(
   productId: string,
-  patch: { title?: string; price?: number; compareAtPrice?: number; quantity?: number; status?: "draft" | "active" | "out_of_stock" | "archived"; description?: string },
+  patch: { title?: string; price?: number; compareAtPrice?: number; quantity?: number; status?: "draft" | "active" | "out_of_stock" | "archived"; description?: string; imageUrl?: string },
 ) {
   return call<{ id: string; title: string; price: number; status: string }>(`/api/vendor/products/${encodeURIComponent(productId)}`, {
     method: "PATCH",
@@ -210,6 +210,87 @@ export function updateVendorProduct(
 
 export function deleteVendorProduct(productId: string) {
   return call<{ deleted: boolean }>(`/api/vendor/products/${encodeURIComponent(productId)}`, { method: "DELETE" });
+}
+
+/* ---------------- IMAGE UPLOAD (/api/vendor/uploads — multipart) ---------------- */
+
+/** گزارش عملیات ایجنت استانداردسازی تصویر — دقیقاً همان چیزی که سرور انجام داد. */
+export interface ProductImageReportDTO {
+  original: { format: string; width: number; height: number; bytes: number };
+  output: { format: string; width: number; height: number; bytes: number };
+  actions: string[];
+  warnings: string[];
+}
+
+export interface ProductImageUploadDTO {
+  url: string;
+  storage: string; // r2 | supabase
+  width: number;
+  height: number;
+  bytes: number;
+  report: ProductImageReportDTO;
+}
+
+function parseXhrBody(xhr: XMLHttpRequest): Record<string, unknown> {
+  try {
+    return (xhr.responseType === "json" ? xhr.response : JSON.parse(xhr.responseText)) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * آپلود multipart تصویر محصول با پیشرفت واقعی (XHR — fetch پروگرس ندارد).
+ * همان قرارداد call(): نتیجهٔ تفکیک‌شده، رفرش یک‌بارهٔ نشست روی 401، و
+ * هرگز خطای شبکه را موفق جلوه نمی‌دهد. عکس روی سرور خودکار به استاندارد
+ * سایت تبدیل می‌شود (ایجنت استانداردسازی تصویر).
+ */
+export function uploadProductImage(
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<ApiResult<ProductImageUploadDTO>> {
+  const send = () =>
+    new Promise<ApiResult<ProductImageUploadDTO>>((resolve) => {
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/vendor/uploads");
+        xhr.responseType = "json";
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && onProgress) onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100)));
+        };
+        xhr.onload = () => {
+          if (onProgress) onProgress(100);
+          const body = parseXhrBody(xhr) as Record<string, unknown>;
+          if (xhr.status >= 200 && xhr.status < 300 && body.ok !== false) {
+            resolve({ ok: true, data: body.data as ProductImageUploadDTO });
+          } else {
+            const err = body.error as { code?: string; message?: string } | undefined;
+            resolve({
+              ok: false,
+              status: xhr.status,
+              code: (body.code as string) ?? err?.code,
+              message: (body.message as string) ?? err?.message,
+            });
+          }
+        };
+        xhr.onerror = () => resolve({ ok: false, status: 0, code: "NETWORK" });
+        xhr.ontimeout = () => resolve({ ok: false, status: 0, code: "NETWORK" });
+        const fd = new FormData();
+        fd.append("file", file);
+        xhr.send(fd);
+      } catch {
+        resolve({ ok: false, status: 0, code: "NETWORK" });
+      }
+    });
+
+  return (async () => {
+    const first = await send();
+    if (!first.ok && first.status === 401) {
+      const refreshed = await refreshSessionOnce();
+      if (refreshed) return send();
+    }
+    return first;
+  })();
 }
 
 /* ---------------- ORDERS (/api/vendor/orders) ---------------- */

@@ -18,6 +18,7 @@ import {
   PRODUCT_STATUS_TONE,
   type VendorProductRow,
 } from "@/lib/vendorClient";
+import ProductImageUploader from "@/components/vendor/ProductImageUploader";
 
 const input = "w-full rounded-xl border border-clay/60 bg-cream p-2.5 text-sm outline-none focus:border-ink";
 
@@ -86,6 +87,9 @@ function RealProductsPage() {
   const [editing, setEditing] = useState<VendorProductRow | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // تصویر مودال‌ها — خروجی ایجنت استانداردسازی (URL نهایی)
+  const [addImageUrl, setAddImageUrl] = useState<string | null>(null);
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   // Manual refresh trigger — mutations bump it and the effect refetches
   // (setState stays out of the effect body — repo lint rule).
   const [tick, setTick] = useState(0);
@@ -144,11 +148,12 @@ function RealProductsPage() {
       quantity,
       brand: String(fd.get("brand") ?? "").trim() || undefined,
       description: String(fd.get("description") ?? "").trim() || undefined,
-      imageUrl: String(fd.get("imageUrl") ?? "").trim() || undefined,
+      imageUrl: addImageUrl ?? undefined,
     }).then((res) => {
       setSaving(false);
       if (res.ok) {
         setShowAdd(false);
+        setAddImageUrl(null);
         toast(`محصول «${title}» ثبت شد (وضعیت: پیش‌نویس)`, "success");
         refresh();
       } else {
@@ -164,12 +169,15 @@ function RealProductsPage() {
     const price = Number(String(fd.get("price") ?? "").replace(/[^0-9۰-۹٠-٩]/g, ""));
     const quantity = Number(String(fd.get("quantity") ?? "0").replace(/[^0-9۰-۹٠-٩]/g, "")) || 0;
     const status = String(fd.get("status") ?? "draft") as "draft" | "active" | "out_of_stock" | "archived";
+    // عکس فقط وقتی فرستاده می‌شود که فروشنده واقعاً عوضش کرده — پاک‌سازی بی‌صدا ممنوع
+    const imageChanged = editImageUrl !== null && editImageUrl !== editing.image;
     setSaving(true);
     void patchVendorProduct(editing.id, {
       title: String(fd.get("title") ?? "").trim() || undefined,
       price: price > 0 ? price : undefined,
       quantity,
       status,
+      ...(imageChanged ? { imageUrl: editImageUrl } : {}),
     }).then((res) => {
       setSaving(false);
       if (res.ok) {
@@ -237,7 +245,7 @@ function RealProductsPage() {
                   </td>
                   <td className="p-3"><Badge tone={PRODUCT_STATUS_TONE[p.status] ?? "neutral"}>{PRODUCT_STATUS_LABEL[p.status] ?? p.status}</Badge></td>
                   <td className="p-3"><div className="flex justify-end gap-1">
-                    <button onClick={() => setEditing(p)} aria-label="ویرایش محصول" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-ivory-2"><Pencil size={15} /></button>
+                    <button onClick={() => { setEditing(p); setEditImageUrl(null); }} aria-label="ویرایش محصول" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-ivory-2"><Pencil size={15} /></button>
                     {confirmDeleteId === p.id ? (
                       <button onClick={() => void remove(p)} disabled={busyId === p.id} aria-label="تأیید حذف محصول" className="rounded-lg bg-danger px-2 text-2xs font-bold text-white transition hover:opacity-90">تأیید حذف</button>
                     ) : (
@@ -257,11 +265,13 @@ function RealProductsPage() {
       {/* add product — real POST /api/vendor/products */}
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="افزودن محصول جدید" description="محصول واقعی روی سرور هومینو ثبت می‌شود؛ اول به‌صورت پیش‌نویس، تا وقتی خودت فعالش کنی.">
         <form onSubmit={saveNew} className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <ProductImageUploader value={addImageUrl} onChange={setAddImageUrl} compact />
+          </div>
           <div className="sm:col-span-2"><label className="mb-1 block text-sm text-ink-muted">نام محصول</label><input name="title" required minLength={3} placeholder="مثلاً میز تلویزیون گردو" className={input} /></div>
           <div><label className="mb-1 block text-sm text-ink-muted">برند</label><input name="brand" placeholder="نام برند فروشگاه" className={input} /></div>
           <div><label className="mb-1 block text-sm text-ink-muted">موجودی</label><input name="quantity" inputMode="numeric" defaultValue="5" className={input} /></div>
           <div><label className="mb-1 block text-sm text-ink-muted">قیمت (تومان)</label><input name="price" inputMode="numeric" required placeholder="مثلاً 12500000" className={input} /></div>
-          <div><label className="mb-1 block text-sm text-ink-muted">آدرس تصویر (اختیاری)</label><input name="imageUrl" dir="ltr" placeholder="https://…" className={input} /></div>
           <div className="sm:col-span-2"><label className="mb-1 block text-sm text-ink-muted">توضیحات</label><textarea name="description" rows={2} className={`${input} resize-none`} /></div>
           <div className="flex gap-2 sm:col-span-2">
             <Button type="submit" disabled={saving}>{saving ? <><Spinner /> در حال ثبت…</> : <><PackagePlus size={15} /> ثبت محصول</>}</Button>
@@ -274,6 +284,9 @@ function RealProductsPage() {
       <Modal open={Boolean(editing)} onClose={() => setEditing(null)} title={`ویرایش ${editing?.title ?? ""}`} description="تغییرات مستقیم روی سرور هومینو ذخیره می‌شود.">
         {editing && (
           <form onSubmit={saveEdit} className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <ProductImageUploader value={editImageUrl ?? editing.image} onChange={setEditImageUrl} compact />
+            </div>
             <div className="sm:col-span-2"><label className="mb-1 block text-sm text-ink-muted">نام محصول</label><input name="title" defaultValue={editing.title} className={input} /></div>
             <div><label className="mb-1 block text-sm text-ink-muted">قیمت (تومان)</label><input name="price" inputMode="numeric" defaultValue={editing.price} className={input} /></div>
             <div><label className="mb-1 block text-sm text-ink-muted">موجودی</label><input name="quantity" inputMode="numeric" defaultValue={editing.quantity ?? 0} className={input} /></div>

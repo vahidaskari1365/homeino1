@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.homeino.ir" },
       { protocol: "https", hostname: "sfile.chatglm.cn" },
       { protocol: "https", hostname: "z-cdn.chatglm.cn" },
+      // تصاویر واقعی محصولات/کاربران (ایجنت استانداردسازی، پین‌ها، آواتار)
+      // روی باکت‌های عمومی سوپابیس ذخیره می‌شوند — وایلدکارد برای ref پروژه
+      { protocol: "https", hostname: "**.supabase.co" },
     ],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 414, 640, 768, 1024, 1280, 1440, 1920],
