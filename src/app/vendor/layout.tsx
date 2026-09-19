@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Store, BarChart3, PlusCircle, Info, CheckCircle2, Crown, Bell } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Store, BarChart3, PlusCircle, Info, CheckCircle2, Crown, Bell, MessagesSquare } from "lucide-react";
 import { DashboardLayout, type NavItem } from "@/components/layout/DashboardLayout";
 import { PLATFORM } from "@/config/platform";
 import { vendorStoreProfile } from "@/data/vendorSession";
@@ -15,6 +15,7 @@ const NAV: NavItem[] = [
   { label: "فروشگاه", href: "/vendor/store", icon: Store },
   { label: "تحلیل و گزارش", href: "/vendor/analytics", icon: BarChart3 },
   { label: "اطلاع‌رسانی‌ها", href: "/vendor/notifications", icon: Bell }, // صندوق پیام فروشنده — Task 59
+  { label: "پیام‌های مشتریان", href: "/vendor/messages", icon: MessagesSquare }, // گفتگوی مشتری و فروشگاه — Task 60
   { label: "خرید پکیج", href: "/vendor/package", icon: Crown }, // فقط در پنل فروشنده — Task 58
 ];
 

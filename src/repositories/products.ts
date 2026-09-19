@@ -14,6 +14,7 @@ export interface ProductsRepository {
   list(): Promise<Product[]>; bySlug(slug: string): Promise<Product | undefined>;
   byId(id: string): Promise<Product | undefined>;
   bySku(sku: string): Promise<Product | undefined>;
+  byStore(vendorSlug: string, fallback: () => Product[]): Promise<Product[]>;
   byCategory(slug: string): Promise<Product[]>;
   byStyle(slug: string): Promise<Product[]>; similar(productId: string, take?: number): Promise<Product[]>;
   trending(take?: number): Promise<Product[]>; salesCount(product: Product): Promise<number>;
@@ -75,6 +76,17 @@ function toDomain(value: Record<string, unknown>): Product {
 
 export const productsRepository: ProductsRepository = {
   list: async () => withDbFallback(mockProducts, () => remoteList()),
+  // محصولات یک فروشگاه واقعی (Task 60 — صفحهٔ /stores/[slug]):
+  // فقط کالای فعال همان vendor با همان مپینگ کاتالوگ (toDomain) —
+  // بدون DB یا خطای DB → همان کاتالوگ دمو (honest fallback).
+  byStore: async (vendorSlug, fallback) => {
+    if (!process.env.DATABASE_URL) return fallback();
+    try {
+      return await remoteList({ vendorSlug });
+    } catch {
+      return fallback();
+    }
+  },
   bySlug: async (slug) => {
     if (!process.env.DATABASE_URL) return mockBySlug(slug);
     try {

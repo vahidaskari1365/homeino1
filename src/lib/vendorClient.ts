@@ -461,6 +461,43 @@ export function markVendorNotificationsRead(input: { ids?: string[]; all?: boole
   });
 }
 
+/* ---------------- CUSTOMER MESSAGES (/api/vendor/messages) — Task 60 ---------------- */
+
+export interface VendorMessageRow {
+  id: string;
+  senderRole: "customer" | "vendor";
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface VendorThreadSummary {
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  lastBody: string;
+  lastSenderRole: "customer" | "vendor";
+  lastAt: string;
+  unread: number;
+}
+
+export function fetchVendorMessageThreads() {
+  return call<{ threads: VendorThreadSummary[]; unread: number }>("/api/vendor/messages");
+}
+
+export function fetchVendorMessageThread(customerId: string) {
+  return call<{ items: VendorMessageRow[] }>(
+    `/api/vendor/messages?customer=${encodeURIComponent(customerId)}`,
+  );
+}
+
+export function replyToCustomer(customerId: string, body: string) {
+  return call<{ message: VendorMessageRow }>("/api/vendor/messages", {
+    method: "POST",
+    body: JSON.stringify({ customerId, body }),
+  });
+}
+
 /* ---------------- PAYOUTS (/api/vendor/payouts) ---------------- */
 
 export interface VendorPayoutRow {

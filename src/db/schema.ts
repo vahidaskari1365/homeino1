@@ -18,6 +18,7 @@ export * from "./schema/marketing";
 export * from "./schema/marketplace";
 export * from "./schema/gamification";
 export * from "./schema/notifications";
+export * from "./schema/storeMessages";
 
 import * as users from "./schema/users";
 import * as vendors from "./schema/vendors";
@@ -33,6 +34,7 @@ import * as marketing from "./schema/marketing";
 import * as marketplace from "./schema/marketplace";
 import * as gamification from "./schema/gamification";
 import * as notifications from "./schema/notifications";
+import * as storeMessages from "./schema/storeMessages";
 
 /** Flat namespace of every table — consumes cleanly as the schema map. */
 export const schema = {
@@ -50,6 +52,7 @@ export const schema = {
   ...marketplace,
   ...gamification,
   ...notifications,
+  ...storeMessages,
 };
 
 export type { User, Profile, NewUser } from "./schema/users";

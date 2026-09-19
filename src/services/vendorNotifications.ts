@@ -25,6 +25,7 @@ export type VendorNotificationKind =
   | "order_sold"
   | "payout"
   | "package"
+  | "customer_message"
   | "platform_message";
 
 export interface NotifyVendorInput {

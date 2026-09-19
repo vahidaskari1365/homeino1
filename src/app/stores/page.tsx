@@ -1,33 +1,21 @@
-"use client";
-import { useState } from "react";
-import { Store as StoreIcon, Flame, Sparkles, CheckCircle2 } from "lucide-react";
-import { Container, PageHeader } from "@/components/shared";
-import { Chip } from "@/components/ui/primitives";
-import { StoreCard } from "@/components/cards";
-import { stores } from "@/data/stores";
-import { toFa } from "@/lib/utils";
+import type { Metadata } from "next";
+import { storesRepository } from "@/repositories/stores";
+import { StoresBrowser } from "./StoresBrowser";
 
-export default function StoresPage() {
-  const [filter, setFilter] = useState<"all" | "trending" | "new" | "verified">("all");
-  const list = stores.filter((s) =>
-    filter === "all" ? true : filter === "trending" ? s.trending : filter === "new" ? s.isNew : s.verified
-  );
-  const tabs = [
-    { id: "all", label: "همه", icon: StoreIcon },
-    { id: "trending", label: "محبوب", icon: Flame },
-    { id: "new", label: "جدید", icon: Sparkles },
-    { id: "verified", label: "تأییدشده", icon: CheckCircle2 },
-  ] as const;
+// ============================================================
+// /stores — فهرست فروشگاه‌ها روی دیتابیس واقعی (Task 60)
+// فروشگاه‌های تازه‌تأییدِ بک‌اند بلافاصله در همین فهرست دیده می‌شوند؛
+// بدون DB، همان فهرست نمونهٔ محلی (honest fallback).
+// ============================================================
 
-  return (
-    <Container className="py-10">
-      <PageHeader eyebrow="فروشگاه‌ها" title="فروشگاه‌ها و برندها" desc={`${toFa(stores.length)} فروشگاه منتخب در سراسر کشور. محصولات هر فروشگاه را ببین.`} />
-      <div className="mb-8 flex flex-wrap gap-2">
-        {tabs.map((t) => <Chip key={t.id} active={filter === t.id} onClick={() => setFilter(t.id)}>{t.label}</Chip>)}
-      </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {list.map((s) => <StoreCard key={s.id} store={s} />)}
-      </div>
-    </Container>
-  );
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "فروشگاه‌ها و برندها | هومینو",
+  description: "فروشگاه‌های منتخب دکوراسیون و چیدمان خانه در هومینو — خرید از فروشگاه‌های تأییدشده.",
+};
+
+export default async function StoresPage() {
+  const stores = await storesRepository.list();
+  return <StoresBrowser stores={stores} />;
 }

@@ -13,7 +13,7 @@
 // ============================================================
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, BellOff, CheckCheck, Info, LogIn, ShoppingBag, Wallet, Crown, MessageSquare, RefreshCw } from "lucide-react";
+import { Bell, BellOff, CheckCheck, Info, LogIn, ShoppingBag, Wallet, Crown, MessageSquare, MessageCircle, RefreshCw } from "lucide-react";
 import { Button, Badge, Spinner } from "@/components/ui/primitives";
 import { toFa, cn } from "@/lib/utils";
 import { useUi } from "@/stores/useApp";
@@ -29,6 +29,7 @@ const KIND_META: Record<string, { label: string; icon: typeof Bell; tone: "gold"
   order_sold: { label: "فروش", icon: ShoppingBag, tone: "success" },
   payout: { label: "تسویه", icon: Wallet, tone: "accent" },
   package: { label: "پکیج", icon: Crown, tone: "gold" },
+  customer_message: { label: "پیام مشتری", icon: MessageCircle, tone: "accent" },
   platform_message: { label: "پیام هومینو", icon: MessageSquare, tone: "neutral" },
 };
 
