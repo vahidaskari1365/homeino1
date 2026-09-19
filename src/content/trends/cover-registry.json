@@ -75,7 +75,11 @@
     "792b81b9afc2ed832515f844897af117": "2026-09-18-wj6ltf",
     "2765457ebc2fa946ca5d8a51e6e6a4b8": "2026-09-18-urban-utility-suv",
     "c126975b11ec728f3d0829b760d8fa81": "2026-09-18-ci5t88",
-    "ff1cbb700f680d1644dd4db3273ee1cd": "2026-09-18-k7vdcq"
+    "ff1cbb700f680d1644dd4db3273ee1cd": "2026-09-18-k7vdcq",
+    "754e8e5c0128ee8721a39765e2270533": "2026-09-19-cp8iiv",
+    "da6f16e5047585e9fe458f89d96f939f": "2026-09-19-j6l6mw",
+    "2930ff85d67c6f1e3bbb95c48fd3a810": "2026-09-19-pvh0n0",
+    "7e4223f0b5de05da1cf2e31fd1463a5a": "2026-09-19-ivun3p"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -122,7 +126,11 @@
     "/images/trends/src/2026-09-18-wj6ltf.jpg": "2026-09-18-wj6ltf",
     "/images/trends/src/2026-09-18-urban-utility-suv.jpg": "2026-09-18-urban-utility-suv",
     "/images/trends/src/2026-09-18-ci5t88.jpg": "2026-09-18-ci5t88",
-    "/images/trends/src/2026-09-18-k7vdcq.jpg": "2026-09-18-k7vdcq"
+    "/images/trends/src/2026-09-18-k7vdcq.jpg": "2026-09-18-k7vdcq",
+    "/images/trends/src/2026-09-19-cp8iiv.jpg": "2026-09-19-cp8iiv",
+    "/images/trends/src/2026-09-19-j6l6mw.jpg": "2026-09-19-j6l6mw",
+    "/images/trends/src/2026-09-19-pvh0n0.jpg": "2026-09-19-pvh0n0",
+    "/images/trends/src/2026-09-19-ivun3p.jpg": "2026-09-19-ivun3p"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -200,6 +208,10 @@
     "https://www.designboom.com/twitterimages/uploads/2026/09/gunia-assouline-visual-history-ukrainian-folk-art-naive-my-love-designboom-1200.jpg": "2026-09-18-wj6ltf",
     "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=79243&nologo=true&model=flux": "2026-09-18-urban-utility-suv",
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=56146&nologo=true&model=flux": "2026-09-18-ci5t88",
-    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=35733&nologo=true&model=flux": "2026-09-18-k7vdcq"
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=35733&nologo=true&model=flux": "2026-09-18-k7vdcq",
+    "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=44215&nologo=true&model=flux": "2026-09-19-cp8iiv",
+    "https://image.pollinations.ai/prompt/warm%20inviting%20home%20interior%20with%20lived-in%20charm%2C%20interior%20design%20photography?width=1152&height=864&seed=84300&nologo=true&model=flux": "2026-09-19-j6l6mw",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=39580&nologo=true&model=flux": "2026-09-19-pvh0n0",
+    "https://image.pollinations.ai/prompt/premium%20wooden%20flooring%20in%20a%20bright%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=80623&nologo=true&model=flux": "2026-09-19-ivun3p"
   }
 }
