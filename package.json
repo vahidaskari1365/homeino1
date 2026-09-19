@@ -21,7 +21,9 @@
     "magazine:daily": "node scripts/magazine-daily.mjs",
     "inspiration:daily": "node scripts/inspiration-daily.mjs",
     "trend:repair": "node scripts/trend-cover-repair.mjs",
-    "watchdog:site": "node scripts/site-watchdog.mjs"
+    "watchdog:site": "node scripts/site-watchdog.mjs",
+    "magazine:qa": "node scripts/lib/visual-qa.mjs",
+    "magazine:qa:fix": "node scripts/lib/visual-qa.mjs --fix"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.3.0",
