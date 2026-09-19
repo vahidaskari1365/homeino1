@@ -36,6 +36,7 @@ import {
   downloadCoverImage, openverseImages, generatedCover, topicPromptEn, looksLikeNonPhoto,
 } from "./lib/cover-pipeline.mjs";
 import { serperKey, serperNews, serperTopicImages } from "./lib/serper.mjs";
+import { relevantCoverCandidates, lruCoverPick, repairConflicts } from "./lib/visual-qa.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, "..");
@@ -656,9 +657,20 @@ async function main() {
       : [];
     const values = [...new Set(Object.values(COVER_BY_CATEGORY))];
     const ai = AI_TREND_COVERS[category] || [];
-    const candidates = [...variants, ...ai, base, ...values.filter((v) => v !== base && !variants.includes(v)), DEFAULT_COVER].filter(Boolean);
+    // ترتیب ارتباط‌محور (visual-qa): واریانت همان دسته → کاورهای AI همان دسته →
+    // کاورهای پایهٔ مرتبط همان دسته → پایهٔ دسته → سایر دسته‌ها (پناه آخر) —
+    // دیگر کاور نامرتبط تا جایی که ممکن باشد به بریف نمی‌رسد.
+    const relevant = relevantCoverCandidates(category);
+    const candidates = [...new Set([
+      ...variants, ...ai, ...relevant, base,
+      ...values.filter((v) => v !== base && !variants.includes(v)),
+      DEFAULT_COVER,
+    ].filter(Boolean))]
+      .filter((p) => p.startsWith("/images/product-pins/") ? fs.existsSync(path.join(REPO, "public", p)) : true);
     const pick = candidates.find((c) => !usedCovers.has(c))
-      ?? candidates[(existing.length + usedCovers.size) % candidates.length];
+      // استخر تمام شد؟ به‌جای انتخاب تصادفی، کم‌استفاده‌ترینِ مجاز (LRU) — همیشه مرتبط
+      ?? lruCoverPick(relevant.length ? relevant : candidates, existing)
+      ?? DEFAULT_COVER;
     usedCovers.add(pick);
     return pick;
   };
@@ -796,10 +808,14 @@ async function main() {
     return;
   }
 
-  // 4) ادغام + نگه‌داری + نوشتن
-  const merged = [...created, ...existing]
+  // 4) ادغام + گیت نهایی کاور روی کل فایل (ترمیم تکراری/نامرتبط حتی در داده‌های قدیمی)
+  //    + نگه‌داری + نوشتن
+  const mergedRaw = [...created, ...existing]
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
     .filter((b) => Date.parse(`${b.date}T00:00:00Z`) >= Date.now() - RETENTION_DAYS * 24 * 3600 * 1000);
+  const { briefs: merged, repairs: coverRepairs, unresolved: coverUnresolved } = repairConflicts(mergedRaw);
+  if (coverRepairs.length) console.log(`  ترمیم کاور (تکراری/نامرتبط): ${coverRepairs.length} مورد`);
+  if (coverUnresolved.length) console.log(`  ⚠ کاور حل‌نشده: ${coverUnresolved.length} مورد`);
 
   fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs: merged }, null, 2)}\n`, "utf8");
   saveRegistry(coverReg); // رجیستری ضدتکرار کاورها — همراه trends.json کامیت می‌شود
@@ -835,6 +851,7 @@ async function main() {
       titles: created.map((b) => b.title).slice(0, 4),
       sources: [...new Set(created.map((b) => b.source?.name).filter(Boolean))].slice(0, 4),
       qaRejected,
+      qaGate: { coverRepairs: coverRepairs.length, coverUnresolved: coverUnresolved.length },
     },
   });
 }
