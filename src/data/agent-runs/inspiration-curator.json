@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-19T08:25:37.856Z",
+  "updatedAt": "2026-09-19T12:39:32.001Z",
   "runs": [
+    {
+      "id": "run-1789821572000-84t47",
+      "at": "2026-09-19T12:39:32.001Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 56054,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 254,
+        "via": "template",
+        "poolRemaining": 637,
+        "productPoolRemaining": 52,
+        "skippedStarved": 0,
+        "combos": [
+          "مدیترانه‌ای × اتاق خواب",
+          "معاصر × ناهارخوری",
+          "مدرن × پذیرایی",
+          "مینیمال × فضای کار"
+        ],
+        "productJobs": [
+          "پرده و منسوجات",
+          "فرش و قالیچه"
+        ]
+      }
+    },
     {
       "id": "run-1789806337856-ujddw",
       "at": "2026-09-19T08:25:37.856Z",
