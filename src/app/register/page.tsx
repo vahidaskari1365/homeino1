@@ -51,6 +51,7 @@ export default function RegisterPage() {
       name: name.trim(),
       isVendor: isProducer,
       brandName: isProducer ? brand.trim() : undefined,
+      referralCode: new URLSearchParams(window.location.search).get("ref") ?? undefined,
     });
     if (res.ok) {
       if (res.data.emailConfirmationRequired) {

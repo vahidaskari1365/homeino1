@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 export const POST = guard(async (req) => {
   const input = validate(await readBody(req), {
     email: isEmail, password: isPassword, name: isOptionalString(120), phone: isOptionalString(32),
+    referralCode: isOptionalString(16),
   });
   await rateLimit(`register:${input.email}`, { windowMs: 60_000, max: 8 });
   const { data, error } = await createSupabaseServerClient().auth.signUp({
@@ -26,6 +27,20 @@ export const POST = guard(async (req) => {
     throw ApiError.badRequest("ثبت‌نام انجام نشد — اطلاعات را بررسی کنید یا بعداً تلاش کنید");
   }
   if (!data.user) throw ApiError.badRequest("ثبت‌نام انجام نشد");
+
+  // Referral «بده بگیر» — link the new user to their inviter (pending until
+  // their first real payment qualifies both bonuses). Fail-safe, never blocks.
+  if (input.referralCode) {
+    try {
+      const { applyReferralCode } = await import("@/services/gamification");
+      const applied = await applyReferralCode(data.user.id, input.referralCode);
+      if (!applied.applied && applied.reason && applied.reason !== "db_unavailable") {
+        console.info("[auth:register] referral not applied:", applied.reason);
+      }
+    } catch (err) {
+      console.warn("[auth:register] referral skipped:", err instanceof Error ? err.message : err);
+    }
+  }
 
   // Welcome gift — 5 credits, 48h expiry. Fail-safe: a bonus problem must
   // never break registration (idempotent via ledger idempotency key).

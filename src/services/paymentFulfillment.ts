@@ -40,6 +40,17 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
     return { ok: true, kind: "order", orderId: order.id, status: "refunded" };
   }
 
+  // Referral qualification: the invitee's FIRST successful payment (credits
+  // OR order) releases both referral bonuses. Fail-safe by design.
+  if (meta.userId) {
+    try {
+      const { qualifyReferral } = await import("@/services/gamification");
+      await qualifyReferral(meta.userId);
+    } catch (err) {
+      console.warn("[fulfillment] referral qualification skipped:", err instanceof Error ? err.message : err);
+    }
+  }
+
   // payment.succeeded
   if (meta.kind === "credits") {
     if (!meta.userId || !Number.isInteger(meta.credits) || (meta.credits ?? 0) <= 0) {

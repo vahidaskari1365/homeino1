@@ -69,7 +69,7 @@ export interface MeUser {
 export function loginRequest(email: string, password: string) {
   return call<{ user: MeUser }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
 }
-export function registerRequest(input: { email: string; password: string; name?: string; phone?: string; isVendor?: boolean; brandName?: string }) {
+export function registerRequest(input: { email: string; password: string; name?: string; phone?: string; isVendor?: boolean; brandName?: string; referralCode?: string }) {
   return call<{ user: MeUser; emailConfirmationRequired?: boolean }>("/api/auth/register", { method: "POST", body: JSON.stringify(input) });
 }
 export function logoutRequest() {
@@ -187,6 +187,46 @@ export function confirmCreditsPurchase(paymentId: string, pack: string) {
 
 export function fetchCreditsBalance() {
   return call<{ balance: number }>("/api/credits");
+}
+
+/* ---------------- GAMIFICATION (فاز ۳) ---------------- */
+
+export interface GamificationStateDTO {
+  today: string;
+  streak: { current: number; longest: number; totalCheckins: number; checkedInToday: boolean; todayCredits: number; nextReward: number };
+  spin: { available: boolean; todayCredits: number; todayKey: string | null };
+  badges: { key: string; title: string; description: string; icon: string; awardedAt: string }[];
+  referral: { code: string; shareMessage: string; invited: number; credited: number; pending: number; creditsEarned: number };
+}
+
+export function fetchGamificationState() {
+  return call<{ state: GamificationStateDTO | null }>("/api/gamification/state");
+}
+
+export interface SpinResultDTO {
+  ok: boolean;
+  alreadySpun?: boolean;
+  credits: number;
+  label: string;
+  segmentKey: string;
+  balanceAfter: number;
+  nextSpinAt?: string;
+}
+
+export function spinDailyWheel() {
+  return call<SpinResultDTO>("/api/gamification/spin", { method: "POST" });
+}
+
+export interface CheckinResultDTO {
+  ok: boolean;
+  alreadyCheckedIn?: boolean;
+  credits: number;
+  streak: number;
+  balanceAfter: number;
+}
+
+export function checkInToday() {
+  return call<CheckinResultDTO>("/api/gamification/checkin", { method: "POST" });
 }
 
 /* ---------------- NEWSLETTER + REVIEWS ---------------- */

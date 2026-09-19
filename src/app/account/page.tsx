@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Sparkles, Package, Heart, Wand2, ArrowLeft, Tag, X } from "lucide-react";
+import { Sparkles, Package, Heart, Wand2, ArrowLeft, Tag, X, Gift } from "lucide-react";
 import { Button, LogoBlock, Badge, EmptyState } from "@/components/ui/primitives";
 import { useAuth, useCredits } from "@/stores/useApp";
 import { useWishlist } from "@/stores/useShop";
@@ -47,6 +47,7 @@ export default function AccountOverview() {
   }, []);
 
   const stats = [
+    { label: "جایزه‌ها", value: "چرخ و استریک", icon: Gift, color: "text-gold", href: "/account/rewards" },
     { label: "اعتبار AI", value: toFa(balance), icon: Sparkles, color: "text-gold" },
     { label: "سفارش‌ها", value: toFa(ordersCount), icon: Package, color: "text-terracotta-deep" },
     { label: "آگهی‌های من", value: toFa(adsCount), icon: Tag, color: "text-sage" },

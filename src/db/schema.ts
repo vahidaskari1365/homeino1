@@ -16,6 +16,7 @@ export * from "./schema/agents";
 export * from "./schema/supabase";
 export * from "./schema/marketing";
 export * from "./schema/marketplace";
+export * from "./schema/gamification";
 
 import * as users from "./schema/users";
 import * as vendors from "./schema/vendors";
@@ -29,6 +30,7 @@ import * as agents from "./schema/agents";
 import * as supabase from "./schema/supabase";
 import * as marketing from "./schema/marketing";
 import * as marketplace from "./schema/marketplace";
+import * as gamification from "./schema/gamification";
 
 /** Flat namespace of every table — consumes cleanly as the schema map. */
 export const schema = {
@@ -44,6 +46,7 @@ export const schema = {
   ...supabase,
   ...marketing,
   ...marketplace,
+  ...gamification,
 };
 
 export type { User, Profile, NewUser } from "./schema/users";
@@ -53,6 +56,7 @@ export type { Order, OrderItem } from "./schema/commerce";
 export type { AiGeneration } from "./schema/ai";
 export type { Coupon } from "./schema/marketing";
 export type { VendorEarning, VendorPayout } from "./schema/marketplace";
+export type { GamificationSpin, Referral } from "./schema/gamification";
 export type {
   Agent,
   Workflow,
