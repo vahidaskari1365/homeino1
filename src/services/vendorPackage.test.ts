@@ -11,6 +11,9 @@ import {
   proWindowStartFor,
   proIdempotencyKey,
   PRO_COMMISSION_BP,
+  LIGHT_COMMISSION_BP,
+  packageBySlug,
+  VENDOR_PACKAGE_CATALOG,
 } from "./vendorPackage";
 import { PLATFORM } from "@/config/platform";
 import { fulfillPaymentEvent } from "./paymentFulfillment";
@@ -18,22 +21,39 @@ import { fulfillPaymentEvent } from "./paymentFulfillment";
 const BASE_BP = PLATFORM.vendor.commissionRatePercent * 100; // ۹٪ طبق سیاست مالک
 
 describe("effectiveCommissionBp — نرخ مؤثر", () => {
-  it("حین اشتراک فعال، نرخ پکیج (۵٪) بر هر نرخ دیگری اولویت دارد", () => {
+  it("حین اشتراک پلاس فعال، نرخ پکیج (۵٪) بر هر نرخ دیگری اولویت دارد", () => {
     expect(PRO_COMMISSION_BP).toBe(500);
-    expect(effectiveCommissionBp(null, true)).toBe(500);
-    expect(effectiveCommissionBp(300, true)).toBe(500); // حتی override ادمین
-    expect(effectiveCommissionBp(BASE_BP, true)).toBe(500);
+    expect(effectiveCommissionBp(null, "pro-monthly")).toBe(500);
+    expect(effectiveCommissionBp(300, "pro-monthly")).toBe(500); // حتی override ادمین
+    expect(effectiveCommissionBp(BASE_BP, "pro-monthly")).toBe(500);
+  });
+
+  it("پکیج سبک (Task 59) → نرخ ۷٪ — بین پایهٔ ۹٪ و پلاسِ ۵٪", () => {
+    expect(LIGHT_COMMISSION_BP).toBe(700);
+    expect(effectiveCommissionBp(BASE_BP, PLATFORM.vendor.lightPackage.slug)).toBe(700);
+    expect(effectiveCommissionBp(null, "light-monthly")).toBe(700);
+  });
+
+  it("کاتالوگ پکیج‌ها سازگار است — دو پله، slug یکتا، نرخ نزولی", () => {
+    expect(VENDOR_PACKAGE_CATALOG).toHaveLength(2);
+    const slugs = VENDOR_PACKAGE_CATALOG.map((p) => p.slug);
+    expect(new Set(slugs).size).toBe(2);
+    expect(packageBySlug("light-monthly").priceToman).toBe(990_000);
+    expect(packageBySlug("pro-monthly").priceToman).toBe(2_280_000);
+    // slug نامعتبر → پیش‌فرض محافظه‌کارانه: پلاس (هرگز نرخ اشتباه نمی‌دهد)
+    expect(packageBySlug("bogus").slug).toBe("pro-monthly");
+    expect(packageBySlug(null).slug).toBe("pro-monthly");
   });
 
   it("بدون اشتراک → نرخ per-vendor یا پیش‌فرض پلتفرم (۹٪)", () => {
-    expect(effectiveCommissionBp(null, false)).toBe(BASE_BP);
-    expect(effectiveCommissionBp(undefined, false)).toBe(BASE_BP);
-    expect(effectiveCommissionBp(300, false)).toBe(300);
+    expect(effectiveCommissionBp(null, null)).toBe(BASE_BP);
+    expect(effectiveCommissionBp(undefined, undefined)).toBe(BASE_BP);
+    expect(effectiveCommissionBp(300, null)).toBe(300);
   });
 
   it("override نامعتبر بدون اشتراک → پیش‌فرض", () => {
-    expect(effectiveCommissionBp(-1, false)).toBe(BASE_BP);
-    expect(effectiveCommissionBp(10_001, false)).toBe(BASE_BP);
+    expect(effectiveCommissionBp(-1, null)).toBe(BASE_BP);
+    expect(effectiveCommissionBp(10_001, null)).toBe(BASE_BP);
   });
 
   it("ریاضی صرفه‌جویی: روی ۱۰ میلیون فروش، ۴٪ اختلاف = ۴۰۰٬۰۰۰ تومان", () => {
@@ -48,6 +68,14 @@ describe("effectiveCommissionBp — نرخ مؤثر", () => {
     );
     expect(breakeven).toBe(57_000_000);
   });
+
+  it("سربه‌سر پکیج سبک: ۹۹۰٬۰۰۰ ÷ ۲٪ = ۴۹.۵ میلیون — پلهٔ ورود فروشندهٔ کوچک", () => {
+    const breakeven = Math.round(
+      PLATFORM.vendor.lightPackage.priceToman /
+        ((PLATFORM.vendor.commissionRatePercent - PLATFORM.vendor.lightPackage.commissionRatePercent) / 100),
+    );
+    expect(breakeven).toBe(49_500_000);
+  });
 });
 
 describe("پنجرهٔ تمدید — روزِ خریده‌شده هدر نمی‌رود", () => {
@@ -55,6 +83,11 @@ describe("پنجرهٔ تمدید — روزِ خریده‌شده هدر نمی
 
   it("بدون اشتراک فعال → از الان + ۳۰ روز", () => {
     const exp = proExpiryFor(now, null);
+    expect(exp.getTime()).toBe(now.getTime() + 30 * 86_400_000);
+  });
+
+  it("مدت پلهٔ سبک هم ۳۰ روزه است (فقط قیمت/نرخ فرق دارد)", () => {
+    const exp = proExpiryFor(now, null, PLATFORM.vendor.lightPackage.durationDays);
     expect(exp.getTime()).toBe(now.getTime() + 30 * 86_400_000);
   });
 

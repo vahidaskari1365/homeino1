@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendorEarnings } from "@/db/schema";
 import { requireVendorMember } from "@/lib/api/vendorAuth";
-import { vendorEarningsSummary } from "@/services/vendorSettlement";
+import { vendorEarningsSummary, vendorMonthEarningsSummary } from "@/services/vendorSettlement";
 
 export const runtime = "nodejs";
 
@@ -35,5 +35,5 @@ export const GET = guard(async (req) => {
     .limit(limit)
     .offset(offset);
 
-  return ok({ summary: await vendorEarningsSummary(ctx.vendor.id), items: rows });
+  return ok({ summary: await vendorEarningsSummary(ctx.vendor.id), month: await vendorMonthEarningsSummary(ctx.vendor.id), items: rows });
 });

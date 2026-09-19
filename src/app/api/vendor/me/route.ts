@@ -2,7 +2,7 @@ import { ok, demoUnavailable } from "@/lib/api/response";
 import { guard } from "@/lib/api/http";
 import { requireVendorMember, requireVendorManager } from "@/lib/api/vendorAuth";
 import { vendorEarningsSummary } from "@/services/vendorSettlement";
-import { effectiveCommissionBp, vendorPackageState } from "@/services/vendorPackage";
+import { effectiveCommissionBp, vendorPackageState, activeProVendorCount } from "@/services/vendorPackage";
 import { getDb } from "@/db";
 import { vendorPayoutSettings } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -30,8 +30,10 @@ export const GET = guard(async (req) => {
     .orderBy(desc(vendorVerificationLogs.createdAt))
     .limit(10);
 
-  // پکیج فروشنده — وضعیت اشتراک فعال + نرخ مؤثر کمیسیون (۵٪ حین اشتراک).
+  // پکیج فروشنده — وضعیت اشتراک فعال (پلاس/سبک) + نرخ مؤثر کمیسیون.
   const pkg = await vendorPackageState(ctx.vendor.id);
+  // سوشال پروف صادقانهٔ صفحهٔ پکیج (Task 59): شمارش واقعی فروشگاه‌های پلاسِ فعال.
+  const proVendorsCount = await activeProVendorCount();
 
   return ok({
     vendor: {
@@ -45,13 +47,14 @@ export const GET = guard(async (req) => {
       // نرخ پایهٔ per-vendor (null → پیش‌فرض پلتفرم). نرخ مؤثر حین اشتراک
       // پکیج در effectiveCommissionPercent می‌آید.
       commissionRatePercent: ctx.vendor.commissionRateBp === null ? null : ctx.vendor.commissionRateBp / 100,
-      effectiveCommissionPercent: effectiveCommissionBp(ctx.vendor.commissionRateBp, pkg.active) / 100,
+      effectiveCommissionPercent: effectiveCommissionBp(ctx.vendor.commissionRateBp, pkg.slug) / 100,
       contactEmail: ctx.vendor.contactEmail,
       contactPhone: ctx.vendor.contactPhone,
     },
     member: { role: ctx.member.role, permissions: ctx.member.permissions ?? [] },
     summary: await vendorEarningsSummary(ctx.vendor.id),
     package: pkg,
+    proVendorsCount,
     payoutSettings: payoutSettings
       ? { shaba: payoutSettings.shaba, cardNumber: payoutSettings.cardNumber, accountHolderName: payoutSettings.accountHolderName, payoutsEnabled: payoutSettings.payoutsEnabled }
       : null,

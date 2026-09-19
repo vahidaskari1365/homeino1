@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck, ShieldCheck, Info, LogIn, Percent, Wallet, Store as StoreIcon, RefreshCw, Crown } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, Clock, Plus, CheckCircle2, Truck, ShieldCheck, Info, LogIn, Percent, Wallet, Store as StoreIcon, RefreshCw, Crown, TrendingUp } from "lucide-react";
 import { Button, Badge, LogoBlock, Spinner } from "@/components/ui/primitives";
 import { toFa, formatCompactFa, formatPrice, cn } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
@@ -23,6 +23,7 @@ import {
   type VendorMe,
   type VendorEarningRow,
   type EarningsSummary,
+  type MonthEarningsSummary,
 } from "@/lib/vendorClient";
 import { PLATFORM } from "@/config/platform";
 
@@ -108,7 +109,7 @@ function RealDashboard({ me }: { me: VendorMe }) {
   const proActive = me.package?.active ?? false;
   // Ledger rows → exact gross/commission sums. The summary endpoint only
   // carries NET numbers; the ledger fetch is real data, never derived math.
-  const [ledger, setLedger] = useState<{ items: VendorEarningRow[]; summary: EarningsSummary } | null>(null);
+  const [ledger, setLedger] = useState<{ items: VendorEarningRow[]; summary: EarningsSummary; month?: MonthEarningsSummary } | null>(null);
   const [ledgerFailed, setLedgerFailed] = useState(false);
 
   useEffect(() => {
@@ -142,7 +143,7 @@ function RealDashboard({ me }: { me: VendorMe }) {
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <Badge tone={VENDOR_STATUS_TONE[vendor.status] ?? "neutral"}>{VENDOR_STATUS_LABEL[vendor.status] ?? vendor.status}</Badge>
               <Badge tone={vendor.verificationStatus === "verified" ? "success" : "gold"}>{VERIFICATION_LABEL[vendor.verificationStatus] ?? vendor.verificationStatus}</Badge>
-              {proActive && <Badge tone="accent"><Crown size={12} className="ml-0.5 inline" /> پلاس</Badge>}
+              {proActive && <Badge tone="accent"><Crown size={12} className="ml-0.5 inline" /> {me.package.label ?? "پلاس"}</Badge>}
               <Badge tone="accent">کمیسیون {toFa(rate)}٪</Badge>
             </div>
           </div>
@@ -175,6 +176,39 @@ function RealDashboard({ me }: { me: VendorMe }) {
         </div>
         <Link href="/vendor/package"><Button variant={proActive ? "ghost" : "accent"}>{proActive ? "مشاهدهٔ پکیج" : "خرید پکیج"}</Button></Link>
       </div>
+
+      {/* انکر شخصی کمیسیون (Task 59) — فقط با عدد واقعی ماه جاری؛ بدون فروشِ این ماه نمایش داده نمی‌شود */}
+      {ledger?.month && ledger.month.grossToman > 0 && (
+        <div className="card-surface flex flex-wrap items-center justify-between gap-3 border-sage/40 bg-sage/8 p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-sage/15 text-sage"><TrendingUp size={19} /></span>
+            <div>
+              <div className="text-sm font-bold text-ink">
+                {proActive
+                  ? "پکیج شما این ماه صرفه‌جویی کرد"
+                  : "کمیسیون این ماه شما"}
+              </div>
+              <div className="text-xs leading-6 text-ink-muted">
+                {proActive ? (
+                  <>
+                    فروش این ماه: {toman(ledger.month.grossToman)} · کارمزد پرداختی: {toman(ledger.month.commissionToman)} · اگر پکیج نداشتی{" "}
+                    <b className="text-ink">{toman(Math.max(0, Math.round((ledger.month.grossToman * PLATFORM.vendor.commissionRatePercent) / 100) - ledger.month.commissionToman))}</b> بیشتر می‌پرداختی.
+                  </>
+                ) : (
+                  <>
+                    فروش این ماه: {toman(ledger.month.grossToman)} · کارمزد پرداختی: <b className="text-ink">{toman(ledger.month.commissionToman)}</b> · با پکیج پلاس فقط{" "}
+                    <b className="text-ink">{toman(ledger.month.withProCommissionToman)}</b> می‌شد — اختلاف:{" "}
+                    <b className="text-ink">{toman(Math.max(0, ledger.month.commissionToman - ledger.month.withProCommissionToman))}</b>.
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          {!proActive && (
+            <Link href="/vendor/package"><Button variant="accent">کاهش کارمزد به ۵٪</Button></Link>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 text-2xs text-ink-muted">
         <span className="rounded-lg border border-clay/40 bg-ivory-2 px-3 py-1.5">در جریان تسویه: {toman(summary.settling)}</span>

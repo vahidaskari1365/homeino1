@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   orderItems,
@@ -8,7 +8,7 @@ import {
   vendorPayoutItems,
 } from "@/db/schema";
 import { PLATFORM } from "@/config/platform";
-import { activeProVendorIds, effectiveCommissionBp } from "@/services/vendorPackage";
+import { activePackageSlugsFor, effectiveCommissionBp } from "@/services/vendorPackage";
 
 // ============================================================
 // HOMEINO — Vendor settlement engine
@@ -36,13 +36,13 @@ export function commissionBpFor(vendorRateBp: number | null | undefined): number
 }
 
 /**
- * Snapshot rate for accrual: the PRO package (پکیج فروشنده) overrides the
+ * Snapshot rate for accrual: an ACTIVE vendor package (پلاس/سبک) overrides the
  * per-vendor/platform rate while its window covers now. Kept as a tiny
  * wrapper so the effective-rate contract lives in ONE place.
  */
 export async function effectiveBpForVendor(vendorId: string, vendorRateBp: number | null | undefined): Promise<number> {
-  const pro = await activeProVendorIds([vendorId]);
-  return effectiveCommissionBp(vendorRateBp, pro.has(vendorId));
+  const slugs = await activePackageSlugsFor([vendorId]);
+  return effectiveCommissionBp(vendorRateBp, slugs.get(vendorId) ?? null);
 }
 
 export function commissionFor(grossToman: number, bp: number): { commissionToman: number; netToman: number } {
@@ -72,14 +72,14 @@ export async function accrueOrderEarnings(orderId: string): Promise<{ created: n
     .where(eq(orderItems.orderId, orderId));
 
   // ONE query for the whole order: which of these vendors hold an active
-  // پکیج فروشنده window right now → their effective rate is ۵٪.
-  const proActive = await activeProVendorIds([...new Set(items.map((i) => i.vendorId))]);
+  // پکیج window right now → their effective rate is the package rate (۵٪/۷٪).
+  const packageSlugs = await activePackageSlugsFor([...new Set(items.map((i) => i.vendorId))]);
 
   let created = 0;
   for (const item of items) {
     const gross = Math.max(0, item.total - (item.refundedAmount ?? 0));
     if (gross <= 0) continue;
-    const bp = effectiveCommissionBp(item.vendorRateBp, proActive.has(item.vendorId));
+    const bp = effectiveCommissionBp(item.vendorRateBp, packageSlugs.get(item.vendorId) ?? null);
     const { commissionToman, netToman } = commissionFor(gross, bp);
     const deliveredEarly = item.itemStatus === "delivered";
     const result = await db
@@ -152,6 +152,62 @@ export async function vendorEarningsSummary(vendorId: string): Promise<VendorEar
     paid: Number(by("paid")?.net ?? 0),
     totalNet: rows.reduce((sum, r) => sum + Number(r.net ?? 0), 0),
     itemCount: rows.reduce((sum, r) => sum + Number(r.count ?? 0), 0),
+  };
+}
+
+/**
+ * شروع ماهِ جاری به وقت تهران (UTC instant) — pure و تست‌شده.
+ * ایران از ۱۴۰۱ DST ندارد؛ آفست ثابت +۳:۳۰ است.
+ * نیمه‌شب تهرانِ روز اول ماه = ۲۰:۳۰ UTCِ روزِ آخرِ ماه قبل.
+ */
+export function tehranMonthStartUtc(now: Date = new Date()): Date {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tehran",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const y = get("year");
+  const m = get("month");
+  return new Date(Date.UTC(y, m - 1, 1, 0, 0, 0) - 3.5 * 60 * 60 * 1000);
+}
+
+export interface VendorMonthEarningsSummary {
+  /** جمع ناخالص فروشِ ردیف‌های ثبت‌شده در ماه جاری (تومان). */
+  grossToman: number;
+  /** کارمزدی که واقعاً برای همین ماه snapshot شده (تومان). */
+  commissionToman: number;
+  netToman: number;
+  itemCount: number;
+  /** «اگر همهٔ فروش این ماه با نرخ پکیج پلاس محاسبه می‌شد» — انکر صادقانهٔ داشبورد. */
+  withProCommissionToman: number;
+}
+
+/**
+ * خلاصهٔ کمیسیونِ ماه جاری فروشنده (به وقت تهران) — دادهٔ واقعی از ledger،
+ * نه مشتقِ تخمینی. پایهٔ کارت «انکر شخصی» داشبورد (Task 59).
+ */
+export async function vendorMonthEarningsSummary(vendorId: string): Promise<VendorMonthEarningsSummary> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      gross: sql<number>`coalesce(sum(${vendorEarnings.grossToman}), 0)::int`,
+      commission: sql<number>`coalesce(sum(${vendorEarnings.commissionToman}), 0)::int`,
+      net: sql<number>`coalesce(sum(${vendorEarnings.netToman}), 0)::int`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(vendorEarnings)
+    .where(and(eq(vendorEarnings.vendorId, vendorId), gte(vendorEarnings.createdAt, tehranMonthStartUtc())));
+
+  const gross = Number(row?.gross ?? 0);
+  return {
+    grossToman: gross,
+    commissionToman: Number(row?.commission ?? 0),
+    netToman: Number(row?.net ?? 0),
+    itemCount: Number(row?.count ?? 0),
+    withProCommissionToman: Math.round((gross * PLATFORM.vendor.proPackage.commissionRatePercent) / 100),
   };
 }
 
@@ -233,7 +289,7 @@ export async function adminPayoutAction(input: {
   note?: string;
 }): Promise<{ ok: true; status: string } | { ok: false; reason: string }> {
   const db = getDb();
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx): Promise<{ ok: true; status: string; vendorId: string; amountToman: number; reference: string | null } | { ok: false; reason: string }> => {
     const [payout] = await tx
       .select()
       .from(vendorPayouts)
@@ -253,7 +309,7 @@ export async function adminPayoutAction(input: {
       await tx.update(vendorPayouts)
         .set({ status: "approved", processedBy: input.adminUserId, note: input.note ?? payout.note, updatedAt: new Date() })
         .where(eq(vendorPayouts.id, payout.id));
-      return { ok: true as const, status: "approved" };
+      return { ok: true as const, status: "approved", vendorId: payout.vendorId, amountToman: payout.amountToman, reference: payout.reference };
     }
 
     if (input.action === "reject") {
@@ -267,15 +323,16 @@ export async function adminPayoutAction(input: {
           .set({ status: "available" })
           .where(and(inArray(vendorEarnings.id, itemIds), eq(vendorEarnings.status, "settling")));
       }
-      return { ok: true as const, status: "rejected" };
+      return { ok: true as const, status: "rejected", vendorId: payout.vendorId, amountToman: payout.amountToman, reference: payout.reference };
     }
 
     // mark_paid — only from approved (or directly requested for small shops)
     if (payout.status !== "approved" && payout.status !== "requested") return { ok: false, reason: "invalid_state" } as const;
+    const paidRef = input.reference ?? payout.reference;
     await tx.update(vendorPayouts)
       .set({
         status: "paid",
-        reference: input.reference ?? payout.reference,
+        reference: paidRef,
         processedBy: input.adminUserId,
         processedAt: new Date(),
         updatedAt: new Date(),
@@ -286,6 +343,22 @@ export async function adminPayoutAction(input: {
         .set({ status: "paid", settledAt: new Date() })
         .where(and(inArray(vendorEarnings.id, itemIds), eq(vendorEarnings.status, "settling")));
     }
-    return { ok: true as const, status: "paid" };
+    return { ok: true as const, status: "paid", vendorId: payout.vendorId, amountToman: payout.amountToman, reference: paidRef };
   });
+
+  // اعلان فروشنده پس از commit — fail-safe: مشکل اعلان هرگز تسویه را خراب نمی‌کند.
+  if (result.ok) {
+    try {
+      const { notifyVendorPayout } = await import("@/services/vendorNotifications");
+      await notifyVendorPayout({
+        vendorId: result.vendorId,
+        action: input.action,
+        amountToman: result.amountToman,
+        reference: result.reference,
+      });
+    } catch (err) {
+      console.warn("[settlement] payout notification skipped:", err instanceof Error ? err.message : err);
+    }
+  }
+  return result;
 }

@@ -3,11 +3,34 @@ import {
   commissionBpFor,
   commissionFor,
   DEFAULT_COMMISSION_BP,
+  tehranMonthStartUtc,
 } from "./vendorSettlement";
 import { ZarinpalProvider, paymentGateway, resetPaymentGateway } from "./payments";
 import { createHmac } from "node:crypto";
 
 process.env.PAYMENTS_WEBHOOK_SECRET = "test-secret";
+
+describe("tehranMonthStartUtc — ماه جاری به وقت تهران (Task 59)", () => {
+  it("اولین لحظهٔ ماه میلادی جاریِ تهران را برمی‌گرداند (آفست ثابت +۳:۳۰)", () => {
+    // ۱۵ سپتامبر ۲۰۲۶ ساعت ۰۸:۰۰ UTC = ۱۱:۳۰ تهران → ماه: سپتامبر
+    const now = new Date("2026-09-15T08:00:00Z");
+    const start = tehranMonthStartUtc(now);
+    expect(start.toISOString()).toBe("2026-08-31T20:30:00.000Z");
+  });
+
+  it("نیمه‌شب مرزی: ۰۱:۰۰ تهرانِ روز اول ماه → خودِ ماه", () => {
+    // ۱ اکتبر ۰۰:۳۰ UTC = ۰۴:۰۰ تهرانِ ۱ اکتبر
+    const now = new Date("2026-10-01T00:30:00Z");
+    const start = tehranMonthStartUtc(now);
+    expect(start.toISOString()).toBe("2026-09-30T20:30:00.000Z");
+  });
+
+  it("روز ۳۱ مرزی: ۲۰:۰۰ UTCِ ۳۱ اوت = ۲۳:۳۰ تهرانِ ۳۱ اوت → ماه اوت", () => {
+    const now = new Date("2026-08-31T20:00:00Z");
+    const start = tehranMonthStartUtc(now);
+    expect(start.toISOString()).toBe("2026-07-31T20:30:00.000Z");
+  });
+});
 
 describe("vendorSettlement commission math (pure)", () => {
   it("uses the platform default when the vendor has no override", () => {

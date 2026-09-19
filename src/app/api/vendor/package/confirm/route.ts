@@ -53,6 +53,8 @@ export const POST = guard(async (req: NextRequest) => {
       kind: "vendor_package",
       userId: ctx.userId,
       vendorId: ctx.vendor.id,
+      // پلهٔ خریداری‌شده از intent سرور (نه اکوی کلاینت) — Task 59
+      packageSlug: typeof meta.packageSlug === "string" ? meta.packageSlug : null,
     },
     raw: { paymentId: input.paymentId },
   });

@@ -2,7 +2,7 @@ import { grantCredits } from "@/services/creditService";
 import { recordCouponRedemption } from "@/services/coupons";
 import { updateOrderStatus } from "@/services/orderService";
 import { accrueOrderEarnings, reverseOrderEarnings } from "@/services/vendorSettlement";
-import { activateVendorPackage } from "@/services/vendorPackage";
+import { activateVendorPackage, packageBySlug } from "@/services/vendorPackage";
 import type { PaymentWebhookEvent } from "@/services/payments";
 
 export type FulfillmentResult =
@@ -31,6 +31,7 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
     couponCode?: string;
     couponId?: string;
     amountOffIrr?: number;
+    packageSlug?: string; // پلهٔ پکیج فروشنده (پلاس/سبک) — Task 59
   };
 
   if (event.eventType === "refund.succeeded") {
@@ -106,7 +107,24 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
         provider: event.provider,
         providerPaymentId: event.providerPaymentId,
         priceToman: Number(meta.amountToman ?? 0) || undefined,
+        packageSlug: typeof meta.packageSlug === "string" ? meta.packageSlug : null,
       });
+      // اعلان فروشگاه (پیام + تلاش SMS) — فقط در فعال‌سازی واقعی، نه retry (fail-safe).
+      if (!res.duplicate) {
+        try {
+          const { notifyVendorPackageActivated } = await import("@/services/vendorNotifications");
+          const def = packageBySlug(res.packageSlug);
+          await notifyVendorPackageActivated({
+            vendorId: res.vendorId,
+            packageSlug: def.slug,
+            packageLabel: def.label,
+            expiresAt: res.expiresAt,
+            commissionPercent: def.commissionRatePercent,
+          });
+        } catch (err) {
+          console.warn("[fulfillment] package notification skipped:", err instanceof Error ? err.message : err);
+        }
+      }
       return {
         ok: true,
         kind: "vendor_package",
@@ -131,6 +149,14 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
     await accrueOrderEarnings(order.id).catch((err) =>
       console.warn("[fulfillment] earnings accrual skipped:", err instanceof Error ? err.message : err),
     );
+    // «به فروشنده پیغام بره» — برای هر فروشگاهِ درگیر یک پیام «فروش جدید»
+    // + تلاش SMS (Task 59). fail-safe: هرگز پرداخت موفق را خراب نمی‌کند.
+    try {
+      const { notifyVendorsForOrder } = await import("@/services/vendorNotifications");
+      await notifyVendorsForOrder(order.id);
+    } catch (err) {
+      console.warn("[fulfillment] order notification skipped:", err instanceof Error ? err.message : err);
+    }
     return { ok: true, kind: "order", orderId: order.id, status: order.status };
   }
 

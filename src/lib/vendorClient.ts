@@ -120,14 +120,18 @@ export interface VendorMe {
     totalNet: number;
     itemCount: number;
   };
-  /** پکیج فروشنده — وضعیت اشتراک فعال + نرخ کارمزد حین اشتراک. */
+  /** پکیج فروشنده — وضعیت اشتراک فعال (پلاس/سبک) + نرخ کارمزد حین اشتراک. */
   package: {
     active: boolean;
+    slug: string | null;
+    label: string | null;
     expiresAt: string | null;
     priceToman: number;
     commissionPercent: number;
     baseCommissionPercent: number;
   };
+  /** سوشال پروف صادقانه: شمارش واقعی فروشگاه‌های پلاسِ فعال (Task 59). */
+  proVendorsCount: number;
   payoutSettings: { shaba: string | null; cardNumber: string | null; accountHolderName: string | null; payoutsEnabled: boolean } | null;
   verificationLog: { action: string; note: string | null; createdAt: string }[];
 }
@@ -311,20 +315,28 @@ export interface VendorPackagePurchaseDTO {
   paymentUrl: string | null;
   confirmable: boolean; // dev gateway → confirm locally
   amountToman: number;
+  packageSlug?: string; // پلهٔ خریداری‌شده (Task 59)
   renewsAt?: string | null; // تمدید: پنجرهٔ جدید از انتهای اشتراک فعلی
 }
 
 export interface VendorPackageStateDTO {
   active: boolean;
+  slug?: string | null;
+  label?: string | null;
   expiresAt: string | null;
   priceToman: number;
   commissionPercent: number;
   baseCommissionPercent: number;
 }
 
-/** خرید پکیج فروشنده — intent واقعی؛ با درگاه بانکی paymentUrl می‌آید. */
-export function purchaseVendorPackage() {
-  return call<VendorPackagePurchaseDTO>("/api/vendor/package/purchase", { method: "POST" });
+export type VendorPackageTier = "pro" | "light";
+
+/** خرید پکیج فروشنده — intent واقعی؛ با درگاه بانکی paymentUrl می‌آید. قیمت از سرور. */
+export function purchaseVendorPackage(tier: VendorPackageTier = "pro") {
+  return call<VendorPackagePurchaseDTO>("/api/vendor/package/purchase", {
+    method: "POST",
+    body: JSON.stringify({ tier }),
+  });
 }
 
 /** تأیید پرداخت دمو (فقط DevPaymentProvider) — فعال‌سازی از مسیر fulfillment واحد. */
@@ -408,7 +420,45 @@ export interface VendorEarningRow {
 }
 
 export function fetchVendorEarnings(page = 1, limit = 20) {
-  return call<{ summary: EarningsSummary; items: VendorEarningRow[] }>(`/api/vendor/earnings?page=${page}&limit=${limit}`);
+  return call<{ summary: EarningsSummary; month: MonthEarningsSummary; items: VendorEarningRow[] }>(`/api/vendor/earnings?page=${page}&limit=${limit}`);
+}
+
+/** خلاصهٔ ماه جاری (تقویم تهران) — پایهٔ کارت انکر شخصی داشبورد (Task 59). */
+export interface MonthEarningsSummary {
+  grossToman: number;
+  commissionToman: number;
+  netToman: number;
+  itemCount: number;
+  /** اگر همهٔ فروشِ این ماه با نرخ پکیج پلاس محاسبه می‌شد. */
+  withProCommissionToman: number;
+}
+
+/* ---------------- NOTIFICATIONS (/api/vendor/notifications — Task 59) ---------------- */
+
+export type VendorNotificationKind = "order_sold" | "payout" | "package" | "platform_message";
+
+export interface VendorNotificationRow {
+  id: string;
+  kind: VendorNotificationKind;
+  title: string;
+  body: string | null;
+  link: string | null;
+  readAt: string | null;
+  smsStatus: "pending" | "sent" | "failed" | "skipped" | "no_phone";
+  createdAt: string;
+}
+
+export function fetchVendorNotifications(limit = 30, unreadOnly = false) {
+  const q = new URLSearchParams({ limit: String(limit) });
+  if (unreadOnly) q.set("unread", "1");
+  return call<{ unread: number; items: VendorNotificationRow[] }>(`/api/vendor/notifications?${q.toString()}`);
+}
+
+export function markVendorNotificationsRead(input: { ids?: string[]; all?: boolean }) {
+  return call<{ updated: number }>("/api/vendor/notifications", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 /* ---------------- PAYOUTS (/api/vendor/payouts) ---------------- */

@@ -24,8 +24,9 @@ import {
   toman,
   faDate,
   type VendorMe,
+  type VendorPackageTier,
 } from "@/lib/vendorClient";
-import { BadgeCheck, Crown, LogIn, Info, Percent, ShieldCheck, TrendingUp, Wallet, Landmark, RefreshCw } from "lucide-react";
+import { BadgeCheck, Crown, LogIn, Info, Percent, ShieldCheck, TrendingUp, Wallet, Landmark, RefreshCw, Users, Zap } from "lucide-react";
 
 type Mode =
   | { kind: "loading" }
@@ -84,6 +85,16 @@ const BREAK_EVEN_TOMAN = Math.round(
     ((PLATFORM.vendor.commissionRatePercent - PLATFORM.vendor.proPackage.commissionRatePercent) / 100),
 );
 
+/** نقطهٔ سربه‌سر هر پله — محاسبهٔ صادقانه از PLATFORM (سرور). */
+function breakEvenFor(tier: VendorPackageTier): number {
+  const def = tier === "light" ? PLATFORM.vendor.lightPackage : PLATFORM.vendor.proPackage;
+  return Math.round(def.priceToman / ((PLATFORM.vendor.commissionRatePercent - def.commissionRatePercent) / 100));
+}
+
+function packageDef(tier: VendorPackageTier) {
+  return tier === "light" ? PLATFORM.vendor.lightPackage : PLATFORM.vendor.proPackage;
+}
+
 function perkRows() {
   const base = PLATFORM.vendor.commissionRatePercent;
   const pro = PLATFORM.vendor.proPackage.commissionRatePercent;
@@ -136,8 +147,11 @@ function PackagePriceCard({ children, className }: { children?: React.ReactNode;
 function RealPackagePage({ me }: { me: VendorMe }) {
   const { toast } = useUi();
   const [busy, setBusy] = useState(false);
+  const [tier, setTier] = useState<VendorPackageTier>("pro");
   const [state, setState] = useState(me.package);
   const effective = me.vendor.effectiveCommissionPercent;
+  const proCount = me.proVendorsCount ?? 0;
+  const def = packageDef(tier);
 
   const refresh = useCallback(async () => {
     invalidateVendorMeCache();
@@ -172,7 +186,7 @@ function RealPackagePage({ me }: { me: VendorMe }) {
     if (busy) return;
     setBusy(true);
     try {
-      const res = await purchaseVendorPackage();
+      const res = await purchaseVendorPackage(tier);
       if (!res.ok) {
         // خطای واقعی = پیام صادقانه؛ هیچ فعال‌سازی فکی وجود ندارد.
         toast(res.message ?? "خرید پکیج ممکن نشد", "error");
@@ -188,7 +202,7 @@ function RealPackagePage({ me }: { me: VendorMe }) {
           toast(
             confirmed.data.duplicate
               ? "این پرداخت قبلاً فعال شده بود"
-              : "پکیج فعال شد — کارمزد فروش شما ۵٪ است",
+              : `پکیج فعال شد — کارمزد فروش شما ${toFa(confirmed.data.package.commissionPercent)}٪ است`,
             "success",
           );
           await refresh();
@@ -211,12 +225,12 @@ function RealPackagePage({ me }: { me: VendorMe }) {
           <h1 className="font-display text-xl font-black text-ink">پکیج فروشنده</h1>
           <p className="mt-1 text-sm text-ink-muted">
             {state.active
-              ? `اشتراک پلاس فعال است تا ${faDate(state.expiresAt)} — کارمزد فروش شما همین حالا ${toFa(effective)}٪ است.`
-              : `کارمزد فروش فعلی شما ${toFa(effective)}٪ است — با پکیج، به ${toFa(PLATFORM.vendor.proPackage.commissionRatePercent)}٪ کاهش می‌یابد.`}
+              ? `اشتراک ${state.label ?? "پلاس"} فعال است تا ${faDate(state.expiresAt)} — کارمزد فروش شما همین حالا ${toFa(effective)}٪ است.`
+              : `کارمزد فروش فعلی شما ${toFa(effective)}٪ است — دو پله داریم: سبک (${toFa(PLATFORM.vendor.lightPackage.commissionRatePercent)}٪، ${formatCompactFa(PLATFORM.vendor.lightPackage.priceToman)} تومان) و پلاس (${toFa(PLATFORM.vendor.proPackage.commissionRatePercent)}٪، ${formatCompactFa(PLATFORM.vendor.proPackage.priceToman)} تومان).`}
           </p>
         </div>
         {state.active ? (
-          <Badge tone="success"><BadgeCheck size={13} className="ml-1 inline" /> پلاس — کارمزد {toFa(effective)}٪</Badge>
+          <Badge tone="success"><BadgeCheck size={13} className="ml-1 inline" /> {state.label ?? "پلاس"} — کارمزد {toFa(effective)}٪</Badge>
         ) : (
           <Badge tone="neutral">بدون اشتراک فعال</Badge>
         )}
@@ -242,15 +256,55 @@ function RealPackagePage({ me }: { me: VendorMe }) {
           </p>
         </div>
 
-        {/* کارت قیمت + گزینه‌های پرداخت */}
+        {/* انتخاب پله + کارت قیمت + گزینه‌های پرداخت */}
         <div className="space-y-4">
-          <PackagePriceCard>
-            {state.active && state.expiresAt && (
-              <p className="mt-3 rounded-xl bg-white/10 p-3 text-xs leading-6">اشتراک فعلی تا {faDate(state.expiresAt)} فعال است؛ خرید امروز پنجرهٔ جدیدی از انتهای همین دوره آغاز می‌کند — روزِ خریده‌شده هدر نمی‌رود.</p>
-            )}
-          </PackagePriceCard>
+          {/* سوشال پروف صادقانه (Task 59) — عدد واقعی از سرور؛ صفر = دعوت صادقانه، نه عدد فیک */}
+          <div className="flex items-center gap-2 rounded-xl border border-clay/40 bg-ivory-2 px-4 py-2.5 text-xs text-ink">
+            <Users size={14} className="shrink-0 text-terracotta-deep" />
+            {proCount > 0
+              ? <span><b>{toFa(proCount)} فروشگاه</b> همین حالا اشتراک پلاس فعال دارند.</span>
+              : <span>اولین فروشگاهی باش که اشتراک پلاس فعال می‌گیرد.</span>}
+          </div>
 
-          {/* گزینه‌های پرداخت — کارمزد ۵٪ همین‌جا نوشته می‌شود */}
+          {/* دو پلهٔ پکیج — قیمت/نرخ هر دو از PLATFORM (سرور) */}
+          <div className="grid grid-cols-2 gap-3">
+            {(["pro", "light"] as const).map((t) => {
+              const d = packageDef(t);
+              const selected = tier === t;
+              const isActiveNow = state.active && state.slug === d.slug;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTier(t)}
+                  className={cn(
+                    "relative rounded-2xl border-2 p-4 text-right transition-all",
+                    selected ? "border-ink bg-gradient-to-bl from-ink to-ink-soft text-cream shadow-md" : "border-clay/50 bg-cream hover:border-ink/40",
+                  )}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {t === "pro" ? <Crown size={14} className={selected ? "text-gold" : "text-gold"} /> : <Zap size={14} className={selected ? "text-gold" : "text-terracotta-deep"} />}
+                    <span className="font-display text-sm font-black">پکیج {d.label}</span>
+                  </div>
+                  <div className="mt-2 font-display text-xl font-black">
+                    {formatCompactFa(d.priceToman)} <span className={cn("text-2xs font-normal", selected ? "text-cream/80" : "text-ink-muted")}>تومان/ماه</span>
+                  </div>
+                  <div className={cn("mt-1.5 flex flex-wrap gap-1 text-2xs", selected ? "text-cream/85" : "text-ink-muted")}>
+                    <span className={cn("rounded-full px-2 py-0.5", selected ? "bg-white/12" : "bg-ivory-2")}>کارمزد {toFa(d.commissionRatePercent)}٪</span>
+                  </div>
+                  {isActiveNow && (
+                    <span className="mt-2 inline-block rounded-full bg-success/15 px-2 py-0.5 text-2xs text-success">اشتراک فعلی شما</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={cn("rounded-xl border p-4 text-2xs leading-6", tier === "pro" ? "border-ink/20 bg-ivory-2 text-ink" : "border-clay/40 bg-ivory-2 text-ink")}>
+            <b>{def.tagline}</b> — نقطهٔ سربه‌سر این پله: فروش ماهانهٔ {formatCompactFa(breakEvenFor(tier))} تومان؛ بالاتر از آن، پکیج از محل کاهش کارمزد خودش را پس می‌دهد.
+          </div>
+
+          {/* گزینه‌های پرداخت — کارمزدِ پلهٔ انتخابی همین‌جا نوشته می‌شود */}
           <div className="card-surface p-6">
             <h3 className="mb-3 font-display font-bold text-ink">گزینه‌های پرداخت</h3>
             <div className="space-y-2.5 text-sm">
@@ -262,10 +316,10 @@ function RealPackagePage({ me }: { me: VendorMe }) {
                 </div>
               </div>
               <div className="rounded-xl border border-gold/40 bg-gold/8 p-3 text-xs leading-6 text-ink">
-                با خرید این پکیج، <b>کارمزد فروش شما {toFa(PLATFORM.vendor.proPackage.commissionRatePercent)}٪</b> می‌شود — به‌جای {toFa(PLATFORM.vendor.commissionRatePercent)}٪ پلتفرم. یعنی از هر فروش شما فقط {toFa(PLATFORM.vendor.proPackage.commissionRatePercent)}٪ کارمزد گرفته می‌شود، نه {toFa(PLATFORM.vendor.commissionRatePercent)}٪.
+                با خرید «پکیج {def.label}»، <b>کارمزد فروش شما {toFa(def.commissionRatePercent)}٪</b> می‌شود — به‌جای {toFa(PLATFORM.vendor.commissionRatePercent)}٪ پلتفرم. یعنی از هر فروش شما فقط {toFa(def.commissionRatePercent)}٪ کارمزد گرفته می‌شود، نه {toFa(PLATFORM.vendor.commissionRatePercent)}٪.
               </div>
               <Button className="w-full" variant="accent" disabled={busy || me.vendor.status !== "active"} onClick={buy}>
-                {busy ? (<span className="flex items-center gap-2"><RefreshCw size={14} className="animate-spin" /> در حال انتقال به درگاه…</span>) : state.active ? "تمدید / خرید دورهٔ بعدی" : "خرید پکیج — " + toFa(PLATFORM.vendor.proPackage.priceToman.toLocaleString("en-US")) + " تومان"}
+                {busy ? (<span className="flex items-center gap-2"><RefreshCw size={14} className="animate-spin" /> در حال انتقال به درگاه…</span>) : state.active ? "تمدید / خرید دورهٔ بعدی" : `خرید پکیج ${def.label} — ${toFa(def.priceToman.toLocaleString("en-US"))} تومان`}
               </Button>
               {me.vendor.status !== "active" && (
                 <p className="text-2xs leading-5 text-warning">خرید پکیج پس از فعال شدن فروشگاه توسط مدیر امکان‌پذیر است.</p>

@@ -53,12 +53,23 @@ export const PLATFORM = {
     demoStoreId: "st1",         // فروشگاه نمونهٔ پنل فروشنده
     // پکیج فروشنده (اشتراک ماهانه) — تنها راه کاهش کارمزد؛ فقط در پنل فروشنده.
     // فعال‌سازی واقعی: با پرداخت موفق، subscription در DB ثبت و نرخ مؤثر
-    // کمیسیون روی ۵٪ قفل می‌شود (vendorSubscriptions + effectiveCommissionBp).
+    // کمیسیون روی نرخِ همان پکیج قفل می‌شود (vendorSubscriptions + effectiveCommissionBp).
+    // دو پلهٔ قیمت (Task 59 — پیشنهاد مالک/Cialdini): پلاس برای فروش بزرگ، سبک برای فروشندهٔ کوچک.
     proPackage: {
       priceToman: 2_280_000,          // ماهانه
       durationDays: 30,
       commissionRatePercent: 5,       // کارمزد حین اشتراک فعال
       slug: "pro-monthly",
+      label: "پلاس",
+      tagline: "برای فروشندهٔ جدی — بیشترین صرفه‌جویی",
+    },
+    lightPackage: {
+      priceToman: 990_000,            // ماهانه — پلهٔ ورود برای فروشندهٔ کوچک
+      durationDays: 30,
+      commissionRatePercent: 7,       // بین پایهٔ ۹٪ و پلاسِ ۵٪
+      slug: "light-monthly",
+      label: "سبک",
+      tagline: "برای شروع — بدون ریسک، ماه‌به‌ماه",
     },
     demo: {
       enabled: true,
