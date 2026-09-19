@@ -36,21 +36,29 @@ export default function LoginPage() {
     // ---- Real backend first (Supabase session + httpOnly cookies).
     const res = await loginRequest(email, pwd);
     if (res.ok) {
-      login(email, { name: res.data.user?.name || email.split("@")[0] });
+      // Store the SERVER-confirmed identity (real UUID + role) so memory,
+      // credits, orders and agents all share the same user_id the server uses.
+      login(email, { id: res.data.user?.id, name: res.data.user?.name || email.split("@")[0], role: (res.data.user?.role as never) || "customer" });
+      try { window.localStorage.removeItem("homeino-logged-out-at"); } catch { /* private mode */ }
       toast("خوش آمدی!");
       router.push(nextPath());
       return;
     }
+    setLoading(false);
     // Real server rejection (wrong credentials on a live backend) — honest error.
     if (res.status === 400 || res.status === 403) {
-      setLoading(false);
       setErr(res.message ?? "ایمیل یا رمز عبور درست نیست");
       return;
     }
-    // Server unavailable (demo mode / network) → honest local demo session.
-    login(email);
-    toast("حالت دمو: ورود محلی انجام شد", "info");
-    router.push(nextPath());
+    // Explicit demo deployment (no backend wired) → honest local demo session.
+    if (res.status === 503 && res.code === "DEMO_MODE") {
+      login(email);
+      toast("حالت دمو: ورود محلی انجام شد", "info");
+      router.push(nextPath());
+      return;
+    }
+    // Network failure / outage on a live backend — NEVER fake a session.
+    setErr("ورود انجام نشد — اتصالت را بررسی کن یا چند لحظه بعد تلاش کن");
   };
 
   function nextPath(): string {

@@ -61,6 +61,25 @@ export function productEmbeddingText(product: CatalogProduct): string {
 let embeddingCache: { at: number; model: string; vectors: Map<string, number[]> } | null = null;
 const EMBEDDING_TTL_MS = 10 * 60_000;
 
+// Background persistence: catalog embeddings survive restarts and are shared
+// across serverless instances through the DB (pgvector-ready). Throttled to
+// once per 6h per instance — the in-memory cache still serves the hot path.
+let lastPersistedAt = 0;
+const PERSIST_INTERVAL_MS = 6 * 60 * 60 * 1000;
+async function persistEmbeddings(map: Map<string, number[]>, model: string): Promise<void> {
+  if (Date.now() - lastPersistedAt < PERSIST_INTERVAL_MS) return;
+  lastPersistedAt = Date.now();
+  try {
+    const { upsertEmbedding } = await import("@/services/agents/store/database");
+    for (const [productId, vector] of map) {
+      await upsertEmbedding({ entityType: "product", entityId: productId, model, embedding: vector })
+        .catch(() => { /* one bad row must not stop the sync */ });
+    }
+  } catch {
+    // No DATABASE_URL (memory mode) — the in-memory cache is the store.
+  }
+}
+
 /**
  * Catalog embeddings. Uses a configured embedding model when available and
  * falls back to the deterministic local lexical embedder (still real text in,
@@ -98,6 +117,8 @@ export async function buildCatalogEmbeddings(opts: { forceLocal?: boolean; limit
     if (vector?.length) map.set(product.id, vector);
   });
   embeddingCache = { at: Date.now(), model: cacheKey, vectors: map };
+  // fire-and-forget: never blocks a request on DB writes
+  void persistEmbeddings(map, model);
   return { vectors: map, model, provider };
 }
 

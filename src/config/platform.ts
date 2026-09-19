@@ -43,11 +43,13 @@ export const PLATFORM = {
     shareMessage: "با کد دعوت من ثبت‌نام کن و ۳۰ اعتبار هومینو استودیو رایگان بگیر!",
   },
 
-  // ---- Vendor marketplace economics (display-only until real settlement exists) ----
-  // Single source for every commission/settlement figure shown in the demo.
-  // Rule: the vendor panels NEVER hardcode these numbers — import them here.
+  // ---- Vendor marketplace economics ----
+  // Single source for every commission/settlement figure — the vendor panels
+  // and the settlement service import from here, never hardcode.
   vendor: {
-    commissionRatePercent: 8,   // کمیسیون پلتفرم از هر فروش
+    commissionRatePercent: 8,   // کمیسیون پیش‌فرض پلتفرم از هر فروش (قابل بازنویسی per-vendor در DB)
+    minPayoutToman: 500_000,    // حداقل مبلغ درخواست تسویه
+    payoutScheduleLabel: "تسویه هفتگی", // برچسب نمایشی
     demoStoreId: "st1",         // فروشگاه نمونهٔ پنل فروشنده
     demo: {
       enabled: true,

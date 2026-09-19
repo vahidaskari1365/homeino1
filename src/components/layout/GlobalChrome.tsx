@@ -6,6 +6,7 @@ import { useUi, useCredits } from "@/stores/useApp";
 import { useCompare } from "@/stores/useShop";
 import { ActivityToast } from "@/components/marketing/ActivityToast";
 import { ExitIntentPopup } from "@/components/marketing/ExitIntentPopup";
+import { SessionSync } from "@/components/auth/SessionSync";
 import { toFa } from "@/lib/utils";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 
@@ -89,6 +90,9 @@ export function GlobalChrome() {
       {/* Live activity toast (real, anonymized DB events) + exit-intent offer */}
       <ActivityToast />
       <ExitIntentPopup />
+
+      {/* Real-session projection: hydrates useAuth with the server identity */}
+      <SessionSync />
 
     </>
   );

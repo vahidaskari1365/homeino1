@@ -59,6 +59,8 @@ export const vendors = pgTable(
     contactPhone: varchar("contact_phone", { length: 32 }),
     website: text("website"),
     social: jsonb("social").$type<Record<string, string>>().default({}),
+    /** Commission in basis points (800 = 8%). NULL → platform default (config/platform.ts). */
+    commissionRateBp: integer("commission_rate_bp"),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
     ...timestamps,
   },

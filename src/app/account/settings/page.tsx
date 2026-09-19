@@ -6,6 +6,7 @@ import { useUi, useAuth } from "@/stores/useApp";
 import { useRouter } from "next/navigation";
 import { DEFAULT_NOTIFICATION_PREFS, NOTIFICATION_LABELS, type NotificationType } from "@/config/notifications";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { logoutRequest } from "@/lib/commerceClient";
 import { cn, toFa } from "@/lib/utils";
 
 // Toggles persist across reloads in their own localStorage record.
@@ -158,7 +159,16 @@ export default function SettingsPage() {
               e.target.value = "";
             }}
           />
-          <Button variant="ghost" className="text-danger" onClick={() => { logout(); toast("از حساب خارج شدی"); router.push("/"); }}><Trash2 size={15} /> خروج از حساب</Button>
+          <Button variant="ghost" className="text-danger" onClick={async () => {
+            // Real sign-out first: revokes the Supabase session server-side and
+            // clears the httpOnly cookies. The store clear alone would leave a
+            // live session behind.
+            await logoutRequest();
+            try { window.localStorage.setItem("homeino-logged-out-at", String(Date.now())); } catch { /* private mode */ }
+            logout();
+            toast("از حساب خارج شدی");
+            router.push("/");
+          }}><Trash2 size={15} /> خروج از حساب</Button>
         </div>
       </div>
 

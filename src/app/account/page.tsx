@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Sparkles, Package, Heart, Wand2, ArrowLeft, Tag } from "lucide-react";
+import { Sparkles, Package, Heart, Wand2, ArrowLeft, Tag, X } from "lucide-react";
 import { Button, LogoBlock, Badge, EmptyState } from "@/components/ui/primitives";
 import { useAuth, useCredits } from "@/stores/useApp";
 import { useWishlist } from "@/stores/useShop";
@@ -107,11 +107,28 @@ export default function AccountOverview() {
           </div>
           <div className="space-y-3">
             {recommended.map((p) => (
-              <Link key={p.id} href={`/products/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
-                <img width="48" height="48" src={p.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
-                <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{p.name}</div><div className="text-xs text-ink-muted">{p.brand}</div></div>
-                <ArrowLeft size={15} className="text-ink-muted" />
-              </Link>
+              <div key={p.id} className="group flex items-center gap-3 rounded-xl p-2 transition hover:bg-ivory-2">
+                <Link href={`/products/${p.slug}`} className="flex min-w-0 flex-1 items-center gap-3" onClick={() => {
+                  void trackEvent("recommendation_click", { entityType: "product", entityId: p.id, metadata: { scenario: "account" } });
+                  void recommendationsRepository.feedback({ recommendationId: p.recommendationId, productId: p.id, action: "click", scenario: "account" });
+                }}>
+                  <img width="48" height="48" src={p.images[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-ink">{p.name}</div><div className="text-xs text-ink-muted">{p.brand}</div></div>
+                  <ArrowLeft size={15} className="text-ink-muted" />
+                </Link>
+                <button
+                  type="button"
+                  aria-label="نمایش ندادن این پیشنهاد"
+                  onClick={() => {
+                    setRecommended((prev) => prev.filter((x) => x.id !== p.id));
+                    void trackEvent("recommendation_dismiss", { entityType: "product", entityId: p.id, metadata: { scenario: "account" } });
+                    void recommendationsRepository.feedback({ recommendationId: p.recommendationId, productId: p.id, action: "dismiss", scenario: "account" });
+                  }}
+                  className="text-ink-muted opacity-0 transition group-hover:opacity-100 hover:text-danger"
+                >
+                  <X size={15} />
+                </button>
+              </div>
             ))}
           </div>
         </div>

@@ -236,17 +236,161 @@ export class DevPaymentProvider implements PaymentProvider {
   }
 }
 
+/**
+ * Zarinpal (درگاه ایرانی) — v4 REST, no SDK.
+ *
+ * Money boundary: callers pass IRR (×10 Toman) like Stripe; Zarinpal v4 bills
+ * in TOMAN, so the provider divides by 10 internally. Verification happens on
+ * the redirect callback (GET ?Authority=…&Status=OK) — the callback carries an
+ * HMAC-signed metadata blob (stateless → works on serverless, nothing can be
+ * forged without PAYMENTS_WEBHOOK_SECRET), and the actual verify.json call
+ * re-checks amount+authority against Zarinpal itself. Verification IS the auth.
+ */
+export class ZarinpalProvider implements PaymentProvider {
+  readonly name = "zarinpal";
+  private merchantId: string;
+  private signingSecret: string;
+  private sandbox: boolean;
+
+  constructor() {
+    this.merchantId = process.env.ZARINPAL_MERCHANT_ID ?? "";
+    this.signingSecret = process.env.PAYMENTS_WEBHOOK_SECRET ?? "";
+    this.sandbox = process.env.ZARINPAL_SANDBOX === "1";
+    if (!this.merchantId) {
+      throw new Error("ZARINPAL_MERCHANT_ID is required for Zarinpal provider");
+    }
+    if (!this.signingSecret) {
+      throw new Error("PAYMENTS_WEBHOOK_SECRET is required for Zarinpal callback signing");
+    }
+  }
+
+  private base(): string {
+    return this.sandbox ? "https://sandbox.zarinpal.com" : "https://payment.zarinpal.com";
+  }
+
+  private static origin(): string {
+    return (
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      process.env.APP_ORIGIN ??
+      "https://homeino.vercel.app"
+    ).replace(/\/+$/, "");
+  }
+
+  private async sign(payload: string): Promise<string> {
+    const { createHmac } = await import("node:crypto");
+    return createHmac("sha256", this.signingSecret).update(payload).digest("base64url");
+  }
+
+  async createIntent(input: PaymentIntentInput): Promise<PaymentResult> {
+    const amountToman = Math.round(input.amount / 10);
+    if (amountToman < 1000) throw new Error("Zarinpal minimum amount is 1000 Toman");
+
+    const meta = { ...input.metadata, amountToman };
+    const encoded = Buffer.from(JSON.stringify(meta), "utf8").toString("base64url");
+    const sig = await this.sign(encoded);
+    const callbackUrl = `${ZarinpalProvider.origin()}/api/payments/zarinpal/callback?d=${encoded}&s=${sig}`;
+
+    const res = await fetch(`${this.base()}/pg/v4/payment/request.json`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({
+        merchant_id: this.merchantId,
+        amount: amountToman,
+        description: input.description ?? "پرداخت هومینو",
+        callback_url: callbackUrl,
+        metadata: input.orderId ? { order_id: input.orderId } : undefined,
+      }),
+    });
+    const body = (await res.json()) as {
+      data?: { code?: number; authority?: string; message?: string };
+      errors?: unknown;
+    };
+    const authority = body.data?.authority;
+    if (!res.ok || body.data?.code !== 100 || !authority) {
+      throw new Error(`Zarinpal request failed: ${body.data?.message ?? res.status}`);
+    }
+    return {
+      provider: this.name,
+      paymentId: authority,
+      status: "pending",
+      paymentUrl: `${this.base()}/pg/StartPay/${authority}`,
+    };
+  }
+
+  /** Server-side verify — the single source of truth for «this payment really happened». */
+  async verify(authority: string, amountToman: number): Promise<{ ok: boolean; alreadyVerified: boolean; refId?: number }> {
+    const res = await fetch(`${this.base()}/pg/v4/payment/verify.json`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ merchant_id: this.merchantId, amount: amountToman, authority }),
+    });
+    const body = (await res.json()) as { data?: { code?: number; ref_id?: number } };
+    const code = body.data?.code;
+    if (code === 100) return { ok: true, alreadyVerified: false, refId: body.data?.ref_id };
+    if (code === 101) return { ok: true, alreadyVerified: true, refId: body.data?.ref_id };
+    return { ok: false, alreadyVerified: false };
+  }
+
+  /**
+   * POST-compat path (server-to-server integrations). The body must carry the
+   * SAME signed blob the redirect uses; Zarinpal itself has no signed webhook,
+   * so the HMAC + a successful verify.json are what make this fail-closed.
+   */
+  async parseWebhook(rawBody: string, signature?: string): Promise<PaymentWebhookEvent> {
+    let payload: { d?: string; s?: string; authority?: string };
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      throw new Error("invalid webhook payload");
+    }
+    if (!payload.d || !payload.s || !payload.authority || signature !== payload.s) {
+      throw new Error("missing webhook signature");
+    }
+    if ((await this.sign(payload.d)) !== payload.s) throw new Error("invalid webhook signature");
+    const meta = JSON.parse(Buffer.from(payload.d, "base64url").toString("utf8")) as Record<string, unknown> & { amountToman?: number };
+    if (!meta.amountToman) throw new Error("invalid webhook payload");
+    const verified = await this.verify(payload.authority, meta.amountToman);
+    if (!verified.ok) throw new Error("zarinpal verification failed");
+    return {
+      provider: this.name,
+      providerPaymentId: payload.authority,
+      eventType: "payment.succeeded",
+      amount: meta.amountToman * 10,
+      currency: "IRR",
+      metadata: meta,
+      raw: payload,
+    };
+  }
+
+  /** Decodes + authenticates the callback blob (no Zarinpal roundtrip here —
+   *  the callback route calls verify() itself with the DB-stored amount). */
+  async decodeCallback(d: string, s: string): Promise<Record<string, unknown> | null> {
+    if ((await this.sign(d)) !== s) return null;
+    try {
+      return JSON.parse(Buffer.from(d, "base64url").toString("utf8")) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+}
+
 let gateway: PaymentProvider | null = null;
 
 export function paymentGateway(): PaymentProvider {
   if (gateway) return gateway;
+  // Iranian rail first (WORKING-CONTEXT decision: Zarinpal is the primary
+  // local gateway), then Stripe (international), then dev-only fallback.
+  if (process.env.ZARINPAL_MERCHANT_ID) {
+    gateway = new ZarinpalProvider();
+    return gateway;
+  }
   if (process.env.STRIPE_SECRET_KEY) {
     gateway = new StripeProvider();
     return gateway;
   }
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "STRIPE_SECRET_KEY is required in production. Refusing to use DevPaymentProvider (fake succeeded payments).",
+      "ZARINPAL_MERCHANT_ID or STRIPE_SECRET_KEY is required in production. Refusing to use DevPaymentProvider (fake succeeded payments).",
     );
   }
   gateway = new DevPaymentProvider();

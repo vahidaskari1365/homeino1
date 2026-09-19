@@ -8,8 +8,9 @@
 //   1. dify          DIFY_API_BASE_URL + DIFY_API_KEY        (agent/chat app)
 //   2. langflow      LANGFLOW_BASE_URL + LANGFLOW_API_KEY + LANGFLOW_FLOW_ID
 //   3. openai-compat LLM_API_BASE_URL + LLM_API_KEY          (current project LLM)
-//   4. ollama        OLLAMA_BASE_URL                         (local open-source models)
-//   5. heuristic     built-in deterministic engine           (always available)
+//   4. gemini        GEMINI_API_KEY (یا کلید پنل ادمین، رمزنگاری‌شده در DB)
+//   5. ollama        OLLAMA_BASE_URL                         (local open-source models)
+//   6. heuristic     built-in deterministic engine           (always available)
 //
 // The gateway NEVER throws: a provider failure degrades to the heuristic engine
 // and the result is flagged `degraded` so callers can stay honest.
@@ -18,7 +19,7 @@
 // /embeddings → deterministic local lexical embedder `homeino-lexical-v1`).
 // ============================================================
 
-export type LlmProviderName = "dify" | "langflow" | "openai-compat" | "ollama" | "heuristic";
+export type LlmProviderName = "dify" | "langflow" | "openai-compat" | "gemini" | "ollama" | "heuristic";
 
 export interface LlmCompletionRequest {
   system?: string;
@@ -68,6 +69,8 @@ const env = {
   compatModel: () => process.env.LLM_MODEL ?? "auto",
   ollamaBase: () => (process.env.OLLAMA_BASE_URL ?? "").replace(/\/+$/, ""),
   ollamaModel: () => process.env.OLLAMA_MODEL ?? "llama3.1",
+  geminiEnvKey: () => process.env.GEMINI_API_KEY ?? "",
+  geminiModel: () => process.env.GEMINI_TEXT_MODEL ?? "gemini-3.6-flash",
   pinned: () => (process.env.HOMEINO_LLM_PROVIDER ?? "") as LlmProviderName | "",
   embedModel: () => process.env.EMBEDDING_MODEL ?? process.env.OLLAMA_EMBED_MODEL ?? "nomic-embed-text",
 };
@@ -131,6 +134,15 @@ export function llmStatus(): LlmStatusEntry[] {
       missing: [...(env.compatBase() ? [] : ["LLM_API_BASE_URL"]), ...(env.compatKey() ? [] : ["LLM_API_KEY"])],
     },
     {
+      provider: "gemini",
+      label: "Google Gemini (env یا پنل ادمین)",
+      // env-presence only here (sync). resolutionOrder()/complete() re-check
+      // with resolveGeminiConfig() so an admin-panel key (DB) also activates it.
+      configured: Boolean(env.geminiEnvKey()),
+      model: env.geminiModel(),
+      missing: env.geminiEnvKey() ? [] : ["GEMINI_API_KEY (یا کلید از پنل ادمین)"],
+    },
+    {
       provider: "ollama",
       label: "Ollama (مدل‌های Open Source محلی)",
       configured: Boolean(env.ollamaBase()),
@@ -143,11 +155,30 @@ export function llmStatus(): LlmStatusEntry[] {
   return entries;
 }
 
-function resolutionOrder(pin?: LlmProviderName): LlmProviderName[] {
-  const all: LlmProviderName[] = ["dify", "langflow", "openai-compat", "ollama", "heuristic"];
-  const configured = all.filter((p) => llmStatus().find((s) => s.provider === p)?.configured);
+/** Gemini is active with an env key OR an admin-panel key (DB, AES-encrypted).
+ *  resolveGeminiConfig() caches for 15s, so this is cheap on the hot path. */
+async function isGeminiGatewayConfigured(): Promise<boolean> {
+  try {
+    const { resolveGeminiConfig } = await import("@/services/ai/settings");
+    return Boolean((await resolveGeminiConfig()).apiKey);
+  } catch {
+    return Boolean(env.geminiEnvKey());
+  }
+}
+
+async function resolutionOrder(pin?: LlmProviderName): Promise<LlmProviderName[]> {
+  const all: LlmProviderName[] = ["dify", "langflow", "openai-compat", "gemini", "ollama", "heuristic"];
+  const configured: LlmProviderName[] = [];
+  for (const p of all) {
+    if (p === "heuristic") continue;
+    if (p === "gemini") {
+      if (await isGeminiGatewayConfigured()) configured.push(p);
+      continue;
+    }
+    if (llmStatus().find((s) => s.provider === p)?.configured) configured.push(p);
+  }
   const pinned = pin ?? (env.pinned() || undefined);
-  if (pinned && configured.includes(pinned)) {
+  if (pinned && pinned !== "heuristic" && configured.includes(pinned)) {
     return [pinned, ...configured.filter((p) => p !== pinned), "heuristic"];
   }
   return [...configured, "heuristic"];
@@ -280,6 +311,37 @@ async function callLangflow(req: LlmCompletionRequest): Promise<LlmCompletionRes
   };
 }
 
+/** Gemini text generation — same key source as the design pipeline
+ *  (env GEMINI_API_KEY or the admin panel, whichever is configured). */
+async function callGemini(req: LlmCompletionRequest): Promise<LlmCompletionResult> {
+  const { resolveGeminiConfig } = await import("@/services/ai/settings");
+  const cfg = await resolveGeminiConfig();
+  if (!cfg.apiKey) throw new Error("gemini_not_configured");
+  const model = req.model ?? cfg.textModel ?? env.geminiModel();
+  const payload = (await postJson(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cfg.apiKey}`,
+    {
+      ...(req.system ? { systemInstruction: { parts: [{ text: req.system }] } } : {}),
+      contents: [{ role: "user", parts: [{ text: req.prompt }] }],
+      generationConfig: {
+        temperature: req.temperature ?? 0.2,
+        maxOutputTokens: req.maxTokens ?? 400,
+        ...(req.json ? { responseMimeType: "application/json" } : {}),
+      },
+    },
+    { "Content-Type": "application/json" },
+    req.timeoutMs ?? 20_000,
+  )) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  };
+  const text = (payload.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("").trim();
+  if (!text) throw new Error("empty completion");
+  const tokensIn = payload.usageMetadata?.promptTokenCount ?? estimateTokens(req.prompt + (req.system ?? ""));
+  const tokensOut = payload.usageMetadata?.candidatesTokenCount ?? estimateTokens(text);
+  return { text, provider: "gemini", model, tokensIn, tokensOut, costMicro: estimateCostMicro("gemini", tokensIn, tokensOut), degraded: false };
+}
+
 /**
  * Deterministic built-in engine. It answers only what can be derived from the
  * request itself — never inventing catalog facts. Used for intent extraction
@@ -295,13 +357,14 @@ const CALLERS: Record<LlmProviderName, (req: LlmCompletionRequest) => Promise<Ll
   dify: callDify,
   langflow: callLangflow,
   "openai-compat": callOpenAiCompat,
+  gemini: callGemini,
   ollama: callOllama,
   heuristic: async (req) => callHeuristic(req),
 };
 
 /** Never throws — degrades to the deterministic engine. */
 export async function complete(req: LlmCompletionRequest): Promise<LlmCompletionResult> {
-  const order = resolutionOrder(req.provider);
+  const order = await resolutionOrder(req.provider);
   for (const provider of order) {
     try {
       // Heuristic is always the last entry of `order` — every earlier provider

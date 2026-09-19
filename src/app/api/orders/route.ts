@@ -1,4 +1,5 @@
 import { createOrderFromCart, listOrders, getOrderByNumber, getOrderForUser } from "@/services/orderService";
+import { recordEvent } from "@/services/workflows/triggers";
 import { requireUser } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/errors";
 import { demoUnavailable, ok } from "@/lib/api/response";
@@ -39,5 +40,17 @@ export const POST = guard(async (req) => {
     customerNote: input.customerNote,
     shippingMethod: input.shippingMethod,
   });
+
+  // The strongest preference signal (weight 5) — feeds Customer Intelligence
+  // and the recommendation feedback loop. Analytics must never break orders.
+  void recordEvent({
+    eventType: "order_placed",
+    userId: user.id,
+    entityType: "order",
+    entityId: order.id,
+    path: "/checkout",
+    metadata: { orderNumber: order.orderNumber, total: order.total },
+  }).catch(() => undefined);
+
   return ok(order, { status: 201 });
 });

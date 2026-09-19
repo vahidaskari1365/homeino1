@@ -12,21 +12,49 @@
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; code?: string; message?: string };
 
-async function call<T>(url: string, init?: RequestInit): Promise<ApiResult<T>> {
-  try {
-    const res = await fetch(url, {
-      ...init,
-      headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
-    });
-    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!res.ok || body.ok === false) {
-      const err = body.error as { code?: string; message?: string } | undefined;
-      return { ok: false, status: res.status, code: (body.code as string) ?? err?.code, message: (body.message as string) ?? err?.message };
+/** Single-flight session refresh: concurrent 401s share one refresh call. */
+let refreshInFlight: Promise<boolean> | null = null;
+async function refreshSessionOnce(): Promise<boolean> {
+  refreshInFlight ??= (async () => {
+    try {
+      const res = await fetch("/api/auth/refresh", { method: "POST" });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      setTimeout(() => { refreshInFlight = null; }, 0);
     }
-    return { ok: true, data: body.data as T };
-  } catch {
-    return { ok: false, status: 0, code: "NETWORK" };
+  })();
+  return refreshInFlight;
+}
+
+async function call<T>(url: string, init?: RequestInit): Promise<ApiResult<T>> {
+  const attempt = async (): Promise<ApiResult<T>> => {
+    try {
+      const res = await fetch(url, {
+        ...init,
+        headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
+      });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok || body.ok === false) {
+        const err = body.error as { code?: string; message?: string } | undefined;
+        return { ok: false, status: res.status, code: (body.code as string) ?? err?.code, message: (body.message as string) ?? err?.message };
+      }
+      return { ok: true, data: body.data as T };
+    } catch {
+      return { ok: false, status: 0, code: "NETWORK" };
+    }
+  };
+
+  const first = await attempt();
+  // The Supabase access token lives ~1h in the cookie. When it expires the
+  // server answers 401 while the refresh-token cookie is still valid — rotate
+  // once and retry transparently instead of failing the user's action.
+  if (!first.ok && first.status === 401 && !url.startsWith("/api/auth/")) {
+    const refreshed = await refreshSessionOnce();
+    if (refreshed) return attempt();
   }
+  return first;
 }
 
 /* ---------------- AUTH ---------------- */
@@ -42,13 +70,22 @@ export function loginRequest(email: string, password: string) {
   return call<{ user: MeUser }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
 }
 export function registerRequest(input: { email: string; password: string; name?: string; phone?: string; isVendor?: boolean; brandName?: string }) {
-  return call<{ user: MeUser }>("/api/auth/register", { method: "POST", body: JSON.stringify(input) });
+  return call<{ user: MeUser; emailConfirmationRequired?: boolean }>("/api/auth/register", { method: "POST", body: JSON.stringify(input) });
 }
 export function logoutRequest() {
   return call<{ ok: boolean }>("/api/auth/logout", { method: "POST" });
 }
+/** Session probe: resolves the REAL server identity (401 → guest). */
 export function fetchMe() {
-  return call<{ user: MeUser | null }>("/api/auth/me");
+  return call<MeUser>("/api/auth/me");
+}
+/** Rotates the access token using the refresh-token cookie. */
+export function refreshSessionRequest() {
+  return fetch("/api/auth/refresh", { method: "POST" }).then((r) => r.ok).catch(() => false);
+}
+/** Requests a Supabase recovery email (link → /reset-password). */
+export function forgotPasswordRequest(email: string) {
+  return call<{ sent: boolean }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
 }
 
 /* ---------------- CART + ORDERS ---------------- */

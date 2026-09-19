@@ -35,10 +35,16 @@ export const useUi = create<UiState>((set) => ({
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
 
-/* ---------------- AUTH (mock) ---------------- */
+/* ---------------- AUTH — client projection of the real Supabase session ----------------
+ * The server (httpOnly cookies + /api/auth/*) is the single source of truth.
+ * This store is a UI projection: SessionSync hydrates it with the REAL user
+ * id/role from /api/auth/me, and login() callers pass the server-issued id.
+ * Nothing here authenticates — it only mirrors what the server confirmed. */
 export type Role = "customer" | "vendor" | "admin" | "support";
 
 interface AuthUser {
+  /** Real auth.users UUID — present once the server session is confirmed. */
+  id?: string;
   name: string;
   email: string;
   avatar: string;
@@ -48,7 +54,7 @@ interface AuthUser {
 
 interface AuthState {
   user: AuthUser | null;
-  login: (email: string, opts?: { name?: string; role?: Role; brand?: string }) => void;
+  login: (email: string, opts?: { id?: string; name?: string; role?: Role; brand?: string }) => void;
   /** Patch the logged-in user's own profile (name/city/phone) — persisted.
    *  Avatar re-derives from the name like login does. */
   updateProfile: (patch: { name?: string; email?: string; city?: string; phone?: string }) => void;
@@ -67,6 +73,7 @@ export const useAuth = create<AuthState>()(
       login: (email, opts = {}) =>
         set({
           user: {
+            id: opts.id,
             email,
             name: opts.name || email.split("@")[0],
             avatar: (opts.name || email)[0],

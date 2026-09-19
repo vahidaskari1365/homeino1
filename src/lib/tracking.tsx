@@ -1,6 +1,7 @@
 "use client";
 import { createContext, use, useEffect, useRef, type ReactNode } from "react";
 import { useAuth } from "@/stores/useApp";
+import { usePathname } from "next/navigation";
 
 // ============================================================
 // Homeino — Tracking layer.
@@ -65,7 +66,15 @@ function hashEmail(email: string): string {
 export function getSessionId(): string {
   try {
     let id = sessionStorage.getItem(SESSION_KEY);
-    if (!id) { id = crypto.randomUUID(); sessionStorage.setItem(SESSION_KEY, id); }
+    if (!id) {
+      // Adopt the cross-tab cookie id if it exists so anonymous identity
+      // (recommendations, analytics) survives new tabs, not just this one.
+      const cookie = document.cookie.split("; ").find((c) => c.startsWith("homeino_session_id="));
+      id = cookie ? decodeURIComponent(cookie.split("=")[1]) : crypto.randomUUID();
+      sessionStorage.setItem(SESSION_KEY, id);
+    }
+    // 1-year mirror cookie — the server reads it for guest-scoped data.
+    document.cookie = `homeino_session_id=${encodeURIComponent(id)}; max-age=31536000; path=/; samesite=lax`;
     return id;
   } catch {
     return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `s_${Date.now()}`;
@@ -165,8 +174,10 @@ const Ctx = createContext<{ track: typeof trackEvent }>({ track: trackEvent });
 
 export function TrackingProvider({ children }: { children: ReactNode }) {
   const user = useAuth((s) => s.user);
+  const pathname = usePathname();
   const prevEmail = useRef<string | null>(null);
   const flushed = useRef(false);
+  const prevPath = useRef<string | null>(null);
 
   // Flush anything buffered while the visitor was offline.
   useEffect(() => {
@@ -175,10 +186,19 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     void flushEventQueue();
   }, []);
 
+  // page_view on every route change (incl. the first client mount).
   useEffect(() => {
-    const id = user?.email ?? null;
-    // Hash email for analytics — never store raw PII
-    const hashedId = id ? hashEmail(id) : null;
+    if (!pathname || prevPath.current === pathname) return;
+    prevPath.current = pathname;
+    void trackEvent("page_view", { path: pathname });
+  }, [pathname]);
+
+  useEffect(() => {
+    // Identity: prefer the REAL auth UUID (set by SessionSync from /api/auth/me);
+    // fall back to a hashed email only when no server id is known yet.
+    // Raw PII is never stored — ids/hashes only.
+    const realId = user?.id ?? null;
+    const hashedId = realId ? `u_${realId.slice(0, 8)}` : user?.email ? hashEmail(user.email) : null;
     if (hashedId && hashedId !== prevEmail.current) trackEvent("user_login", { metadata: { userHash: hashedId, role: user?.role } });
     if (!hashedId && prevEmail.current) trackEvent("user_logout");
     prevEmail.current = hashedId;

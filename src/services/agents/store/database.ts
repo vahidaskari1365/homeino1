@@ -1313,6 +1313,9 @@ export async function upsertEmbedding(input: {
   metadata?: Record<string, unknown>;
 }) {
   const db = getDb();
+  // The ANN column only fits 256-dim vectors (local embedder); remote models
+  // (768/1536) are stored in the portable array column only.
+  const vec = input.embedding.length === 256 ? input.embedding : null;
   await db
     .insert(entityEmbeddings)
     .values({
@@ -1321,11 +1324,12 @@ export async function upsertEmbedding(input: {
       model: input.model,
       dims: input.embedding.length,
       embedding: input.embedding,
+      embeddingVec: vec,
       sourceText: input.sourceText ?? null,
       metadata: input.metadata ?? {},
     })
     .onConflictDoUpdate({
       target: [entityEmbeddings.entityType, entityEmbeddings.entityId, entityEmbeddings.model],
-      set: { dims: input.embedding.length, embedding: input.embedding, sourceText: input.sourceText ?? null, updatedAt: new Date() },
+      set: { dims: input.embedding.length, embedding: input.embedding, embeddingVec: vec, sourceText: input.sourceText ?? null, updatedAt: new Date() },
     });
 }

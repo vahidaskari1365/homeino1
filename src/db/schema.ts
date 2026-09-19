@@ -15,6 +15,7 @@ export * from "./schema/system";
 export * from "./schema/agents";
 export * from "./schema/supabase";
 export * from "./schema/marketing";
+export * from "./schema/marketplace";
 
 import * as users from "./schema/users";
 import * as vendors from "./schema/vendors";
@@ -27,6 +28,7 @@ import * as system from "./schema/system";
 import * as agents from "./schema/agents";
 import * as supabase from "./schema/supabase";
 import * as marketing from "./schema/marketing";
+import * as marketplace from "./schema/marketplace";
 
 /** Flat namespace of every table — consumes cleanly as the schema map. */
 export const schema = {
@@ -41,6 +43,7 @@ export const schema = {
   ...agents,
   ...supabase,
   ...marketing,
+  ...marketplace,
 };
 
 export type { User, Profile, NewUser } from "./schema/users";
@@ -49,6 +52,7 @@ export type { Product, NewProduct } from "./schema/products";
 export type { Order, OrderItem } from "./schema/commerce";
 export type { AiGeneration } from "./schema/ai";
 export type { Coupon } from "./schema/marketing";
+export type { VendorEarning, VendorPayout } from "./schema/marketplace";
 export type {
   Agent,
   Workflow,

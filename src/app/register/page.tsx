@@ -9,6 +9,7 @@ import { useAuth, useUi } from "@/stores/useApp";
 import { updateVendorStoreProfile } from "@/data/vendorSession";
 import { categories } from "@/data/categories";
 import { registerRequest } from "@/lib/commerceClient";
+import { vendorOnboard } from "@/lib/vendorClient";
 import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
@@ -43,7 +44,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     // ---- Real backend first (Supabase auth + DB user row); the demo local
-    // session is the honest fallback when the server is unavailable.
+    // session is ONLY for explicit demo deployments (503 DEMO_MODE).
     const res = await registerRequest({
       email,
       password: pwd,
@@ -52,12 +53,33 @@ export default function RegisterPage() {
       brandName: isProducer ? brand.trim() : undefined,
     });
     if (res.ok) {
+      if (res.data.emailConfirmationRequired) {
+        // Honest state: account created, but the session isn't active until
+        // the email is confirmed — never pretend the user is logged in.
+        setLoading(false);
+        toast("حسابت ساخته شد — ایمیل تأیید را چک کن", "info");
+        router.push(`/login?next=${encodeURIComponent(isProducer ? "/vendor" : "/account")}`);
+        return;
+      }
+      login(email, isProducer ? { id: res.data.user?.id, name: brand, role: "vendor", brand } : { id: res.data.user?.id, name: name.trim() });
+      try { window.localStorage.removeItem("homeino-logged-out-at"); } catch { /* private mode */ }
+      if (isProducer) {
+        // REAL onboarding — creates the pending vendor row on the server.
+        // Fire-and-forget: a failure must never block the registration flow
+        // (the dashboard shows its own onboarding form if this didn't land).
+        void vendorOnboard({ name: brand.trim(), city: city.trim() || undefined })
+          .then((onb) => {
+            if (onb.ok) toast("فروشگاه شما ثبت شد و در انتظار تأیید مدیر است", "success");
+          })
+          .catch(() => undefined);
+      }
+    } else if (res.status === 503 && res.code === "DEMO_MODE") {
       login(email, isProducer ? { name: brand, role: "vendor", brand } : { name: name.trim() });
-    } else if (res.status !== 0 && res.status !== 503 && res.status !== 401 && res.status !== 404) {
+    } else {
       setLoading(false);
       setErr(res.message ?? "ثبت‌نام ناموفق بود");
       return;
-    } // else: demo/local session below
+    }
     if (isProducer) {
       // The panel greets the vendor with the brand they registered — keeps
       // the registration promise «پنل فروشنده فعال می‌شود» true in the demo.

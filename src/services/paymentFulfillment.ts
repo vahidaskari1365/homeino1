@@ -1,6 +1,7 @@
 import { grantCredits } from "@/services/creditService";
 import { recordCouponRedemption } from "@/services/coupons";
 import { updateOrderStatus } from "@/services/orderService";
+import { accrueOrderEarnings, reverseOrderEarnings } from "@/services/vendorSettlement";
 import type { PaymentWebhookEvent } from "@/services/payments";
 
 export type FulfillmentResult =
@@ -31,6 +32,11 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
   if (event.eventType === "refund.succeeded") {
     if (!meta.orderId) return { ok: false, reason: "missing_order" };
     const order = await updateOrderStatus(meta.orderId, "refunded", `payment:${event.provider}`);
+    // Void the vendors' unpaid commission rows too (fail-safe — a settlement
+    // problem must never break the buyer's refund flow).
+    await reverseOrderEarnings(meta.orderId).catch((err) =>
+      console.warn("[fulfillment] earnings reversal skipped:", err instanceof Error ? err.message : err),
+    );
     return { ok: true, kind: "order", orderId: order.id, status: "refunded" };
   }
 
@@ -79,6 +85,12 @@ export async function fulfillPaymentEvent(event: PaymentWebhookEvent): Promise<F
 
   if (meta.kind === "order" && meta.orderId) {
     const order = await updateOrderStatus(meta.orderId, "confirmed", `payment:${event.provider}`);
+    // Marketplace settlement: create the per-item commission ledger rows.
+    // Idempotent (unique per order item) + fail-safe — a settlement failure
+    // must never invalidate a successful payment.
+    await accrueOrderEarnings(order.id).catch((err) =>
+      console.warn("[fulfillment] earnings accrual skipped:", err instanceof Error ? err.message : err),
+    );
     return { ok: true, kind: "order", orderId: order.id, status: order.status };
   }
 

@@ -15,6 +15,7 @@ import { getStoreById } from "@/data/stores";
 import { offersForProduct, getBestOffer } from "@/data/offers";
 import { sampleReviews } from "@/data/inspirations";
 import { fetchProductReviews, createProductReview } from "@/lib/commerceClient";
+import { recommendationsRepository, type RecommendationEntry } from "@/repositories/recommendations";
 import { useCart, useWishlist, useCompare, useRecentlyViewed } from "@/stores/useShop";
 import { useUi, useChat } from "@/stores/useApp";
 import { toFa, formatPrice, cn } from "@/lib/utils";
@@ -426,6 +427,9 @@ export default function ProductDetailClient({
       {/* RECENTLY VIEWED — retention loop */}
       <RecentlyViewedSection currentId={product!.id} />
 
+      {/* ENGINE PICKS — only REAL recommendation-agent output (never curated) */}
+      <HomeinoPicksRail productId={product!.id} />
+
       {/* add review — persisted to localStorage per product */}
       <ReviewModal
         open={reviewOpen}
@@ -524,6 +528,52 @@ function RecentlyViewedSection({ currentId }: { currentId: string }) {
             <div className="overflow-hidden rounded-xl border border-clay/40"><SmartImage src={p.images[0]} alt={p.name} className="aspect-square w-full" sizes="128px" /></div>
             <p className="mt-1.5 line-clamp-1 text-2xs font-bold text-ink">{p.name}</p>
             <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(p.price))} ت</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * «پیشنهاد هومینو برای این فضا» — the recommendation-agent rail for this seed
+ * product. Renders ONLY when the engine really has output (dataState=ok and
+ * NOT the curated fallback) — curated lists are never dressed up as engine
+ * picks. Hydration-safe: SSR renders nothing; the feed lands in useEffect.
+ */
+function HomeinoPicksRail({ productId }: { productId: string }) {
+  const [items, setItems] = useState<RecommendationEntry[]>([]);
+  useEffect(() => {
+    if (!productId) return;
+    let alive = true;
+    void recommendationsRepository.similarTo(productId, 4).then((feed) => {
+      if (!alive) return;
+      if (feed.dataState === "ok" && feed.source !== "curated_fallback") {
+        setItems(feed.items.slice(0, 4));
+      }
+    });
+    return () => { alive = false; };
+  }, [productId]);
+  if (!items.length) return null;
+  return (
+    <div className="mt-10">
+      <h2 className="mb-4 text-sm font-bold text-ink-muted">پیشنهاد هومینو برای این فضا</h2>
+      <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
+        {items.map((item) => (
+          <Link
+            key={item.id}
+            href={`/products/${item.slug}`}
+            className="group w-32 shrink-0"
+            onClick={() => {
+              // click feedback → feeds the agent's memory (fire-and-forget)
+              void recommendationsRepository
+                .feedback({ recommendationId: item.recommendationId, productId: item.id, action: "click", scenario: "wishlist" })
+                .catch(() => undefined);
+            }}
+          >
+            <div className="overflow-hidden rounded-xl border border-clay/40"><SmartImage src={item.images[0]} alt={item.name} className="aspect-square w-full" sizes="128px" /></div>
+            <p className="mt-1.5 line-clamp-1 text-2xs font-bold text-ink">{item.name}</p>
+            {typeof item.price === "number" && <p className="text-2xs text-terracotta-deep">{toFa(formatPrice(item.price))} ت</p>}
           </Link>
         ))}
       </div>

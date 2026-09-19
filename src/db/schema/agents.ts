@@ -1,5 +1,6 @@
 import {
   boolean,
+  customType,
   doublePrecision,
   index,
   integer,
@@ -660,6 +661,18 @@ export const analyticsEvents = pgTable(
 // Postgres. The migration additionally creates `embedding_vec vector(n)`
 // + ANN index when the pgvector extension is available.
 // ---------------------------------------------------------------
+/** pgvector column — fixed at 256 dims to match the default local embedder
+ *  `homeino-lexical-v1` (see migration 202609190003). Rows embedded by a
+ *  remote model (768/1536 dims) keep only the portable array column. */
+export const embeddingVector256 = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return "vector(256)";
+  },
+  toDriver(value: number[]) {
+    return `[${value.join(",")}]`;
+  },
+});
+
 export const entityEmbeddings = pgTable(
   "entity_embeddings",
   {
@@ -669,6 +682,7 @@ export const entityEmbeddings = pgTable(
     model: varchar("model", { length: 120 }).notNull().default("homeino-lexical-v1"),
     dims: integer("dims").notNull().default(0),
     embedding: doublePrecision("embedding").array().notNull(),
+    embeddingVec: embeddingVector256("embedding_vec"),
     sourceText: text("source_text"),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
     createdAt: createdAtColumn,

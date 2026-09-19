@@ -38,28 +38,13 @@ export type { RetryResult } from "./validation";
 export { AiError, classifyAiError, toPublicAiError, AI_ERROR_MESSAGE } from "./errors";
 export type { AiErrorCode, PublicAiError } from "./errors";
 
-/** Low-level server call. Automatically attaches userId from localStorage
- *  (optimistic — backend will use the authenticated session instead). */
+/** Low-level server call. Identity is resolved SERVER-side from the httpOnly
+ *  Supabase session cookie — the client never sends (or fakes) a user id. */
 export async function callAiServer<T>(action: string, payload: unknown): Promise<T> {
-  // Read userId from persisted auth (non-reactive, safe for non-component use)
-  let userHash: string | null = null;
-  try {
-    const raw = localStorage.getItem("homeino-auth");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const email = parsed?.state?.user?.email;
-      if (email) {
-        let h = 0;
-        for (let i = 0; i < email.length; i++) { h = (h << 5) - h + email.charCodeAt(i); h |= 0; }
-        userHash = `u_${Math.abs(h).toString(36)}`;
-      }
-    }
-  } catch { /* ignore */ }
-
   const res = await fetch("/api/ai", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, payload, _userHash: userHash }),
+    body: JSON.stringify({ action, payload }),
   });
   if (!res.ok) {
     // پیام صادقانه به‌جای «AI service unavailable» مبهم: بدنهٔ JSON خطای
