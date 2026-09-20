@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-20T09:03:17.797Z",
+  "updatedAt": "2026-09-20T13:43:35.365Z",
   "runs": [
+    {
+      "id": "run-1789911815365-qtgk6",
+      "at": "2026-09-20T13:43:35.365Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 319916,
+      "summary": "4 بریف ترند جدید (رنگ، روشنایی و لوستر، دیوارپوش، حمام) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 105,
+        "via": "zai-2",
+        "titles": [
+          "رنگ بیژن، طلایی ۲۰۲۷ برای دکوراسیون خانه",
+          "ترند روشنایی پاییز برای خانه گرم‌تر",
+          "طرح‌های دیواری دهه‌ی نود با رویکرد مدرن",
+          "بودجه حمام کوچک را در این سه جا خرج کن"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1789894997797-kz74q",
       "at": "2026-09-20T09:03:17.797Z",

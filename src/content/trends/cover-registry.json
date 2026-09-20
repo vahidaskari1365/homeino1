@@ -84,7 +84,11 @@
     "1b607ec842d4ed6006468151bd9f17f2": "2026-09-19-zm0z03",
     "60abd61a3628cfc7fa0efe75cf3a569d": "2026-09-19-0nqnld",
     "372cb523da492b4d561f391043f6d363": "2026-09-20-ze351w",
-    "a4dd334704ee75a7439c02cd461cb116": "2026-09-20-zitwb0"
+    "a4dd334704ee75a7439c02cd461cb116": "2026-09-20-zitwb0",
+    "a6e87b2318d093063a3fec64a5d4a39c": "2026-09-20-h8mxta",
+    "bf639aa821c676cfecc852e648ef76db": "2026-09-20-zpzxot",
+    "918b3ce3873e5640acd228473de0d626": "2026-09-20-i5ksyh",
+    "98761f205dba33f8e20bdd9f5b132a76": "2026-09-20-ildqum"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -140,7 +144,11 @@
     "/images/trends/src/2026-09-19-zm0z03.jpg": "2026-09-19-zm0z03",
     "/images/trends/src/2026-09-19-0nqnld.jpg": "2026-09-19-0nqnld",
     "/images/trends/src/2026-09-20-ze351w.jpg": "2026-09-20-ze351w",
-    "/images/trends/src/2026-09-20-zitwb0.png": "2026-09-20-zitwb0"
+    "/images/trends/src/2026-09-20-zitwb0.png": "2026-09-20-zitwb0",
+    "/images/trends/src/2026-09-20-h8mxta.jpg": "2026-09-20-h8mxta",
+    "/images/trends/src/2026-09-20-zpzxot.jpg": "2026-09-20-zpzxot",
+    "/images/trends/src/2026-09-20-i5ksyh.jpg": "2026-09-20-i5ksyh",
+    "/images/trends/src/2026-09-20-ildqum.jpg": "2026-09-20-ildqum"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -227,6 +235,10 @@
     "https://cdn.mos.cms.futurecdn.net/mABEZhRyByCAYrtrKFvAN-2560-80.jpg": "2026-09-19-zm0z03",
     "https://cdn.mos.cms.futurecdn.net/LpF4xUbnGd3MSxNQSqr3nU-2560-80.jpg": "2026-09-19-0nqnld",
     "https://cdn.mos.cms.futurecdn.net/tHuYbxX3Zjp9urQazWN4mk-2560-80.jpg": "2026-09-20-ze351w",
-    "https://cdn.mos.cms.futurecdn.net/MgqygDT3mc9tSC3w3feQTi-2400-80.png": "2026-09-20-zitwb0"
+    "https://cdn.mos.cms.futurecdn.net/MgqygDT3mc9tSC3w3feQTi-2400-80.png": "2026-09-20-zitwb0",
+    "https://cdn.mos.cms.futurecdn.net/maExCR5CfS6CdaP6PSiK8a-2560-80.jpg": "2026-09-20-h8mxta",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=17199&nologo=true&model=flux": "2026-09-20-zpzxot",
+    "https://image.pollinations.ai/prompt/accent%20wall%20with%20elegant%20wallpaper%20and%20panelling%2C%20interior%20design%20photography?width=1152&height=864&seed=82521&nologo=true&model=flux": "2026-09-20-i5ksyh",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=65598&nologo=true&model=flux": "2026-09-20-ildqum"
   }
 }
