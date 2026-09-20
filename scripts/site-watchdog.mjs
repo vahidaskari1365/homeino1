@@ -370,6 +370,7 @@ try {
   const WORKFLOWS = [
     { id: "magazine-daily.yml", name: "ایجنت مجله/ترند", maxAgeH: 36 },
     { id: "inspiration-daily.yml", name: "ایجنت الهام", maxAgeH: 36 },
+    { id: "recon-daily.yml", name: "گردآور اطلاعات بازاریابی (Agent-Reach)", maxAgeH: 30 },
     { id: "agentshield-weekly.yml", name: "سپر هفتگی AI", maxAgeH: 24 * 9 },
   ];
   for (const wf of WORKFLOWS) {
