@@ -82,7 +82,9 @@
     "7e4223f0b5de05da1cf2e31fd1463a5a": "2026-09-19-ivun3p",
     "2731bbcbd815e2c05e17958c2bfb0d7a": "2026-09-19-jpmrcb",
     "1b607ec842d4ed6006468151bd9f17f2": "2026-09-19-zm0z03",
-    "60abd61a3628cfc7fa0efe75cf3a569d": "2026-09-19-0nqnld"
+    "60abd61a3628cfc7fa0efe75cf3a569d": "2026-09-19-0nqnld",
+    "372cb523da492b4d561f391043f6d363": "2026-09-20-ze351w",
+    "a4dd334704ee75a7439c02cd461cb116": "2026-09-20-zitwb0"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -136,7 +138,9 @@
     "/images/trends/src/2026-09-19-ivun3p.jpg": "2026-09-19-ivun3p",
     "/images/trends/src/2026-09-19-jpmrcb.jpg": "2026-09-19-jpmrcb",
     "/images/trends/src/2026-09-19-zm0z03.jpg": "2026-09-19-zm0z03",
-    "/images/trends/src/2026-09-19-0nqnld.jpg": "2026-09-19-0nqnld"
+    "/images/trends/src/2026-09-19-0nqnld.jpg": "2026-09-19-0nqnld",
+    "/images/trends/src/2026-09-20-ze351w.jpg": "2026-09-20-ze351w",
+    "/images/trends/src/2026-09-20-zitwb0.png": "2026-09-20-zitwb0"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -221,6 +225,8 @@
     "https://image.pollinations.ai/prompt/premium%20wooden%20flooring%20in%20a%20bright%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=80623&nologo=true&model=flux": "2026-09-19-ivun3p",
     "https://cdn.mos.cms.futurecdn.net/R37zTGJPWZMtzVYp2KA7BY-2400-80.jpg": "2026-09-19-jpmrcb",
     "https://cdn.mos.cms.futurecdn.net/mABEZhRyByCAYrtrKFvAN-2560-80.jpg": "2026-09-19-zm0z03",
-    "https://cdn.mos.cms.futurecdn.net/LpF4xUbnGd3MSxNQSqr3nU-2560-80.jpg": "2026-09-19-0nqnld"
+    "https://cdn.mos.cms.futurecdn.net/LpF4xUbnGd3MSxNQSqr3nU-2560-80.jpg": "2026-09-19-0nqnld",
+    "https://cdn.mos.cms.futurecdn.net/tHuYbxX3Zjp9urQazWN4mk-2560-80.jpg": "2026-09-20-ze351w",
+    "https://cdn.mos.cms.futurecdn.net/MgqygDT3mc9tSC3w3feQTi-2400-80.png": "2026-09-20-zitwb0"
   }
 }

@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-19T17:30:15.104Z",
+  "updatedAt": "2026-09-20T09:03:17.797Z",
   "runs": [
+    {
+      "id": "run-1789894997797-kz74q",
+      "at": "2026-09-20T09:03:17.797Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 622596,
+      "summary": "4 بریف ترند جدید (دکوری و اکسسوری، دکوری و اکسسوری، دکوری و اکسسوری، حمام) + ۱ مقاله کامل مجله («تسلط روستایی در آشپزخانه و حمام با آینه‌…») — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 101,
+        "via": "zai-1",
+        "titles": [
+          "آینه‌های روستیک در آشپزخانه و حمام",
+          "ترند بازی‌های رومیزی در دکوراسیون خانه",
+          "ترند دکوراسیون بازی‌ها در خانه ۱۹۷۸",
+          "ترند ترکیب کاشی حمام"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com",
+          "idealhome.co.uk"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1789839015104-de8sb",
       "at": "2026-09-19T17:30:15.104Z",
