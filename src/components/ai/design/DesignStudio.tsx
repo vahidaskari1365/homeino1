@@ -9,19 +9,27 @@
 //   چپ: «تنظیمات» — سبک، وسایل، بودجه/دستور/SKU + CTA چسبان
 //   هیچ مرحلهٔ مخفی یا جمع‌شونده‌ای وجود ندارد؛ تحلیل عکس همیشه
 //   زیر خود عکس و روی کانواس دیده می‌شود (اشکال نسخه‌های قبل).
+// • مالک ۲۰۲۶-۰۹-۲۰: «اسکن بصری» و «پیشنهاد دکور» هر دو بخش‌های
+//   مستقل‌اند — جریان کامل در همان تب انجام می‌شود (آپلود → لیست
+//   محصولات واقعی سایت → جای‌گذاری/اعمال روی عکس کاربر) و هیچ
+//   پرشی به تب چیدمان نیست.
 // ============================================================
 import { Wand2, Search, Sparkles, PlugZap } from "lucide-react";
 import { Container, Breadcrumb } from "@/components/shared";
-import { SuggestAssistant } from "@/components/ai/SuggestAssistant";
 import { cn } from "@/lib/utils";
 import type { DesignStudio as Studio } from "./useDesignStudio";
 import { StudioSettings } from "./StudioSettings";
 import { ResultCanvas } from "./ResultCanvas";
-import { InspirationTab } from "./InspirationTab";
+import { VisualScanTab } from "./VisualScanTab";
+import { DecorSuggestTab } from "./DecorSuggestTab";
 import { RealInspirationStrip } from "./RealInspirationStrip";
+import { useVisualScan } from "./useVisualScan";
+import { useDecorPlan } from "./useDecorPlan";
 
 export function DesignStudio({ studio }: { studio: Studio }) {
-  const { tab, setTab, selectStyle, setBudget, toast, styleLabel } = studio;
+  const { tab, setTab, styleLabel } = studio;
+  const scan = useVisualScan(studio);
+  const decor = useDecorPlan(studio);
   return (
     <div className="min-h-screen bg-ivory">
       <Container className="py-6 sm:py-8">
@@ -45,9 +53,9 @@ export function DesignStudio({ studio }: { studio: Studio }) {
           ))}
         </div>
 
-        {tab === "suggest" && <SuggestAssistant onApply={(p) => { selectStyle(p.style); setBudget(p.budget); setTab("design"); toast("پیشنهاد اعمال شد"); }} onBack={() => setTab("design")} />}
+        {tab === "suggest" && <DecorSuggestTab studio={studio} decor={decor} />}
 
-        {tab === "inspiration" && <InspirationTab studio={studio} />}
+        {tab === "inspiration" && <VisualScanTab scan={scan} />}
 
         {/* grid-cols-[minmax(0,1fr)] : در موبایل ستون‌ها زیر هم می‌آیند و بدون این،
             min-content عکس‌های ذاتی‌بلند (۱۲۰۰px) کل صفحه را overflow می‌دهد. */}

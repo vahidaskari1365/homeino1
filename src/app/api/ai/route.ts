@@ -32,7 +32,7 @@ import { requireUser } from "@/lib/api/auth";
 // enough to fall back gracefully instead of a cold 504 (Hobby allows 60s).
 export const maxDuration = 60;
 
-const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice", "detect-objects", "search-images"]);
+const VALID_ACTIONS = new Set(["generate", "edit", "inpaint", "chat", "suggest", "analyze", "recommend", "understand", "pipeline", "resolve-sku", "match-products", "agent", "agent-status", "advice", "detect-objects", "search-images", "visual-scan", "decor-plan"]);
 const IMAGE_ACTIONS = new Set(["generate", "edit", "inpaint"]);
 /** Actions that run an image generation — protected against duplicates. */
 const GENERATIVE_ACTIONS = new Set([...IMAGE_ACTIONS, "pipeline"]);
@@ -346,6 +346,48 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
       const objects = await detectCounterparts(image, cats);
       finish("ok", { provider: objects.length ? "gemini-vision" : "fallback" });
       return json({ objects }, 200, requestId);
+    }
+
+    if (action === "visual-scan") {
+      // اسکن بصری — مالک ۲۰۲۶-۰۹-۲۰: عکس کاربر واقعاً دیده می‌شود و با
+      // مدل‌های داخل سایت (کاتالوگ زندهٔ DB → فیکسچر دمو) تطبیق داده
+      // می‌شود. غیرتولیدی و بدون اعتبار — فالبک همیشه صادقانه.
+      const image = typeof p.referenceImage === "string" ? p.referenceImage : "";
+      if (!image.startsWith("data:image/")) {
+        finish("error", { errorCode: "INVALID_REQUEST" });
+        return json({ error: "عکسی برای اسکن ارسال نشد", code: "INVALID_REQUEST" }, 400, requestId);
+      }
+      try {
+        const { scanCatalogForImage } = await import("@/services/ai/visualScan");
+        const result = await scanCatalogForImage({ referenceImage: image });
+        finish(result.visionAvailable ? "ok" : "degraded", { provider: "visual-scan" });
+        return json({ ...result, ...(result.visionAvailable ? {} : { _degraded: true }) }, 200, requestId);
+      } catch (err) {
+        console.error("[visual-scan] failed:", err instanceof Error ? err.message : err);
+        finish("degraded", { provider: "visual-scan", errorCode: "SCAN_UNAVAILABLE" });
+        return json({ error: "اسکن بصری همین الان ممکن نشد — دوباره تلاش کن", code: "SCAN_UNAVAILABLE" }, 502, requestId);
+      }
+    }
+
+    if (action === "decor-plan") {
+      // پیشنهاد دکور مستقل — تحلیل واقعی عکس + پیشنهادهای اجرایی که هر
+      // کدام به محصولات واقعی کاتالوگ گره می‌خورند (هرگز تصادفی).
+      const image = typeof p.referenceImage === "string" ? p.referenceImage : "";
+      if (!image.startsWith("data:image/")) {
+        finish("error", { errorCode: "INVALID_REQUEST" });
+        return json({ error: "عکسی برای تحلیل ارسال نشد", code: "INVALID_REQUEST" }, 400, requestId);
+      }
+      const style = typeof p.style === "string" ? p.style : undefined;
+      try {
+        const { buildDecorPlan } = await import("@/services/ai/decorPlan");
+        const result = await buildDecorPlan({ referenceImage: image, style });
+        finish(result.visionAvailable ? "ok" : "degraded", { provider: "decor-plan" });
+        return json({ ...result, ...(result.visionAvailable ? {} : { _degraded: true }) }, 200, requestId);
+      } catch (err) {
+        console.error("[decor-plan] failed:", err instanceof Error ? err.message : err);
+        finish("degraded", { provider: "decor-plan", errorCode: "DECOR_PLAN_UNAVAILABLE" });
+        return json({ error: "ساخت پیشنهاد دکور همین الان ممکن نشد — دوباره تلاش کن", code: "DECOR_PLAN_UNAVAILABLE" }, 502, requestId);
+      }
     }
 
     // ---- Pipeline actions: LLM Service + Orali pipeline (provider-agnostic) ----

@@ -25,6 +25,7 @@ export type { OverlayRegion, OverlayBox, OraliEditRequest, OraliEditResult, Oral
 export type { PipelineInput, DesignInstruction, PipelineResult, PipelineOutcome, ChangeScope } from "./pipeline";
 export { AI_PHASE_LABEL, AI_WAIT_TIPS, PIPELINE_STEPS, isBusyPhase, stepIndexForPhase } from "./states";
 export type { AiPhase, PipelineStepKey } from "./states";
+export type { VisualScanResult, ScanMatch, ScanIdentification, DecorPlanResult, DecorSuggestionPlan } from "./scanTypes";
 
 // ---- AI Engine core (Phases 2–15) — pure, client-safe ----
 export { detectScope, scopeToEditStrength, scopeToIntentType, isFullScope, scopeSummary, EDIT_SCOPE_LABELS } from "./scope";
@@ -102,5 +103,11 @@ export const aiService = {
    *  سرور کوئری را ترجمه + گارد دامنه می‌کند و کش ۶ساعته دارد. */
   searchImages: (input: { query: string; num?: number }) =>
     callAiServer<{ images: { imageUrl: string; title: string; source: string; link?: string; width?: number; height?: number }[]; configured: boolean }>("search-images", input),
+  /** اسکن بصری — عکسِ کالا با مدل‌های داخل سایت تطبیق داده می‌شود (هرگز تصادفی). */
+  visualScan: (input: { referenceImage: string }) =>
+    callAiServer<import("./scanTypes").VisualScanResult>("visual-scan", input),
+  /** پیشنهاد دکور مستقل — تحلیل عکس خانه + پیشنهادهای گره‌خورده به محصولات واقعی. */
+  decorPlan: (input: { referenceImage: string; style?: string }) =>
+    callAiServer<import("./scanTypes").DecorPlanResult>("decor-plan", input),
 };
 

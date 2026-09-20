@@ -54,7 +54,12 @@ export function useDesignStudio() {
   const sp = useSearchParams();
   const presetSlug = sp.get("product");
   const router = useRouter();
-  const [tab, setTab] = useState<"design" | "inspiration" | "suggest">(sp.get("tab") === "inspiration" ? "inspiration" : "design");
+  // ?tab= هر سه تب را می‌شناسد — پیشنهاد دکور و اسکن بصری بخش‌های مستقل‌اند
+  // و ورودی عمیق (لینک/بوکمارک) باید مستقیم به همان بخش برسد.
+  const [tab, setTab] = useState<"design" | "inspiration" | "suggest">(() => {
+    const t = sp.get("tab");
+    return t === "inspiration" || t === "suggest" ? t : "design";
+  });
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [presetProduct, setPresetProduct] = useState<Product | null>(null);
   const [style, setStyle] = useState("modern");

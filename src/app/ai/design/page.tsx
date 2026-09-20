@@ -6,7 +6,7 @@ import { DesignStudio } from "@/components/ai/design/DesignStudio";
 
 /** Orchestrator only — state lives in useDesignStudio, every visual block lives
  *  in src/components/ai/design/* (RoomUploader, StylePicker, ItemPicker,
- *  BudgetStep, GenerationProgress, ResultCanvas, InspirationTab, …). */
+ *  BudgetStep, GenerationProgress, ResultCanvas, VisualScanTab, …). */
 function DesignInner() {
   const studio = useDesignStudio();
   return <DesignStudio studio={studio} />;
