@@ -1,0 +1,54 @@
+name: recon-daily
+
+# گردآور روزانه اطلاعات بازاریابی هومینو — بر پایهٔ مسیرهای Agent-Reach
+# (Exa MCP رایگان/بی‌کلید + RSS مستقیم + API عمومی پینترست + صفحه‌خوانی چند-مسیری)
+# خروجی‌ها:
+#   • recon/YYYY-MM-DD.md — گزارش فارسی (ترند، فرش/روشنایی/وسایل، پینترست، رقبا، منشن‌ها، اینفلوئنسر)
+#   • recon/pinterest.json + latest.json
+#   • برداشت‌های پینترست مستقیم به scripts/inspiration-pool.json اضافه می‌شود (تغذیهٔ ایجنت الهام)
+# زیر نظر watchdog-daily: اگر گزارش تازه (≤۳۰ ساعت) نباشد، ایسوی هشدار ساخته می‌شود.
+
+on:
+  schedule:
+    - cron: "30 4 * * *"   # ۰۸:۰۰ تهران — قبل از نوبت عصر ایجنت‌های محتوا
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: recon-daily
+  cancel-in-progress: true
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install mcporter (پل MCP برای Exa)
+        run: npm install -g mcporter
+
+      - name: Run recon pipeline
+        run: python3 scripts/recon/recon_daily.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "homeino-recon-bot"
+          git config user.email "bot@homeino.ir"
+          if [[ -n "$(git status --porcelain recon scripts/inspiration-pool.json)" ]]; then
+            git add recon scripts/inspiration-pool.json
+            git commit -m "recon: daily marketing intel + pinterest harvest (auto)"
+            for i in 1 2 3; do
+              if git pull --rebase origin main; then git push && break; fi
+              git rebase --abort 2>/dev/null || true
+              echo "push retry $i failed — re-pulling"; sleep 15
+            done
+          else
+            echo "No recon changes today — nothing to commit."
+          fi

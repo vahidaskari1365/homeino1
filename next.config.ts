@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
       // تصاویر واقعی محصولات/کاربران (ایجنت استانداردسازی، پین‌ها، آواتار)
       // روی باکت‌های عمومی سوپابیس ذخیره می‌شوند — وایلدکارد برای ref پروژه
       { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "i.pinimg.com" }, // برداشت پینترست ایجنت الهام (hotlink تأیید شده)
     ],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 414, 640, 768, 1024, 1280, 1440, 1920],

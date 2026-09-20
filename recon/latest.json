@@ -1,0 +1,27 @@
+{
+ "generated_at": "2026-09-20T09:53:02.625799+00:00",
+ "status": "ok",
+ "routes": {
+  "trends": [
+   "exa"
+  ],
+  "mentions": [
+   "exa"
+  ]
+ },
+ "duration_s": 70.0,
+ "sections": {
+  "trends": 20,
+  "topics": 25,
+  "pinterest": {
+   "items": 25,
+   "added_to_pool": 0
+  },
+  "feeds": 10,
+  "competitors": 2,
+  "mentions": 20,
+  "influencer_items": 14,
+  "influencer_handles": 3
+ },
+ "generated_at_epoch": 1789898052
+}
