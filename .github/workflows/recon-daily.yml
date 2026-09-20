@@ -1,7 +1,8 @@
 name: recon-daily
 
 # گردآور روزانه اطلاعات بازاریابی هومینو — بر پایهٔ مسیرهای Agent-Reach
-# (Exa MCP رایگان/بی‌کلید + RSS مستقیم + API عمومی پینترست + صفحه‌خوانی چند-مسیری)
+# (Exa MCP با HTTP خام پایتون — بی‌کلید/بی‌وابستگی + RSS مستقیم + API عمومی پینترست)
+# نکته: نیازی به mcporter/node نیست؛ فقط python3 استاندارد.
 # خروجی‌ها:
 #   • recon/YYYY-MM-DD.md — گزارش فارسی (ترند، فرش/روشنایی/وسایل، پینترست، رقبا، منشن‌ها، اینفلوئنسر)
 #   • recon/pinterest.json + latest.json
@@ -26,13 +27,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install mcporter (پل MCP برای Exa)
-        run: npm install -g mcporter
 
       - name: Run recon pipeline
         run: python3 scripts/recon/recon_daily.py

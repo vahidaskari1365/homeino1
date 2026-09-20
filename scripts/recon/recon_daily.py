@@ -4,7 +4,8 @@
 HOMEINO — گردآور روزانه اطلاعات بازاریابی (recon-daily)
 بر پایهٔ مسیرهای Agent-Reach (فلسفه: چند-بک‌اند + fallback، همهٔ بک‌ندها رایگان):
 
-  جستجوی معنایی:  Exa via mcporter MCP (رایگان، بی‌کلید)  →  fallback: DuckDuckGo HTML
+  جستجوی معنایی:  Exa MCP — HTTP خام (بی‌کلید، بدون وابستگی)
+                  →  fallback: mcporter CLI  →  fallback: DuckDuckGo HTML
   صفحه‌خوانی:     دریافت مستقیم با UA مرورگر           →  fallback: Jina Reader (r.jina.ai)
   فید:            RSS/Atom با xml.etree (استاندارد پایتون — بدون pip install)
   موضوعات بروز:   فرش، روشنایی، مبل، وسایل خانه — تغذیهٔ مجله/ترند
@@ -80,7 +81,12 @@ SPACE_EN = {
     "ناهارخوری": "dining room",
     "بیرونی": "outdoor patio balcony",
 }
-PINTEREST_TOPICS = ["rug carpet", "lighting lamp", "sofa furniture", "decor accessories", "curtains textile"]
+PINTEREST_TOPICS = [
+    "rug carpet", "lighting lamp", "sofa furniture", "decor accessories", "curtains textile",
+    "coffee table styling", "bedroom headboard", "kitchen backsplash", "bathroom vanity",
+    "wall art gallery", "indoor plants corner", "bookshelf styling", "mirror decor",
+    "dining table centerpiece", "entryway console", "ceiling design", "floor tile pattern",
+]
 POOL_FILE = os.path.join(ROOT, "scripts/inspiration-pool.json")
 GEN_FILE = os.path.join(ROOT, "src/data/inspirations.generated.json")
 PINIMG_OK = re.compile(r"^https://i\.pinimg\.com/[0-9a-zA-Z]+x?/[0-9a-zA-Z/]+\.(jpg|png|jpeg|webp)$", re.I)
@@ -169,44 +175,103 @@ def clean(s: str, limit: int = 220) -> str:
 
 
 # ---------------------------------------------------------------- جستجوها ---
-_exa_ready = None
+EXA_MCP = "https://mcp.exa.ai/mcp"
+_exa_sid = {"v": None}
+_exa_ready = None  # وضعیت fallback مربوط به mcporter (سه‌حالته)
 
 
-def _exa_setup():
+def _sse_data(text: str) -> dict:
+    """از پاسخ SSE (event/data)، آخرین بلوک data معتبر را JSON برگردان"""
+    for line in reversed(text.splitlines()):
+        if line.startswith("data: "):
+            try:
+                return json.loads(line[6:])
+            except Exception:
+                continue
+    return {}
+
+
+def _exa_post(body: dict, sid: str = "", timeout: int = 60):
+    headers = {"Content-Type": "application/json",
+               "Accept": "application/json, text/event-stream", "User-Agent": UA}
+    if sid:
+        headers["Mcp-Session-Id"] = sid
+    req = urllib.request.Request(EXA_MCP, data=json.dumps(body).encode("utf-8"),
+                                 headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.status, {k.lower(): v for k, v in resp.headers.items()}, \
+            resp.read(2_000_000).decode("utf-8", "replace")
+
+
+def _exa_call(query: str, num: int) -> str:
+    """tools/call روی MCP HTTP خام → متن بلوک‌های Title/URL/Highlights"""
+    sid = _exa_sid["v"]
+    if not sid:
+        body = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                "params": {"protocolVersion": "2024-11-05", "capabilities": {},
+                           "clientInfo": {"name": "homeino-recon", "version": "1.0"}}}
+        _, headers, _ = _exa_post(body, timeout=30)
+        sid = headers.get("mcp-session-id", "")
+        if not sid:
+            raise RuntimeError("exa: no session id")
+        _exa_post({"jsonrpc": "2.0", "method": "notifications/initialized"}, sid, timeout=20)
+        _exa_sid["v"] = sid
+    call = {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+            "params": {"name": "web_search_exa",
+                       "arguments": {"query": query, "numResults": int(num)}}}
+    _, _, text = _exa_post(call, sid, timeout=90)
+    data = _sse_data(text)
+    if data.get("error"):
+        raise RuntimeError(str(data["error"])[:100])
+    blobs = [c.get("text", "") for c in (data.get("result", {}).get("content") or [])
+             if isinstance(c, dict)]
+    return "\n".join(blobs)
+
+
+def _exa_mcporter(query: str, num: int) -> str:
+    """fallback دوم: Exa از طریق mcporter CLI (اگر نصب/قابل‌تنظیم باشد)"""
     global _exa_ready
-    if _exa_ready is not None:
-        return _exa_ready
+    if _exa_ready is False:
+        return ""
     try:
         probe = subprocess.run(["mcporter", "list", "exa"], capture_output=True, text=True, timeout=30)
         _exa_ready = probe.returncode == 0
-    except FileNotFoundError:
-        _exa_ready = False
-        return _exa_ready
-    if not _exa_ready:
-        try:
+        if not _exa_ready:
             subprocess.run(["mcporter", "config", "add", "exa", "https://mcp.exa.ai/mcp", "--scope", "home"],
                            capture_output=True, text=True, timeout=30)
             _exa_ready = subprocess.run(["mcporter", "list", "exa"], capture_output=True, text=True,
-                                        timeout=30).returncode == 0
-        except Exception:
-            _exa_ready = False
-    return _exa_ready
-
-
-def exa_search(query: str, num: int = 5):
-    """Exa via mcporter → لیست {title,url,published,highlight}. در شکست: None"""
-    if not _exa_setup():
-        return None
-    payload = json.dumps({"query": query, "numResults": str(num)})
-    try:
+                                        timeout=60).returncode == 0
+        if not _exa_ready:
+            log(f"  ⚠ mcporter: exa آماده نیست ({probe.stderr.strip()[:60] or 'unknown'})")
+            return ""
         r = subprocess.run(
-            ["mcporter", "call", "exa.web_search_exa", "--output", "json", "--args", payload],
+            ["mcporter", "call", "exa.web_search_exa", "--output", "json", "--args",
+             json.dumps({"query": query, "numResults": str(num)})],
             capture_output=True, text=True, timeout=EXA_TIMEOUT_S)
         data = json.loads(r.stdout or "{}")
         blobs = [c.get("text", "") for c in data.get("content", []) if isinstance(c, dict)]
-        text = "\n".join(blobs)
+        return "\n".join(blobs)
     except Exception as e:
-        log(f"  ⚠ exa fail: {type(e).__name__}: {str(e)[:80]}")
+        log(f"  ⚠ mcporter fail: {type(e).__name__}: {str(e)[:80]}")
+        return ""
+
+
+def exa_search(query: str, num: int = 5):
+    """Exa → لیست {title,url,published,highlight}؛ HTTP خام → mcporter → None"""
+    text = ""
+    for attempt in (1, 2):
+        try:
+            text = _exa_call(query, num)
+            break
+        except Exception as e:
+            if attempt == 1:
+                _exa_sid["v"] = None  # احتمالاً نشست منقضی شده — از نو
+                log(f"  ↻ exa retry ({type(e).__name__}: {str(e)[:60]})")
+            else:
+                log(f"  ⚠ exa-http fail: {type(e).__name__}: {str(e)[:80]}")
+    if not text:
+        text = _exa_mcporter(query, num)
+    if not text:
         return None
     entries = []
     for block in re.split(r"\n(?=Title: )", text):
@@ -556,7 +621,7 @@ def render_md(data: dict) -> str:
 
     L += ["", "## ⑧ پوشش و محدودیت‌ها", "",
           "- **اینستاگرام عمیق** (پست‌های اخیر رقبا، تعامل، دایرکت): نیازمند OpenCLI روی دسکتاپ با اکانت اختصاصی — فاز B. جریان فعلی فقط کشف سطح‌بالا با Exa است.",
-          "- **پینترست**: استخراج og:image از صفحات پین؛ i.pinimg.com به وایت‌لیست next/image اضافه شده و هات‌لینکش تست شده است.",
+          "- **پینترست**: کشف پین با Exa (site:pinterest.com) + تصویر/توضیح از API عمومی pidgets؛ i.pinimg.com در وایت‌لیست next/image است و هات‌لینکش تست شده.",
           "- فهرست کوئری‌ها/فیدها/رقبا/موضوعات: بالای فایل `scripts/recon/recon_daily.py` — قابل ویرایش.", ""]
     return "\n".join(L)
 
