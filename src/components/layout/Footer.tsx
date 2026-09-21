@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { AtSign, Send, Globe, Gift, Check, Phone, Mail } from "lucide-react";
 import { Container } from "../ui/primitives";
-import { LogoMark } from "@/components/ui/LogoMark";
 import { categories } from "@/data/categories";
 import { subscribeNewsletter } from "@/lib/commerceClient";
 import { useUi } from "@/stores/useApp";
@@ -68,9 +68,15 @@ export function Footer() {
 
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <LogoMark variant="dark" className="h-9 w-9 shrink-0" />
-              <span className="font-display text-xl font-black text-cream">Home<span className="text-terracotta-soft">ino</span></span>
+            <Link href="/" aria-label="Homeino — هایومینو" className="inline-block">
+              {/* لوگوی فارسی برند روی پلاک کرم — خوانا روی فوتر تیره */}
+              <Image
+                src="/brand/logo-fa-plate.png"
+                alt="هایومینو — Homeino"
+                width={1732}
+                height={604}
+                className="h-14 w-auto rounded-xl"
+              />
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-6 text-cream/60">
               هر چیزی که برای ساختن خانه‌ای که دوست داری لازم داری، در یک مکان. الهام، محصول، فروشگاه و طراحی با هومینو استودیو.

@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogoMark } from "@/components/ui/LogoMark";
 import {
   AnimatePresence,
   motion,
@@ -408,16 +408,20 @@ export function Header() {
               : "border-clay/30 bg-cream/55 shadow-[var(--shadow-soft)] backdrop-blur-md"
           )}
         >
-          {/* Logo */}
+          {/* Logo — وردمارک سه‌بعدی برند (انگلیسی) */}
           <Link
             href="/"
-            className="group flex shrink-0 items-center gap-2.5 rounded-full ps-1"
+            className="group flex shrink-0 items-center rounded-full ps-1"
             aria-label="Homeino — خانه"
           >
-            <LogoMark variant="light" className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover:scale-105" />
-            <span className="font-display text-xl font-black tracking-tight text-ink">
-              Home<span className="text-gold-gradient">ino</span>
-            </span>
+            <Image
+              src="/brand/logo-word-en.png"
+              alt="Homeino — دکوراسیون و طراحی داخلی"
+              width={2009}
+              height={603}
+              priority
+              className="h-9 w-auto transition-transform duration-500 group-hover:scale-105 sm:h-10 lg:h-11"
+            />
           </Link>
 
           {/* Desktop nav */}
