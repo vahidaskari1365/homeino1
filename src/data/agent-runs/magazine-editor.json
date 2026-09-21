@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-21T09:30:49.778Z",
+  "updatedAt": "2026-09-21T16:05:46.895Z",
   "runs": [
+    {
+      "id": "run-1790006746895-1vyyp",
+      "at": "2026-09-21T16:05:46.895Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 540595,
+      "summary": "4 بریف ترند جدید (آشپزخانه، مبلمان، حمام، دکوری و اکسسوری) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 117,
+        "via": "zai-1",
+        "titles": [
+          "ترند آشپزخانه ارزان با ظاهر لوکس",
+          "مبلمان هماهنگ‌نشده، زیبایی‌شناسی ۲۰۲۷",
+          "روند بازسازی حمام و آشپزخانه در اروپا قوی است",
+          "کالکشن دیواری آرت دکو با طرح‌های طلایی و تیره"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1789983049778-8q8rd",
       "at": "2026-09-21T09:30:49.778Z",
