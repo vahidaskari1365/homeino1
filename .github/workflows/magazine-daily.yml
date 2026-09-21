@@ -53,6 +53,11 @@ jobs:
           OMNIROUTE_BASE_URL: http://localhost:20128/v1
         run: node scripts/magazine-daily.mjs
 
+      # گیت ساختاری کاور (بدون بینایی): کاور استخر/مشترک/تکراری → تعویض یا پرچم
+      # QA بینایی عمیق (trend-cover-repair) دوره‌ای در سندباکس اجرا می‌شود
+      - name: Structural cover QA
+        run: node scripts/lib/visual-qa.mjs --fix || true
+
       - name: Commit and push if changed
         run: |
           git config user.name "homeino-magazine-bot"

@@ -259,9 +259,18 @@ async function downloadSourceImage(imgUrl, destBase) {
   } catch { return null; }
 }
 
+/** مقالهٔ سلبریتی/چهره‌ها/اخبار — og معمولاً عکس آدم است نه دکوراسیون (فیکس ۲۰۲۶-۰۹-۲۱: کاور جان لجند!) */
+const CELEB_SOURCE_RE = /(celebrit|\/celeb\/|\/people\/|\/stars?\/|\/news\/|\/interview|[-\/]wife|[-\/]husband|girlfriend|boyfriend|divorce|married)/i;
+
 /** کل زنجیره: URL منبع → og:image → فایل محلی */
 async function coverFromSource(sourceUrl, slug) {
   const real = await resolveRealSourceUrl(sourceUrl);
+  try {
+    if (CELEB_SOURCE_RE.test(new URL(real).pathname)) {
+      console.log("  cover ✗ منبع سلبریتی/اخبار — og استفاده نمی‌شود (خطر عکس چهره)");
+      return { cover: null, realUrl: real };
+    }
+  } catch {}
   const html = real === sourceUrl ? null : await fetchText(real, 11000);
   const og = extractOgImage(html, real);
   if (!og) return { cover: null, realUrl: real };
@@ -310,8 +319,9 @@ async function topicCover(query, slug, usedUrls) {
  *   ⑥ null → استخر جنریک با پرچم coverSource:"pool" (ناظر سایت آلارم می‌دهد)
  */
 async function smartCover(title, category, slug, { og, usedUrls }) {
-  // ① og خود منبع
-  if (og && !looksLikeNonPhoto(og)) {
+  // ① og خود منبع — اما og سلبریتی/اخبار هرگز (عکس آدم ≠ دکوراسیون)
+  const ogIsCeleb = (() => { try { return og && CELEB_SOURCE_RE.test(new URL(og).pathname); } catch { return false; } })();
+  if (og && !ogIsCeleb && !looksLikeNonPhoto(og)) {
     const r = await downloadCoverImage(og, slug, coverReg, liveBytesIndex);
     if (!r.error) return { ...r, via: "source" };
   }

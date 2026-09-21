@@ -89,7 +89,27 @@
     "bf639aa821c676cfecc852e648ef76db": "2026-09-20-zpzxot",
     "918b3ce3873e5640acd228473de0d626": "2026-09-20-i5ksyh",
     "98761f205dba33f8e20bdd9f5b132a76": "2026-09-20-ildqum",
-    "70c5e3a9352b2f9355e5ac8b34a74e7a": "2026-09-20-vvjimq"
+    "70c5e3a9352b2f9355e5ac8b34a74e7a": "2026-09-20-vvjimq",
+    "235809ccd5ab3cf0488640b31dd1787b": "2026-09-20-26o5ui",
+    "026045972eb8813cffd40a20745f8639": "2026-09-20-kjkqeq",
+    "4057c024e1cd4d9e5b066fb4963d731e": "2026-09-20-0fcfm4",
+    "158ca1cd47b38f8cc134b71573b52a37": "2026-09-19-dbmp1g",
+    "81fc0eb97ee33bea32e6ac83e44c946f": "2026-09-19-3y34um",
+    "0580b91f74d01f51fc66add38c6482f8": "2026-09-19-bm29tb",
+    "5e116865db4e468a9fe36bf219775623": "/images/trends/src/2026-09-20-h8mxta.jpg",
+    "cc847ef6c7ec1efeb7a7738071bb7ece": "/images/trends/src/2026-09-20-ze351w.jpg",
+    "b5b5a2127c7d412786f4a95e53a60317": "/images/trends/src/2026-09-20-zitwb0.jpg",
+    "5cc95cfb2a63516bea194c095afe9917": "2026-09-19-3cjngv",
+    "5f91c37b44e2230320f31b4fc8d56258": "2026-09-19-j54wll",
+    "e36d9af4e9df451bcbb401fe3ad97c21": "2026-09-19-jpmrcb",
+    "9bee33a55806d453e6fbb0d7b018e22b": "2026-09-19-zm0z03",
+    "a2053e882700090c99c9224c74bfe97e": "2026-09-19-j6l6mw",
+    "48a20794e81caa0598b9b223f924a40a": "2026-09-19-ivun3p",
+    "fba53098aeb66e45df770206efe0df0e": "2026-09-18-urban-utility-suv",
+    "0bb58df82340fbee10f5cd097b51b811": "2026-09-18-ci5t88",
+    "8f837b59b2df1989ea633adeda1e9d05": "2026-09-18-k7vdcq",
+    "7ffa0e0ba7efe8310e37c74a92ec22ba": "2026-09-20-0fcfm4",
+    "080f2ee48e8ca1d25b509d4b4aa4f12b": "2026-09-18-rlvgv1"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -144,13 +164,31 @@
     "/images/trends/src/2026-09-19-jpmrcb.jpg": "2026-09-19-jpmrcb",
     "/images/trends/src/2026-09-19-zm0z03.jpg": "2026-09-19-zm0z03",
     "/images/trends/src/2026-09-19-0nqnld.jpg": "2026-09-19-0nqnld",
-    "/images/trends/src/2026-09-20-ze351w.jpg": "2026-09-20-ze351w",
+    "/images/trends/src/2026-09-20-ze351w.jpg": {
+      "md5": "cc847ef6c7ec1efeb7a7738071bb7ece",
+      "slug": "2026-09-20-ze351w"
+    },
     "/images/trends/src/2026-09-20-zitwb0.png": "2026-09-20-zitwb0",
-    "/images/trends/src/2026-09-20-h8mxta.jpg": "2026-09-20-h8mxta",
+    "/images/trends/src/2026-09-20-h8mxta.jpg": {
+      "md5": "5e116865db4e468a9fe36bf219775623",
+      "slug": "2026-09-20-h8mxta"
+    },
     "/images/trends/src/2026-09-20-zpzxot.jpg": "2026-09-20-zpzxot",
     "/images/trends/src/2026-09-20-i5ksyh.jpg": "2026-09-20-i5ksyh",
     "/images/trends/src/2026-09-20-ildqum.jpg": "2026-09-20-ildqum",
-    "/images/trends/src/2026-09-20-vvjimq.jpg": "2026-09-20-vvjimq"
+    "/images/trends/src/2026-09-20-vvjimq.jpg": "2026-09-20-vvjimq",
+    "/images/trends/src/2026-09-20-26o5ui.jpg": "2026-09-20-26o5ui",
+    "/images/trends/src/2026-09-20-kjkqeq.jpg": "2026-09-20-kjkqeq",
+    "/images/trends/src/2026-09-20-0fcfm4.jpg": "2026-09-20-0fcfm4",
+    "/images/trends/src/2026-09-19-dbmp1g.jpg": "2026-09-19-dbmp1g",
+    "/images/trends/src/2026-09-19-3y34um.jpg": "2026-09-19-3y34um",
+    "/images/trends/src/2026-09-19-bm29tb.jpg": "2026-09-19-bm29tb",
+    "/images/trends/src/2026-09-20-zitwb0.jpg": {
+      "md5": "b5b5a2127c7d412786f4a95e53a60317",
+      "slug": "2026-09-20-zitwb0"
+    },
+    "/images/trends/src/2026-09-19-3cjngv.jpg": "2026-09-19-3cjngv",
+    "/images/trends/src/2026-09-19-j54wll.jpg": "2026-09-19-j54wll"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -242,6 +280,23 @@
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=17199&nologo=true&model=flux": "2026-09-20-zpzxot",
     "https://image.pollinations.ai/prompt/accent%20wall%20with%20elegant%20wallpaper%20and%20panelling%2C%20interior%20design%20photography?width=1152&height=864&seed=82521&nologo=true&model=flux": "2026-09-20-i5ksyh",
     "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=65598&nologo=true&model=flux": "2026-09-20-ildqum",
-    "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=50585&nologo=true&model=flux": "2026-09-20-vvjimq"
+    "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=50585&nologo=true&model=flux": "2026-09-20-vvjimq",
+    "https://image.pollinations.ai/prompt/Soft%20ceiling%20and%20wall%20lighting%2C%20modern%20interior%20design%2C%20warm%20ambiance%2C%20realistic%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=86426&nologo=true&model=flux": "2026-09-20-26o5ui",
+    "https://image.pollinations.ai/prompt/Rustic%20mirrors%20in%20kitchen%20and%20bathroom%2C%20realistic%20interior%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=141837&nologo=true&model=flux": "2026-09-20-kjkqeq",
+    "https://image.pollinations.ai/prompt/Modern%20board%20game%20themed%20interior%20design%20with%20elegant%20display%20shelves%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=146884&nologo=true&model=flux": "2026-09-20-0fcfm4",
+    "https://image.pollinations.ai/prompt/Autumn%20cozy%20lighting%2C%20warm%20small%20fixtures%2C%20realistic%20interior%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=84905&nologo=true&model=flux": "2026-09-19-dbmp1g",
+    "https://image.pollinations.ai/prompt/Modern%20Persian%20rug%20centerpiece%20in%20London%20design%20festival%20interior%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=81361&nologo=true&model=flux": "2026-09-19-3y34um",
+    "https://image.pollinations.ai/prompt/Eco-friendly%20sustainable%20interior%20design%20with%20natural%20lighting%20and%20modern%20fixtures%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=76882&nologo=true&model=flux": "2026-09-19-bm29tb",
+    "https://image.pollinations.ai/prompt/Halloween%20and%20Christmas%20gift%20display%20in%20a%20cozy%20general%20store%20interior%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=24757&nologo=true&model=flux": "2026-09-19-3cjngv",
+    "https://image.pollinations.ai/prompt/Golden%20arrow%20wall%20art%20under%2010k%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=78880&nologo=true&model=flux": "2026-09-19-j54wll",
+    "https://image.pollinations.ai/prompt/Minimalist%20white%20chair%20in%20warm%20interior%20decor%2C%202027%20trend%2C%20realistic%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=60389&nologo=true&model=flux": "2026-09-19-jpmrcb",
+    "https://image.pollinations.ai/prompt/Minimalist%20interior%20design%20in%20celebrity%20home%2C%20elegant%20simplicity%2C%20realistic%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=44274&nologo=true&model=flux": "2026-09-19-zm0z03",
+    "https://image.pollinations.ai/prompt/Modern%20Persian%20kitchen%20with%20soft%20lighting%20and%20minimalist%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=119051&nologo=true&model=flux": "2026-09-19-j6l6mw",
+    "https://image.pollinations.ai/prompt/Elegant%20kitchen%20flooring%20to%20boost%20home%20value%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=104597&nologo=true&model=flux": "2026-09-19-ivun3p",
+    "https://image.pollinations.ai/prompt/Modern%20urban%20SUV%20interior%20with%20minimalist%20design%20and%20utility%20features%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=131880&nologo=true&model=flux": "2026-09-18-urban-utility-suv",
+    "https://image.pollinations.ai/prompt/Affordable%20table%20lamps%20on%20a%20modern%20autumn-themed%20desk%20with%20warm%20lighting%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=109560&nologo=true&model=flux": "2026-09-18-ci5t88",
+    "https://image.pollinations.ai/prompt/Realistic%20room%20with%20peel-and-stick%20wall%20panels%2C%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=94147&nologo=true&model=flux": "2026-09-18-k7vdcq",
+    "https://image.pollinations.ai/prompt/Cozy%20living%20room%20with%20elegant%20board%20game%20display%20shelves%20and%20vintage%20game%20pieces%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=137381&nologo=true&model=flux": "2026-09-20-0fcfm4",
+    "https://image.pollinations.ai/prompt/Modern%20maximalist%20decorative%20rug%20in%20luxurious%20interior%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=143475&nologo=true&model=flux": "2026-09-18-rlvgv1"
   }
 }
