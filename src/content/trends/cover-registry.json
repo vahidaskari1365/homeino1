@@ -109,7 +109,9 @@
     "0bb58df82340fbee10f5cd097b51b811": "2026-09-18-ci5t88",
     "8f837b59b2df1989ea633adeda1e9d05": "2026-09-18-k7vdcq",
     "7ffa0e0ba7efe8310e37c74a92ec22ba": "2026-09-20-0fcfm4",
-    "080f2ee48e8ca1d25b509d4b4aa4f12b": "2026-09-18-rlvgv1"
+    "080f2ee48e8ca1d25b509d4b4aa4f12b": "2026-09-18-rlvgv1",
+    "24935211611893a192ca8b0ba2376617": "2026-09-21-qtqvpa",
+    "425b8a00ee150e22f7cf9452d4a39478": "2026-09-21-nf1szp"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -188,7 +190,9 @@
       "slug": "2026-09-20-zitwb0"
     },
     "/images/trends/src/2026-09-19-3cjngv.jpg": "2026-09-19-3cjngv",
-    "/images/trends/src/2026-09-19-j54wll.jpg": "2026-09-19-j54wll"
+    "/images/trends/src/2026-09-19-j54wll.jpg": "2026-09-19-j54wll",
+    "/images/trends/src/2026-09-21-qtqvpa.jpg": "2026-09-21-qtqvpa",
+    "/images/trends/src/2026-09-21-nf1szp.jpg": "2026-09-21-nf1szp"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -297,6 +301,8 @@
     "https://image.pollinations.ai/prompt/Affordable%20table%20lamps%20on%20a%20modern%20autumn-themed%20desk%20with%20warm%20lighting%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=109560&nologo=true&model=flux": "2026-09-18-ci5t88",
     "https://image.pollinations.ai/prompt/Realistic%20room%20with%20peel-and-stick%20wall%20panels%2C%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=94147&nologo=true&model=flux": "2026-09-18-k7vdcq",
     "https://image.pollinations.ai/prompt/Cozy%20living%20room%20with%20elegant%20board%20game%20display%20shelves%20and%20vintage%20game%20pieces%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=137381&nologo=true&model=flux": "2026-09-20-0fcfm4",
-    "https://image.pollinations.ai/prompt/Modern%20maximalist%20decorative%20rug%20in%20luxurious%20interior%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=143475&nologo=true&model=flux": "2026-09-18-rlvgv1"
+    "https://image.pollinations.ai/prompt/Modern%20maximalist%20decorative%20rug%20in%20luxurious%20interior%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=143475&nologo=true&model=flux": "2026-09-18-rlvgv1",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=89230&nologo=true&model=flux": "2026-09-21-qtqvpa",
+    "https://cdn.mos.cms.futurecdn.net/HNRxqbvySkFSDj9wkZSALf-2560-80.jpg": "2026-09-21-nf1szp"
   }
 }

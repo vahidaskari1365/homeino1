@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-20T17:44:09.426Z",
+  "updatedAt": "2026-09-21T09:30:49.778Z",
   "runs": [
+    {
+      "id": "run-1789983049778-8q8rd",
+      "at": "2026-09-21T09:30:49.778Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 533427,
+      "summary": "4 بریف ترند جدید (دکوری و اکسسوری، تابلو و دیوارکوب، آشپزخانه، سبک‌ها) + ۱ مقاله کامل مجله («ویترین حمام و استخر؛ طلا و قرمز در فضای …») — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 113,
+        "via": "zai-2",
+        "titles": [
+          "تابلو فلزی وینتیج حمام و استخر",
+          "دیوارنگاری عکاسی و پادکسترها ۲۰۲۷",
+          "۶ ترند صفحه کابینت آشپزخانه که دیگر قدیمی شده‌اند",
+          "آرامشِ کرمی در دکوراسیون"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1789926249426-tu76w",
       "at": "2026-09-20T17:44:09.426Z",
