@@ -415,10 +415,10 @@ export function Header() {
             aria-label="Homeino — خانه"
           >
             <Image
-              src="/brand/logo-word-en.png"
-              alt="Homeino — دکوراسیون و طراحی داخلی"
-              width={2009}
-              height={603}
+              src="/brand/logo-fa.png"
+              alt="هایومینو — دکوراسیون و طراحی داخلی"
+              width={1782}
+              height={660}
               priority
               className="h-9 w-auto transition-transform duration-500 group-hover:scale-105 sm:h-10 lg:h-11"
             />

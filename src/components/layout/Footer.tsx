@@ -69,12 +69,12 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2">
             <Link href="/" aria-label="Homeino — هایومینو" className="inline-block">
-              {/* لوگوی فارسی برند روی پلاک کرم — خوانا روی فوتر تیره */}
+              {/* لوگوی انگلیسی برند روی پلاک کرم — خوانا روی فوتر تیره */}
               <Image
-                src="/brand/logo-fa-plate.png"
-                alt="هایومینو — Homeino"
-                width={1732}
-                height={604}
+                src="/brand/logo-en-plate.png"
+                alt="Homeino — هایومینو"
+                width={1991}
+                height={582}
                 className="h-14 w-auto rounded-xl"
               />
             </Link>
