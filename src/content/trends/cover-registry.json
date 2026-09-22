@@ -116,7 +116,9 @@
     "7244284223ac6804b99e42497dc56925": "2026-09-21-vm23zg",
     "f8fc68ccf037ad364caff04b08e2d31e": "2026-09-21-2rrxk3",
     "e31c5e0dd963d12d440f5c37e8fa0011": "2026-09-21-v4xgj3",
-    "dde3be38f3e78cc4dd7f76194dccb022": "2026-09-21-30d043"
+    "dde3be38f3e78cc4dd7f76194dccb022": "2026-09-21-30d043",
+    "8377d906eb9c45e9ada80dc3af129a6c": "2026-09-22-0lrvg3",
+    "22e822e61bb4fb9bec6ee6e3716e0efa": "2026-09-22-pkblvg"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -202,7 +204,9 @@
     "/images/trends/src/2026-09-21-vm23zg.jpg": "2026-09-21-vm23zg",
     "/images/trends/src/2026-09-21-2rrxk3.jpg": "2026-09-21-2rrxk3",
     "/images/trends/src/2026-09-21-v4xgj3.jpg": "2026-09-21-v4xgj3",
-    "/images/trends/src/2026-09-21-30d043.jpg": "2026-09-21-30d043"
+    "/images/trends/src/2026-09-21-30d043.jpg": "2026-09-21-30d043",
+    "/images/trends/src/2026-09-22-0lrvg3.jpg": "2026-09-22-0lrvg3",
+    "/images/trends/src/2026-09-22-pkblvg.jpg": "2026-09-22-pkblvg"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -318,6 +322,8 @@
     "https://cdn.mos.cms.futurecdn.net/8zCpmCrZRvDoyTeSXnXsFe-2560-80.jpg": "2026-09-21-vm23zg",
     "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=37187&nologo=true&model=flux": "2026-09-21-2rrxk3",
     "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=23531&nologo=true&model=flux": "2026-09-21-v4xgj3",
-    "https://cdn.mos.cms.futurecdn.net/LqvscnbfrZo3KMRF2AFUfn-2560-80.jpg": "2026-09-21-30d043"
+    "https://cdn.mos.cms.futurecdn.net/LqvscnbfrZo3KMRF2AFUfn-2560-80.jpg": "2026-09-21-30d043",
+    "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=46048&nologo=true&model=flux": "2026-09-22-0lrvg3",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=35146&nologo=true&model=flux": "2026-09-22-pkblvg"
   }
 }

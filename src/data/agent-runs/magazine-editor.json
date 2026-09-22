@@ -1,7 +1,33 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-21T19:43:08.368Z",
+  "updatedAt": "2026-09-22T08:59:17.834Z",
   "runs": [
+    {
+      "id": "run-1790067557834-0bq4y",
+      "at": "2026-09-22T08:59:17.834Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 433499,
+      "summary": "2 بریف ترند جدید (سبک‌ها، آشپزخانه) + ۱ مقاله کامل مجله («رنسانس کوچکی در خانه‌های ایرانی…») — از طریق zai-2",
+      "detail": {
+        "added": 2,
+        "articlesAdded": 1,
+        "total": 123,
+        "via": "zai-2",
+        "titles": [
+          "بازگشت به فضاهای کوچک و شخصی در سال ۲۰۲۷",
+          "آشپزخانه‌های ۲۰۲۷: سبک‌های پیش‌رونده هومینو"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790019788368-15m7k",
       "at": "2026-09-21T19:43:08.368Z",
