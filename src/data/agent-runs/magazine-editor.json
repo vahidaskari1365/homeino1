@@ -1,7 +1,35 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-22T14:10:19.270Z",
+  "updatedAt": "2026-09-22T18:28:01.122Z",
   "runs": [
+    {
+      "id": "run-1790101681122-j7dih",
+      "at": "2026-09-22T18:28:01.122Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 971614,
+      "summary": "4 بریف ترند جدید (تابلو و دیوارکوب، روشنایی و لوستر، دکوری و اکسسوری، حیاط و بیرونی)",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 131,
+        "via": "unknown",
+        "titles": [
+          "مینیمالیسمِ مینیمال‌ترین: نقاشی‌های خیلی زیاد روی دیوار",
+          "لوستر مینیمال مید-سنچری مدرن برای دکوراسیون",
+          "مبلمان و دکوری با تخفیف ویژه",
+          "تخفیف‌های عالی مبلمان حیاط با آمازون"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790086219270-0mikc",
       "at": "2026-09-22T14:10:19.270Z",
