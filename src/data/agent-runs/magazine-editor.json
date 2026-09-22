@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-22T08:59:17.834Z",
+  "updatedAt": "2026-09-22T14:10:19.270Z",
   "runs": [
+    {
+      "id": "run-1790086219270-0mikc",
+      "at": "2026-09-22T14:10:19.270Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 287448,
+      "summary": "4 بریف ترند جدید (کف‌پوش، آشپزخانه، مبلمان، دکوری و اکسسوری) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 127,
+        "via": "zai-2",
+        "titles": [
+          "ترند کاشی حمام ۵ سال دیگر خوش‌شانس نیست",
+          "آشپزخانه مُدولار چوب در دکوراسیون مدرن",
+          "ترند میزهای نامتقارن در اتاق نشیمن",
+          "رستوران پاریس با فضای صوتی و مبلمان قدیمی"
+        ],
+        "sources": [
+          "news.google.com",
+          "dezeen.com",
+          "designboom.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790067557834-0bq4y",
       "at": "2026-09-22T08:59:17.834Z",

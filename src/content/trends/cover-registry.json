@@ -118,7 +118,11 @@
     "e31c5e0dd963d12d440f5c37e8fa0011": "2026-09-21-v4xgj3",
     "dde3be38f3e78cc4dd7f76194dccb022": "2026-09-21-30d043",
     "8377d906eb9c45e9ada80dc3af129a6c": "2026-09-22-0lrvg3",
-    "22e822e61bb4fb9bec6ee6e3716e0efa": "2026-09-22-pkblvg"
+    "22e822e61bb4fb9bec6ee6e3716e0efa": "2026-09-22-pkblvg",
+    "eeca8445532717d3489cb1e338ae9dba": "2026-09-22-ezvouk",
+    "bb766a81d61699f8627f577bfa5b3876": "2026-09-22-8vjumc",
+    "3d244c465c905ed209da5b26b460589d": "2026-09-22-t9mat5",
+    "860fb06dff1272ebad481faac2a5d7bb": "2026-09-22-xen2xp"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -206,7 +210,11 @@
     "/images/trends/src/2026-09-21-v4xgj3.jpg": "2026-09-21-v4xgj3",
     "/images/trends/src/2026-09-21-30d043.jpg": "2026-09-21-30d043",
     "/images/trends/src/2026-09-22-0lrvg3.jpg": "2026-09-22-0lrvg3",
-    "/images/trends/src/2026-09-22-pkblvg.jpg": "2026-09-22-pkblvg"
+    "/images/trends/src/2026-09-22-pkblvg.jpg": "2026-09-22-pkblvg",
+    "/images/trends/src/2026-09-22-ezvouk.jpg": "2026-09-22-ezvouk",
+    "/images/trends/src/2026-09-22-8vjumc.jpg": "2026-09-22-8vjumc",
+    "/images/trends/src/2026-09-22-t9mat5.jpg": "2026-09-22-t9mat5",
+    "/images/trends/src/2026-09-22-xen2xp.jpg": "2026-09-22-xen2xp"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -324,6 +332,10 @@
     "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=23531&nologo=true&model=flux": "2026-09-21-v4xgj3",
     "https://cdn.mos.cms.futurecdn.net/LqvscnbfrZo3KMRF2AFUfn-2560-80.jpg": "2026-09-21-30d043",
     "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=46048&nologo=true&model=flux": "2026-09-22-0lrvg3",
-    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=35146&nologo=true&model=flux": "2026-09-22-pkblvg"
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=35146&nologo=true&model=flux": "2026-09-22-pkblvg",
+    "https://image.pollinations.ai/prompt/premium%20wooden%20flooring%20in%20a%20bright%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=33272&nologo=true&model=flux": "2026-09-22-ezvouk",
+    "https://static.dezeen.com/uploads/2026/06/modular-kitchens-vermland-dezeen-showroom_dezeen_2364_hero_0.jpg": "2026-09-22-8vjumc",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=92718&nologo=true&model=flux": "2026-09-22-t9mat5",
+    "https://www.designboom.com/twitterimages/uploads/2026/09/sobo-paris-listening-restaurant-oak-vintage-furniture-acoustic-panels-designboom-1200.jpg": "2026-09-22-xen2xp"
   }
 }
