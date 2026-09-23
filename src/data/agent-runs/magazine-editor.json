@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-22T18:28:01.122Z",
+  "updatedAt": "2026-09-23T09:03:19.262Z",
   "runs": [
+    {
+      "id": "run-1790154199262-bl3di",
+      "at": "2026-09-23T09:03:19.262Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 578482,
+      "summary": "4 بریف ترند جدید (رنگ، مبلمان، روشنایی و لوستر، سبک زندگی) + ۱ مقاله کامل مجله («رنگ‌های سرمه‌ای و قهوه‌ای؛ تلفیق هنر و آ…») — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 135,
+        "via": "zai-2",
+        "titles": [
+          "ترند رنگ‌های مطلق در خانه‌های تاریخی",
+          "میز بار هکسبورد، نماد لوکس ۲۰۲۶",
+          "نورپردازی جزیره آشپزخانه؛ پایان دوره سه لوستر آویز خطی",
+          "ترند رنگ نارنجی در حمام با حوله‌های ۱ پوندی"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "livingetc.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790101681122-j7dih",
       "at": "2026-09-22T18:28:01.122Z",

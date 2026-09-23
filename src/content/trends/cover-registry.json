@@ -122,7 +122,11 @@
     "eeca8445532717d3489cb1e338ae9dba": "2026-09-22-ezvouk",
     "bb766a81d61699f8627f577bfa5b3876": "2026-09-22-8vjumc",
     "3d244c465c905ed209da5b26b460589d": "2026-09-22-t9mat5",
-    "860fb06dff1272ebad481faac2a5d7bb": "2026-09-22-xen2xp"
+    "860fb06dff1272ebad481faac2a5d7bb": "2026-09-22-xen2xp",
+    "075f2267d109285773853f8d2c83b0e8": "2026-09-23-s76iv7",
+    "52723ca35ad77b70be40781908ec89a6": "2026-09-23-r5la13",
+    "48e0cc9fe0be7155ba0f5d536da515b8": "2026-09-23-9d4pnh",
+    "e95433a4917abd129309c5c557a9c88f": "2026-09-23-61zfd5"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -214,7 +218,11 @@
     "/images/trends/src/2026-09-22-ezvouk.jpg": "2026-09-22-ezvouk",
     "/images/trends/src/2026-09-22-8vjumc.jpg": "2026-09-22-8vjumc",
     "/images/trends/src/2026-09-22-t9mat5.jpg": "2026-09-22-t9mat5",
-    "/images/trends/src/2026-09-22-xen2xp.jpg": "2026-09-22-xen2xp"
+    "/images/trends/src/2026-09-22-xen2xp.jpg": "2026-09-22-xen2xp",
+    "/images/trends/src/2026-09-23-s76iv7.jpg": "2026-09-23-s76iv7",
+    "/images/trends/src/2026-09-23-r5la13.jpg": "2026-09-23-r5la13",
+    "/images/trends/src/2026-09-23-9d4pnh.jpg": "2026-09-23-9d4pnh",
+    "/images/trends/src/2026-09-23-61zfd5.jpg": "2026-09-23-61zfd5"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -336,6 +344,10 @@
     "https://image.pollinations.ai/prompt/premium%20wooden%20flooring%20in%20a%20bright%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=33272&nologo=true&model=flux": "2026-09-22-ezvouk",
     "https://static.dezeen.com/uploads/2026/06/modular-kitchens-vermland-dezeen-showroom_dezeen_2364_hero_0.jpg": "2026-09-22-8vjumc",
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=92718&nologo=true&model=flux": "2026-09-22-t9mat5",
-    "https://www.designboom.com/twitterimages/uploads/2026/09/sobo-paris-listening-restaurant-oak-vintage-furniture-acoustic-panels-designboom-1200.jpg": "2026-09-22-xen2xp"
+    "https://www.designboom.com/twitterimages/uploads/2026/09/sobo-paris-listening-restaurant-oak-vintage-furniture-acoustic-panels-designboom-1200.jpg": "2026-09-22-xen2xp",
+    "https://cdn.mos.cms.futurecdn.net/um3us9xxoQ4jqJTnaXfKJ8-1600-80.jpg": "2026-09-23-s76iv7",
+    "https://cdn.mos.cms.futurecdn.net/nYs8T3pUM6eYsHTRJboTNM-2560-80.jpg": "2026-09-23-r5la13",
+    "https://cdn.mos.cms.futurecdn.net/dgw5x4RsPdfLofddCchhtX-2560-80.jpg": "2026-09-23-9d4pnh",
+    "https://image.pollinations.ai/prompt/warm%20inviting%20home%20interior%20with%20lived-in%20charm%2C%20interior%20design%20photography?width=1152&height=864&seed=99115&nologo=true&model=flux": "2026-09-23-61zfd5"
   }
 }
