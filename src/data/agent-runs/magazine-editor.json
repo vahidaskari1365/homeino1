@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-23T14:29:04.897Z",
+  "updatedAt": "2026-09-23T18:33:27.738Z",
   "runs": [
+    {
+      "id": "run-1790188407738-v0v1d",
+      "at": "2026-09-23T18:33:27.738Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 288589,
+      "summary": "4 بریف ترند جدید (متریال، دکوری و اکسسوری، دکوری و اکسسوری، روشنایی و لوستر) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 143,
+        "via": "zai-1",
+        "titles": [
+          "کاشی‌های شیشه‌ای Mutina با چهره‌های متحرک",
+          "میز بار دکوری و کمدی با روکش طبیعی",
+          "دکوری ارزان‌قیمت با ظاهر گران‌بها در آمازون",
+          "ترند استودیوی نورپردازی مکزیکی"
+        ],
+        "sources": [
+          "news.google.com",
+          "dezeen.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790173744897-6am8l",
       "at": "2026-09-23T14:29:04.897Z",
