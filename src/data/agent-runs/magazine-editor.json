@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-24T14:20:21.325Z",
+  "updatedAt": "2026-09-24T18:36:06.146Z",
   "runs": [
+    {
+      "id": "run-1790274966146-669js",
+      "at": "2026-09-24T18:36:06.146Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 361553,
+      "summary": "4 بریف ترند جدید (رنگ، محیط کار، محیط کار، روشنایی و لوستر) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 152,
+        "via": "zai-1",
+        "titles": [
+          "رنگ‌بندی خاکی در دکوراسیون خانه",
+          "ترند‌های مصرف مواد در سان‌دی‌گو، نگاهی به آزمایشگاه تحلیل مواد مخدر",
+          "زیبایی‌شناسی معکوس در فضای کار هنرمند مبلمان",
+          "پرده نورپردازی آبی هوشمند ۲۰ دلاری"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790259621325-1kf2g",
       "at": "2026-09-24T14:20:21.325Z",

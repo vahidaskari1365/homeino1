@@ -138,7 +138,11 @@
     "023e98f9699a05a182db0659ba00e679": "2026-09-24-q9zb6d",
     "eba16b57e59ff83ff64ff308e93fe0ca": "2026-09-24-sb47qm",
     "5555809fac48976b172c5837363e8ea5": "2026-09-24-6p7o9d",
-    "220b19364de910d4bb1d0a47ce0d55a3": "2026-09-24-uvsgzf"
+    "220b19364de910d4bb1d0a47ce0d55a3": "2026-09-24-uvsgzf",
+    "619adf01476af267e6a0c5a189bbb87e": "2026-09-24-pjw1on",
+    "1bbe7bc1c231c8f9e922c7a74ea556f0": "2026-09-24-c7vkf3",
+    "94820734fbca4fa909761d06d8241acf": "2026-09-24-a6h7tp",
+    "344f48ae47dca8d6d32a8107c36573e4": "2026-09-24-vk3uh8"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -246,7 +250,11 @@
     "/images/trends/src/2026-09-24-q9zb6d.jpg": "2026-09-24-q9zb6d",
     "/images/trends/src/2026-09-24-sb47qm.jpg": "2026-09-24-sb47qm",
     "/images/trends/src/2026-09-24-6p7o9d.jpg": "2026-09-24-6p7o9d",
-    "/images/trends/src/2026-09-24-uvsgzf.png": "2026-09-24-uvsgzf"
+    "/images/trends/src/2026-09-24-uvsgzf.png": "2026-09-24-uvsgzf",
+    "/images/trends/src/2026-09-24-pjw1on.jpg": "2026-09-24-pjw1on",
+    "/images/trends/src/2026-09-24-c7vkf3.jpg": "2026-09-24-c7vkf3",
+    "/images/trends/src/2026-09-24-a6h7tp.jpg": "2026-09-24-a6h7tp",
+    "/images/trends/src/2026-09-24-vk3uh8.jpg": "2026-09-24-vk3uh8"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -384,6 +392,10 @@
     "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=12304&nologo=true&model=flux": "2026-09-24-q9zb6d",
     "https://image.pollinations.ai/prompt/close-up%20of%20natural%20materials%20and%20textures%20in%20a%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=10112&nologo=true&model=flux": "2026-09-24-sb47qm",
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=2639&nologo=true&model=flux": "2026-09-24-6p7o9d",
-    "https://cdn.mos.cms.futurecdn.net/DDRErR8PK6DSvjPX8LRzNP-2560-80.png": "2026-09-24-uvsgzf"
+    "https://cdn.mos.cms.futurecdn.net/DDRErR8PK6DSvjPX8LRzNP-2560-80.png": "2026-09-24-uvsgzf",
+    "https://cdn.mos.cms.futurecdn.net/sSJ8Rb6BxPxkP8WUEyAb5V-2560-80.jpg": "2026-09-24-pjw1on",
+    "https://image.pollinations.ai/prompt/stylish%20home%20office%20workspace%20in%20a%20bright%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=48072&nologo=true&model=flux": "2026-09-24-c7vkf3",
+    "https://image.pollinations.ai/prompt/stylish%20home%20office%20workspace%20in%20a%20bright%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=99698&nologo=true&model=flux": "2026-09-24-a6h7tp",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=38713&nologo=true&model=flux": "2026-09-24-vk3uh8"
   }
 }
