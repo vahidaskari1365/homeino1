@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-24T08:58:40.954Z",
+  "updatedAt": "2026-09-24T14:20:21.325Z",
   "runs": [
+    {
+      "id": "run-1790259621325-1kf2g",
+      "at": "2026-09-24T14:20:21.325Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 290372,
+      "summary": "4 بریف ترند جدید (رنگ، متریال، مبلمان، آشپزخانه) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 148,
+        "via": "zai-1",
+        "titles": [
+          "ترند پالت‌رنگ کرم و خاکی برای پاییز",
+          "ویلا‌های چوبی مدرن، ستاره ترند طراحی داخلی دانمارکی",
+          "روغن‌های شیشه‌ای پلی‌یورتان برای مبلمان سال ۲۰۳۵",
+          "جای‌گذاری نور در کمد آشپزخانه"
+        ],
+        "sources": [
+          "news.google.com",
+          "livingetc.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790240320954-y5f54",
       "at": "2026-09-24T08:58:40.954Z",
