@@ -285,6 +285,22 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
     permissions: ["CALL_LLM", "BROWSER_AUTOMATION", "EXTERNAL_ACTION"] as AgentPermissionKey[],
     tools: ["llmComplete", "browserTask", "httpRequest"],
   },
+  {
+    isBuiltin: true,
+    key: "instagram",
+    name: "ایجنت اینستاگرام (Manus)",
+    description:
+      "اتصال اینستاگرام پروژه به Manus API (api.manus.ai). فعلاً فقط بررسی اتصال — بدون هیچ اقدامی. کلید از env: MANUS_API_KEY (Vercel → Environment Variables).",
+    type: "executor",
+    status: "active",
+    runtime: "local",
+    handler: "instagram",
+    maxRetries: 1,
+    timeoutMs: 15000,
+    config: { provider: "manus", mode: "connect-only", connectApp: "manus.im/app?connect_type=instagram" },
+    permissions: ["EXTERNAL_ACTION"] as AgentPermissionKey[],
+    tools: [],
+  },
 ];
 
 // ------------------------------------------------------------
