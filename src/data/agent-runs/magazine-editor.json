@@ -1,7 +1,32 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-23T18:33:27.738Z",
+  "updatedAt": "2026-09-24T08:58:40.954Z",
   "runs": [
+    {
+      "id": "run-1790240320954-y5f54",
+      "at": "2026-09-24T08:58:40.954Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 562521,
+      "summary": "1 بریف ترند جدید (آشپزخانه) + ۱ مقاله کامل مجله («ترند آشپزخانه‌ای با سقف آبی و جزیره‌ی ون…») — از طریق zai-2",
+      "detail": {
+        "added": 1,
+        "articlesAdded": 1,
+        "total": 144,
+        "via": "zai-2",
+        "titles": [
+          "آشپزخانه مدیترانه‌ای با سقف آبی"
+        ],
+        "sources": [
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790188407738-v0v1d",
       "at": "2026-09-23T18:33:27.738Z",
