@@ -1,7 +1,35 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-25T14:53:47.987Z",
+  "updatedAt": "2026-09-25T18:51:11.977Z",
   "runs": [
+    {
+      "id": "run-1790362271977-budh3",
+      "at": "2026-09-25T18:51:11.977Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 415314,
+      "summary": "4 بریف ترند جدید (حیاط و بیرونی، مبلمان، کف‌پوش، روشنایی و لوستر) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 161,
+        "via": "zai-2",
+        "titles": [
+          "تخفیف‌های پایانی هفته Lowe's برای باغ‌خانه ایرانی",
+          "میزهای قدیمی اروپایی، ستون آشپزخانه‌ها",
+          "ترند کف‌پوش و پنجره‌های آپارتمان‌های مدرن",
+          "ترند کابل‌های رنگی: راهرویی داینامیک با نور زنده"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790348027987-07axd",
       "at": "2026-09-25T14:53:47.987Z",

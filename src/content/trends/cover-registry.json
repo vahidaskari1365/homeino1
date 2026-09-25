@@ -146,7 +146,8 @@
     "146623a31840563eb93aec6a409aeaba": "2026-09-25-ego4hz",
     "a4e8b90769270407220197034877f004": "2026-09-25-cv60nq",
     "8d7eead60c6b58526167e611125b032d": "2026-09-25-sv7mu0",
-    "ad9bfcdaa01d5bbfc6d313e5192c7008": "2026-09-25-vxz565"
+    "ad9bfcdaa01d5bbfc6d313e5192c7008": "2026-09-25-vxz565",
+    "16745ee89e650f3010e4aef21362b3b7": "2026-09-25-31uwcv"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -262,7 +263,8 @@
     "/images/trends/src/2026-09-25-ego4hz.jpg": "2026-09-25-ego4hz",
     "/images/trends/src/2026-09-25-cv60nq.jpg": "2026-09-25-cv60nq",
     "/images/trends/src/2026-09-25-sv7mu0.jpg": "2026-09-25-sv7mu0",
-    "/images/trends/src/2026-09-25-vxz565.jpg": "2026-09-25-vxz565"
+    "/images/trends/src/2026-09-25-vxz565.jpg": "2026-09-25-vxz565",
+    "/images/trends/src/2026-09-25-31uwcv.jpg": "2026-09-25-31uwcv"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -408,6 +410,7 @@
     "https://cdn.mos.cms.futurecdn.net/TuxTJtTcDcJMrLBCfnin9W-2560-80.jpg": "2026-09-25-ego4hz",
     "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=9921&nologo=true&model=flux": "2026-09-25-cv60nq",
     "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=64901&nologo=true&model=flux": "2026-09-25-sv7mu0",
-    "https://cdn.mos.cms.futurecdn.net/wXe4n4Vmhk6sXpw5PpaMtA-2560-80.jpg": "2026-09-25-vxz565"
+    "https://cdn.mos.cms.futurecdn.net/wXe4n4Vmhk6sXpw5PpaMtA-2560-80.jpg": "2026-09-25-vxz565",
+    "https://image.pollinations.ai/prompt/cozy%20outdoor%20patio%20with%20stylish%20furniture%20at%20golden%20hour%2C%20interior%20design%20photography?width=1152&height=864&seed=99748&nologo=true&model=flux": "2026-09-25-31uwcv"
   }
 }
