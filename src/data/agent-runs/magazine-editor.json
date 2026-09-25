@@ -1,7 +1,34 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-25T09:18:56.007Z",
+  "updatedAt": "2026-09-25T14:53:47.987Z",
   "runs": [
+    {
+      "id": "run-1790348027987-07axd",
+      "at": "2026-09-25T14:53:47.987Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 863102,
+      "summary": "2 بریف ترند جدید (آشپزخانه، پرده و منسوجات) — از طریق zai-2",
+      "detail": {
+        "added": 2,
+        "articlesAdded": 0,
+        "total": 157,
+        "via": "zai-2",
+        "titles": [
+          "دکوراسیون آشپزخانه پاییز: کمتر همیشه بهتر است",
+          "پرده‌های شناور و متریال‌های نانو در ۲۰۲۶"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790327936007-b9p7q",
       "at": "2026-09-25T09:18:56.007Z",
