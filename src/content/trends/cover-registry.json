@@ -147,7 +147,11 @@
     "a4e8b90769270407220197034877f004": "2026-09-25-cv60nq",
     "8d7eead60c6b58526167e611125b032d": "2026-09-25-sv7mu0",
     "ad9bfcdaa01d5bbfc6d313e5192c7008": "2026-09-25-vxz565",
-    "16745ee89e650f3010e4aef21362b3b7": "2026-09-25-31uwcv"
+    "16745ee89e650f3010e4aef21362b3b7": "2026-09-25-31uwcv",
+    "9fe5e1d8a09a429a638717dffec4b124": "2026-09-26-qbq46w",
+    "ff136278ac31cc2b17ee2755dc2fbb80": "2026-09-26-ui66du",
+    "bd4649d3ad1f48b293c08941c14c65b0": "2026-09-26-vc7fog",
+    "d790e32e6c5f98fdc27f33248364d205": "2026-09-26-ommj4z"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -264,7 +268,11 @@
     "/images/trends/src/2026-09-25-cv60nq.jpg": "2026-09-25-cv60nq",
     "/images/trends/src/2026-09-25-sv7mu0.jpg": "2026-09-25-sv7mu0",
     "/images/trends/src/2026-09-25-vxz565.jpg": "2026-09-25-vxz565",
-    "/images/trends/src/2026-09-25-31uwcv.jpg": "2026-09-25-31uwcv"
+    "/images/trends/src/2026-09-25-31uwcv.jpg": "2026-09-25-31uwcv",
+    "/images/trends/src/2026-09-26-qbq46w.jpg": "2026-09-26-qbq46w",
+    "/images/trends/src/2026-09-26-ui66du.jpg": "2026-09-26-ui66du",
+    "/images/trends/src/2026-09-26-vc7fog.jpg": "2026-09-26-vc7fog",
+    "/images/trends/src/2026-09-26-ommj4z.jpg": "2026-09-26-ommj4z"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -411,6 +419,10 @@
     "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=9921&nologo=true&model=flux": "2026-09-25-cv60nq",
     "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=64901&nologo=true&model=flux": "2026-09-25-sv7mu0",
     "https://cdn.mos.cms.futurecdn.net/wXe4n4Vmhk6sXpw5PpaMtA-2560-80.jpg": "2026-09-25-vxz565",
-    "https://image.pollinations.ai/prompt/cozy%20outdoor%20patio%20with%20stylish%20furniture%20at%20golden%20hour%2C%20interior%20design%20photography?width=1152&height=864&seed=99748&nologo=true&model=flux": "2026-09-25-31uwcv"
+    "https://image.pollinations.ai/prompt/cozy%20outdoor%20patio%20with%20stylish%20furniture%20at%20golden%20hour%2C%20interior%20design%20photography?width=1152&height=864&seed=99748&nologo=true&model=flux": "2026-09-25-31uwcv",
+    "https://images.adsttc.com/media/images/6ab6/66ed/e944/b300/0137/3b90/large_jpg/interihotelmad26.jpg?1790338809": "2026-09-26-qbq46w",
+    "https://cdn.mos.cms.futurecdn.net/W2vA5pFk6HGKEDgAKFqPzR-2560-80.jpg": "2026-09-26-ui66du",
+    "https://static.dezeen.com/uploads/2026/03/eterna-nouveau-wallpaper-astek-design_dezeen_2364_hero.jpg": "2026-09-26-vc7fog",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=50833&nologo=true&model=flux": "2026-09-26-ommj4z"
   }
 }
