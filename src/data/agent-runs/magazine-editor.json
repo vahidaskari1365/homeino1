@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-26T08:59:49.051Z",
+  "updatedAt": "2026-09-26T13:56:15.859Z",
   "runs": [
+    {
+      "id": "run-1790430975859-lf92i",
+      "at": "2026-09-26T13:56:15.859Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 517482,
+      "summary": "4 بریف ترند جدید (حمام، مبلمان، دکوری و اکسسوری، روشنایی و لوستر)",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 169,
+        "via": "unknown",
+        "titles": [
+          "تزیین سقف حمام کوچک با ترند دیوار پنجم",
+          "مبلمان گل‌دار، آخرین چالش در دکوراسیون مدرن",
+          "آبجکت‌های ساده در اتاق پنت‌هاوس",
+          "لوسترهای هنری در ونیز، تلفیق معماری و هنر"
+        ],
+        "sources": [
+          "idealhome.co.uk",
+          "news.google.com",
+          "archdaily.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790413189051-f6kls",
       "at": "2026-09-26T08:59:49.051Z",

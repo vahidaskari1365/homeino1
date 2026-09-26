@@ -151,7 +151,11 @@
     "9fe5e1d8a09a429a638717dffec4b124": "2026-09-26-qbq46w",
     "ff136278ac31cc2b17ee2755dc2fbb80": "2026-09-26-ui66du",
     "bd4649d3ad1f48b293c08941c14c65b0": "2026-09-26-vc7fog",
-    "d790e32e6c5f98fdc27f33248364d205": "2026-09-26-ommj4z"
+    "d790e32e6c5f98fdc27f33248364d205": "2026-09-26-ommj4z",
+    "f31e01629829824564b8a80478e56683": "2026-09-26-h6xsvz",
+    "981700182f06a175898d7218f8b7280f": "2026-09-26-gscjsa",
+    "0c2be58ba4b00b0bd1c40db6c8ed7c02": "2026-09-26-jqvht1",
+    "d193775f24d2b9a114a3231ab2c7145f": "2026-09-26-nuphgn"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -272,7 +276,11 @@
     "/images/trends/src/2026-09-26-qbq46w.jpg": "2026-09-26-qbq46w",
     "/images/trends/src/2026-09-26-ui66du.jpg": "2026-09-26-ui66du",
     "/images/trends/src/2026-09-26-vc7fog.jpg": "2026-09-26-vc7fog",
-    "/images/trends/src/2026-09-26-ommj4z.jpg": "2026-09-26-ommj4z"
+    "/images/trends/src/2026-09-26-ommj4z.jpg": "2026-09-26-ommj4z",
+    "/images/trends/src/2026-09-26-h6xsvz.jpg": "2026-09-26-h6xsvz",
+    "/images/trends/src/2026-09-26-gscjsa.jpg": "2026-09-26-gscjsa",
+    "/images/trends/src/2026-09-26-jqvht1.jpg": "2026-09-26-jqvht1",
+    "/images/trends/src/2026-09-26-nuphgn.jpg": "2026-09-26-nuphgn"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -423,6 +431,10 @@
     "https://images.adsttc.com/media/images/6ab6/66ed/e944/b300/0137/3b90/large_jpg/interihotelmad26.jpg?1790338809": "2026-09-26-qbq46w",
     "https://cdn.mos.cms.futurecdn.net/W2vA5pFk6HGKEDgAKFqPzR-2560-80.jpg": "2026-09-26-ui66du",
     "https://static.dezeen.com/uploads/2026/03/eterna-nouveau-wallpaper-astek-design_dezeen_2364_hero.jpg": "2026-09-26-vc7fog",
-    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=50833&nologo=true&model=flux": "2026-09-26-ommj4z"
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=50833&nologo=true&model=flux": "2026-09-26-ommj4z",
+    "https://cdn.mos.cms.futurecdn.net/gt8QRtB5dEns4TQTRbkxyi-2400-80.jpg": "2026-09-26-h6xsvz",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=62769&nologo=true&model=flux": "2026-09-26-gscjsa",
+    "https://images.adsttc.com/media/images/6a9d/6c5a/15d8/6f00/01a2/f424/large_jpg/8_2540-MerckxHolvoet_VPenthouse-270-HiRes.jpg?1788701820": "2026-09-26-jqvht1",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=98870&nologo=true&model=flux": "2026-09-26-nuphgn"
   }
 }
