@@ -155,7 +155,8 @@
     "f31e01629829824564b8a80478e56683": "2026-09-26-h6xsvz",
     "981700182f06a175898d7218f8b7280f": "2026-09-26-gscjsa",
     "0c2be58ba4b00b0bd1c40db6c8ed7c02": "2026-09-26-jqvht1",
-    "d193775f24d2b9a114a3231ab2c7145f": "2026-09-26-nuphgn"
+    "d193775f24d2b9a114a3231ab2c7145f": "2026-09-26-nuphgn",
+    "c0ad6b325017abf82fe01bc10d755ac4": "2026-09-26-xlb47l"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -280,7 +281,8 @@
     "/images/trends/src/2026-09-26-h6xsvz.jpg": "2026-09-26-h6xsvz",
     "/images/trends/src/2026-09-26-gscjsa.jpg": "2026-09-26-gscjsa",
     "/images/trends/src/2026-09-26-jqvht1.jpg": "2026-09-26-jqvht1",
-    "/images/trends/src/2026-09-26-nuphgn.jpg": "2026-09-26-nuphgn"
+    "/images/trends/src/2026-09-26-nuphgn.jpg": "2026-09-26-nuphgn",
+    "/images/trends/src/2026-09-26-xlb47l.png": "2026-09-26-xlb47l"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -435,6 +437,7 @@
     "https://cdn.mos.cms.futurecdn.net/gt8QRtB5dEns4TQTRbkxyi-2400-80.jpg": "2026-09-26-h6xsvz",
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=62769&nologo=true&model=flux": "2026-09-26-gscjsa",
     "https://images.adsttc.com/media/images/6a9d/6c5a/15d8/6f00/01a2/f424/large_jpg/8_2540-MerckxHolvoet_VPenthouse-270-HiRes.jpg?1788701820": "2026-09-26-jqvht1",
-    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=98870&nologo=true&model=flux": "2026-09-26-nuphgn"
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=98870&nologo=true&model=flux": "2026-09-26-nuphgn",
+    "https://cdn.mos.cms.futurecdn.net/Qsoj3wEpUHJ8K63nrxKziX-2560-80.png": "2026-09-26-xlb47l"
   }
 }

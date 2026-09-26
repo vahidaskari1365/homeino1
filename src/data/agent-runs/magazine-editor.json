@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-26T13:56:15.859Z",
+  "updatedAt": "2026-09-26T17:59:03.337Z",
   "runs": [
+    {
+      "id": "run-1790445543337-canfb",
+      "at": "2026-09-26T17:59:03.337Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 568883,
+      "summary": "4 بریف ترند جدید (مبلمان، رنگ، دکوری و اکسسوری، دیوارپوش) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 173,
+        "via": "zai-1",
+        "titles": [
+          "مبلمان گل‌دوزی، جلوه‌ای از سبک‌های کلاسیک و مدرن",
+          "چرا خانه‌تان تنگ و ارزان به نظر می‌رسد؟",
+          "میزهای اروپایی بزرگ‌شده در آشپزخانه‌ها",
+          "ویلا مالورکا با تلفیق کالکشن شخصی و فرم‌های کلاسیک"
+        ],
+        "sources": [
+          "news.google.com",
+          "livingetc.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 1,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790430975859-lf92i",
       "at": "2026-09-26T13:56:15.859Z",
