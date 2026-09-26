@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-26T08:51:09.346Z",
+  "updatedAt": "2026-09-26T13:21:10.661Z",
   "runs": [
+    {
+      "id": "run-1790428870661-2u61s",
+      "at": "2026-09-26T13:21:10.661Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 115432,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 314,
+        "via": "template",
+        "poolRemaining": 689,
+        "productPoolRemaining": 26,
+        "skippedStarved": 0,
+        "combos": [
+          "مینیمال × فضای کار",
+          "اسکاندیناوی × حیاط و محوطه",
+          "کلاسیک × اتاق خواب",
+          "نئوکلاسیک × ناهارخوری"
+        ],
+        "productJobs": [
+          "دکوری و اکسسوری",
+          "کف‌پوش"
+        ]
+      }
+    },
     {
       "id": "run-1790412669346-e3zdn",
       "at": "2026-09-26T08:51:09.346Z",
