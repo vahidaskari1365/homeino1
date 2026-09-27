@@ -1628,6 +1628,10 @@
         {
           "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4aea23b63188.jpg",
           "source": "Hello Hayley"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/41/6d/5a/416d5a229c60320adafa47ce79976f26.jpg",
+          "source": "Pinterest"
         }
       ],
       "فضای کار": [
@@ -1724,6 +1728,14 @@
         {
           "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d2e8a45d0c37.jpg",
           "source": "ELLE Decor"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/e2/a7/8d/e2a78dfdc6d46dfd6fb063f43fbf33e8.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/7d/5e/0a/7d5e0a7fadfde7114122257a0102e41f.jpg",
+          "source": "Pinterest"
         }
       ],
       "بیرونی": [
@@ -2232,6 +2244,10 @@
         {
           "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0f0b906ecf70.jpg",
           "source": "Architectural Digest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/8e/86/ce/8e86cec25cf8bcd664cee025359bdd31.jpg",
+          "source": "Pinterest"
         }
       ],
       "بیرونی": [
@@ -3381,6 +3397,10 @@
         },
         {
           "url": "https://i.pinimg.com/564x/4f/ab/2e/4fab2ec756c842ef0a54effa3d6071ce.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/75/f3/6c/75f36cbc71cf5e5ea494fa5287b75cd5.jpg",
           "source": "Pinterest"
         }
       ],
