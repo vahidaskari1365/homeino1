@@ -156,7 +156,9 @@
     "981700182f06a175898d7218f8b7280f": "2026-09-26-gscjsa",
     "0c2be58ba4b00b0bd1c40db6c8ed7c02": "2026-09-26-jqvht1",
     "d193775f24d2b9a114a3231ab2c7145f": "2026-09-26-nuphgn",
-    "c0ad6b325017abf82fe01bc10d755ac4": "2026-09-26-xlb47l"
+    "c0ad6b325017abf82fe01bc10d755ac4": "2026-09-26-xlb47l",
+    "df33bac682c80572fac3391adef98a28": "2026-09-27-w5egw3",
+    "2702695213679b1c8305349a7ffde419": "2026-09-27-8kngh3"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -282,7 +284,9 @@
     "/images/trends/src/2026-09-26-gscjsa.jpg": "2026-09-26-gscjsa",
     "/images/trends/src/2026-09-26-jqvht1.jpg": "2026-09-26-jqvht1",
     "/images/trends/src/2026-09-26-nuphgn.jpg": "2026-09-26-nuphgn",
-    "/images/trends/src/2026-09-26-xlb47l.png": "2026-09-26-xlb47l"
+    "/images/trends/src/2026-09-26-xlb47l.png": "2026-09-26-xlb47l",
+    "/images/trends/src/2026-09-27-w5egw3.jpg": "2026-09-27-w5egw3",
+    "/images/trends/src/2026-09-27-8kngh3.jpg": "2026-09-27-8kngh3"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -438,6 +442,8 @@
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=62769&nologo=true&model=flux": "2026-09-26-gscjsa",
     "https://images.adsttc.com/media/images/6a9d/6c5a/15d8/6f00/01a2/f424/large_jpg/8_2540-MerckxHolvoet_VPenthouse-270-HiRes.jpg?1788701820": "2026-09-26-jqvht1",
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=98870&nologo=true&model=flux": "2026-09-26-nuphgn",
-    "https://cdn.mos.cms.futurecdn.net/Qsoj3wEpUHJ8K63nrxKziX-2560-80.png": "2026-09-26-xlb47l"
+    "https://cdn.mos.cms.futurecdn.net/Qsoj3wEpUHJ8K63nrxKziX-2560-80.png": "2026-09-26-xlb47l",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=70699&nologo=true&model=flux": "2026-09-27-w5egw3",
+    "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=39270&nologo=true&model=flux": "2026-09-27-8kngh3"
   }
 }
