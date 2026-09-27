@@ -1,7 +1,35 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-27T09:42:48.226Z",
+  "updatedAt": "2026-09-27T14:53:31.743Z",
   "runs": [
+    {
+      "id": "run-1790520811743-cs1i0",
+      "at": "2026-09-27T14:53:31.743Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 526725,
+      "summary": "4 بریف ترند جدید (کمد و ذخیره‌سازی، آشپزخانه، آشپزخانه، فرش و قالیچه) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 181,
+        "via": "zai-2",
+        "titles": [
+          "متریال چوب پلی‌وود برای طراحی لوکس",
+          "ترند کاغذ دیواری آشپزخانه",
+          "بازگشت استایل‌های قدیمی به آشپزخانه‌ها",
+          "فرش‌های عروسکی ترندِ اغراق‌شده پاییز"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790502168226-as9qq",
       "at": "2026-09-27T09:42:48.226Z",
