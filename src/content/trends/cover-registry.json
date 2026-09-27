@@ -162,7 +162,10 @@
     "e57ef36d90bcd0b8145c49615660c00a": "2026-09-27-84ds5z",
     "901393b2788a304cc32a776c2e6e5b44": "2026-09-27-b6t1i6",
     "48aee92458b3a0b50f4319ddb3e71f64": "2026-09-27-z5tz7o",
-    "b294a7238868e2a422ec8cda94eab745": "2026-09-27-gc470n"
+    "b294a7238868e2a422ec8cda94eab745": "2026-09-27-gc470n",
+    "58da29d42e5d4efcebf4613df17e0042": "2026-09-27-umfdz6",
+    "92fb1539662a4e548757a90a0b89657b": "2026-09-27-sjace1",
+    "c8449f39f5bf7ffabdf9a969db5b338d": "2026-09-27-617h56"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -294,7 +297,10 @@
     "/images/trends/src/2026-09-27-84ds5z.jpg": "2026-09-27-84ds5z",
     "/images/trends/src/2026-09-27-b6t1i6.jpg": "2026-09-27-b6t1i6",
     "/images/trends/src/2026-09-27-z5tz7o.jpg": "2026-09-27-z5tz7o",
-    "/images/trends/src/2026-09-27-gc470n.jpg": "2026-09-27-gc470n"
+    "/images/trends/src/2026-09-27-gc470n.jpg": "2026-09-27-gc470n",
+    "/images/trends/src/2026-09-27-umfdz6.jpg": "2026-09-27-umfdz6",
+    "/images/trends/src/2026-09-27-sjace1.jpg": "2026-09-27-sjace1",
+    "/images/trends/src/2026-09-27-617h56.jpg": "2026-09-27-617h56"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -456,6 +462,9 @@
     "https://image.pollinations.ai/prompt/built-in%20wardrobe%20and%20smart%20storage%20wall%20in%20a%20modern%20bedroom%2C%20interior%20design%20photography?width=1152&height=864&seed=57727&nologo=true&model=flux": "2026-09-27-84ds5z",
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=43885&nologo=true&model=flux": "2026-09-27-b6t1i6",
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=21352&nologo=true&model=flux": "2026-09-27-z5tz7o",
-    "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=45516&nologo=true&model=flux": "2026-09-27-gc470n"
+    "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=45516&nologo=true&model=flux": "2026-09-27-gc470n",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=56577&nologo=true&model=flux": "2026-09-27-umfdz6",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=77140&nologo=true&model=flux": "2026-09-27-sjace1",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=77628&nologo=true&model=flux": "2026-09-27-617h56"
   }
 }
