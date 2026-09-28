@@ -168,7 +168,10 @@
     "c8449f39f5bf7ffabdf9a969db5b338d": "2026-09-27-617h56",
     "d58443599070f9fd69d035013e747b30": "2026-09-28-p7gsba",
     "2123fb2ac0201b45a991dda21df423e2": "2026-09-28-h0p6bk",
-    "e0f6a73c001cb9d8a346aa506b704f66": "2026-09-28-g327rv"
+    "e0f6a73c001cb9d8a346aa506b704f66": "2026-09-28-g327rv",
+    "3fe86ce7c656e3574b006d5ed2520414": "2026-09-28-7dpks5",
+    "d8cd011e84329a2147a389c51b868398": "2026-09-28-xjxv2b",
+    "319673192dc26a0f571a3a7220460aa9": "2026-09-28-rk4fet"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -306,7 +309,10 @@
     "/images/trends/src/2026-09-27-617h56.jpg": "2026-09-27-617h56",
     "/images/trends/src/2026-09-28-p7gsba.jpg": "2026-09-28-p7gsba",
     "/images/trends/src/2026-09-28-h0p6bk.jpg": "2026-09-28-h0p6bk",
-    "/images/trends/src/2026-09-28-g327rv.jpg": "2026-09-28-g327rv"
+    "/images/trends/src/2026-09-28-g327rv.jpg": "2026-09-28-g327rv",
+    "/images/trends/src/2026-09-28-7dpks5.jpg": "2026-09-28-7dpks5",
+    "/images/trends/src/2026-09-28-xjxv2b.jpg": "2026-09-28-xjxv2b",
+    "/images/trends/src/2026-09-28-rk4fet.png": "2026-09-28-rk4fet"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -474,6 +480,9 @@
     "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=77628&nologo=true&model=flux": "2026-09-27-617h56",
     "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=94528&nologo=true&model=flux": "2026-09-28-p7gsba",
     "https://cdn.mos.cms.futurecdn.net/Peyg7jShs8M2XJBUq6seQb-2560-80.jpg": "2026-09-28-h0p6bk",
-    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=2019&nologo=true&model=flux": "2026-09-28-g327rv"
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=2019&nologo=true&model=flux": "2026-09-28-g327rv",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=52280&nologo=true&model=flux": "2026-09-28-7dpks5",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=35150&nologo=true&model=flux": "2026-09-28-xjxv2b",
+    "https://cdn.mos.cms.futurecdn.net/D73hCGCbCECQMH8unfWVcj-2400-80.png": "2026-09-28-rk4fet"
   }
 }

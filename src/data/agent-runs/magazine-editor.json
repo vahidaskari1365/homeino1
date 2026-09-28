@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-28T10:26:14.255Z",
+  "updatedAt": "2026-09-28T17:49:41.168Z",
   "runs": [
+    {
+      "id": "run-1790617781168-ezrd2",
+      "at": "2026-09-28T17:49:41.168Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 435926,
+      "summary": "4 بریف ترند جدید (آشپزخانه، دکوری و اکسسوری، دکوری و اکسسوری، رنگ) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 193,
+        "via": "zai-1",
+        "titles": [
+          "بازگشت کمدبندی سرد به‌جای کابینت‌های باز",
+          "رشد بازار مبلمان و منسوجات دکوری تا ۵.۴٪",
+          "دکور آشپزخانه هالووین، ترند ترسناک و شیک",
+          "رنگ سبز کله‌غازی، خط قرمز دکوراسیون"
+        ],
+        "sources": [
+          "news.google.com",
+          "idealhome.co.uk"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790591174255-ud8dp",
       "at": "2026-09-28T10:26:14.255Z",
