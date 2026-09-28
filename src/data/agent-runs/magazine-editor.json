@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-28T17:49:41.168Z",
+  "updatedAt": "2026-09-28T20:46:09.562Z",
   "runs": [
+    {
+      "id": "run-1790628369562-3xgur",
+      "at": "2026-09-28T20:46:09.562Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 465712,
+      "summary": "4 بریف ترند جدید (حیاط و بیرونی، رنگ، روشنایی و لوستر، روشنایی و لوستر) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 197,
+        "via": "zai-2",
+        "titles": [
+          "دکوراسیون گیلاس با مبلمان رنگی",
+          "رنگ‌های نارنجی و زغالی، فصل جدید دیزاین داخلی",
+          "لامپ میزی متریال آهن، قیمت ۴۹ دلار",
+          "روشنایی‌های ۲۰۲۶: مینیمال، باریک و هوشمند"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790617781168-ezrd2",
       "at": "2026-09-28T17:49:41.168Z",
