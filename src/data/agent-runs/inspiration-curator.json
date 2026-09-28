@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-28T16:57:05.128Z",
+  "updatedAt": "2026-09-28T20:17:56.436Z",
   "runs": [
+    {
+      "id": "run-1790626676436-epsf0",
+      "at": "2026-09-28T20:17:56.436Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 229317,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 332,
+        "via": "template",
+        "poolRemaining": 684,
+        "productPoolRemaining": 18,
+        "skippedStarved": 0,
+        "combos": [
+          "اسکاندیناوی × حیاط و محوطه",
+          "کلاسیک × اتاق خواب",
+          "نئوکلاسیک × ناهارخوری",
+          "بوهو × پذیرایی"
+        ],
+        "productJobs": [
+          "تابلو و دیوارکوب",
+          "دیوارپوش"
+        ]
+      }
+    },
     {
       "id": "run-1790614625128-fz0lg",
       "at": "2026-09-28T16:57:05.128Z",
