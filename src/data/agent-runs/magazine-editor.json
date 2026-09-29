@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-28T20:46:09.562Z",
+  "updatedAt": "2026-09-29T10:18:56.236Z",
   "runs": [
+    {
+      "id": "run-1790677136236-94phe",
+      "at": "2026-09-29T10:18:56.236Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 387876,
+      "summary": "4 بریف ترند جدید (حمام، کف‌پوش، دیوارپوش، مبلمان) + ۱ مقاله کامل مجله («دکوراسیون حمام: تکنیک کوچک‌سازی با پنل‌ه…») — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 201,
+        "via": "zai-2",
+        "titles": [
+          "رویکرد کوچک و صلب در طراحی حمام‌ها",
+          "کف‌پوش بیومورفیک سبز در دکوراسیون",
+          "دیوارکوب ۲۰۲۶، رنگی بهتر از نقاشی",
+          "۵ جفت رنگ فرش و صندلی که همیشه کار می‌کنند"
+        ],
+        "sources": [
+          "news.google.com",
+          "livingetc.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790628369562-3xgur",
       "at": "2026-09-28T20:46:09.562Z",

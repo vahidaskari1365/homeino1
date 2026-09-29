@@ -174,7 +174,11 @@
     "319673192dc26a0f571a3a7220460aa9": "2026-09-28-rk4fet",
     "1676b758e55f31b3e71600227bfe13af": "2026-09-28-p2k783",
     "ababf685f7932076af5e3ad99fd48282": "2026-09-28-e1gk8z",
-    "5718e8759d6849dc0ff3de4e7f91226a": "2026-09-28-ntj5i3"
+    "5718e8759d6849dc0ff3de4e7f91226a": "2026-09-28-ntj5i3",
+    "c9ae24b42fe9c8b8ed84269d20b40d2d": "2026-09-29-bzpqrn",
+    "11e77b45b34efcb3d126cd0998e49104": "2026-09-29-e5vjhh",
+    "dba1c30bad773bd2a071c67899a43935": "2026-09-29-wo690l",
+    "394601d9e76eb7c7aae743d0bfa97310": "2026-09-29-1zvk5z"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -318,7 +322,11 @@
     "/images/trends/src/2026-09-28-rk4fet.png": "2026-09-28-rk4fet",
     "/images/trends/src/2026-09-28-p2k783.jpg": "2026-09-28-p2k783",
     "/images/trends/src/2026-09-28-e1gk8z.jpg": "2026-09-28-e1gk8z",
-    "/images/trends/src/2026-09-28-ntj5i3.jpg": "2026-09-28-ntj5i3"
+    "/images/trends/src/2026-09-28-ntj5i3.jpg": "2026-09-28-ntj5i3",
+    "/images/trends/src/2026-09-29-bzpqrn.jpg": "2026-09-29-bzpqrn",
+    "/images/trends/src/2026-09-29-e5vjhh.jpg": "2026-09-29-e5vjhh",
+    "/images/trends/src/2026-09-29-wo690l.jpg": "2026-09-29-wo690l",
+    "/images/trends/src/2026-09-29-1zvk5z.jpg": "2026-09-29-1zvk5z"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -492,6 +500,10 @@
     "https://cdn.mos.cms.futurecdn.net/D73hCGCbCECQMH8unfWVcj-2400-80.png": "2026-09-28-rk4fet",
     "https://cdn.mos.cms.futurecdn.net/XBehMBX9Mfq7LKcMBwHvq6-2560-80.jpg": "2026-09-28-p2k783",
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=23776&nologo=true&model=flux": "2026-09-28-e1gk8z",
-    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=969&nologo=true&model=flux": "2026-09-28-ntj5i3"
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=969&nologo=true&model=flux": "2026-09-28-ntj5i3",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=39362&nologo=true&model=flux": "2026-09-29-bzpqrn",
+    "https://image.pollinations.ai/prompt/premium%20wooden%20flooring%20in%20a%20bright%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=75569&nologo=true&model=flux": "2026-09-29-e5vjhh",
+    "https://image.pollinations.ai/prompt/accent%20wall%20with%20elegant%20wallpaper%20and%20panelling%2C%20interior%20design%20photography?width=1152&height=864&seed=9060&nologo=true&model=flux": "2026-09-29-wo690l",
+    "https://cdn.mos.cms.futurecdn.net/CyXTT3g9bRZA6vnWHBJdnK-2560-80.jpg": "2026-09-29-1zvk5z"
   }
 }
