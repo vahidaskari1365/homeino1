@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-28T11:08:28.169124+00:00",
+ "generated_at": "2026-09-29T10:50:30.782740+00:00",
  "status": "ok",
  "routes": {
   "trends": [
@@ -9,19 +9,19 @@
    "exa"
   ]
  },
- "duration_s": 66.8,
+ "duration_s": 65.7,
  "sections": {
   "trends": 20,
   "topics": 25,
   "pinterest": {
-   "items": 17,
-   "added_to_pool": 7
+   "items": 24,
+   "added_to_pool": 8
   },
   "feeds": 10,
   "competitors": 2,
   "mentions": 20,
-  "influencer_items": 16,
-  "influencer_handles": 4
+  "influencer_items": 15,
+  "influencer_handles": 3
  },
- "generated_at_epoch": 1790593774
+ "generated_at_epoch": 1790679096
 }
