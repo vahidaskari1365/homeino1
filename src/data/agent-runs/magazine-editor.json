@@ -1,7 +1,35 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-29T16:00:09.040Z",
+  "updatedAt": "2026-09-29T19:35:54.089Z",
   "runs": [
+    {
+      "id": "run-1790710554089-7g59z",
+      "at": "2026-09-29T19:35:54.089Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 332867,
+      "summary": "4 بریف ترند جدید (دکوری و اکسسوری، مبلمان، سبک‌ها، دیوارپوش) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 209,
+        "via": "zai-1",
+        "titles": [
+          "سینی نگهداری ادویه با قاب چوبی",
+          "آرامش مالی در مبلمان و فرش‌ها",
+          "بازگشت کلاسیک‌ها به دکوراسیون مدرن",
+          "طراحی‌های محدود دیوارپوش فارو و بال"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790697609040-yzb2c",
       "at": "2026-09-29T16:00:09.040Z",
