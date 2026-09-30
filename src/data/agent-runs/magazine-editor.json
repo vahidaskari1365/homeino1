@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-30T10:13:52.211Z",
+  "updatedAt": "2026-09-30T16:07:36.847Z",
   "runs": [
+    {
+      "id": "run-1790784456847-w0zyu",
+      "at": "2026-09-30T16:07:36.847Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 584621,
+      "summary": "4 بریف ترند جدید (روشنایی و لوستر، حمام، متریال، گلدان و گیاه) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 216,
+        "via": "zai-2",
+        "titles": [
+          "روشنایی‌های طبیعی؛ دست‌ساز با چوب و سنگ",
+          "ترند حمام: دکوراسیون سبک‌سازی شده و فضای باز",
+          "طراحی مجدد خانه‌های سنتی ایرلند با بهره‌گیری از تکنیک‌های نوین",
+          "ترند گلدان‌های سفید متداول برای دکوراسیون لوکس"
+        ],
+        "sources": [
+          "news.google.com",
+          "archdaily.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1790763232210-54js2",
       "at": "2026-09-30T10:13:52.210Z",
