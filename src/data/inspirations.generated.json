@@ -1774,7 +1774,7 @@
   {
     "id": "ag-20260923-61",
     "title": "اجازه بدهید خاکستریِ روح را در خانه ببینید",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e9c8fa4ca74c.jpg",
+    "image": "/images/pins/ag-20260923-61.jpg",
     "styleSlug": "japandi",
     "room": "حیاط و محوطه",
     "tags": [
@@ -1800,7 +1800,7 @@
     },
     "createdAt": "2026-09-23T08:53:32.613Z",
     "_via": "llm",
-    "_prov": "pool:japandi:حیاط و محوطه"
+    "_prov": "local|gen:japandi:حیاط و محوطه"
   },
   {
     "id": "ag-20260923-60",
@@ -5199,7 +5199,7 @@
   {
     "id": "ag-20260911-24",
     "title": "ترکیب هنرمندانه متریال‌های صنعتی در فضای لوفت",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/43b1ef2e831e.png",
+    "image": "/images/pins/ag-20260911-24.jpg",
     "styleSlug": "industrial",
     "room": "پذیرایی",
     "tags": [
@@ -5226,7 +5226,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-11T17:09:46.619Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:پذیرایی"
   },
   {
     "id": "ag-20260911-23",

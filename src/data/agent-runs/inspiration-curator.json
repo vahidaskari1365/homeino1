@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-09-30T10:04:50.914Z",
+  "updatedAt": "2026-09-30T15:08:01.834Z",
   "runs": [
+    {
+      "id": "run-1790780881834-sxffq",
+      "at": "2026-09-30T15:08:01.834Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 171998,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 231,
+        "via": "template",
+        "poolRemaining": 165,
+        "productPoolRemaining": 28,
+        "skippedStarved": 4,
+        "combos": [
+          "روستیک × پذیرایی",
+          "معاصر × حیاط و محوطه",
+          "مدرن × اتاق خواب",
+          "مینیمال × ناهارخوری"
+        ],
+        "productJobs": [
+          "دیوارپوش",
+          "تابلو و دیوارکوب"
+        ]
+      }
+    },
     {
       "id": "run-1790762690914-ptqok",
       "at": "2026-09-30T10:04:50.914Z",
