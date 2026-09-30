@@ -768,6 +768,18 @@ async function main() {
       console.log(`  cover ✓ ${smart.via === "source" ? "از خود منبع" : smart.via === "web" ? "وب هم‌موضوع" : smart.via === "openverse" ? "Openverse" : "تولید رایگان"} → ${cover}`);
     }
     if (!cover) {
+      // تلاش دوم (Task 75) — 429 ناپایدارِ pollinations/شبکه در لحظه است؛
+      // ۱۵ ثانیه نفس و یک بار دیگر، تا بریف تازه در همان رانِ تولدش کاور اختصاصی بگیرد
+      await new Promise((s) => setTimeout(s, 15000));
+      const smart2 = await smartCover(item.title, category, slug, { og: null, usedUrls: usedWebImgs });
+      if (smart2) {
+        cover = smart2.publicPath;
+        coverSource = smart2.via;
+        registerCover({ md5: smart2.md5, publicPath: smart2.publicPath, url: smart2.url, slug }, coverReg);
+        console.log(`  cover ✓ (تلاش دوم) ${smart2.via} → ${cover}`);
+      }
+    }
+    if (!cover) {
       cover = pickFallbackCover(category);
       console.log(`  cover ⚠ استخر جنریک (پناه آخر) — ناظر سایت آلارم می‌دهد: ${cover}`);
     }
@@ -827,13 +839,15 @@ async function main() {
   if (coverRepairs.length) console.log(`  ترمیم کاور (تکراری/نامرتبط): ${coverRepairs.length} مورد`);
   if (coverUnresolved.length) console.log(`  ⚠ کاور حل‌نشده: ${coverUnresolved.length} مورد`);
 
-  // 4.5) خودترمیمی کاورهای میراثی استخر (Task 74) — در هر اجرا ۲ بریف قدیمی‌ترین که
-  // هنوز کاور جنریک استخر دارند (coverSource:"pool" یا فایل product-pins) زنجیرهٔ
-  // کامل کاور را می‌گیرند؛ ناظر سایت دیگر هفته‌ها روی همین آلارم نمی‌ماند.
+  // 4.5) خودترمیمی کاورهای استخر (Task 74؛ فیکس تقدم Task 75) — تا ۴ بریف که هنوز
+  // کاور جنریک استخر دارند (coverSource:"pool" یا فایل product-pins) زنجیرهٔ کامل
+  // کاور می‌گیرند. تقدم با تازه‌ترین‌هاست (sort date نزولی → slice(0,4)) — همان‌هایی
+  // که کاربر در صفحه اول می‌بیند و ناظر سایت رویشان آلارم می‌دهد؛ باگ قبلی
+  // قدیمی‌ترین‌ها را ترمیم می‌کرد و بریف‌های تازهٔ استخری هرگز سبز نمی‌شدند.
   let selfHealedCovers = 0;
   const legacyPool = merged
     .filter((b) => b.coverSource === "pool" || (b.cover || "").includes("/product-pins/"))
-    .slice(-2); // قدیمی‌ترین‌ها — sort بر اساس date نزولی است
+    .slice(0, 4); // تازه‌ترین‌ها — sort بر اساس date نزولی است
   for (const b of legacyPool) {
     const smart = await smartCover(b.title, b.category, b.slug, { og: null, usedUrls: usedWebImgs });
     if (smart) {

@@ -23,6 +23,11 @@ const UA = { "User-Agent": "Mozilla/5.0 (compatible; HomeinoInspirationBot/1.0; 
 // دامنه‌هایی که به تجربهٔ ایجنت‌ها (recon-harvest/تست دانلود) پایدارند — پیش‌فرض چک نمی‌شوند
 const STABLE_RE = /^https?:\/\/(i\.pinimg\.com|images\.pexels\.com|images\.unsplash\.com|cdn\.pixabay\.com|upload\.wikimedia\.org|live\.staticflickr\.com|images\.adsttc\.com|cdn\.home-designing\.com)\//i;
 
+// دامنه‌های محکوم‌به‌انقضا (Task 75) — لینک‌های امضادار/زمان‌دار که حتی اگر الان
+// زنده باشند تا چند ساعت/روز آینده می‌میرند و استخر را «پوسیده» می‌کنند. بدون
+// HEAD حذف می‌شوند تا چرخ‌لنگهٔ پوسیدگی برای همیشه بسته بماند.
+const DOOMED_RE = /^https?:\/\/([a-z0-9-]+\.)*z-cdn\.chatglm\.cn\//i;
+
 const doc = JSON.parse(readFileSync(POOL_FILE, "utf8"));
 const pool = doc.pool || {};
 
@@ -37,8 +42,9 @@ for (const [st, spaces] of Object.entries(pool)) {
     }
   }
 }
-const toCheck = [...urls.keys()].filter((u) => CHECK_ALL || !STABLE_RE.test(u));
-console.log(`استخر: ${Object.keys(pool).length} کلید | ${urls.size} URL یکتا | چک: ${toCheck.length}${CHECK_ALL ? " (همه)" : " (پایدارها مستثنا)"}`);
+const doomedCount = [...urls.keys()].filter((u) => DOOMED_RE.test(u)).length;
+const toCheck = [...urls.keys()].filter((u) => CHECK_ALL || (!STABLE_RE.test(u) && !DOOMED_RE.test(u)));
+console.log(`استخر: ${Object.keys(pool).length} کلید | ${urls.size} URL یکتا | چک: ${toCheck.length}${CHECK_ALL ? " (همه)" : " (پایدارها مستثنا)"}${doomedCount ? ` | محکوم‌به‌انقضا (بدون چک حذف): ${doomedCount}` : ""}`);
 
 // ---------- HEAD موازی ----------
 const alive = new Set();
@@ -71,6 +77,13 @@ for (const [st, spaces] of Object.entries(pool)) {
     const kept = items.filter((it) => {
       const u = it?.url;
       if (!u?.startsWith("http")) return true; // لوکال می‌ماند
+      if (DOOMED_RE.test(u)) {
+        // محکوم‌به‌انقضا — بدون چک حذف (Task 75)
+        removed++;
+        const d = new URL(u).hostname;
+        removedByDomain[d] = (removedByDomain[d] || 0) + 1;
+        return false;
+      }
       if (!toCheck.includes(u)) return true; // پایدار یا اصلاً چک نشده
       if (alive.has(u)) return true;
       removed++;

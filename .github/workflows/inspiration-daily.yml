@@ -47,6 +47,12 @@ jobs:
           curl -sf http://localhost:20128/v1/models >/dev/null || echo "omniroute not reachable — chain continues without it"
         timeout-minutes: 5
 
+      - name: Purge doomed/dead pool links (always — Task 75)
+        run: node scripts/purge-dead-pool.mjs
+
+      - name: Top-up pool via Openverse (keyless, verified-alive — Task 75)
+        run: node scripts/openverse-pool-topup.mjs --min-unused 130 --max-searches 40
+
       - name: Top-up starved image pools (serper.dev)
         env:
           SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}

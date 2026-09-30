@@ -4,24 +4,34 @@
     "modern": {
       "پذیرایی": [
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/71e348f67b76.jpg",
-          "source": "House Beautiful"
+          "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvc2s1ODg5LWltYWdlLWt3dnVrM3ZzLmpwZw.jpg",
+          "source": "rawpixel",
+          "w": 4000
         },
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/79854e62e999.jpg",
-          "source": "Veranda"
+          "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvbnMxNzA1Mi1pbWFnZS1rd3Z5YmRreC5qcGc.jpg",
+          "source": "rawpixel",
+          "w": 5446
         },
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5b33ae271e57.jpg",
-          "source": "Architectural Digest"
+          "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHUyMzM0ODQ0LWltYWdlLWt3dnk4Z2ZrLmpwZw.jpg",
+          "source": "rawpixel",
+          "w": 2950
         },
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c76128c87ad1.jpg",
-          "source": "BRABBU"
+          "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvc2s1ODkyLWltYWdlLWt3dnVraWFoLmpwZw.jpg",
+          "source": "rawpixel",
+          "w": 4000
         },
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/26d593d25039.jpg",
-          "source": "House & Garden"
+          "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B1MjMzMzc2MS1pbWFnZS1rd3Z3a2Q5by5qcGc.jpg",
+          "source": "rawpixel",
+          "w": 2950
+        },
+        {
+          "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B1MjMzNTE4Mi1pbWFnZS1rd3Z3anhlMi5qcGc.jpg",
+          "source": "rawpixel",
+          "w": 2950
         }
       ],
       "بیرونی": [
@@ -31,42 +41,6 @@
         }
       ],
       "اتاق خواب": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/aec03a0159fd.jpg",
-          "source": "Good Housekeeping"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0ebcda2cc982.jpg",
-          "source": "Homes and Gardens"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/590c9a367978.jpg",
-          "source": "ELLE Decor"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9d2bec58ce68.jpg",
-          "source": "Home Designing"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b1ebb6d771cc.jpg",
-          "source": "House Beautiful"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f90e20e9c413.png",
-          "source": "About Wall Art"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/6db57a5f4564.jpg",
-          "source": "Livingetc"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/97ce4879fca1.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/aabc3f238cba.jpg",
-          "source": "Evolve Artisanal"
-        },
         {
           "url": "https://i.pinimg.com/564x/70/b1/67/70b1679c5d2de713a71fbfbb166cebe7.jpg",
           "source": "Pinterest"
@@ -82,22 +56,6 @@
       ],
       "فضای کار": [
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/99b6cfbe5264.png",
-          "source": "TheCoolist"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/39a294a501f0.jpg",
-          "source": "Dwell"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/43cf78f7cb9c.jpg",
-          "source": "Real Homes"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9a25ed1ae58b.jpg",
-          "source": "Houzz"
-        },
-        {
           "url": "https://i.pinimg.com/564x/83/40/61/834061426a323c59c9a8eae8dc28677d.jpg",
           "source": "Pinterest"
         },
@@ -107,18 +65,6 @@
         }
       ],
       "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a2d77f6dba2d.jpg",
-          "source": "ELLE Decor"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a7b8a69ec4e1.jpg",
-          "source": "House & Garden"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3836214876d5.jpeg",
-          "source": "ELLE Decor"
-        },
         {
           "url": "https://i.pinimg.com/564x/d8/26/33/d82633b3016a62ac20f852a1c727a94a.jpg",
           "source": "Pinterest"
@@ -138,61 +84,10 @@
       ]
     },
     "scandinavian": {
-      "اتاق خواب": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4f935fc07b44.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/13beb11fd98f.jpg",
-          "source": "Sonno Beds"
-        }
-      ],
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/170814b7ad99.jpg",
-          "source": "Homes and Gardens"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cd2d2362afe6.jpg",
-          "source": "Real Homes"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a31ba17fb51c.png",
-          "source": "thestylesaloniste"
-        }
-      ],
-      "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a64d8acfb631.jpg",
-          "source": "Decorilla"
-        }
-      ],
+      "اتاق خواب": [],
+      "پذیرایی": [],
+      "ناهارخوری": [],
       "فضای کار": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7448f68355bb.jpg",
-          "source": "Livingetc"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/eebe490013fb.png",
-          "source": "HomeDesigns AI"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0bd7d4226eb2.jpg",
-          "source": "Cozy Home Vibes"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4af37a37194b.jpg",
-          "source": "Staunton and Henry"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8abf853b916c.jpg",
-          "source": "Amanda Katherine Interiors"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ab21113b60c9.jpeg",
-          "source": "Planner 5D"
-        },
         {
           "url": "https://i.pinimg.com/564x/ca/aa/f0/caaaf073302f6e82995de5e0aae9aba0.jpg",
           "source": "Pinterest"
@@ -202,44 +97,11 @@
           "source": "Pinterest"
         }
       ],
-      "بیرونی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c1ba0bc57088.jpg",
-          "source": "Ideal Home"
-        }
-      ]
+      "بیرونی": []
     },
     "minimal": {
       "فضای کار": [],
       "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d19394cb0291.jpg",
-          "source": "Acousart"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e61af5106395.jpg",
-          "source": "Lumi Gallery"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5d732ce95c01.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1ed8e60ee146.png",
-          "source": "ELLE Decor"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cd58f970c3b0.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/12c6ac379ce3.jpeg",
-          "source": "House Beautiful"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/89659a34eabb.jpeg",
-          "source": "Setting For Four Interiors"
-        },
         {
           "url": "https://i.pinimg.com/564x/e2/0a/ac/e20aac4cfc6c04e993e500ce824b173d.jpg",
           "source": "Pinterest"
@@ -267,43 +129,11 @@
       ],
       "اتاق خواب": [
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0cc9ec8a946d.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/6a565c019362.jpg",
-          "source": "House & Garden"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c44509ec0e77.jpg",
-          "source": "CharmyDecor"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/93629af42cd1.jpg",
-          "source": "ELLE Decor"
-        },
-        {
           "url": "https://i.pinimg.com/564x/d1/f1/68/d1f1682b47237c6409fa9f20a8991d12.jpg",
           "source": "Pinterest"
         }
       ],
       "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/dff9de040205.png",
-          "source": "Aetheris Concepts"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/52190bac6575.jpg",
-          "source": "House Beautiful"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a8eb8b5852ae.jpg",
-          "source": "House Beautiful"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/05f189409ea9.jpg",
-          "source": "Livspace"
-        },
         {
           "url": "https://i.pinimg.com/564x/eb/30/57/eb3057bc9338673b8c715642c6633bd8.jpg",
           "source": "Pinterest"
@@ -335,10 +165,6 @@
     "art-deco": {
       "ناهارخوری": [
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d13121eb9b4f.png",
-          "source": "Architectural Digest"
-        },
-        {
           "url": "https://i.pinimg.com/564x/b1/f9/85/b1f9859381e821ccfe7b8cc3443421fd.jpg",
           "source": "Pinterest"
         },
@@ -369,10 +195,6 @@
       ],
       "پذیرایی": [
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/6a708517fdd9.jpg",
-          "source": "Architectural Digest"
-        },
-        {
           "url": "https://i.pinimg.com/564x/5b/de/fd/5bdefd9fb429f9cc5eb7dfb9428cf5b4.jpg",
           "source": "Pinterest"
         },
@@ -390,60 +212,22 @@
       "بیرونی": []
     },
     "japandi": {
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3f3f0dd63c09.jpg",
-          "source": "Homes and Gardens"
-        }
-      ],
-      "فضای کار": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/19b13b008743.png",
-          "source": "Apex Granite Outlet"
-        }
-      ],
-      "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/594ede66e4cc.jpg",
-          "source": "Homes and Gardens"
-        }
-      ],
+      "پذیرایی": [],
+      "فضای کار": [],
+      "ناهارخوری": [],
       "بیرونی": [],
       "اتاق خواب": []
     },
     "boho": {
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/fe43f4e90dd8.jpg",
-          "source": "Homes and Gardens"
-        }
-      ],
-      "اتاق خواب": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/01cbd6762555.jpg",
-          "source": "House Beautiful"
-        }
-      ],
+      "پذیرایی": [],
+      "اتاق خواب": [],
       "فضای کار": [],
       "ناهارخوری": [],
       "بیرونی": []
     },
     "industrial": {
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3aba84aa85e5.jpg",
-          "source": "Homecrux"
-        }
-      ],
+      "پذیرایی": [],
       "فضای کار": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f35493317778.jpeg",
-          "source": "Walmart"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a6f93eeb2e38.jpg",
-          "source": "Decoist"
-        },
         {
           "url": "https://i.pinimg.com/564x/2c/67/77/2c6777c0d14da20061997c7411116f4b.jpg",
           "source": "Pinterest"
@@ -453,22 +237,13 @@
       "ناهارخوری": [],
       "بیرونی": [
         {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9abf31d7eb8a.jpg",
-          "source": "Livingetc"
-        },
-        {
           "url": "https://i.pinimg.com/564x/b1/dc/b6/b1dcb66dafc9e154978f4f95985f7b70.jpg",
           "source": "Pinterest"
         }
       ]
     },
     "rustic": {
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1dded6b4e2e5.jpg",
-          "source": "Manomin Resawn Timbers"
-        }
-      ],
+      "پذیرایی": [],
       "اتاق خواب": [],
       "فضای کار": [],
       "ناهارخوری": [],
@@ -485,18 +260,6 @@
     },
     "contemporary": {
       "فضای کار": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/eccdf6272808.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0ad701d6fb8f.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/375c7fe29890.jpg",
-          "source": "Sharps"
-        },
         {
           "url": "https://i.pinimg.com/564x/82/72/1e/82721e262c773586c9b03c2c70236bf6.jpg",
           "source": "Pinterest"
@@ -522,41 +285,8 @@
           "source": "Pinterest"
         }
       ],
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/85a1fdd0e25b.jpg",
-          "source": "Hommés Studio"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b44b67ee405d.jpg",
-          "source": "Homes and Gardens"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a81611de4510.jpg",
-          "source": "Wallroom"
-        }
-      ],
+      "پذیرایی": [],
       "اتاق خواب": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/569c3d0c1a09.jpg",
-          "source": "Hommés Studio"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3372dd0b4359.jpg",
-          "source": "AD Middle East"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/fd18493b96a0.jpg",
-          "source": "Evolve Artisanal"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f5ec7e32e612.png",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/003c2a2baad8.jpg",
-          "source": "ELLE Decor"
-        },
         {
           "url": "https://i.pinimg.com/564x/ee/ff/64/eeff64885545288fda08031160885058.jpg",
           "source": "Pinterest"
@@ -578,21 +308,8 @@
           "source": "Pinterest"
         }
       ],
-      "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/94c18a9f60fe.jpg",
-          "source": "Livingetc"
-        }
-      ],
+      "ناهارخوری": [],
       "بیرونی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/bfd27f325bb7.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7d9a209533fe.jpg",
-          "source": "ELLE Decor"
-        },
         {
           "url": "https://i.pinimg.com/564x/30/92/9f/30929f7e120e1f7912da9e57faecd926.jpg",
           "source": "Pinterest"
@@ -600,50 +317,9 @@
       ]
     },
     "classic": {
-      "پذیرایی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a234c90e128b.jpg",
-          "source": "Home Designing"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/60b7a47c75d4.jpg",
-          "source": "House Beautiful"
-        }
-      ],
+      "پذیرایی": [],
       "اتاق خواب": [],
       "فضای کار": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c396d4304d1c.webp",
-          "source": "Beautiful Homes - Asian Paints"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5c8e0bdabe41.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1359da196b2e.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/437ec74f3d45.jpg",
-          "source": "ELLE Decor"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0ea426ef3ae9.png",
-          "source": "About Wall Art"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f617d9fa9be0.jpg",
-          "source": "House Beautiful"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/09461f8a4f24.jpg",
-          "source": "Architectural Digest"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5101d8530f98.jpg",
-          "source": "Apartment Therapy"
-        },
         {
           "url": "https://i.pinimg.com/564x/7d/04/d6/7d04d634816156112449636f8421b26f.jpg",
           "source": "Pinterest"
@@ -653,53 +329,21 @@
           "source": "Pinterest"
         }
       ],
-      "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4245df439c9d.jpg",
-          "source": "Home Designing"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/351a35eda89c.jpg",
-          "source": "Classic Casual Home"
-        }
-      ],
-      "بیرونی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d3df3dbe45a4.jpg",
-          "source": "Ideal Home"
-        }
-      ]
+      "ناهارخوری": [],
+      "بیرونی": []
     },
     "neoclassic": {
       "پذیرایی": [],
       "اتاق خواب": [],
-      "فضای کار": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3534ab918855.png",
-          "source": "Luxury Antonovich Design"
-        },
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2717326a7abc.jpg",
-          "source": "Pooya Alavi"
-        }
-      ],
+      "فضای کار": [],
       "ناهارخوری": [],
-      "بیرونی": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f52d35841ba8.jpg",
-          "source": "www.wallpaper.com"
-        }
-      ]
+      "بیرونی": []
     },
     "mediterranean": {
       "پذیرایی": [],
       "اتاق خواب": [],
       "فضای کار": [],
       "ناهارخوری": [
-        {
-          "url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ffbd8902608e.jpg",
-          "source": "ELLE Decor"
-        },
         {
           "url": "https://i.pinimg.com/564x/48/6f/91/486f91b212e8d2e142c56d1563d9b6bf.jpg",
           "source": "Pinterest"
