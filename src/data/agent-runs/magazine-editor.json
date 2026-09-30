@@ -1,7 +1,35 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-29T19:35:54.089Z",
+  "updatedAt": "2026-09-30T10:13:52.211Z",
   "runs": [
+    {
+      "id": "run-1790763232210-54js2",
+      "at": "2026-09-30T10:13:52.210Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 599138,
+      "summary": "3 بریف ترند جدید (سبک‌ها، رنگ، آشپزخانه) + ۱ مقاله کامل مجله («بازسازی با الگوهای شبکه‌ای و پالت رنگی پ…») — از طریق zai-2",
+      "detail": {
+        "added": 3,
+        "articlesAdded": 1,
+        "total": 212,
+        "via": "zai-2",
+        "titles": [
+          "بازسازی آپارتمان با رنگ‌های پاپ و الگوهای شبکه‌ای",
+          "رنگ تیتانیوم برای یکپارچگی دکوراتورها",
+          "کاغذ دیواری برای آشپزخانه چه مزایایی دارد؟"
+        ],
+        "sources": [
+          "dwell.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0
+        }
+      }
+    },
     {
       "id": "run-1790710554089-7g59z",
       "at": "2026-09-29T19:35:54.089Z",
