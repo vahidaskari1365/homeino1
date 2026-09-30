@@ -827,6 +827,31 @@ async function main() {
   if (coverRepairs.length) console.log(`  ترمیم کاور (تکراری/نامرتبط): ${coverRepairs.length} مورد`);
   if (coverUnresolved.length) console.log(`  ⚠ کاور حل‌نشده: ${coverUnresolved.length} مورد`);
 
+  // 4.5) خودترمیمی کاورهای میراثی استخر (Task 74) — در هر اجرا ۲ بریف قدیمی‌ترین که
+  // هنوز کاور جنریک استخر دارند (coverSource:"pool" یا فایل product-pins) زنجیرهٔ
+  // کامل کاور را می‌گیرند؛ ناظر سایت دیگر هفته‌ها روی همین آلارم نمی‌ماند.
+  let selfHealedCovers = 0;
+  const legacyPool = merged
+    .filter((b) => b.coverSource === "pool" || (b.cover || "").includes("/product-pins/"))
+    .slice(-2); // قدیمی‌ترین‌ها — sort بر اساس date نزولی است
+  for (const b of legacyPool) {
+    const smart = await smartCover(b.title, b.category, b.slug, { og: null, usedUrls: usedWebImgs });
+    if (smart) {
+      const oldCover = b.cover;
+      b.cover = smart.publicPath;
+      b.coverSource = smart.via;
+      registerCover({ md5: smart.md5, publicPath: smart.publicPath, url: smart.url, slug: b.slug }, coverReg);
+      if ((oldCover || "").includes("/trends/src/") && !merged.some((x) => x.cover === oldCover)) {
+        try { fs.rmSync(path.join(REPO, "public", oldCover)); } catch {}
+      }
+      selfHealedCovers++;
+      console.log(`  self-heal ✓ ${b.slug} → ${b.cover} (${smart.via})`);
+      await new Promise((s) => setTimeout(s, 4000));
+    } else {
+      console.log(`  self-heal ✗ ${b.slug} — کاور استخر باقی ماند (نوبت بعدی)`);
+    }
+  }
+
   fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs: merged }, null, 2)}\n`, "utf8");
   saveRegistry(coverReg); // رجیستری ضدتکرار کاورها — همراه trends.json کامیت می‌شود
   console.log(`[magazine-daily] ✓ ${created.length} new brief(s) → total ${merged.length}`);
@@ -861,7 +886,7 @@ async function main() {
       titles: created.map((b) => b.title).slice(0, 4),
       sources: [...new Set(created.map((b) => b.source?.name).filter(Boolean))].slice(0, 4),
       qaRejected,
-      qaGate: { coverRepairs: coverRepairs.length, coverUnresolved: coverUnresolved.length },
+      qaGate: { coverRepairs: coverRepairs.length, coverUnresolved: coverUnresolved.length, selfHealedCovers },
     },
   });
 }

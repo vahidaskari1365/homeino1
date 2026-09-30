@@ -30,6 +30,10 @@ const QA_REPORT = path.join(__dirname, "trend-cover-qa-report.json");
 const COLLECTED_FILE = path.join(__dirname, "cover-collected-t50.json");
 const COLLECT = process.argv.includes("--collect");
 const QA_ONLY = process.argv.includes("--qa-only");
+// --fast (Task 74): بدون QA بینایی (گیت‌های دانلود کافی‌اند؛ کاور تازه «تأییدنشده» ثبت
+// می‌شود که اطلاعاتی است نه آلارم) + نفس‌های کوتاه — برای پاک‌کردن بدهی انبوه کاورهای
+// استخر/تکراری در چند دقیقه به‌جای ساعت‌ها
+const FAST = process.argv.includes("--fast");
 // اجرای تکه‌ای — سندباکس پروسهٔ طولانی را می‌کشد؛ هر بار فقط N بریف (Task 50)
 const LIMIT_IDX = process.argv.indexOf("--limit");
 const REPLACE_LIMIT = LIMIT_IDX > -1 ? Math.max(1, Number(process.argv[LIMIT_IDX + 1]) || 1) : Infinity;
@@ -100,13 +104,15 @@ const liveBytes = buildBytesIndex(briefs);
 console.log(`بریف‌ها: ${briefs.length} | رجیستری: md5=${Object.keys(reg.byMd5).length} path=${Object.keys(reg.byPath).length}`);
 
 // ---------- فاز A: QA بصری همه کاورهای src ----------
+// گزارش QA — در حالت fast فقط خوانده می‌شود (دست‌نخورده)، در حالت کامل به‌روز می‌شود
+const prevQa = fs.existsSync(QA_REPORT) ? JSON.parse(fs.readFileSync(QA_REPORT, "utf8")) : {};
+const qa = { ...prevQa };
+if (!FAST) {
 const qaTargets = [];
 for (const b of briefs) {
   if (b.cover && b.cover.includes("/trends/src/")) qaTargets.push(b);
 }
 // resume: QA قبلی را بازیابی کن — فقط خطاها دوباره امتحان می‌شوند
-const prevQa = fs.existsSync(QA_REPORT) ? JSON.parse(fs.readFileSync(QA_REPORT, "utf8")) : {};
-const qa = { ...prevQa };
 const pending = qaTargets.filter((b) => {
   const p = prevQa[b.slug];
   return !p || p.error;
@@ -135,6 +141,9 @@ const stillErr = Object.values(qa).filter((v) => v.error).length;
 const flagged = Object.entries(qa).filter(([, v]) => !v.error && (v.score <= 5 || v.textHeavy));
 console.log(`QA تمام شد — خطای باقی‌مانده: ${stillErr} | پرچم‌دار: ${flagged.length} (${flagged.map(([s]) => s).join(", ") || "—"})`);
 if (QA_ONLY) process.exit(stillErr > 0 ? 2 : 0); // کد ۲ = ناتمام؛ دوباره اجرا شود
+} else {
+  console.log("[fast] فاز QA بینایی رد شد — گزارش موجود دست‌نخورده می‌ماند؛ گیت‌های دانلود کافی‌اند");
+}
 
 // ---------- فاز B: فهرست تعویض ----------
 // گروه‌بندی بر اساس مسیر کاور — فایل مشترک: تازه‌ترین نگه می‌دارد
@@ -146,7 +155,8 @@ for (const b of [...briefs].sort((a, z) => (a.date < z.date ? 1 : -1))) {
 }
 const toReplace = new Set();
 for (const [cover, group] of byPath) {
-  const isPool = cover.includes("/product-pins/");
+  // فیکس Task 74: پرچم coverSource:"pool" هم تعویض می‌خواهد (ناظر هر دو را می‌سنجد)
+  const isPool = cover.includes("/product-pins/") || group.some((b) => b.coverSource === "pool");
   const isStaticShared = cover.includes("/trends/trends-") && group.length > 1;
   if (isPool) group.forEach((b) => toReplace.add(b.slug));
   else if (isStaticShared) group.slice(1).forEach((b) => toReplace.add(b.slug)); // اولی (تازه‌ترین) می‌ماند
@@ -233,6 +243,12 @@ for (const b of briefs) {
       console.log(`  · دانلود رد شد (${r.error}): ${c.url.slice(0, 90)}`);
       continue;
     }
+    if (FAST) { // fast: گیت دانلود کافی است — QA بینایی نمی‌گیریم
+      accepted = { ...r, via: c.via };
+      usedUrls.add(c.url);
+      console.log(`  ✓ ${c.via} (fast) → ${r.publicPath}`);
+      break;
+    }
     // گیت نهایی: QA بصری کاندید — قاعدهٔ coverQaOk
     const v = await zAiVision(
       path.join(REPO_ROOT, "public", r.publicPath),
@@ -249,6 +265,7 @@ for (const b of briefs) {
   }
   if (!accepted) {
     // تولید با گیت QA — ۳ راند با پرامپت و seed متفاوت؛ قاعدهٔ coverQaOk (Task 50)
+    // در حالت fast: اولین تولید یکتا پذیرفته می‌شود (بدون QA بینایی)
     let best = null;
     for (let round = 0; round < 3 && !accepted; round++) {
       const genPrompt = round === 0
@@ -256,6 +273,11 @@ for (const b of briefs) {
         : await topicPromptEn(`${b.title} — ${String(b.excerpt || "").slice(0, 120)}`, b.category, callLlm);
       const gen = await generatedCover(genPrompt, b.slug, reg, liveBytes, { seedOffset: round * 5000 + runSalt });
       if (!gen) break;
+      if (FAST) {
+        accepted = { ...gen, via: "generated" };
+        console.log(`  ✓ تولید رایگان (fast) → ${gen.publicPath}`);
+        break;
+      }
       const v = await zAiVision(
         path.join(REPO_ROOT, "public", gen.publicPath),
         `این عکس باید کاور مقالهٔ ترند دکوراسیون «${b.title}» باشد. فقط JSON: {"score": ۰تا۱۰ ارتباط با موضوع, "textHeavy": کلاژ/بنر پر از متن یا لوگو؟}`
@@ -289,11 +311,15 @@ for (const b of briefs) {
     try { fs.rmSync(path.join(REPO_ROOT, "public", oldCover)); } catch {}
   }
   replaced++;
-  await sleep(20000); // نفس بین بریف‌ها — سهمیه‌ها خنک شوند (۴۲۹ در اجرای فشرده — Task 50)
+  // ذخیرهٔ تدریجی (Task 74) — کاور هر بریف بلافاصله ثبت می‌شود؛ قطعِ اجرا هیچ چیز را از دست نمی‌دهد
+  fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs }, null, 2)}\n`, "utf8");
+  saveRegistry(reg);
+  if (!FAST) fs.writeFileSync(QA_REPORT, JSON.stringify(qa, null, 2) + "\n", "utf8");
+  await sleep(FAST ? 1500 : 20000); // نفس بین بریف‌ها — سهمیه‌ها خنک شوند (۴۲۹ در اجرای فشرده — Task 50)
 }
 
 // ---------- ذخیره ----------
 fs.writeFileSync(DATA_FILE, `${JSON.stringify({ briefs }, null, 2)}\n`, "utf8");
 saveRegistry(reg);
-fs.writeFileSync(QA_REPORT, JSON.stringify(qa, null, 2) + "\n", "utf8"); // QA کاورهای تعویضی هم ثبت شد (Task 50)
+if (!FAST) fs.writeFileSync(QA_REPORT, JSON.stringify(qa, null, 2) + "\n", "utf8"); // QA کاورهای تعویضی هم ثبت شد (Task 50)
 console.log(`\nخلاصه: ${replaced}/${toReplace.size} کاور تعویض شد | رجیستری: ${Object.keys(reg.byMd5).length} md5 یکتا`);

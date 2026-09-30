@@ -108,22 +108,40 @@ const POOL_FILE = join(ROOT, "scripts/inspiration-pool.json");
 let POOL = null;
 try { POOL = JSON.parse(readFileSync(POOL_FILE, "utf8")).pool; } catch { POOL = null; }
 
-function poolImage(styleSlug, spaceSlug) {
+// ثبات دامنه — تجربهٔ ناظر: لینک‌های z-cdn چند ساعت بعد می‌میرند؛ pinimg/لوکال ماندگارند.
+// انتخاب استخر همیشه اول ثبات‌ترین‌ها (Task 74 — ضد «عکس مرده» و «استخر پوسیده»)
+function stability(url) {
+  if (typeof url !== "string") return 0;
+  if (url.startsWith("/images/")) return 3;
+  if (/^https?:\/\/(i\.pinimg\.com|images\.pexels\.com|images\.unsplash\.com|cdn\.pixabay\.com|upload\.wikimedia\.org|live\.staticflickr\.com)\//i.test(url)) return 2;
+  return 1;
+}
+
+function poolCandidates(styleSlug, spaceSlug, n = 3) {
   // وفاداری سخت‌گیرانه: فقط دقیقاً همان (سبک × فضا) — فال‌بک خواهر حذف شد
   // (عکس پذیرایی در پین «اتاق خواب» = عکس نامرتبط)؛ alias همان فضا با نام دیگر است، مجاز
-  if (!POOL) return null;
+  if (!POOL) return [];
   const alias = SPACE_POOL_ALIAS[spaceSlug];
   const direct = POOL[styleSlug]?.[spaceSlug] || (alias ? POOL[styleSlug]?.[alias] || [] : []);
-  const hit = direct.find((p) => !seenImgs.has(p.url));
-  return hit ? { ...hit, _prov: `pool:${styleSlug}:${spaceSlug}` } : null;
+  return direct
+    .filter((p) => !seenImgs.has(p.url))
+    .sort((a, b) => stability(b.url) - stability(a.url))
+    .slice(0, n)
+    .map((p) => ({ ...p, _prov: `pool:${styleSlug}:${spaceSlug}` }));
+}
+
+function poolImage(styleSlug, spaceSlug) {
+  return poolCandidates(styleSlug, spaceSlug, 1)[0] || null;
 }
 
 // استخر اختصاصی دسته‌های محصول (کلید _products در inspiration-pool.json)
-function productPoolImage(productSlug) {
-  if (!POOL) return null;
-  const cands = POOL._products?.[productSlug] || [];
-  const hit = cands.find((p) => !seenImgs.has(p.url));
-  return hit ? { ...hit, _prov: `products:${productSlug}` } : null;
+function productPoolCandidates(productSlug, n = 3) {
+  if (!POOL) return [];
+  return (POOL._products?.[productSlug] || [])
+    .filter((p) => !seenImgs.has(p.url))
+    .sort((a, b) => stability(b.url) - stability(a.url))
+    .slice(0, n)
+    .map((p) => ({ ...p, _prov: `products:${productSlug}` }));
 }
 function productPoolRemaining() {
   if (!POOL?._products) return 0;
@@ -143,13 +161,13 @@ function searchImage(query) {
 
 // جستجوی زنده serper (گوگل‌ایمیج) — در Actions هم زنده است (کلید رایگان: SERPER_API_KEY)
 const STOCK_DOMAINS = /(dreamstime|shutterstock|gettyimages|istockphoto|123rf|alamy|depositphotos|stock\.adobe|freepik|bigstockphoto|colourbox|agefotostock|photos\.com|stockcake|vecteezy)\.?/i;
-async function serperLiveImage(query) {
-  if (!serperKey()) return null;
+/** چند کاندید زندهٔ جستجو — فراخوان اقدام به سلف-هاست می‌کند؛ بدون کلید: [] */
+async function serperLiveImages(query, n = 3) {
+  if (!serperKey()) return [];
   try {
     const hits = await serperTopicImages(`${query} interior design`, { num: 10 });
-    return hits.find((p) => p.w >= 600 && !seenImgs.has(p.url) && !STOCK_DOMAINS.test(p.source || "")) || null;
-  } catch { return null;
-  }
+    return hits.filter((p) => p.w >= 600 && !seenImgs.has(p.url) && !STOCK_DOMAINS.test(p.source || "")).slice(0, n);
+  } catch { return []; }
 }
 
 // ---------- سلف-هاست + وفاداری ----------
@@ -214,28 +232,31 @@ if (!process.env.LLM_KEYS_JSON && !process.env.LLM_API_KEY && !process.env.OMNIR
 for (const [i, { style, space }] of combos.entries()) {
   const label = `${style.name} × ${space.slug}`;
   process.stdout.write(`[${i + 1}/${combos.length}] ${label} ... `);
-  let pick = null, pickProv = null;
-  if (which("z-ai")) {
-    const imgs = searchImage(`${style.en} ${space.en} layout`);
-    pick = imgs.find((p) => !seenImgs.has(p.url) && p.w >= 600) || null;
-    if (pick) pickProv = `search:${style.slug}:${space.slug}`;
-  }
-  if (!pick) {
-    const sp = await serperLiveImage(`${style.en} ${space.en} layout`); // ابر: serper (گوگل‌ایمیج)
-    if (sp) { pick = sp; pickProv = `serper:${style.slug}:${space.slug}`; }
-  }
-  if (!pick) {
-    const pp = poolImage(style.slug, space.slug); // آخرین فال‌بک: استخر (فقط دقیقاً هم‌موضوع)
-    if (pp) { pick = pp; pickProv = pp._prov; }
-  }
-  if (!pick) { console.log("✗ عکس تازه همموضوع پیدا نشد"); continue; }
-
-  // سلف-هاست: ضد انقضای لینک — اگر دانلود نشد، همان URL می‌ماند (بدترین حالت مثل قبل)
   const pinIdBase = `ag-${today.replace(/-/g, "")}-${String(cursor + i).padStart(2, "0")}`;
-  if (pick.url?.startsWith("http")) {
-    const local = await persistPinImage(pinIdBase, pick.url);
-    if (local) { pick = { ...pick, url: local }; pickProv = `local|${pickProv}`; }
+  // زنجیرهٔ کاندید: z-ai (سندباکس) → serper (گوگل‌ایمیج، ابر) → استخر (فقط دقیقاً هم‌موضوع)
+  const cands = [];
+  if (which("z-ai")) {
+    for (const img of searchImage(`${style.en} ${space.en} layout`).filter((p) => !seenImgs.has(p.url) && p.w >= 600).slice(0, 3))
+      cands.push({ img, prov: `search:${style.slug}:${space.slug}` });
   }
+  for (const img of await serperLiveImages(`${style.en} ${space.en} layout`))
+    cands.push({ img, prov: `serper:${style.slug}:${space.slug}` });
+  for (const pc of poolCandidates(style.slug, space.slug, 3)) cands.push({ img: pc, prov: pc._prov });
+  // قانون ضد انقضا (ناظر: ۴/۶ پین مرده — Task 74): هر کاندید http باید همین حالا
+  // سلف-هاست شود؛ نشد → کاندید بعدی. انتشار لینک منقضی‌شدنی دیگر ممکن نیست.
+  let pick = null, pickProv = null;
+  for (const c of cands) {
+    const url = c.img.url;
+    if (url?.startsWith("http")) {
+      const local = await persistPinImage(pinIdBase, url);
+      if (!local) continue;
+      c.img = { ...c.img, url: local };
+      c.prov = `local|${c.prov}`;
+    }
+    pick = c.img; pickProv = c.prov;
+    break;
+  }
+  if (!pick) { console.log("✗ عکس تازه همموضوع سلف-هاست‌شدنی پیدا نشد"); continue; }
 
   const topic = `${space.en} in ${style.en} style — image description: ${pick.source}`;
   let meta = null, via = "llm";
@@ -319,24 +340,29 @@ console.log(`پین‌های محصول این نوبت: ${productJobs.map((j) =
 for (const [k, { product, style }] of productJobs.entries()) {
   const label = `${product.slug} × ${style.name}`;
   process.stdout.write(`[${k + 1}/${productJobs.length}] ${label} ... `);
-  let pick = productPoolImage(product.slug); // اول استخر کامیت‌شده (اجرای ابری)
-  let pickProv = pick?._prov || null;
-  if (!pick && which("z-ai")) {
-    const imgs = searchImage(`${product.en} ${style.en.split(" ")[0]}`).filter((p) => p.w >= 600 && !seenImgs.has(p.url));
-    pick = imgs[0] || null;
-    if (pick) pickProv = `search-products:${product.slug}`;
+  const productPinId = `ag-${today.replace(/-/g, "")}-p${String(prodCursor).padStart(2, "0")}-${k}`;
+  // زنجیرهٔ کاندید محصول: استخر محصول (اجرای ابری) → z-ai (سندباکس) → عکس فضای هماهنگ
+  const cands = [];
+  for (const pc of productPoolCandidates(product.slug, 3)) cands.push({ img: pc, prov: pc._prov });
+  if (which("z-ai")) {
+    for (const img of searchImage(`${product.en} ${style.en.split(" ")[0]}`).filter((p) => p.w >= 600 && !seenImgs.has(p.url)).slice(0, 2))
+      cands.push({ img, prov: `search-products:${product.slug}` });
   }
-  if (!pick) {
-    const pp = poolImage(style.slug, product.room); // آخرین فال‌بک: عکس فضای هماهنگ
-    if (pp) { pick = pp; pickProv = pp._prov; }
+  for (const pc of poolCandidates(style.slug, product.room, 2)) cands.push({ img: pc, prov: pc._prov });
+  // قانون ضد انقضا — مثل پین سبک×فضا (فیکس TDZ: شناسه قبل از مصرف تعریف می‌شود)
+  let pick = null, pickProv = null;
+  for (const c of cands) {
+    const url = c.img.url;
+    if (url?.startsWith("http")) {
+      const local = await persistPinImage(productPinId, url);
+      if (!local) continue;
+      c.img = { ...c.img, url: local };
+      c.prov = `local|${c.prov || `products:${product.slug}`}`;
+    }
+    pick = c.img; pickProv = c.prov;
+    break;
   }
-  if (!pick) { console.log("✗ عکس تازه پیدا نشد"); continue; }
-
-  // سلف-هاست محصول هم مثل پین سبک×فضا — ضد انقضای لینک
-  if (pick.url?.startsWith("http")) {
-    const local = await persistPinImage(productPinId, pick.url);
-    if (local) { pick = { ...pick, url: local }; pickProv = `local|${pickProv || ""}`; }
-  }
+  if (!pick) { console.log("✗ عکس تازه سلف-هاست‌شدنی پیدا نشد"); continue; }
 
   const topic =
     `عکس یک «${product.slug}» در فضای ${product.room} با حال‌وهوای سبک ${style.name} (منبع تصویر: ${pick.source}). ` +
@@ -365,7 +391,6 @@ for (const [k, { product, style }] of productJobs.entries()) {
     };
   }
 
-  const productPinId = `ag-${today.replace(/-/g, "")}-p${String(prodCursor).padStart(2, "0")}-${k}`;
   // ضدتکرار id — مثل پین سبک×فضا
   if (gen.some((g) => g.id === productPinId)) {
     console.log("✗ id تکراری — پین محصول رد شد");

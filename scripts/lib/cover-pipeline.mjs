@@ -212,8 +212,9 @@ export async function generatedCover(promptEn, slug, reg, extraBytesIndex, opts 
   return null;
 }
 
-/** نوار پایین عکس تولیدی را می‌بُرد (واترمارک) — اگر sharp در دسترس باشد */
-async function cropBottomStrip(absPath) {
+/** نوار پایین عکس تولیدی را می‌بُرد (واترمارک) — اگر sharp در دسترس باشد
+ *  (اکسپورت برای qa-repair-pins — Task 74) */
+export async function cropBottomStrip(absPath) {
   try {
     const sharp = require("sharp");
     const meta = await sharp(absPath).metadata();

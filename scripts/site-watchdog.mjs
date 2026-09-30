@@ -301,6 +301,10 @@ try {
     deadPins ? `${deadPins} عکس مرده از ${samplePins.length} پین اخیر` : `${samplePins.length} عکس اخیر همگی زنده`,
     "لینک‌های z-cdn منقضی می‌شوند — scripts/qa-repair-pins.mjs (سلف-هاست) را اجرا کنید");
   // ② نمونهٔ پوسیدگی استخر (۱۲ URL تصادفی مصرف‌نشده)
+  //    فیکس Task 74: URLهای سلف-هاست (/images/) با fetch قابل سنجش نیستند
+  //    (URL نسبی → استثنا → مردهٔ کاذب) — با وجود فایل سنجیده می‌شوند
+  const isLocalUrl = (u) => typeof u === "string" && u.startsWith("/images/");
+  const headDeadSafe = async (u) => (isLocalUrl(u) ? !existsSync(join(ROOT, "public", u)) : headDead(u));
   const poolDoc2 = JSON.parse(readFileSync(join(ROOT, "scripts/inspiration-pool.json"), "utf8")).pool || {};
   const unused = [];
   for (const spaces of Object.values(poolDoc2)) {
@@ -310,7 +314,7 @@ try {
   }
   const poolSample = unused.sort(() => Math.random() - 0.5).slice(0, 12);
   let poolDead = 0;
-  await Promise.all(poolSample.map(async (u) => { if (await headDead(u)) poolDead++; }));
+  await Promise.all(poolSample.map(async (u) => { if (await headDeadSafe(u)) poolDead++; }));
   const rotten = poolSample.length > 0 && poolDead / poolSample.length >= 0.25;
   add("محتوا", "سلامت استخر عکس (نمونه)", !rotten,
     poolSample.length ? `${poolSample.length - poolDead}/${poolSample.length} زنده — ${unused.length} عکس مصرف‌نشده${rotten ? " ⚠ استخر در حال پوسیدن" : ""}` : "استخر خالی است",
@@ -396,17 +400,34 @@ try {
 // ---------- ⑥ تازگی دیپلوی ورسل (اختیاری) ----------
 if (process.env.VERCEL_TOKEN) {
   try {
-    const res = await fetchWithTimeout("https://api.vercel.com/v6/deployments?app=homeino&target=production&limit=1", 20_000, {
-      headers: { Authorization: `Bearer ${process.env.VERCEL_TOKEN}` },
-    });
-    const j = await res.json();
-    const d = j?.deployments?.[0];
+    const vh = { Authorization: `Bearer ${process.env.VERCEL_TOKEN}` };
+    // فیکس Task 74 («دیپلویی یافت نشد»): فیلتر app=homeino وقتی خالی برمی‌گرداند که
+    // نام deployment با پروژه فرق دارد یا توکن تیمی است. اول پروژه را از لیست
+    // پروژه‌ها پیدا می‌کنیم (teamId را هم پاسخ می‌دهد)، بعد دیپلوی با projectId.
+    let projectId = null;
+    let listUrl = "https://api.vercel.com/v9/projects?limit=40";
+    for (let hop = 0; hop < 3; hop++) {
+      const pr = await fetchWithTimeout(listUrl, 15_000, { headers: vh });
+      if (!pr.ok) break;
+      const pj = await pr.json().catch(() => null);
+      const hit = (pj?.projects || []).find((p) => /homeino/i.test(`${p.name || ""} ${p.slug || ""}`));
+      if (hit) { projectId = hit.id; break; }
+      const next = pj?.pagination?.next;
+      if (!next) break;
+      listUrl = `https://api.vercel.com${next.startsWith("/") ? next : "/" + next}`;
+    }
+    const q = new URLSearchParams({ target: "production", limit: "8", state: "READY,BUILDING,QUEUED,INITIALIZING" });
+    if (projectId) q.set("projectId", projectId);
+    if (process.env.VERCEL_TEAM_ID) q.set("teamId", process.env.VERCEL_TEAM_ID);
+    const res = await fetchWithTimeout(`https://api.vercel.com/v6/deployments?${q}`, 20_000, { headers: vh });
+    const j = await res.json().catch(() => null);
+    let d = (j?.deployments || []).find((x) => /homeino/i.test(x?.name || "")) || j?.deployments?.[0] || null;
     const ageH = d ? Math.floor((now - d.createdAt) / 36e5) : null;
     // دیپلوی تازه‌ی در حال بیلد هم یعنی خط لوله سالم است — فقط خطا/رکود آلارم است
-    const state = d?.state || "?";
+    const state = d?.state || d?.readyState || "?";
     const building = ["BUILDING", "INITIALIZING", "QUEUED"].includes(state);
     const ok = Boolean(d) && (state === "READY" || (building && ageH !== null && ageH <= 2)) && ageH !== null && ageH <= 72;
-    add("زیرساخت", "دیپلوی پروداکشن", ok, d ? `آخرین دیپلوی ${ageH} ساعت پیش — ${state}` : "دیپلویی یافت نشد", "ورسل → deployments را چک کنید");
+    add("زیرساخت", "دیپلوی پروداکشن", ok, d ? `آخرین دیپلوی ${ageH} ساعت پیش — ${state}${projectId ? "" : " (بدون projectId)"}` : `دیپلویی یافت نشد${projectId ? "" : " — پروژه هم پیدا نشد (توکن/تیم را چک کنید)"}`, "ورسل → deployments را چک کنید");
   } catch (e) {
     add("زیرساخت", "دیپلوی پروداکشن", false, "خطا: " + e.message, "اعتبار VERCEL_TOKEN را چک کنید");
   }

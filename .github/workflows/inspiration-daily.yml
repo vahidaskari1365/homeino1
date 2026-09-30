@@ -62,6 +62,11 @@ jobs:
           OMNIROUTE_BASE_URL: http://localhost:20128/v1
         run: node scripts/inspiration-daily.mjs --pins=${{ github.event.inputs.pins || '6' }}
 
+      - name: Self-heal dead/mismatched pins (Task 74)
+        env:
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        run: node scripts/qa-repair-pins.mjs --parallel=4
+
       - name: Commit and push if changed
         run: |
           git config user.name "homeino-inspiration-bot"

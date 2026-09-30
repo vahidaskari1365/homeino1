@@ -64,6 +64,38 @@ async function main() {
   }
   console.log(`serper-pool-topup] ترک‌های کم‌عروده (<${MIN_PER_TRACK}): ${starved.length}`);
 
+  // ---------- پالایش خودکار لینک‌های مرده (Task 74 — ضد «استخر پوسیده» ناظر) ----------
+  // لینک‌های z-cdn/chatglm چند ساعت بعد می‌میرند؛ هر اجرا قبل از شارژ، مرده‌های
+  // دامنه‌های ناپایدار را حذف می‌کند (دامنه‌های پایدار مثل pinimg چک نمی‌شوند).
+  const STABLE_RE = /^https?:\/\/(i\.pinimg\.com|images\.pexels\.com|images\.unsplash\.com|cdn\.pixabay\.com|upload\.wikimedia\.org|live\.staticflickr\.com|images\.adsttc\.com|cdn\.home-designing\.com)\//i;
+  const httpUrls = [...existingUrls].filter((u) => typeof u === "string" && u.startsWith("http") && !STABLE_RE.test(u));
+  let purged = 0;
+  if (httpUrls.length) {
+    const dead = new Set();
+    let pi = 0;
+    await Promise.all(Array.from({ length: 16 }, async () => {
+      while (pi < httpUrls.length) {
+        const u = httpUrls[pi++];
+        try {
+          const r = await fetch(u, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(7000), headers: { "User-Agent": "Mozilla/5.0 (compatible; HomeinoInspirationBot/1.0; +https://homeino.ir)" } });
+          if (!r.ok) dead.add(u);
+        } catch { dead.add(u); }
+      }
+    }));
+    if (dead.size) {
+      for (const spaces of Object.values(pool)) {
+        if (!spaces || typeof spaces !== "object") continue;
+        for (const [room, arr] of Object.entries(spaces)) {
+          if (!Array.isArray(arr)) continue;
+          const kept = arr.filter((it) => !(it?.url?.startsWith("http") && dead.has(it.url)));
+          purged += arr.length - kept.length;
+          spaces[room] = kept;
+        }
+      }
+      console.log(`serper-pool-topup] پالایش: ${purged} لینک مرده از ${httpUrls.length} چک‌شده حذف شد`);
+    }
+  }
+
   let added = 0;
   const report = [];
   for (const { style, room, have } of starved) {
@@ -91,14 +123,14 @@ async function main() {
   }
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  if (added === 0) {
-    console.log("serper-pool-topup] هیچ URL تازه‌ای قبول نشد — فایل دست‌نخورده ماند");
+  if (added === 0 && purged === 0) {
+    console.log("serper-pool-topup] هیچ تغییری (تازه‌ای قبول نشد، مرده‌ای نبود) — فایل دست‌نخورده ماند");
     process.exit(0);
   }
   db._comment = db._comment ?? "استخر عکس ایجنت الهام";
-  db._topup = { at: new Date().toISOString(), added, via: "serper", tracks: report.length };
+  db._topup = { at: new Date().toISOString(), added, purged, via: "serper", tracks: report.length };
   fs.writeFileSync(POOL_FILE, `${JSON.stringify(db, null, 2)}\n`, "utf8");
-  console.log(`serper-pool-topup] ✓ ${added} عکس تازه به ${report.length} ترک اضافه شد`);
+  console.log(`serper-pool-topup] ✓ ${added} عکس تازه + ${purged} لینک مرده حذف‌شده → ذخیره شد`);
 }
 
 main().catch((e) => {
