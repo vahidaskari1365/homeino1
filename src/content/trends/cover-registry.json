@@ -219,7 +219,10 @@
     "c7b268e309dfeb60e4c6d73632320d86": "2026-09-30-jthdud",
     "5cd0f2d57de8df675a4146fb8779d278": "2026-09-30-zm8hlb",
     "24fef60f34dd6539367e371a64ea7911": "2026-09-30-tedyp3",
-    "173e1d17ce2004f6c55a9da39165583f": "2026-09-30-4diopa"
+    "173e1d17ce2004f6c55a9da39165583f": "2026-09-30-4diopa",
+    "c2afb2e94202f7b879c1ff5e519e4d58": "2026-09-30-om4sgq",
+    "bddf4785e49dcd7806db1e067c9d9044": "2026-09-30-executive",
+    "caf7f80746db27e7aa47c4708c9e88aa": "2026-09-30-ot57pb"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -408,7 +411,10 @@
     "/images/trends/src/2026-09-30-jthdud.jpg": "2026-09-30-jthdud",
     "/images/trends/src/2026-09-30-zm8hlb.jpg": "2026-09-30-zm8hlb",
     "/images/trends/src/2026-09-30-tedyp3.jpg": "2026-09-30-tedyp3",
-    "/images/trends/src/2026-09-30-4diopa.jpg": "2026-09-30-4diopa"
+    "/images/trends/src/2026-09-30-4diopa.jpg": "2026-09-30-4diopa",
+    "/images/trends/src/2026-09-30-om4sgq.jpg": "2026-09-30-om4sgq",
+    "/images/trends/src/2026-09-30-executive.jpg": "2026-09-30-executive",
+    "/images/trends/src/2026-09-30-ot57pb.jpg": "2026-09-30-ot57pb"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -627,6 +633,9 @@
     "https://images.adsttc.com/media/images/6abb/84e5/21f2/b512/ac86/a755/large_jpg/building-and-rebuilding-irelands-laboratory-of-renovation_5.jpg?1790674154": "2026-09-30-jthdud",
     "https://image.pollinations.ai/prompt/Natural%20lighting%20fixture%20handcrafted%20with%20wood%20and%20stone%2C%20realistic%20interior%20photo%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=161654&nologo=true&model=flux": "2026-09-30-zm8hlb",
     "https://image.pollinations.ai/prompt/Modern%20minimalist%20bathroom%20with%20open-air%20design%20and%20natural%20elements%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=126575&nologo=true&model=flux": "2026-09-30-tedyp3",
-    "https://image.pollinations.ai/prompt/White%20plant%20pots%20in%20luxurious%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=176781&nologo=true&model=flux": "2026-09-30-4diopa"
+    "https://image.pollinations.ai/prompt/White%20plant%20pots%20in%20luxurious%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=176781&nologo=true&model=flux": "2026-09-30-4diopa",
+    "https://cdn.mos.cms.futurecdn.net/hVwizfkFbSFHrhtBM7sXkk-2400-80.jpg": "2026-09-30-om4sgq",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=72569&nologo=true&model=flux": "2026-09-30-executive",
+    "https://cdn.mos.cms.futurecdn.net/sSQ8FK6XZVnng9xe6YiLQe-2400-80.jpg": "2026-09-30-ot57pb"
   }
 }
