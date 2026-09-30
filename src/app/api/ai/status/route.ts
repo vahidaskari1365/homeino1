@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isZEngineConfigured } from "@/services/ai/engineConfig";
 import { isOpenAiCompatConfigured } from "@/services/ai/llm/openaiCompatLlm";
 import { resolveGeminiConfig } from "@/services/ai/settings";
+import { isCfWorkersAiConfigured } from "@/services/ai/provider";
 
 // ============================================================
 // GET /api/ai/status — تشخیص صادقانه وضعیت موتور هوش مصنوعی
@@ -22,6 +23,7 @@ export async function GET() {
   const zEngine = isZEngineConfigured();
   const openaiChat = isOpenAiCompatConfigured();
   const freellm = Boolean(process.env.FREELLMAPI_API_KEY && process.env.FREELLMAPI_BASE_URL);
+  const cfWorkersAi = isCfWorkersAiConfigured();
 
   const active = gemini
     ? "gemini"
@@ -51,6 +53,11 @@ export async function GET() {
       zaiEngine: { configured: zEngine, env: "ZAI_API_BASE_URL + ZAI_API_KEY (یا فایل .z-ai-config)", quality: "موتور GLM — تولید + ویرایش" },
       openaiChat: { configured: openaiChat, env: "LLM_API_BASE_URL + LLM_API_KEY", quality: "فقط چت/متن — تصویر ندارد" },
       freellmapi: { configured: freellm, env: "FREELLMAPI_API_KEY + FREELLMAPI_BASE_URL", quality: "اختیاری، ایزوله" },
+      cloudflareWorkersAi: {
+        configured: cfWorkersAi,
+        env: "CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN",
+        quality: "فری‌تیر ۱۰هزار neuron/روز — فلکس‌شنل ≈ ۲۰ عکس/روز بدون واترمارک (موتور دومِ تولید)",
+      },
     },
   });
 }

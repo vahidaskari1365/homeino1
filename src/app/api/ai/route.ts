@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider, resolveFreeGenerationFallback, resolveCfGenerationFallback, imageDispatchPlan, shouldBlockMockEdit, isCfImageWorkerConfigured, type ImageAction } from "@/services/ai/provider";
+import { resolveProvider, resolveFreeGenerationFallback, resolveCfGenerationFallback, resolveCfWorkersAiFallback, imageDispatchPlan, shouldBlockMockEdit, isCfImageWorkerConfigured, isCfWorkersAiConfigured, type ImageAction } from "@/services/ai/provider";
 import type { ProviderName } from "@/services/ai/provider";
 import { mockAiProvider } from "@/services/ai/mockAiService";
 import { sanitizeUserPrompt, ALL_ELEMENTS } from "@/services/ai/roomState";
@@ -446,8 +446,11 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
     const imageAction = IMAGE_ACTIONS.has(action) ? (action as ImageAction) : null;
     // Task 42 — زنجیره رایگانِ تولید: pollinations + (وقتی تنظیم باشد) ورکر
     // کلادفلر free-image-generation-api. اگر ورکر ست نباشد plan مثل قبل می‌ماند.
+    // Task 73 — + Workers AI مستقیم (CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN)،
+    // فلکس‌شنل ≈ ۲۰ عکس/روز رایگان بدون واترمارک؛ آخر زنجیرهٔ رایگان، قبل از mock.
     const freeChain: ProviderName[] = ["pollinations"];
     if (isCfImageWorkerConfigured()) freeChain.push("cloudflare");
+    if (isCfWorkersAiConfigured()) freeChain.push("cloudflare-workers");
     const plan = imageAction ? imageDispatchPlan(imageAction, name, freeChain) : [name];
 
     // Task 40 — صداقت روی پروداکشن: با هیچ موتور واقعی، edit/inpaint نباید
@@ -464,6 +467,7 @@ async function handleAction(action: string, p: Record<string, unknown>, requestI
         step === name ? provider
           : step === "pollinations" ? await resolveFreeGenerationFallback()
           : step === "cloudflare" ? await resolveCfGenerationFallback()
+          : step === "cloudflare-workers" ? await resolveCfWorkersAiFallback()
           : mockAiProvider;
       if (!stepProvider) continue;
       try {

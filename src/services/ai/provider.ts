@@ -23,7 +23,7 @@ import { isOpenAiCompatConfigured } from "./llm/openaiCompatLlm";
 import { isZEngineConfigured } from "./engineConfig";
 import { resolveGeminiConfig } from "./settings";
 
-export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat" | "pollinations" | "cloudflare";
+export type ProviderName = "mock" | "gemini" | "zai" | "freellmapi" | "openai-chat" | "pollinations" | "cloudflare" | "cloudflare-workers";
 export interface ResolvedProvider { provider: AiProvider; name: ProviderName }
 
 export type ImageAction = "generate" | "edit" | "inpaint";
@@ -127,6 +127,27 @@ export async function resolveCfGenerationFallback(): Promise<AiProvider | null> 
   try {
     const m = await import("./cloudflareProvider");
     return m.cloudflareProvider;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Task 73 — Workers AI مستقیم (REST رسمی، بدون ورکر واسط):
+ * با CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN فعال می‌شود؛
+ * فری‌تیر ۱۰هزار neuron/روز — فلکس‌شنل ≈ ۲۰ عکس/روز، بدون واترمارک.
+ */
+export function isCfWorkersAiConfigured(): boolean {
+  const id = (process.env.CLOUDFLARE_ACCOUNT_ID || "").trim();
+  const token = (process.env.CLOUDFLARE_API_TOKEN || "").trim();
+  return /^[a-f0-9]{32}$/i.test(id) && token.length >= 20;
+}
+
+export async function resolveCfWorkersAiFallback(): Promise<AiProvider | null> {
+  if (!isCfWorkersAiConfigured()) return null;
+  try {
+    const m = await import("./cloudflareWorkersAi");
+    return m.cloudflareWorkersAiProvider;
   } catch {
     return null;
   }
