@@ -229,7 +229,11 @@
     "be33de41f995b5514ef49156b10acf7d": "2026-10-01-39unuz",
     "9b0b82c93190c45f6fb1b483a3db4f51": "2026-10-01-i7hafb",
     "7be69e64e94393c7c236053ea05d0f24": "2026-10-01-xzhy1m",
-    "96490d301f506494ec8d740e777ccc67": "2026-10-01-fgt5i1"
+    "96490d301f506494ec8d740e777ccc67": "2026-10-01-fgt5i1",
+    "d318c560194ee5126dbdd6fdad59cc6a": "2026-10-01-qbm4jc",
+    "a7d73474f95d1bdd73491bf7cef4d2cc": "2026-10-01-mr16ys",
+    "a44931dfa50fd46e7c381dccdc6d935d": "2026-10-01-qrf4l5",
+    "7ad6bc0ddc8e15e3d7f6afaa83d992ab": "2026-10-01-1i7to1"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -428,7 +432,11 @@
     "/images/trends/src/2026-10-01-39unuz.jpg": "2026-10-01-39unuz",
     "/images/trends/src/2026-10-01-i7hafb.jpg": "2026-10-01-i7hafb",
     "/images/trends/src/2026-10-01-xzhy1m.jpg": "2026-10-01-xzhy1m",
-    "/images/trends/src/2026-10-01-fgt5i1.jpg": "2026-10-01-fgt5i1"
+    "/images/trends/src/2026-10-01-fgt5i1.jpg": "2026-10-01-fgt5i1",
+    "/images/trends/src/2026-10-01-qbm4jc.jpg": "2026-10-01-qbm4jc",
+    "/images/trends/src/2026-10-01-mr16ys.jpg": "2026-10-01-mr16ys",
+    "/images/trends/src/2026-10-01-qrf4l5.jpg": "2026-10-01-qrf4l5",
+    "/images/trends/src/2026-10-01-1i7to1.jpg": "2026-10-01-1i7to1"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -657,6 +665,10 @@
     "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=90477&nologo=true&model=flux": "2026-10-01-39unuz",
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=50028&nologo=true&model=flux": "2026-10-01-i7hafb",
     "https://image.pollinations.ai/prompt/beautiful%20area%20rug%20anchoring%20a%20stylish%20living%20room%2C%20interior%20design%20photography?width=1152&height=864&seed=84632&nologo=true&model=flux": "2026-10-01-xzhy1m",
-    "https://image.pollinations.ai/prompt/luxury%20villa%20living%20space%20opening%20to%20a%20garden%2C%20interior%20design%20photography?width=1152&height=864&seed=7291&nologo=true&model=flux": "2026-10-01-fgt5i1"
+    "https://image.pollinations.ai/prompt/luxury%20villa%20living%20space%20opening%20to%20a%20garden%2C%20interior%20design%20photography?width=1152&height=864&seed=7291&nologo=true&model=flux": "2026-10-01-fgt5i1",
+    "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=474&nologo=true&model=flux": "2026-10-01-qbm4jc",
+    "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=75605&nologo=true&model=flux": "2026-10-01-mr16ys",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=68745&nologo=true&model=flux": "2026-10-01-qrf4l5",
+    "https://cdn.mos.cms.futurecdn.net/23B2doEW4AyFdMFfJ285zX-1600-80.jpg": "2026-10-01-1i7to1"
   }
 }
