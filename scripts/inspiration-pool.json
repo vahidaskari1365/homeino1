@@ -63,6 +63,10 @@
         {
           "url": "https://i.pinimg.com/564x/9c/d6/3f/9cd63fe15cb843a3423f74aa7b0ba970.jpg",
           "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/10/ee/9c/10ee9cc4f610534002692749622ed0b7.jpg",
+          "source": "Pinterest"
         }
       ],
       "ناهارخوری": [
@@ -96,12 +100,25 @@
         {
           "url": "https://i.pinimg.com/564x/a9/0b/41/a90b416ae3c6c7ec041d93335c0f4aac.jpg",
           "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/f1/dc/d1/f1dcd15e04f47ba9f11f0bccb8f7cd07.jpg",
+          "source": "Pinterest"
         }
       ],
       "بیرونی": []
     },
     "minimal": {
-      "فضای کار": [],
+      "فضای کار": [
+        {
+          "url": "https://i.pinimg.com/564x/9a/a3/c8/9aa3c8e8715c90546c8d5aaaea55ad12.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/b3/21/e2/b321e2485da40c0dde2685c3a4fdcb56.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "پذیرایی": [
         {
           "url": "https://i.pinimg.com/564x/e2/0a/ac/e20aac4cfc6c04e993e500ce824b173d.jpg",
@@ -131,6 +148,10 @@
       "اتاق خواب": [
         {
           "url": "https://i.pinimg.com/564x/d1/f1/68/d1f1682b47237c6409fa9f20a8991d12.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/09/c3/f3/09c3f3430f6824e1399f5499f5acb9c1.jpg",
           "source": "Pinterest"
         }
       ],
