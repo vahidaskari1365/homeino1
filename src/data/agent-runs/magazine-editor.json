@@ -1,7 +1,41 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-09-30T19:36:59.252Z",
+  "updatedAt": "2026-10-01T10:43:34.469Z",
   "runs": [
+    {
+      "id": "run-1790851414469-m200b",
+      "at": "2026-10-01T10:43:34.469Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 703315,
+      "summary": "3 بریف ترند جدید (روشنایی و لوستر، دکوری و اکسسوری، کف‌پوش) — از طریق zai-1 — QA 1 رد",
+      "detail": {
+        "added": 3,
+        "articlesAdded": 0,
+        "total": 222,
+        "via": "zai-1",
+        "titles": [
+          "روشنایی‌های قارچی و مدرن",
+          "طراحی آشپزخانه کلاسیک با اکسسوری‌های Vintage",
+          "ترند کف‌پوش چوب ۲۰۲۷: رنگ‌ها و متریال‌های جدید"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [
+          {
+            "title": "دیوارهای رنگی در حمام، ترند دکوری ۱۴۰۵",
+            "reason": "خلاصه کمتر از ۳ جمله است (2)"
+          }
+        ],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1790797019252-yitqu",
       "at": "2026-09-30T19:36:59.252Z",

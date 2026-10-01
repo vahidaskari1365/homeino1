@@ -222,7 +222,10 @@
     "173e1d17ce2004f6c55a9da39165583f": "2026-09-30-4diopa",
     "c2afb2e94202f7b879c1ff5e519e4d58": "2026-09-30-om4sgq",
     "bddf4785e49dcd7806db1e067c9d9044": "2026-09-30-executive",
-    "caf7f80746db27e7aa47c4708c9e88aa": "2026-09-30-ot57pb"
+    "caf7f80746db27e7aa47c4708c9e88aa": "2026-09-30-ot57pb",
+    "c191f7cd87d7e43d2e6f4c7c04bb12d4": "2026-10-01-uiuq79",
+    "8171942fc48ae46439aff1e71e26ec80": "2026-10-01-vintage",
+    "6757051ef417e8dc34b56ad60a711a6a": "2026-10-01-s35x3n"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -414,7 +417,10 @@
     "/images/trends/src/2026-09-30-4diopa.jpg": "2026-09-30-4diopa",
     "/images/trends/src/2026-09-30-om4sgq.jpg": "2026-09-30-om4sgq",
     "/images/trends/src/2026-09-30-executive.jpg": "2026-09-30-executive",
-    "/images/trends/src/2026-09-30-ot57pb.jpg": "2026-09-30-ot57pb"
+    "/images/trends/src/2026-09-30-ot57pb.jpg": "2026-09-30-ot57pb",
+    "/images/trends/src/2026-10-01-uiuq79.jpg": "2026-10-01-uiuq79",
+    "/images/trends/src/2026-10-01-vintage.jpg": "2026-10-01-vintage",
+    "/images/trends/src/2026-10-01-s35x3n.jpg": "2026-10-01-s35x3n"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -636,6 +642,9 @@
     "https://image.pollinations.ai/prompt/White%20plant%20pots%20in%20luxurious%20modern%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=176781&nologo=true&model=flux": "2026-09-30-4diopa",
     "https://cdn.mos.cms.futurecdn.net/hVwizfkFbSFHrhtBM7sXkk-2400-80.jpg": "2026-09-30-om4sgq",
     "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=72569&nologo=true&model=flux": "2026-09-30-executive",
-    "https://cdn.mos.cms.futurecdn.net/sSQ8FK6XZVnng9xe6YiLQe-2400-80.jpg": "2026-09-30-ot57pb"
+    "https://cdn.mos.cms.futurecdn.net/sSQ8FK6XZVnng9xe6YiLQe-2400-80.jpg": "2026-09-30-ot57pb",
+    "https://cdn.mos.cms.futurecdn.net/HYutDnaa7ChuhiiN3r5WGc-2560-80.jpg": "2026-10-01-uiuq79",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=53213&nologo=true&model=flux": "2026-10-01-vintage",
+    "https://image.pollinations.ai/prompt/premium%20wooden%20flooring%20in%20a%20bright%20modern%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=48647&nologo=true&model=flux": "2026-10-01-s35x3n"
   }
 }
