@@ -2692,7 +2692,7 @@
   {
     "id": "ag-20260921-53",
     "title": "طبیعت و طلایی؛ هم‌نشینی هنر دکوری و باغچه ایرانی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9a8ce12d6e7b.jpg",
+    "image": "/images/pins/ag-20260921-53.jpg",
     "styleSlug": "art-deco",
     "room": "حیاط و محوطه",
     "tags": [
@@ -2720,7 +2720,7 @@
     },
     "createdAt": "2026-09-21T09:16:17.328Z",
     "_via": "llm",
-    "_prov": "pool:art-deco:حیاط و محوطه"
+    "_prov": "local|gen:art-deco:حیاط و محوطه"
   },
   {
     "id": "ag-20260921-52",

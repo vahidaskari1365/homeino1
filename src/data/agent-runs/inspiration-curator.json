@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-01T10:30:41.476Z",
+  "updatedAt": "2026-10-01T15:43:31.301Z",
   "runs": [
+    {
+      "id": "run-1790869411301-o45v9",
+      "at": "2026-10-01T15:43:31.301Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 366053,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 240,
+        "via": "template",
+        "poolRemaining": 105,
+        "productPoolRemaining": 24,
+        "skippedStarved": 11,
+        "combos": [
+          "کلاسیک × فضای کار",
+          "مدرن × حیاط و محوطه",
+          "صنعتی × فضای کار",
+          "مدرن × پذیرایی"
+        ],
+        "productJobs": [
+          "کف‌پوش",
+          "دکوری و اکسسوری"
+        ]
+      }
+    },
     {
       "id": "run-1790850641476-o60y0",
       "at": "2026-10-01T10:30:41.476Z",
