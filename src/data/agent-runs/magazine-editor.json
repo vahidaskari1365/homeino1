@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-01T10:43:34.469Z",
+  "updatedAt": "2026-10-01T16:42:37.253Z",
   "runs": [
+    {
+      "id": "run-1790872957253-vw3yu",
+      "at": "2026-10-01T16:42:37.253Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 738718,
+      "summary": "4 بریف ترند جدید (سبک‌ها، مبلمان، ویلا و باغ، فرش و قالیچه) + ۱ مقاله کامل مجله («ترند بورروکور؛ خانه‌ای پناهگاه‌گونه در پ…») — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 226,
+        "via": "zai-1",
+        "titles": [
+          "ترند بورروکور: دکوراسیون درون‌گرا برای پاییز",
+          "آشتی مینیمالیسم و کلاسیک در مبلمان قدیمی",
+          "تخفیف‌های ۱۵٪ تا ۶۵٪ Lowe's برای دکور پاییز",
+          "فرش‌های اورجینال الهام گرفته از طبیعت"
+        ],
+        "sources": [
+          "news.google.com",
+          "dezeen.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 1
+        }
+      }
+    },
     {
       "id": "run-1790851414469-m200b",
       "at": "2026-10-01T10:43:34.469Z",
