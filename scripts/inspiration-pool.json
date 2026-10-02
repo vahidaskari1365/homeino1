@@ -157,7 +157,12 @@
     "scandinavian": {
       "اتاق خواب": [],
       "پذیرایی": [],
-      "ناهارخوری": [],
+      "ناهارخوری": [
+        {
+          "url": "https://i.pinimg.com/564x/35/9a/e0/359ae0853591a58347ed2f793bb17208.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "فضای کار": [
         {
           "url": "https://i.pinimg.com/564x/ca/aa/f0/caaaf073302f6e82995de5e0aae9aba0.jpg",
@@ -172,7 +177,12 @@
           "source": "Pinterest"
         }
       ],
-      "بیرونی": []
+      "بیرونی": [
+        {
+          "url": "https://i.pinimg.com/564x/45/56/5f/45565f38d78fa6b6406c59e373269768.jpg",
+          "source": "Pinterest"
+        }
+      ]
     },
     "minimal": {
       "فضای کار": [
@@ -303,8 +313,18 @@
       "پذیرایی": [],
       "فضای کار": [],
       "ناهارخوری": [],
-      "بیرونی": [],
-      "اتاق خواب": []
+      "بیرونی": [
+        {
+          "url": "https://i.pinimg.com/564x/52/83/54/5283546b52d83f04b432670dcb61bc6d.jpg",
+          "source": "Pinterest"
+        }
+      ],
+      "اتاق خواب": [
+        {
+          "url": "https://i.pinimg.com/564x/e2/1e/8e/e21e8e53117370f5bebbafa98732b04e.jpg",
+          "source": "Pinterest"
+        }
+      ]
     },
     "boho": {
       "پذیرایی": [],
@@ -414,6 +434,10 @@
         },
         {
           "url": "https://i.pinimg.com/564x/0d/d7/a8/0dd7a8359f73310da5513f860bf44741.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/b2/b2/50/b2b250aea2e6eb2189148a6f68013fc0.jpg",
           "source": "Pinterest"
         }
       ],
