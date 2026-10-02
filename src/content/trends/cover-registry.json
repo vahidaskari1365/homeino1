@@ -233,7 +233,10 @@
     "d318c560194ee5126dbdd6fdad59cc6a": "2026-10-01-qbm4jc",
     "a7d73474f95d1bdd73491bf7cef4d2cc": "2026-10-01-mr16ys",
     "a44931dfa50fd46e7c381dccdc6d935d": "2026-10-01-qrf4l5",
-    "7ad6bc0ddc8e15e3d7f6afaa83d992ab": "2026-10-01-1i7to1"
+    "7ad6bc0ddc8e15e3d7f6afaa83d992ab": "2026-10-01-1i7to1",
+    "19e1c0fc4e04d8bcc5dd7426d0942795": "2026-10-02-u2jdqz",
+    "68e01db35a12ee54c0fd2384b0c85243": "2026-10-02-blmcz8",
+    "e830f95b250acd2119438b0e28e5bbda": "2026-10-02-eejuyh"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -436,7 +439,10 @@
     "/images/trends/src/2026-10-01-qbm4jc.jpg": "2026-10-01-qbm4jc",
     "/images/trends/src/2026-10-01-mr16ys.jpg": "2026-10-01-mr16ys",
     "/images/trends/src/2026-10-01-qrf4l5.jpg": "2026-10-01-qrf4l5",
-    "/images/trends/src/2026-10-01-1i7to1.jpg": "2026-10-01-1i7to1"
+    "/images/trends/src/2026-10-01-1i7to1.jpg": "2026-10-01-1i7to1",
+    "/images/trends/src/2026-10-02-u2jdqz.jpg": "2026-10-02-u2jdqz",
+    "/images/trends/src/2026-10-02-blmcz8.jpg": "2026-10-02-blmcz8",
+    "/images/trends/src/2026-10-02-eejuyh.jpg": "2026-10-02-eejuyh"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -669,6 +675,9 @@
     "https://image.pollinations.ai/prompt/freshly%20painted%20accent%20wall%20in%20a%20tasteful%20modern%20interior%2C%20colour-focused%20interior%20design%20photography?width=1152&height=864&seed=474&nologo=true&model=flux": "2026-10-01-qbm4jc",
     "https://image.pollinations.ai/prompt/beautifully%20styled%20modern%20interior%20with%20character%2C%20interior%20design%20photography?width=1152&height=864&seed=75605&nologo=true&model=flux": "2026-10-01-mr16ys",
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=68745&nologo=true&model=flux": "2026-10-01-qrf4l5",
-    "https://cdn.mos.cms.futurecdn.net/23B2doEW4AyFdMFfJ285zX-1600-80.jpg": "2026-10-01-1i7to1"
+    "https://cdn.mos.cms.futurecdn.net/23B2doEW4AyFdMFfJ285zX-1600-80.jpg": "2026-10-01-1i7to1",
+    "https://media.architecturaldigest.com/photos/6abb0e04ccd8f11c28dcade7/16:9/w_1280,c_limit/Great%20room%20%20%C2%A9Jane%20Beiles%20AD2218.jpg": "2026-10-02-u2jdqz",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=54374&nologo=true&model=flux": "2026-10-02-blmcz8",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=5122&nologo=true&model=flux": "2026-10-02-eejuyh"
   }
 }
