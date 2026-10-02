@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-02T14:58:29.156Z",
+  "updatedAt": "2026-10-02T18:38:29.811Z",
   "runs": [
+    {
+      "id": "run-1790966309811-7lpkc",
+      "at": "2026-10-02T18:38:29.811Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 40333,
+      "summary": "3 پین الهام جدید (بازنویسی LLM؛ 2 پین محصول‌محور)",
+      "detail": {
+        "added": 3,
+        "productPins": 2,
+        "total": 252,
+        "via": "llm",
+        "poolRemaining": 102,
+        "productPoolRemaining": 18,
+        "skippedStarved": 5,
+        "combos": [
+          "معاصر × حیاط و محوطه",
+          "مدرن × اتاق خواب",
+          "مینیمال × ناهارخوری",
+          "کلاسیک × فضای کار"
+        ],
+        "productJobs": [
+          "پرده و منسوجات",
+          "فرش و قالیچه"
+        ]
+      }
+    },
     {
       "id": "run-1790953109156-xnf2o",
       "at": "2026-10-02T14:58:29.156Z",
