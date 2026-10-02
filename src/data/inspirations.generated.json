@@ -2905,7 +2905,7 @@
   {
     "id": "ag-20260921-55",
     "title": "چیدمان ناهارخوری اسکاندیناوی با چوب بلوط و نور روز",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/05bf9e5dde7d.jpg",
+    "image": "/images/pins/ag-20260921-55.jpg",
     "styleSlug": "scandinavian",
     "room": "ناهارخوری",
     "tags": [
@@ -2933,7 +2933,7 @@
     },
     "createdAt": "2026-09-21T09:16:41.982Z",
     "_via": "llm",
-    "_prov": "pool:scandinavian:ناهارخوری"
+    "_prov": "local|pool:scandinavian:ناهارخوری"
   },
   {
     "id": "ag-20260921-54",
@@ -6285,7 +6285,7 @@
   {
     "id": "ag-20260910-19",
     "title": "تراس آرامش‌بخش به سبک ژاپندی با گرمای چوب طبیعی",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0849aee55e1a.jpg",
+    "image": "/images/pins/ag-20260910-19.jpg",
     "styleSlug": "japandi",
     "room": "بیرونی",
     "tags": [
@@ -6312,7 +6312,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-10T13:00:14.022Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:japandi:بیرونی"
   },
   {
     "id": "ag-20260909-22",
@@ -7541,7 +7542,7 @@
   {
     "id": "ag-20260906-bf016",
     "title": "بالکن اسکاندیناویایی روشن و دنج",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5262a7c4c752.jpg",
+    "image": "/images/pins/ag-20260906-bf016.jpg",
     "styleSlug": "scandinavian",
     "room": "بیرونی",
     "tags": [
@@ -7569,7 +7570,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T08:42:19.048Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:scandinavian:بیرونی"
   },
   {
     "id": "ag-20260906-bf015",

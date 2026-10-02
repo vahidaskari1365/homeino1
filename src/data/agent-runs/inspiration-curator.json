@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-02T10:05:46.911Z",
+  "updatedAt": "2026-10-02T14:58:29.156Z",
   "runs": [
+    {
+      "id": "run-1790953109156-xnf2o",
+      "at": "2026-10-02T14:58:29.156Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 237255,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 249,
+        "via": "template",
+        "poolRemaining": 105,
+        "productPoolRemaining": 20,
+        "skippedStarved": 4,
+        "combos": [
+          "صنعتی × فضای کار",
+          "مدرن × پذیرایی",
+          "مینیمال × فضای کار",
+          "اسکاندیناوی × حیاط و محوطه"
+        ],
+        "productJobs": [
+          "گلدان و گیاه",
+          "مبل و مبلمان"
+        ]
+      }
+    },
     {
       "id": "run-1790935546911-9j12w",
       "at": "2026-10-02T10:05:46.911Z",
