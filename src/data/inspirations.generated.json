@@ -5759,7 +5759,7 @@
   {
     "id": "ag-20260912-26",
     "title": "چیدمان اتاق خواب به سبک نئوکلاسیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1d7d593420a3.jpg",
+    "image": "/images/pins/ag-20260912-26.jpg",
     "styleSlug": "neoclassic",
     "room": "اتاق خواب",
     "tags": [
@@ -5785,7 +5785,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-12T16:24:49.234Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:neoclassic:اتاق خواب"
   },
   {
     "id": "ag-20260912-p05-1",
@@ -5853,7 +5854,7 @@
   {
     "id": "ag-20260912-25",
     "title": "پذیرایی نئوکلاسیک؛ ترکیب ظرافت مدرن و شکوه اصیل",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/23fdb00dfe2a.jpg",
+    "image": "/images/pins/ag-20260912-25.jpg",
     "styleSlug": "neoclassic",
     "room": "پذیرایی",
     "tags": [
@@ -5880,7 +5881,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-12T12:17:39.242Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|gen:neoclassic:پذیرایی"
   },
   {
     "id": "ag-20260912-30",

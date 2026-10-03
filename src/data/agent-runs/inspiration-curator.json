@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-03T09:33:58.966Z",
+  "updatedAt": "2026-10-03T13:43:46.509Z",
   "runs": [
+    {
+      "id": "run-1791035026509-uhi7v",
+      "at": "2026-10-03T13:43:46.509Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 346575,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 258,
+        "via": "template",
+        "poolRemaining": 104,
+        "productPoolRemaining": 16,
+        "skippedStarved": 15,
+        "combos": [
+          "مدرن × ناهارخوری",
+          "معاصر × فضای کار",
+          "مینیمال × اتاق خواب",
+          "صنعتی × حیاط و محوطه"
+        ],
+        "productJobs": [
+          "کمد و ذخیره‌سازی",
+          "روشنایی و لوستر"
+        ]
+      }
+    },
     {
       "id": "run-1791020038966-gpg3w",
       "at": "2026-10-03T09:33:58.966Z",
