@@ -303,7 +303,12 @@
       "پذیرایی": [],
       "فضای کار": [],
       "ناهارخوری": [],
-      "بیرونی": [],
+      "بیرونی": [
+        {
+          "url": "https://i.pinimg.com/564x/52/83/54/5283546b52d83f04b432670dcb61bc6d.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "اتاق خواب": []
     },
     "boho": {
@@ -406,7 +411,16 @@
     },
     "classic": {
       "پذیرایی": [],
-      "اتاق خواب": [],
+      "اتاق خواب": [
+        {
+          "url": "https://i.pinimg.com/564x/3a/04/fe/3a04fe7ad348da2ca01d0dfe9cb51de1.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/cd/48/b1/cd48b1a2f6c9f162f465ef73dfceebec.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "فضای کار": [
         {
           "url": "https://i.pinimg.com/564x/7d/04/d6/7d04d634816156112449636f8421b26f.jpg",
@@ -419,14 +433,32 @@
         {
           "url": "https://i.pinimg.com/564x/b2/b2/50/b2b250aea2e6eb2189148a6f68013fc0.jpg",
           "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/90/3f/47/903f473f1b1e8be484297b6477f7b86b.jpg",
+          "source": "Pinterest"
         }
       ],
-      "ناهارخوری": [],
+      "ناهارخوری": [
+        {
+          "url": "https://i.pinimg.com/564x/7a/62/b9/7a62b9fbc6bcee718213d19406a7ed63.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/8e/e5/5a/8ee55acdc0bf622fffff0229db6497f1.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "بیرونی": []
     },
     "neoclassic": {
       "پذیرایی": [],
-      "اتاق خواب": [],
+      "اتاق خواب": [
+        {
+          "url": "https://i.pinimg.com/564x/e5/b1/45/e5b145b82da7adf3faf4ed62a611aa3c.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "فضای کار": [],
       "ناهارخوری": [],
       "بیرونی": []
