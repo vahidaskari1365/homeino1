@@ -244,7 +244,8 @@
     "564918080e21a09299867f1b84225dfc": "2026-10-02-kqiwhg",
     "595b2a2689722b8e6b0b1df9ac21b214": "2026-10-02-kox7dn",
     "0472d4498ae156572e573df7d57d149b": "2026-10-02-hzkfo1",
-    "3452a6f604226c214e92ff38e05bfa2e": "2026-10-02-vd92p7"
+    "3452a6f604226c214e92ff38e05bfa2e": "2026-10-02-vd92p7",
+    "900109d9c4eddbda1f547206959bbdb9": "2026-10-03-jlv373"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -458,7 +459,8 @@
     "/images/trends/src/2026-10-02-kqiwhg.jpg": "2026-10-02-kqiwhg",
     "/images/trends/src/2026-10-02-kox7dn.jpg": "2026-10-02-kox7dn",
     "/images/trends/src/2026-10-02-hzkfo1.jpg": "2026-10-02-hzkfo1",
-    "/images/trends/src/2026-10-02-vd92p7.png": "2026-10-02-vd92p7"
+    "/images/trends/src/2026-10-02-vd92p7.png": "2026-10-02-vd92p7",
+    "/images/trends/src/2026-10-03-jlv373.jpg": "2026-10-03-jlv373"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -702,6 +704,7 @@
     "https://image.pollinations.ai/prompt/stylish%20home%20office%20workspace%20in%20a%20bright%20interior%2C%20interior%20design%20photography?width=1152&height=864&seed=33883&nologo=true&model=flux": "2026-10-02-kqiwhg",
     "https://cdn.mos.cms.futurecdn.net/98czW6C6xrrW9t5a9DwaDF-2400-80.jpg": "2026-10-02-kox7dn",
     "https://cdn.mos.cms.futurecdn.net/SQLNTrpc38xKtzDVLNnCM6-2560-80.jpg": "2026-10-02-hzkfo1",
-    "https://cdn.mos.cms.futurecdn.net/dJdhhq5c3P8JH6VLw3NkyQ-2400-80.png": "2026-10-02-vd92p7"
+    "https://cdn.mos.cms.futurecdn.net/dJdhhq5c3P8JH6VLw3NkyQ-2400-80.png": "2026-10-02-vd92p7",
+    "https://cdn.mos.cms.futurecdn.net/RZLuqN4vPna3E9ytoBo85K-2560-80.jpg": "2026-10-03-jlv373"
   }
 }

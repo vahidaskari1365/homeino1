@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-02T19:28:12.156Z",
+  "updatedAt": "2026-10-03T09:52:33.465Z",
   "runs": [
+    {
+      "id": "run-1791021153465-56pl2",
+      "at": "2026-10-03T09:52:33.465Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 1371916,
+      "summary": "4 بریف ترند جدید (مبلمان، محیط کار، رنگ، روشنایی و لوستر) + ۱ مقاله کامل مجله («چیدمان نشیمن با مبلمان شاخص؛ خداحافظی با…») — از طریق google-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 245,
+        "via": "google-2",
+        "titles": [
+          "چیدمان خانه بر پایه مبلمان شاخص و چراغ‌های دکوراتیو",
+          "ترند هنر دکو در فضاهای کاری مدرن",
+          "ترند ترکیب آبی و نارنجی برای اتاق خواب",
+          "لامپ UFO با نور قابل تنظیم"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1790969292156-nnfmd",
       "at": "2026-10-02T19:28:12.156Z",
