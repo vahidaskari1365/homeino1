@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-03T09:52:33.465Z",
+  "updatedAt": "2026-10-03T14:29:25.461Z",
   "runs": [
+    {
+      "id": "run-1791037765461-scs89",
+      "at": "2026-10-03T14:29:25.461Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 453662,
+      "summary": "4 بریف ترند جدید (مبلمان، کمد و ذخیره‌سازی، سبک‌ها، کف‌پوش) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 249,
+        "via": "zai-2",
+        "titles": [
+          "نقش‌آفرینی مبلمان کلاسیک در دکوراسیون مدرن",
+          "بازگشت کمدبندی نیمه‌کاره در آشپزخانه‌های ۲۰۲۶",
+          "دکوراسیون داخلی ستاره‌ها با الهام از هند و ژاپن",
+          "فرش‌های جوت، پوششی طبیعی و خنک برای خانه"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 3
+        }
+      }
+    },
     {
       "id": "run-1791021153465-56pl2",
       "at": "2026-10-03T09:52:33.465Z",
