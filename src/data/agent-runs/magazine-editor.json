@@ -1,7 +1,41 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-03T14:29:25.461Z",
+  "updatedAt": "2026-10-03T18:07:24.820Z",
   "runs": [
+    {
+      "id": "run-1791050844820-5k5mm",
+      "at": "2026-10-03T18:07:24.820Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 268811,
+      "summary": "3 بریف ترند جدید (مبلمان، رنگ، آشپزخانه) — از طریق zai-1 — QA 1 رد",
+      "detail": {
+        "added": 3,
+        "articlesAdded": 0,
+        "total": 252,
+        "via": "zai-1",
+        "titles": [
+          "ترند مبلمان مدرن با پشت‌کشش روان",
+          "رنگ‌های مات و خام در دکوراسیون ۲۰۲۷",
+          "آشپزخانه‌ی اسکاندیناوی با دستورپخت روی دیوار"
+        ],
+        "sources": [
+          "news.google.com",
+          "livingetc.com"
+        ],
+        "qaRejected": [
+          {
+            "title": "ترند کلاسیک دیواری در خانه‌های اجاره‌ای نیویورک",
+            "reason": "خلاصه کمتر از ۳ جمله است (2)"
+          }
+        ],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791037765461-scs89",
       "at": "2026-10-03T14:29:25.461Z",
