@@ -1,7 +1,38 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-03T18:07:24.820Z",
+  "updatedAt": "2026-10-04T10:23:54.928Z",
   "runs": [
+    {
+      "id": "run-1791109434928-2zocb",
+      "at": "2026-10-04T10:23:54.928Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 399213,
+      "summary": "4 بریف ترند جدید (متریال، کف‌پوش، رنگ، دیوارپوش) + ۱ مقاله کامل مجله («دوام و زیبایی: وایروک در دکوراسیون مدرن…») — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 256,
+        "via": "zai-1",
+        "titles": [
+          "پکیج آپارتمان شمالی در سائوپائولو",
+          "ترندهای کف‌پوشی که دیگر مدرن نیستند",
+          "پالت رنگی کوچک‌رویی در اتاق خواب",
+          "ویرایش دیوار و آشپزخانه ویلایی در نیویورک"
+        ],
+        "sources": [
+          "archdaily.com",
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791050844820-5k5mm",
       "at": "2026-10-03T18:07:24.820Z",
