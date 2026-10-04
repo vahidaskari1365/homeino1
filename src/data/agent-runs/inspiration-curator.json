@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-04T14:20:52.530Z",
+  "updatedAt": "2026-10-04T17:50:54.643Z",
   "runs": [
+    {
+      "id": "run-1791136254643-0ei4k",
+      "at": "2026-10-04T17:50:54.643Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 181425,
+      "summary": "3 پین الهام جدید (بازنویسی LLM؛ 2 پین محصول‌محور)",
+      "detail": {
+        "added": 3,
+        "productPins": 2,
+        "total": 269,
+        "via": "llm",
+        "poolRemaining": 105,
+        "productPoolRemaining": 11,
+        "skippedStarved": 4,
+        "combos": [
+          "صنعتی × فضای کار",
+          "مدرن × پذیرایی",
+          "مینیمال × فضای کار",
+          "کلاسیک × اتاق خواب"
+        ],
+        "productJobs": [
+          "کف‌پوش",
+          "دکوری و اکسسوری"
+        ]
+      }
+    },
     {
       "id": "run-1791123652529-tst9e",
       "at": "2026-10-04T14:20:52.529Z",
