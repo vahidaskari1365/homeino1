@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-04T10:07:15.285Z",
+  "updatedAt": "2026-10-04T14:20:52.530Z",
   "runs": [
+    {
+      "id": "run-1791123652529-tst9e",
+      "at": "2026-10-04T14:20:52.529Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 268519,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 266,
+        "via": "template",
+        "poolRemaining": 106,
+        "productPoolRemaining": 13,
+        "skippedStarved": 6,
+        "combos": [
+          "معاصر × فضای کار",
+          "مینیمال × اتاق خواب",
+          "نئوکلاسیک × فضای کار",
+          "صنعتی × حیاط و محوطه"
+        ],
+        "productJobs": [
+          "فرش و قالیچه",
+          "پرده و منسوجات"
+        ]
+      }
+    },
     {
       "id": "run-1791108435285-5v590",
       "at": "2026-10-04T10:07:15.285Z",

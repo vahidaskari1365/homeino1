@@ -5975,7 +5975,7 @@
   {
     "id": "ag-20260912-27",
     "title": "لفت صنعتی: ترکیب هنرمندانه دیوار آجر و فلز",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f0296cee51fb.webp",
+    "image": "/images/pins/ag-20260912-27.jpg",
     "styleSlug": "industrial",
     "room": "ناهارخوری",
     "tags": [
@@ -6002,7 +6002,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-12T16:25:19.425Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:industrial:ناهارخوری"
   },
   {
     "id": "ag-20260912-26",
@@ -6918,7 +6919,7 @@
   {
     "id": "ag-20260909-20",
     "title": "دکوراسیون وینتیج با سبک بوهِمیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2183057341fd.jpg",
+    "image": "/images/pins/ag-20260909-20.jpg",
     "styleSlug": "boho",
     "room": "ناهارخوری",
     "tags": [
@@ -6945,7 +6946,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-09T17:15:46.766Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|gen:boho:ناهارخوری"
   },
   {
     "id": "ag-20260909-19",
