@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-04T15:01:36.928Z",
+  "updatedAt": "2026-10-04T18:21:06.627Z",
   "runs": [
+    {
+      "id": "run-1791138066627-2211w",
+      "at": "2026-10-04T18:21:06.627Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 398168,
+      "summary": "4 بریف ترند جدید (آشپزخانه، روشنایی و لوستر، فرش و قالیچه، آشپزخانه) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 264,
+        "via": "zai-1",
+        "titles": [
+          "کف‌پوش تیره؛ بازتعریف آشپزخانه‌های سفید کلاسیک",
+          "چگونه اتاق را روشن کنیم بدون رنگ‌آمیزی؟",
+          "ترند فرش‌های پشمی ۲۰۲۶؛ بافت‌های ارگانیک در نشیمن مدرن",
+          "ترندهای زودگذر طراحی آشپزخانه که خانه را قدیمی نشان می‌دهند"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791126096928-kkwnp",
       "at": "2026-10-04T15:01:36.928Z",
