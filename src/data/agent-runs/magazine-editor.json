@@ -1,7 +1,38 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-04T10:23:54.928Z",
+  "updatedAt": "2026-10-04T15:01:36.928Z",
   "runs": [
+    {
+      "id": "run-1791126096928-kkwnp",
+      "at": "2026-10-04T15:01:36.928Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 650003,
+      "summary": "4 بریف ترند جدید (پرده و منسوجات، آشپزخانه، دکوری و اکسسوری، مبلمان) — از طریق google-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 260,
+        "via": "google-2",
+        "titles": [
+          "ترند پرده و پوشش پنجره؛ درس‌هایی از طراحان برتر",
+          "ترند لولا و دستگیره‌های آشپزخانه ۲۰۲۷",
+          "چه اکسسوری‌هایی خانه را کهنه نشان می‌دهد؟",
+          "مبل قهوه‌ای شکلاتی؛ پایان دوره رنگ بژ در نشیمن"
+        ],
+        "sources": [
+          "livingetc.com",
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791109434928-2zocb",
       "at": "2026-10-04T10:23:54.928Z",
