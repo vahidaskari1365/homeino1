@@ -270,7 +270,11 @@
     "c33473e44f8460ada93a25bbb7a461c7": "2026-10-04-jq9tqq",
     "13560243fa4b69826425d69aded3c37e": "2026-10-05-3ai9mg",
     "f6962b04f2878d9f90918a6f0daa805e": "2026-10-05-l8z3nd",
-    "b4efc29a73971eb99b0a7cbbe4950382": "2026-10-05-fj5bb3"
+    "b4efc29a73971eb99b0a7cbbe4950382": "2026-10-05-fj5bb3",
+    "6e6ef0dd2f0b6937924206a1ce88cf16": "2026-10-05-f3gmv8",
+    "b3c013954b9b391bdf8d31095c357350": "2026-10-05-8uvgk0",
+    "4349e40ebca4933c23e1c043252ae381": "2026-10-05-vpb0f4",
+    "0ebe1cc61115524017ff34f6ef731e69": "2026-10-05-ekmxmc"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -510,7 +514,11 @@
     "/images/trends/src/2026-10-04-jq9tqq.jpg": "2026-10-04-jq9tqq",
     "/images/trends/src/2026-10-05-3ai9mg.jpg": "2026-10-05-3ai9mg",
     "/images/trends/src/2026-10-05-l8z3nd.png": "2026-10-05-l8z3nd",
-    "/images/trends/src/2026-10-05-fj5bb3.jpg": "2026-10-05-fj5bb3"
+    "/images/trends/src/2026-10-05-fj5bb3.jpg": "2026-10-05-fj5bb3",
+    "/images/trends/src/2026-10-05-f3gmv8.jpg": "2026-10-05-f3gmv8",
+    "/images/trends/src/2026-10-05-8uvgk0.png": "2026-10-05-8uvgk0",
+    "/images/trends/src/2026-10-05-vpb0f4.jpg": "2026-10-05-vpb0f4",
+    "/images/trends/src/2026-10-05-ekmxmc.jpg": "2026-10-05-ekmxmc"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -780,6 +788,10 @@
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=25544&nologo=true&model=flux": "2026-10-04-jq9tqq",
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=29373&nologo=true&model=flux": "2026-10-05-3ai9mg",
     "https://cdn.mos.cms.futurecdn.net/xhD5Q5PVA6PtbdhNmaJeu7-2560-80.png": "2026-10-05-l8z3nd",
-    "https://image.pollinations.ai/prompt/flowing%20linen%20curtains%20in%20a%20sunlit%20living%20room%2C%20soft%20textures%2C%20interior%20design%20photography?width=1152&height=864&seed=17639&nologo=true&model=flux": "2026-10-05-fj5bb3"
+    "https://image.pollinations.ai/prompt/flowing%20linen%20curtains%20in%20a%20sunlit%20living%20room%2C%20soft%20textures%2C%20interior%20design%20photography?width=1152&height=864&seed=17639&nologo=true&model=flux": "2026-10-05-fj5bb3",
+    "https://image.pollinations.ai/prompt/cozy%20outdoor%20patio%20with%20stylish%20furniture%20at%20golden%20hour%2C%20interior%20design%20photography?width=1152&height=864&seed=24730&nologo=true&model=flux": "2026-10-05-f3gmv8",
+    "https://cdn.mos.cms.futurecdn.net/B3kuqPF8kL58knGbARCKsN-2560-80.png": "2026-10-05-8uvgk0",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=17851&nologo=true&model=flux": "2026-10-05-vpb0f4",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=1836&nologo=true&model=flux": "2026-10-05-ekmxmc"
   }
 }

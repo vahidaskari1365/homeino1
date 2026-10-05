@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-05T11:00:31.184Z",
+  "updatedAt": "2026-10-05T18:42:52.887Z",
   "runs": [
+    {
+      "id": "run-1791225772887-zmvkw",
+      "at": "2026-10-05T18:42:52.887Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 675505,
+      "summary": "4 بریف ترند جدید (حیاط و بیرونی، دکوری و اکسسوری، آشپزخانه، آشپزخانه)",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 271,
+        "via": "unknown",
+        "titles": [
+          "تخفیف‌های گرمای توپی آمازون",
+          "لامپ کمری ۲۰ دلاری ترند پاییز",
+          "خروج سفید مینیمال و ورود میکرو هاب‌ها در آشپزخانه‌ها",
+          "۶ رنگ برتر بنجامین مور برای کابینت آشپزخانه به انتخاب طراحان"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791198031184-yaq70",
       "at": "2026-10-05T11:00:31.184Z",
