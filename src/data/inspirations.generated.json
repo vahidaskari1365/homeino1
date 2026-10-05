@@ -8173,7 +8173,7 @@
   {
     "id": "ag-20260906-bf037",
     "title": "چیدمان پذیرایی به سبک بوهو",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/26db031d8c18.jpg",
+    "image": "/images/pins/ag-20260906-bf037.jpg",
     "styleSlug": "boho",
     "room": "پذیرایی",
     "tags": [
@@ -8200,7 +8200,8 @@
     },
     "createdAt": "2026-09-06T08:59:08.371Z",
     "_via": "llm",
-    "_qa": "room-style-fixed"
+    "_qa": "room-style-fixed",
+    "_prov": "local|gen:boho:پذیرایی"
   },
   {
     "id": "ag-20260906-bf036",

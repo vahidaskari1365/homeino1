@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-05T17:21:14.049Z",
+  "updatedAt": "2026-10-05T21:15:30.103Z",
   "runs": [
+    {
+      "id": "run-1791234930103-o5vkz",
+      "at": "2026-10-05T21:15:30.103Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 27499,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 278,
+        "via": "template",
+        "poolRemaining": 103,
+        "productPoolRemaining": 7,
+        "skippedStarved": 13,
+        "combos": [
+          "مدرن × ناهارخوری",
+          "معاصر × فضای کار",
+          "مینیمال × اتاق خواب",
+          "نئوکلاسیک × فضای کار"
+        ],
+        "productJobs": [
+          "گلدان و گیاه",
+          "مبل و مبلمان"
+        ]
+      }
+    },
     {
       "id": "run-1791220874049-ydme6",
       "at": "2026-10-05T17:21:14.049Z",
