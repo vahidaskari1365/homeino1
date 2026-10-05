@@ -328,11 +328,21 @@
       "اتاق خواب": []
     },
     "boho": {
-      "پذیرایی": [],
+      "پذیرایی": [
+        {
+          "url": "https://i.pinimg.com/564x/c4/44/1c/c4441cd4707f6904f4e4857dec34d67d.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "اتاق خواب": [],
       "فضای کار": [],
       "ناهارخوری": [],
-      "بیرونی": []
+      "بیرونی": [
+        {
+          "url": "https://i.pinimg.com/564x/b7/87/29/b78729d8c9b81c836003fc04f1177acd.jpg",
+          "source": "Pinterest"
+        }
+      ]
     },
     "industrial": {
       "پذیرایی": [],
@@ -343,10 +353,19 @@
         }
       ],
       "اتاق خواب": [],
-      "ناهارخوری": [],
+      "ناهارخوری": [
+        {
+          "url": "https://i.pinimg.com/564x/2d/c7/1d/2dc71da0021793b01fc9f2d810c678b8.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "بیرونی": [
         {
           "url": "https://i.pinimg.com/564x/b1/dc/b6/b1dcb66dafc9e154978f4f95985f7b70.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/bf/10/a5/bf10a5198b5c10ad65eb2a84d3211d40.jpg",
           "source": "Pinterest"
         }
       ]
@@ -355,7 +374,24 @@
       "پذیرایی": [],
       "اتاق خواب": [],
       "فضای کار": [],
-      "ناهارخوری": [],
+      "ناهارخوری": [
+        {
+          "url": "https://i.pinimg.com/564x/84/f7/b6/84f7b6c772449d905436fb93b1288345.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/dd/1d/6e/dd1d6e4383ceb40852a46f0bf5a14d6b.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/5a/51/1c/5a511c761e3281d9359ba983c6894ab2.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/8e/86/ce/8e86cec25cf8bcd664cee025359bdd31.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "بیرونی": [
         {
           "url": "https://i.pinimg.com/564x/35/17/f4/3517f476b8cb12a59dc50cffeb487a45.jpg",
