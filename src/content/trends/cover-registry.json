@@ -274,7 +274,11 @@
     "6e6ef0dd2f0b6937924206a1ce88cf16": "2026-10-05-f3gmv8",
     "b3c013954b9b391bdf8d31095c357350": "2026-10-05-8uvgk0",
     "4349e40ebca4933c23e1c043252ae381": "2026-10-05-vpb0f4",
-    "0ebe1cc61115524017ff34f6ef731e69": "2026-10-05-ekmxmc"
+    "0ebe1cc61115524017ff34f6ef731e69": "2026-10-05-ekmxmc",
+    "418bbca142fad92d38fac93fa018a662": "2026-10-05-k2tlap",
+    "bb1eb67a6fa2ff5d0a24a14473eb9902": "2026-10-05-y7k2fi",
+    "3d520771685a93216ae976e5e5fb7059": "2026-10-05-gbukvt",
+    "3f087f35ce80781bfdc19d1718f95374": "2026-10-05-y68xza"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -518,7 +522,11 @@
     "/images/trends/src/2026-10-05-f3gmv8.jpg": "2026-10-05-f3gmv8",
     "/images/trends/src/2026-10-05-8uvgk0.png": "2026-10-05-8uvgk0",
     "/images/trends/src/2026-10-05-vpb0f4.jpg": "2026-10-05-vpb0f4",
-    "/images/trends/src/2026-10-05-ekmxmc.jpg": "2026-10-05-ekmxmc"
+    "/images/trends/src/2026-10-05-ekmxmc.jpg": "2026-10-05-ekmxmc",
+    "/images/trends/src/2026-10-05-k2tlap.jpg": "2026-10-05-k2tlap",
+    "/images/trends/src/2026-10-05-y7k2fi.jpg": "2026-10-05-y7k2fi",
+    "/images/trends/src/2026-10-05-gbukvt.jpg": "2026-10-05-gbukvt",
+    "/images/trends/src/2026-10-05-y68xza.jpg": "2026-10-05-y68xza"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -792,6 +800,10 @@
     "https://image.pollinations.ai/prompt/cozy%20outdoor%20patio%20with%20stylish%20furniture%20at%20golden%20hour%2C%20interior%20design%20photography?width=1152&height=864&seed=24730&nologo=true&model=flux": "2026-10-05-f3gmv8",
     "https://cdn.mos.cms.futurecdn.net/B3kuqPF8kL58knGbARCKsN-2560-80.png": "2026-10-05-8uvgk0",
     "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=17851&nologo=true&model=flux": "2026-10-05-vpb0f4",
-    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=1836&nologo=true&model=flux": "2026-10-05-ekmxmc"
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=1836&nologo=true&model=flux": "2026-10-05-ekmxmc",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=32691&nologo=true&model=flux": "2026-10-05-k2tlap",
+    "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=35157&nologo=true&model=flux": "2026-10-05-y7k2fi",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=75036&nologo=true&model=flux": "2026-10-05-gbukvt",
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=60177&nologo=true&model=flux": "2026-10-05-y68xza"
   }
 }

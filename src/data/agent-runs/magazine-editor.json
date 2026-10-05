@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-05T18:42:52.887Z",
+  "updatedAt": "2026-10-05T21:38:32.472Z",
   "runs": [
+    {
+      "id": "run-1791236312472-4vytc",
+      "at": "2026-10-05T21:38:32.472Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 293920,
+      "summary": "4 بریف ترند جدید (دکوری و اکسسوری، دکوری و اکسسوری، حمام، آشپزخانه) — از طریق zai-1",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 275,
+        "via": "zai-1",
+        "titles": [
+          "ترندهای فرسوده‌ی دکوری که ظاهر خانه را کهنه می‌کنند",
+          "لامپ کوله‌پشتی ترند ویت‌مارت زیر ۲۰ دلار",
+          "ترند‌های حمام: اوج مراقبت از خود",
+          "ترند کمد آشپزخانه ۲۰۲۶ بدون بازسازی"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791225772887-zmvkw",
       "at": "2026-10-05T18:42:52.887Z",
