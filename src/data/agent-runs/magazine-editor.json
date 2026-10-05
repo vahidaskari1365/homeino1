@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-04T18:21:06.627Z",
+  "updatedAt": "2026-10-05T11:00:31.184Z",
   "runs": [
+    {
+      "id": "run-1791198031184-yaq70",
+      "at": "2026-10-05T11:00:31.184Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 300515,
+      "summary": "3 بریف ترند جدید (آشپزخانه، پرده و منسوجات، پرده و منسوجات) + ۱ مقاله کامل مجله («دوباره‌گشت کمد‌های دو درب در آشپزخانه‌ها…») — از طریق zai-1",
+      "detail": {
+        "added": 3,
+        "articlesAdded": 1,
+        "total": 267,
+        "via": "zai-1",
+        "titles": [
+          "ترند بازگشت کمد‌های کلاسیک در آشپزخانه‌ها",
+          "پرده‌های رومی و جاپندی در اتاق خواب ۲۰۲۷",
+          "بازگشت سینما به خانه با پرده‌های دوگانه"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791138066627-2211w",
       "at": "2026-10-04T18:21:06.627Z",
