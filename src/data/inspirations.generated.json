@@ -7253,7 +7253,7 @@
   {
     "id": "ag-20260910-23",
     "title": "تیرچه چوبی؛ روح بخشی به فضای گرم اتاق خواب",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/83cd0103cca9.jpg",
+    "image": "/images/pins/ag-20260910-23.jpg",
     "styleSlug": "rustic",
     "room": "اتاق خواب",
     "tags": [
@@ -7280,7 +7280,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-10T17:07:07.112Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:rustic:اتاق خواب"
   },
   {
     "id": "ag-20260910-22",
@@ -8069,7 +8070,7 @@
   {
     "id": "ag-20260906-12",
     "title": "چیدمان فضای کار به سبک روستیک",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/880100f8a328.jpeg",
+    "image": "/images/pins/ag-20260906-12.jpg",
     "styleSlug": "rustic",
     "room": "فضای کار",
     "tags": [
@@ -8095,7 +8096,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-06T12:28:05.231Z",
-    "_via": "قالب"
+    "_via": "قالب",
+    "_prov": "local|pool:rustic:فضای کار"
   },
   {
     "id": "ag-20260906-bf022",
@@ -8521,7 +8523,7 @@
   {
     "id": "ag-20260906-bf023",
     "title": "چیدمان پذیرایی به سبک معاصر",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/77ffa0996974.png",
+    "image": "/images/pins/ag-20260906-bf023.jpg",
     "styleSlug": "contemporary",
     "room": "پذیرایی",
     "tags": [
@@ -8548,7 +8550,8 @@
     },
     "createdAt": "2026-09-06T08:59:07.586Z",
     "_via": "llm",
-    "_qa": "room-style-fixed"
+    "_qa": "room-style-fixed",
+    "_prov": "local|pool:contemporary:پذیرایی"
   },
   {
     "id": "ag-20260906-bf019",

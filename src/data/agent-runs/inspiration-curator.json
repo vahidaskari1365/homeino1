@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-06T10:56:11.981Z",
+  "updatedAt": "2026-10-06T15:29:51.057Z",
   "runs": [
+    {
+      "id": "run-1791300591057-3adji",
+      "at": "2026-10-06T15:29:51.057Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 303505,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 284,
+        "via": "template",
+        "poolRemaining": 114,
+        "productPoolRemaining": 5,
+        "skippedStarved": 1,
+        "combos": [
+          "روستیک × حیاط و محوطه",
+          "معاصر × اتاق خواب",
+          "آرت دکو × ناهارخوری",
+          "مینیمال × پذیرایی"
+        ],
+        "productJobs": [
+          "دکوری و اکسسوری",
+          "کف‌پوش"
+        ]
+      }
+    },
     {
       "id": "run-1791284171981-4alqb",
       "at": "2026-10-06T10:56:11.981Z",
