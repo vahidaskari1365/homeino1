@@ -1,7 +1,38 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-06T16:07:38.441Z",
+  "updatedAt": "2026-10-06T19:45:38.554Z",
   "runs": [
+    {
+      "id": "run-1791315938554-wqoj9",
+      "at": "2026-10-06T19:45:38.554Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 434367,
+      "summary": "4 بریف ترند جدید (فرش و قالیچه، کمد و ذخیره‌سازی، مبلمان، آشپزخانه) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 287,
+        "via": "zai-2",
+        "titles": [
+          "فرش دستباف مارثا استوارت برای هماهنگی دکوراسیون",
+          "قفسه‌ی چوبی درختی با طراحی منحنی برای گوشه‌های کوچک",
+          "مبلمان کلاسیک آمازون، ترند ۲۰۲۶",
+          "دسترسی به آشپزخانه‌های منحنی با طراحی تانگرام"
+        ],
+        "sources": [
+          "news.google.com",
+          "architecturaldigest.com",
+          "designboom.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791302858441-quelq",
       "at": "2026-10-06T16:07:38.441Z",
