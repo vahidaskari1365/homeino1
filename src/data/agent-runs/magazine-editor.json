@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-06T11:07:28.562Z",
+  "updatedAt": "2026-10-06T16:07:38.441Z",
   "runs": [
+    {
+      "id": "run-1791302858441-quelq",
+      "at": "2026-10-06T16:07:38.441Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 440783,
+      "summary": "4 بریف ترند جدید (فرش و قالیچه، رنگ، حمام، مبلمان) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 283,
+        "via": "zai-2",
+        "titles": [
+          "فرش دستباف ۲۰۲۶: ترند‌های جدید و پایدار",
+          "رنگ‌آمیزی دیوارها در ۲۰۲۷: تکنیک‌های نوین رنگ‌پاشی",
+          "ترند حمام مدرن با استخر مات",
+          "۵ جایگزین مبلمان که فضا را آزاد می‌کنند"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791284848562-7xaur",
       "at": "2026-10-06T11:07:28.562Z",
