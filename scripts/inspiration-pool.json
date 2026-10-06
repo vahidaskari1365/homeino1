@@ -343,7 +343,16 @@
         }
       ],
       "اتاق خواب": [],
-      "ناهارخوری": [],
+      "ناهارخوری": [
+        {
+          "url": "https://i.pinimg.com/564x/2d/c7/1d/2dc71da0021793b01fc9f2d810c678b8.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/63/91/71/6391713859fa97c7098c902c1a72da4d.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "بیرونی": [
         {
           "url": "https://i.pinimg.com/564x/b1/dc/b6/b1dcb66dafc9e154978f4f95985f7b70.jpg",
@@ -357,8 +366,22 @@
     },
     "rustic": {
       "پذیرایی": [],
-      "اتاق خواب": [],
-      "فضای کار": [],
+      "اتاق خواب": [
+        {
+          "url": "https://i.pinimg.com/564x/0d/e8/86/0de886d5ae4310d0028a8b97757d2a6c.jpg",
+          "source": "Pinterest"
+        }
+      ],
+      "فضای کار": [
+        {
+          "url": "https://i.pinimg.com/564x/29/96/51/299651e887000f57a657d25ee4582f7c.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/78/71/eb/7871eb2d4aa3eb3d08b93616c0f68f34.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "ناهارخوری": [
         {
           "url": "https://i.pinimg.com/564x/dd/1d/6e/dd1d6e4383ceb40852a46f0bf5a14d6b.jpg",
@@ -371,6 +394,10 @@
         {
           "url": "https://i.pinimg.com/564x/8e/86/ce/8e86cec25cf8bcd664cee025359bdd31.jpg",
           "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/84/f7/b6/84f7b6c772449d905436fb93b1288345.jpg",
+          "source": "Pinterest"
         }
       ],
       "بیرونی": [
@@ -380,6 +407,10 @@
         },
         {
           "url": "https://i.pinimg.com/564x/5d/f7/e0/5df7e07ffb7da4edfbeacebfadc3e775.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/ec/4d/8e/ec4d8efa199f91a7717812962f34b423.jpg",
           "source": "Pinterest"
         }
       ]
@@ -411,7 +442,20 @@
           "source": "Pinterest"
         }
       ],
-      "پذیرایی": [],
+      "پذیرایی": [
+        {
+          "url": "https://i.pinimg.com/564x/64/1d/af/641daf2b492d50da801f8c1c1cee752c.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/47/7c/89/477c894207d48c3807d61bd41cc39f2e.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/65/12/6e/65126e3b700195c25b4bee139febd07d.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "اتاق خواب": [
         {
           "url": "https://i.pinimg.com/564x/ee/ff/64/eeff64885545288fda08031160885058.jpg",
@@ -502,8 +546,22 @@
     },
     "mediterranean": {
       "پذیرایی": [],
-      "اتاق خواب": [],
-      "فضای کار": [],
+      "اتاق خواب": [
+        {
+          "url": "https://i.pinimg.com/564x/7b/16/76/7b167603e6fbd62faed02581f2484c91.jpg",
+          "source": "Pinterest"
+        }
+      ],
+      "فضای کار": [
+        {
+          "url": "https://i.pinimg.com/564x/ce/e5/dd/cee5dd2fd1c18350e26fd3e3f3b9214e.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/8c/48/a1/8c48a190ea984ba2a151a6935049bced.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "ناهارخوری": [
         {
           "url": "https://i.pinimg.com/564x/48/6f/91/486f91b212e8d2e142c56d1563d9b6bf.jpg",
