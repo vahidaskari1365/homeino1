@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-07T10:33:33.453Z",
+  "updatedAt": "2026-10-07T15:44:08.308Z",
   "runs": [
+    {
+      "id": "run-1791387848307-qai2w",
+      "at": "2026-10-07T15:44:08.307Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 42845,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 291,
+        "via": "template",
+        "poolRemaining": 117,
+        "productPoolRemaining": 3,
+        "skippedStarved": 0,
+        "combos": [
+          "روستیک × پذیرایی",
+          "مدیترانه‌ای × فضای کار",
+          "معاصر × حیاط و محوطه",
+          "مدرن × اتاق خواب"
+        ],
+        "productJobs": [
+          "مبل و مبلمان",
+          "گلدان و گیاه"
+        ]
+      }
+    },
     {
       "id": "run-1791369213453-byr93",
       "at": "2026-10-07T10:33:33.453Z",

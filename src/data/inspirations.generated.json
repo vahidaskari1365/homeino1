@@ -6724,7 +6724,7 @@
   {
     "id": "ag-20260912-28",
     "title": "هویت راست‌رو با چوب و سنگ: تالاری خنک و دلنشین",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/811aa8a4d093.jpg",
+    "image": "/images/pins/ag-20260912-28.jpg",
     "styleSlug": "rustic",
     "room": "پذیرایی",
     "tags": [
@@ -6751,7 +6751,8 @@
       "type": "agent"
     },
     "createdAt": "2026-09-12T16:25:48.028Z",
-    "_via": "llm"
+    "_via": "llm",
+    "_prov": "local|pool:rustic:پذیرایی"
   },
   {
     "id": "ag-20260912-27",
