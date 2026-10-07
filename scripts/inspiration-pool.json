@@ -312,7 +312,16 @@
         }
       ],
       "اتاق خواب": [],
-      "فضای کار": [],
+      "فضای کار": [
+        {
+          "url": "https://i.pinimg.com/564x/88/e8/bf/88e8bf7c2d14c6066941ff963eec2bb7.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/95/b7/39/95b739e392dbc094d62ca1f1675e4f5a.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "بیرونی": []
     },
     "japandi": {
@@ -365,7 +374,12 @@
       ]
     },
     "rustic": {
-      "پذیرایی": [],
+      "پذیرایی": [
+        {
+          "url": "https://i.pinimg.com/564x/a2/e6/bf/a2e6bf0ce88794aa132e3e6b1198a75c.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "اتاق خواب": [],
       "فضای کار": [
         {
@@ -441,6 +455,10 @@
         {
           "url": "https://i.pinimg.com/564x/65/12/6e/65126e3b700195c25b4bee139febd07d.jpg",
           "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/64/1d/af/641daf2b492d50da801f8c1c1cee752c.jpg",
+          "source": "Pinterest"
         }
       ],
       "اتاق خواب": [
@@ -463,9 +481,22 @@
         {
           "url": "https://i.pinimg.com/564x/57/dd/61/57dd61b9ff96436b287d12b17c8ee5e9.jpg",
           "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/19/e0/6c/19e06c84488ab467012087919971f02e.jpg",
+          "source": "Pinterest"
         }
       ],
-      "ناهارخوری": [],
+      "ناهارخوری": [
+        {
+          "url": "https://i.pinimg.com/564x/8c/5e/85/8c5e85cc5a46fb4f451e85b922b180e2.jpg",
+          "source": "Pinterest"
+        },
+        {
+          "url": "https://i.pinimg.com/564x/59/fa/b5/59fab513983577fe194fe42ff79b1a83.jpg",
+          "source": "Pinterest"
+        }
+      ],
       "بیرونی": [
         {
           "url": "https://i.pinimg.com/564x/30/92/9f/30929f7e120e1f7912da9e57faecd926.jpg",
@@ -563,7 +594,12 @@
           "source": "Pinterest"
         }
       ],
-      "بیرونی": []
+      "بیرونی": [
+        {
+          "url": "https://i.pinimg.com/564x/10/a1/79/10a179d74dc64ce47dcaa32108fcbf81.jpg",
+          "source": "Pinterest"
+        }
+      ]
     },
     "_products": {
       "مبل و مبلمان": [
