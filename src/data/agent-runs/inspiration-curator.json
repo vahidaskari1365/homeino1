@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-06T19:08:04.435Z",
+  "updatedAt": "2026-10-07T10:33:33.453Z",
   "runs": [
+    {
+      "id": "run-1791369213453-byr93",
+      "at": "2026-10-07T10:33:33.453Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 41821,
+      "summary": "4 پین الهام جدید (بازنویسی LLM)",
+      "detail": {
+        "added": 4,
+        "productPins": 0,
+        "total": 291,
+        "via": "llm",
+        "poolRemaining": 109,
+        "productPoolRemaining": 3,
+        "skippedStarved": 1,
+        "combos": [
+          "مدیترانه‌ای × فضای کار",
+          "معاصر × حیاط و محوطه",
+          "مدرن × اتاق خواب",
+          "مینیمال × ناهارخوری"
+        ],
+        "productJobs": [
+          "مبل و مبلمان",
+          "گلدان و گیاه"
+        ]
+      }
+    },
     {
       "id": "run-1791313684435-1axsk",
       "at": "2026-10-06T19:08:04.435Z",
