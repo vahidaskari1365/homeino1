@@ -2854,7 +2854,7 @@
   {
     "id": "ag-20260927-11",
     "title": "اتاق کار خانگی به سبک ژاپندی؛ تعادل چوب و خطوط مینیمال",
-    "image": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/19b13b008743.png",
+    "image": "/images/pins/ag-20260927-11.jpg",
     "styleSlug": "japandi",
     "room": "فضای کار",
     "tags": [
@@ -2882,7 +2882,7 @@
     },
     "createdAt": "2026-09-27T09:31:36.217Z",
     "_via": "llm",
-    "_prov": "pool:japandi:فضای کار"
+    "_prov": "local|gen:japandi:فضای کار"
   },
   {
     "id": "ag-20260927-10",

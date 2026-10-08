@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-08T10:55:23.710Z",
+  "updatedAt": "2026-10-08T15:51:50.724Z",
   "runs": [
+    {
+      "id": "run-1791474710724-yuysg",
+      "at": "2026-10-08T15:51:50.724Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 142318,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 297,
+        "via": "template",
+        "poolRemaining": 124,
+        "productPoolRemaining": 2,
+        "skippedStarved": 0,
+        "combos": [
+          "روستیک × ناهارخوری",
+          "معاصر × پذیرایی",
+          "آرت دکو × فضای کار",
+          "مدرن × حیاط و محوطه"
+        ],
+        "productJobs": [
+          "روشنایی و لوستر",
+          "کمد و ذخیره‌سازی"
+        ]
+      }
+    },
     {
       "id": "run-1791456923710-issp4",
       "at": "2026-10-08T10:55:23.710Z",
