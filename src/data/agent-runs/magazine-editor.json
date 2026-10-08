@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-08T16:40:58.934Z",
+  "updatedAt": "2026-10-08T20:20:24.029Z",
   "runs": [
+    {
+      "id": "run-1791490824029-ok82r",
+      "at": "2026-10-08T20:20:24.029Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 1116646,
+      "summary": "3 بریف ترند جدید (مبلمان، سبک‌ها، آشپزخانه)",
+      "detail": {
+        "added": 3,
+        "articlesAdded": 0,
+        "total": 304,
+        "via": "unknown",
+        "titles": [
+          "پیوند مینیمالیسم آرام و فناوری در طراحی مبلمان مدرن",
+          "بازگشت سبک دهه ۷۰ با اتاق نشیمن لئوناردو و یوکو",
+          "ترند کشوهای آشپزخانه کلاسیک، دوباره روی میز است"
+        ],
+        "sources": [
+          "news.google.com",
+          "homesandgardens.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791477658934-ly7hn",
       "at": "2026-10-08T16:40:58.934Z",
