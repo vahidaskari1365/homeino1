@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-07T19:31:27.375Z",
+  "updatedAt": "2026-10-08T10:55:23.710Z",
   "runs": [
+    {
+      "id": "run-1791456923710-issp4",
+      "at": "2026-10-08T10:55:23.710Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 126236,
+      "summary": "4 پین الهام جدید (بازنویسی LLM)",
+      "detail": {
+        "added": 4,
+        "productPins": 0,
+        "total": 297,
+        "via": "llm",
+        "poolRemaining": 115,
+        "productPoolRemaining": 2,
+        "skippedStarved": 0,
+        "combos": [
+          "روستیک × ناهارخوری",
+          "معاصر × پذیرایی",
+          "آرت دکو × فضای کار",
+          "مدرن × حیاط و محوطه"
+        ],
+        "productJobs": [
+          "روشنایی و لوستر",
+          "کمد و ذخیره‌سازی"
+        ]
+      }
+    },
     {
       "id": "run-1791401487375-5zeuk",
       "at": "2026-10-07T19:31:27.375Z",
