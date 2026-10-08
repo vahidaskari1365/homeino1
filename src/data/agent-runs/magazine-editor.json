@@ -1,7 +1,35 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-08T11:10:21.707Z",
+  "updatedAt": "2026-10-08T16:40:58.934Z",
   "runs": [
+    {
+      "id": "run-1791477658934-ly7hn",
+      "at": "2026-10-08T16:40:58.934Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 579314,
+      "summary": "2 بریف ترند جدید (رنگ، روشنایی و لوستر) — از طریق zai-1",
+      "detail": {
+        "added": 2,
+        "articlesAdded": 0,
+        "total": 301,
+        "via": "zai-1",
+        "titles": [
+          "ترند رنگ‌آمیزی حمام در خانه لندن",
+          "ترند نورپردازی زمستانه در دکوراسیون مدرن"
+        ],
+        "sources": [
+          "homesandgardens.com",
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791457821707-a3a5x",
       "at": "2026-10-08T11:10:21.707Z",
