@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-08T15:51:50.724Z",
+  "updatedAt": "2026-10-08T19:27:27.924Z",
   "runs": [
+    {
+      "id": "run-1791487647924-bgx8u",
+      "at": "2026-10-08T19:27:27.924Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 102709,
+      "summary": "1 پین الهام جدید (بازنویسی LLM)",
+      "detail": {
+        "added": 1,
+        "productPins": 0,
+        "total": 298,
+        "via": "llm",
+        "poolRemaining": 124,
+        "productPoolRemaining": 2,
+        "skippedStarved": 0,
+        "combos": [
+          "روستیک × حیاط و محوطه",
+          "معاصر × اتاق خواب",
+          "آرت دکو × ناهارخوری",
+          "مینیمال × پذیرایی"
+        ],
+        "productJobs": [
+          "تابلو و دیوارکوب",
+          "دیوارپوش"
+        ]
+      }
+    },
     {
       "id": "run-1791474710724-yuysg",
       "at": "2026-10-08T15:51:50.724Z",
