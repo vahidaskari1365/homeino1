@@ -1,7 +1,37 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-07T20:11:40.203Z",
+  "updatedAt": "2026-10-08T11:10:21.707Z",
   "runs": [
+    {
+      "id": "run-1791457821707-a3a5x",
+      "at": "2026-10-08T11:10:21.707Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 601057,
+      "summary": "4 بریف ترند جدید (رنگ، مبلمان، رنگ، آشپزخانه) + ۱ مقاله کامل مجله («ترند رنگ ۲۰۲۷؛ چطور لکه‌های جسورانه جای …») — از طریق google-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 1,
+        "total": 299,
+        "via": "google-2",
+        "titles": [
+          "رنگ‌پاشی ۲۰۲۷؛ عصر رنگ‌های جسورانه",
+          "رویکرد ساده‌شده و زیبایی‌شناسانه در مبلمان داخلی",
+          "ترند رنگ‌آمیزی آشپزخانه برای پاییز",
+          "جایگزینی جاروبرقی با کشو زیر کف در آشپزخانه"
+        ],
+        "sources": [
+          "news.google.com",
+          "dezeen.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791403900203-bwjm7",
       "at": "2026-10-07T20:11:40.203Z",
