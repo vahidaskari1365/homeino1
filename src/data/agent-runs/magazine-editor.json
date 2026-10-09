@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-09T11:05:58.714Z",
+  "updatedAt": "2026-10-09T16:33:36.267Z",
   "runs": [
+    {
+      "id": "run-1791563616267-qhamo",
+      "at": "2026-10-09T16:33:36.267Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 1057942,
+      "summary": "4 بریف ترند جدید (مبلمان، رنگ، رنگ، روشنایی و لوستر) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 312,
+        "via": "zai-2",
+        "titles": [
+          "تخفیف‌های هفتگی مبلمان ویت‌مارت",
+          "رنگ طلاییِ همه‌کاره برای آشپزخانه",
+          "رنگ‌های تیره و مشکی در دکوراسیون",
+          "بازار تاریک نور و دکوراسیون دچار ورشکستگی شد"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791543958714-cknaa",
       "at": "2026-10-09T11:05:58.714Z",
