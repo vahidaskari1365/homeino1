@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-10T10:09:10.683Z",
+  "updatedAt": "2026-10-10T14:48:26.532Z",
   "runs": [
+    {
+      "id": "run-1791643706532-16k1z",
+      "at": "2026-10-10T14:48:26.532Z",
+      "agentKey": "inspiration-curator",
+      "ok": false,
+      "dry": false,
+      "durationMs": 666752,
+      "summary": "پین جدیدی افزوده نشد — عکس تازه برای نوبت‌های این اجرا پیدا نشد",
+      "detail": {
+        "added": 0,
+        "productPins": 0,
+        "total": 312,
+        "via": "template",
+        "poolRemaining": 134,
+        "productPoolRemaining": 1,
+        "skippedStarved": 6,
+        "combos": [
+          "مدیترانه‌ای × حیاط و محوطه",
+          "آرت دکو × اتاق خواب",
+          "مدرن × ناهارخوری",
+          "معاصر × فضای کار"
+        ],
+        "productJobs": [
+          "دیوارپوش",
+          "تابلو و دیوارکوب"
+        ]
+      }
+    },
     {
       "id": "run-1791626950683-al5g6",
       "at": "2026-10-10T10:09:10.683Z",
