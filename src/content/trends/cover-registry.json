@@ -323,7 +323,11 @@
     "4b037bfcf08ba73be792aa1c3254a2f8": "2026-10-10-kurtwi",
     "fb9aa9a61084d3400a0f50113d2efce4": "2026-10-10-toqoru",
     "a3b6470190a04ab97a649e4e6914d47f": "2026-10-10-8wzfoo",
-    "5dc75f89215fbf6ca34ddedf6c19950c": "2026-10-10-gfxccr"
+    "5dc75f89215fbf6ca34ddedf6c19950c": "2026-10-10-gfxccr",
+    "79b5bba3928a569d5d932473cc1c8111": "2026-10-10-lkvo9n",
+    "940bbc2ac1be0fa0bc4555073fde504c": "2026-10-10-n6a62g",
+    "b5d704dae05c327e5ee75d745d08dd45": "2026-10-10-017yms",
+    "be73e84b732f02e941f54f73bfbf12ff": "2026-10-10-rp3zkv"
   },
   "byPath": {
     "/images/trends/src/2026-09-16-m7tvfx.jpg": "2026-09-16-m7tvfx",
@@ -616,7 +620,11 @@
     "/images/trends/src/2026-10-10-kurtwi.jpg": "2026-10-10-kurtwi",
     "/images/trends/src/2026-10-10-toqoru.jpg": "2026-10-10-toqoru",
     "/images/trends/src/2026-10-10-8wzfoo.jpg": "2026-10-10-8wzfoo",
-    "/images/trends/src/2026-10-10-gfxccr.jpg": "2026-10-10-gfxccr"
+    "/images/trends/src/2026-10-10-gfxccr.jpg": "2026-10-10-gfxccr",
+    "/images/trends/src/2026-10-10-lkvo9n.jpg": "2026-10-10-lkvo9n",
+    "/images/trends/src/2026-10-10-n6a62g.jpg": "2026-10-10-n6a62g",
+    "/images/trends/src/2026-10-10-017yms.jpg": "2026-10-10-017yms",
+    "/images/trends/src/2026-10-10-rp3zkv.jpg": "2026-10-10-rp3zkv"
   },
   "byUrl": {
     "https://image.pollinations.ai/prompt/Woven%20wall%20tapestry%20in%20warm-toned%20cozy%20interior%20design%2C%20professional%20interior%20design%20photography?width=1152&height=864&seed=31181&nologo=true&model=flux": "2026-09-16-m7tvfx",
@@ -939,6 +947,10 @@
     "https://cdn.mos.cms.futurecdn.net/d45hVMm4NMW6BLULYfDHUB-2400-80.jpg": "2026-10-10-kurtwi",
     "https://image.pollinations.ai/prompt/styled%20coffee%20table%20with%20elegant%20decor%20accessories%2C%20interior%20design%20photography?width=1152&height=864&seed=72327&nologo=true&model=flux": "2026-10-10-toqoru",
     "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=70806&nologo=true&model=flux": "2026-10-10-8wzfoo",
-    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=78212&nologo=true&model=flux": "2026-10-10-gfxccr"
+    "https://image.pollinations.ai/prompt/modern%20kitchen%20interior%20with%20warm%20materials%2C%20interior%20design%20photography?width=1152&height=864&seed=78212&nologo=true&model=flux": "2026-10-10-gfxccr",
+    "https://cdn.mos.cms.futurecdn.net/rcbfFpHcAZj6kMUf6rkYun-2560-80.jpg": "2026-10-10-lkvo9n",
+    "https://image.pollinations.ai/prompt/designer%20pendant%20chandelier%20lighting%20a%20cozy%20interior%2C%20evening%20ambience%2C%20interior%20design%20photography?width=1152&height=864&seed=23293&nologo=true&model=flux": "2026-10-10-n6a62g",
+    "https://image.pollinations.ai/prompt/spa-like%20bathroom%20interior%20with%20elegant%20tiles%2C%20interior%20design%20photography?width=1152&height=864&seed=80628&nologo=true&model=flux": "2026-10-10-017yms",
+    "https://image.pollinations.ai/prompt/elegant%20modern%20living%20room%20with%20a%20statement%20sofa%2C%20warm%20natural%20light%2C%20interior%20design%20photography?width=1152&height=864&seed=859&nologo=true&model=flux": "2026-10-10-rp3zkv"
   }
 }
