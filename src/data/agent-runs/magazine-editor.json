@@ -1,7 +1,36 @@
 {
   "agentKey": "magazine-editor",
-  "updatedAt": "2026-10-10T15:31:24.456Z",
+  "updatedAt": "2026-10-10T18:51:57.939Z",
   "runs": [
+    {
+      "id": "run-1791658317939-0u18p",
+      "at": "2026-10-10T18:51:57.939Z",
+      "agentKey": "magazine-editor",
+      "ok": true,
+      "durationMs": 509028,
+      "summary": "4 بریف ترند جدید (دکوری و اکسسوری، آشپزخانه، دکوری و اکسسوری، سبک‌ها) — از طریق zai-2",
+      "detail": {
+        "added": 4,
+        "articlesAdded": 0,
+        "total": 328,
+        "via": "zai-2",
+        "titles": [
+          "۷ تغییر ساده برای مدرن‌تر شدن خانه",
+          "کمد‌های آشپزخانه کلاسیک برگشتند",
+          "ترند دکوراسیون: دیوارهای ساده و رنگ‌های نئوکلاسیک",
+          "رنگ‌های گرم و مبلمان منحنی، اوج ترند ۲۰۲۶"
+        ],
+        "sources": [
+          "news.google.com"
+        ],
+        "qaRejected": [],
+        "qaGate": {
+          "coverRepairs": 0,
+          "coverUnresolved": 0,
+          "selfHealedCovers": 0
+        }
+      }
+    },
     {
       "id": "run-1791646284456-zxlbx",
       "at": "2026-10-10T15:31:24.456Z",
