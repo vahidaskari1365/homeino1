@@ -1,7 +1,35 @@
 {
   "agentKey": "inspiration-curator",
-  "updatedAt": "2026-10-09T18:59:25.756Z",
+  "updatedAt": "2026-10-10T10:09:10.683Z",
   "runs": [
+    {
+      "id": "run-1791626950683-al5g6",
+      "at": "2026-10-10T10:09:10.683Z",
+      "agentKey": "inspiration-curator",
+      "ok": true,
+      "dry": false,
+      "durationMs": 175615,
+      "summary": "5 پین الهام جدید (بازنویسی LLM؛ 1 پین محصول‌محور)",
+      "detail": {
+        "added": 5,
+        "productPins": 1,
+        "total": 312,
+        "via": "llm",
+        "poolRemaining": 134,
+        "productPoolRemaining": 1,
+        "skippedStarved": 6,
+        "combos": [
+          "مدیترانه‌ای × حیاط و محوطه",
+          "آرت دکو × اتاق خواب",
+          "مدرن × ناهارخوری",
+          "معاصر × فضای کار"
+        ],
+        "productJobs": [
+          "دیوارپوش",
+          "تابلو و دیوارکوب"
+        ]
+      }
+    },
     {
       "id": "run-1791572365756-hlq32",
       "at": "2026-10-09T18:59:25.756Z",
